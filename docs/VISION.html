@@ -390,9 +390,9 @@
 
       <rect class="box accent" x="20" y="236" width="720" height="56" rx="10"/>
       <text class="title" x="380" y="260" text-anchor="middle">World（確定済みの状態）</text>
-      <text class="sub" x="380" y="279" text-anchor="middle">リージョン / 場所 / 道具 / 誰がどこで何をしているか</text>
+      <text class="sub" x="380" y="279" text-anchor="middle">リージョン / 場所とタグ / 誰がどこで何をしているか</text>
       <path class="arrow" d="M380 200 V234"/>
-      <text class="sub" x="392" y="222">提案 → 検証 → 確定</text>
+      <text class="sub" x="392" y="222">Planner の予定は 提案 → 検証 → 確定</text>
 
       <rect class="box" x="20" y="334" width="340" height="52" rx="8"/>
       <text class="title" x="190" y="356" text-anchor="middle">EventLog</text>
@@ -559,15 +559,26 @@
       <thead><tr><th>役割</th><th>担当</th><th>備考</th></tr></thead>
       <tbody>
         <tr><td>1日の骨格<br><small>固定予定、大まかな流れ</small></td><td>Planner（LLM、1日1回）</td><td>ebise の日次プラン生成に相当</td></tr>
-        <tr><td>自由時間の中身</td><td>Decider（Utility AI）</td><td>眠気、退屈、社交欲求などでスコアリング。LLM 不要。最初は無くてもよい</td></tr>
-        <tr><td>文面、世界観の変換や判定</td><td>LLM</td><td>決定の境界でだけ呼ぶ</td></tr>
+        <tr><td>自由時間の中身<br><small>固定ブロック中の「スマホを開く機会」も</small></td><td>Decider（Utility AI）</td><td>行動ライブラリのうち、いまの場所と携行品で実行できるものを候補にして、重みで抽選する（4章）。LLM 不要。最初は無くてもよい</td></tr>
+        <tr><td>文面、世界観の変換や判定</td><td>LLM</td><td>決定の境界でだけ呼ぶ。Planner の予定や生成した場所は、ハーネスが検証してから確定する（4章）</td></tr>
       </tbody>
     </table>
   </div>
   <p><code>IDecider</code> のような差し替え口を用意しておけば、「プランのみ」「Utility のみ」「ハイブリッド」を後から試せる。最初はプランのみで始め、自由時間に Utility を足す。</p>
 
   <h3>ツール</h3>
-  <p>発言の生成や SNS への書き込みなど、ペルソナが使える道具を「ツール」と呼ぶ。</p>
+  <p>似た言葉が3つあるので、先に整理する。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>用語</th><th>意味</th><th>例</th><th>置き場</th></tr></thead>
+      <tbody>
+        <tr><td>行動</td><td>ペルソナが世界の中ですること。Planner と Decider が選ぶ</td><td>散歩、読書、食事、スマホを開く</td><td>行動ライブラリ（4章）</td></tr>
+        <tr><td>道具</td><td>世界の中にある物</td><td>据え付け: キッチン、教室の机<br>携行品: スマホ、ノートPC</td><td>据え付けは場所のタグ、携行品はペルソナ定義（4章）</td></tr>
+        <tr><td>ツール</td><td>行動の中身を作るときに、LLM が呼べる機能</td><td>投稿、返信、検索</td><td>プラグイン。ペルソナごとに許可リスト</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>以降の「ツール」は、3つ目のことを指す。</p>
   <ul>
     <li>ペルソナごとに、使えるツールを許可リストで設定する</li>
     <li>プラグインとして、自由にツールを追加できる</li>
@@ -581,7 +592,7 @@
     <li>予定ブロックごとに <code>availability</code>（スマホを開けるか）と <code>interruptible</code> を持たせる</li>
     <li>睡眠中や授業中は開かない。休み時間や自由時間には開く</li>
     <li>関係性が強い相手の通知だけ即座に開く、などの例外は、ペルソナの設定値で調整する</li>
-    <li>スマホは「道具」として扱い、チャンネルの受信箱を捌けるかどうかを決める</li>
+    <li>スマホは携行品。「スマホを開く」の <code>requires</code> が、スマホの携行品タグを求める。スマホを持たないペルソナや、持ち込めない旅行先では、受信箱を捌けない</li>
   </ul>
   <p>「メールを見ない」「返信しないことがある」は、この仕組みだけで自然に表現できる。</p>
   <p>受信箱方式にしたことで、実行中の行動を中断する「割り込み」の必要性は薄れた。<code>interruptible</code> が本当に要るかは、詳細設計で見直す（不要なら外す）。</p>
@@ -593,8 +604,8 @@
   <h3>構造</h3>
   <div class="grid three">
     <div class="card"><h4>リージョン</h4><p>世界観の最上位。魔界、現代日本など。</p></div>
-    <div class="card"><h4>場所</h4><p>グラフで持つ。辺に移動時間。座標は持たない。</p></div>
-    <div class="card"><h4>道具</h4><p>タグで表す。スマホもここに入る。</p></div>
+    <div class="card"><h4>場所</h4><p>グラフで持つ。辺に移動時間。場所ごとにタグを持つ。座標は持たない。</p></div>
+    <div class="card"><h4>据え付けの道具</h4><p>場所のタグで表す。キッチン、教室の机など。持ち運ぶ道具はペルソナ側（下記）。</p></div>
   </div>
   <ul>
     <li>2D 座標や経路探索は、空間表現を始めるときに足す</li>
@@ -603,20 +614,89 @@
   </ul>
 
   <h3>行動の「中身」と「効果」を分ける</h3>
-  <p>行動は無限に作れるが、エンジンが理解するのは閉じた語彙の「効果」だけにする。</p>
+  <p>行動は無限に作れるが、エンジンが理解するのは閉じた語彙の「効果」だけにする。行動の定義は、次の項目で書く。</p>
   <ul>
-    <li>必要な場所タグ、道具タグ</li>
+    <li>必要な場所タグ、携行品タグ（<code>requires</code>）</li>
     <li>所要時間</li>
-    <li>状態変数への影響</li>
-    <li>スマホを開けるか、割り込み可能か</li>
+    <li>効果（状態変数への影響。語彙は閉じている）</li>
+    <li>基本の重み（Decider が使う）</li>
+    <li>行動中にスマホを開けるか（<code>availability</code>）</li>
   </ul>
   <p>自由記述は表示用のフィールドに押し込める。The Sims の Smart Object や Generative Agents に近い発想。</p>
 
+  <h3>行動と道具の置き場</h3>
+  <p>行動の定義は、ワールドにもペルソナにも属さない<strong>独立したライブラリ</strong>に置く。行動するのはペルソナなので、ペルソナ定義が使える行動を ID で参照する。</p>
+  <figure class="diagram">
+    <svg viewBox="0 0 760 420" role="img" aria-label="行動ライブラリ、ペルソナ定義、ワールドと Decider の関係">
+      <rect class="box accent" x="20" y="30" width="210" height="100" rx="10"/>
+      <text class="title" x="125" y="56" text-anchor="middle">行動ライブラリ</text>
+      <text class="sub" x="125" y="76" text-anchor="middle">組み込み + 自作（同じ形式）</text>
+      <text class="sub" x="125" y="94" text-anchor="middle">requires / 所要時間</text>
+      <text class="sub" x="125" y="112" text-anchor="middle">effect / 基本の重み</text>
+
+      <rect class="box" x="300" y="30" width="200" height="100" rx="10"/>
+      <text class="title" x="400" y="56" text-anchor="middle">ペルソナ定義</text>
+      <text class="sub" x="400" y="76" text-anchor="middle">使える行動の ID</text>
+      <text class="sub" x="400" y="94" text-anchor="middle">行動ごとの重み補正</text>
+      <text class="sub" x="400" y="112" text-anchor="middle">携行品（portable 付き）</text>
+
+      <rect class="box" x="570" y="30" width="170" height="100" rx="10"/>
+      <text class="title" x="655" y="56" text-anchor="middle">ワールド</text>
+      <text class="sub" x="655" y="76" text-anchor="middle">場所のグラフ</text>
+      <text class="sub" x="655" y="94" text-anchor="middle">場所のタグ</text>
+      <text class="sub" x="655" y="112" text-anchor="middle">（据え付けの道具）</text>
+
+      <path class="arrow dash" d="M298 80 H232"/>
+      <text class="sub" x="265" y="70" text-anchor="middle">IDで参照</text>
+      <path class="arrow dash" d="M502 80 H568"/>
+      <text class="sub" x="535" y="70" text-anchor="middle">今いる場所</text>
+
+      <rect class="box warn" x="240" y="205" width="320" height="100" rx="10"/>
+      <text class="title" x="400" y="231" text-anchor="middle">Decider</text>
+      <text class="sub" x="400" y="251" text-anchor="middle">requires が、場所のタグ + 携行品のタグで</text>
+      <text class="sub" x="400" y="269" text-anchor="middle">満たせる行動だけを候補にする</text>
+      <text class="sub" x="400" y="287" text-anchor="middle">候補を重みで抽選する（IRandom）</text>
+
+      <path class="arrow" d="M125 130 V255 H238"/>
+      <text class="sub" x="133" y="190">行動の定義</text>
+      <path class="arrow" d="M400 130 V203"/>
+      <text class="sub" x="408" y="170">使える行動・重み・携行品</text>
+      <path class="arrow" d="M655 130 V255 H562"/>
+      <text class="sub" x="663" y="190">場所のタグ</text>
+
+      <path class="arrow" d="M400 305 V348"/>
+      <rect class="box good" x="260" y="350" width="280" height="50" rx="10"/>
+      <text class="title" x="400" y="372" text-anchor="middle">次の行動イベント</text>
+      <text class="sub" x="400" y="390" text-anchor="middle">行動ID、場所、所要時間を含めて記録</text>
+    </svg>
+    <figcaption>行動の定義は独立し、ペルソナが参照する。ワールドは「満たせる場所があるか」だけを決める</figcaption>
+  </figure>
+  <ul>
+    <li><strong>ライブラリ</strong>: 組み込みの行動（睡眠、移動、スマホを開く、食事など）と、ユーザーが TOML で書いた行動を、同じ形式で持つ</li>
+    <li><strong>ペルソナ</strong>: 使える行動の ID と、行動ごとの重み補正（好き・嫌い・禁止）を持つ。ペルソナごとの許可リストという形は、ツール（3章）と同じ</li>
+    <li><strong>ワールド</strong>: 行動を持たない。行動の <code>requires</code> を満たす場所があるかどうかで、実行できるかが決まる。魔界のワールドで「公園で草むしり」を参照するペルソナがいても、満たす場所がなければ選ばれない。世界観の防御が自然にかかる</li>
+    <li><strong>効果の語彙</strong>: <code>effect</code> は組み込みの語彙から選ぶ。語彙を足せるのはコード側だけ。自作の行動は、既存の語彙の組み合わせで書く（決定的な適用を守るため）</li>
+    <li><strong>検査</strong>: ペルソナ定義を読むときに、「このワールドで一度も実行できない行動」を警告できる</li>
+  </ul>
+
+  <div class="grid two">
+    <div class="card">
+      <h4>据え付けの道具</h4>
+      <p>キッチン、教室の机、ゲームセンターの筐体など。<strong>場所のタグ</strong>として持つ。持ち運ばない。</p>
+    </div>
+    <div class="card">
+      <h4>携行品</h4>
+      <p>スマホ、ノートPC、釣り竿など。<strong>ペルソナ定義の持ち物リスト</strong>に置き、<code>portable</code>（旅行に持っていけるか）を付ける。旅行先に持っていけない物は、現地でその行動を選べなくなるだけで済む。</p>
+    </div>
+  </div>
+  <p>携行品は最初は固定のリストにして、拾う・失くす・買うイベントは作らない。必要になってから足す。</p>
+
   <h3>検証：LLM は提案、ハーネスが確定</h3>
+  <p>検証するのは、<strong>LLM が出したもの</strong>。Planner の予定と、LLM が生成した新しい場所が対象になる。Decider が選ぶ行動は対象外。候補が最初から <code>requires</code> で絞られているから。</p>
   <div class="flow">
-    <div class="step"><b>1. 選ばせる</b><p>場所と道具を ID つきの一覧で渡し、LLM には ID を選ばせる（構造化出力）。</p></div>
+    <div class="step"><b>1. 選ばせる</b><p>そのペルソナが使える行動と、ワールドの場所を ID つきの一覧で渡し、LLM には ID を選ばせる（構造化出力）。</p></div>
     <div class="arr">→</div>
-    <div class="step"><b>2. 検査する</b><p>到達性と移動時間、必要タグ、固定予定との衝突をコードで確認する。</p></div>
+    <div class="step"><b>2. 検査する</b><p>到達性と移動時間、<code>requires</code>（場所タグ・携行品タグ）、固定予定との衝突をコードで確認する。</p></div>
     <div class="arr">→</div>
     <div class="step"><b>3. 直すか落とす</b><p>軽い違反は補正（移動ブロックの自動挿入）。直せなければ汎用の行動に置換。全体が破綻なら理由つきで再生成。</p></div>
   </div>
@@ -627,8 +707,9 @@
     <table>
       <thead><tr><th>対象</th><th>定義</th><th>インスタンス</th></tr></thead>
       <tbody>
-        <tr><td>ペルソナ</td><td>TOML で書いた初期設定（性格、生活習慣、口調など）。持ち運べるテンプレート</td><td>定義をワールドに召喚した実体。記憶、今いる場所、持ち物、人間関係などをセーブデータとして持つ</td></tr>
-        <tr><td>ワールド</td><td>TOML で書いた世界の設定（リージョン、場所、道具、世界観、ポリシーなど）</td><td>実行中の状態。あとから生えた場所（LLM が生成して採用したもの）、誰がどこにいるか、など</td></tr>
+        <tr><td>ペルソナ</td><td>TOML で書いた初期設定（性格、生活習慣、口調、使える行動と重み補正、携行品など）。持ち運べるテンプレート</td><td>定義をワールドに召喚した実体。記憶、今いる場所、人間関係などをセーブデータとして持つ</td></tr>
+        <tr><td>ワールド</td><td>TOML で書いた世界の設定（リージョン、場所とそのタグ、世界観、ポリシーなど）</td><td>実行中の状態。あとから生えた場所（LLM が生成して採用したもの）、誰がどこにいるか、など</td></tr>
+        <tr><td>行動</td><td>TOML で書いた行動の定義（組み込み + 自作）。ワールドにもペルソナにも属さないライブラリ</td><td>なし。状態を持たず、ペルソナ定義とワールドの場所から参照されるだけ</td></tr>
       </tbody>
     </table>
   </div>
@@ -644,6 +725,7 @@
     <li><strong>接続</strong>: 移動は、リージョン設定で接続を宣言したワールド間だけ。接続は両側が宣言して初めて成立する。手段（列車、転移門など）と所要時間は接続の設定に持たせる。設定のないワールド間は移動できない</li>
     <li><strong>時間の持ち主</strong>: 旅行中は、旅行先のワールドがペルソナインスタンスを預かり、その時計で動かす。元のワールドには「不在」と記録する。常に1つのワールドだけがシミュレートする。受信箱とチャンネルはインスタンスに付いてくるので、旅行中も返信は届く</li>
     <li><strong>旅行の好み</strong>: ペルソナ側に <code>travelAffinity</code>（0〜100）を持たせる。Decider のスコアにかかる重みで、100 でも必ず旅行するわけではない。0 は「絶対に旅行しない」で、掛け算に頼らず、ゲートで明示的に落とす</li>
+    <li><strong>携行品</strong>: 旅行に持っていけるかは、携行品の <code>portable</code> で決まる。持っていけない物が要る行動は、旅行先で候補から外れる</li>
     <li><strong>記憶</strong>: アイテムは <code>worldId</code> を持つ。場所や人物の参照は、その World ID の中で解決する。元のワールドに戻ったあとも旅の思い出として話題にできるが、旅行先の場所は元のワールドの行き先の候補にはならない</li>
     <li><strong>場所の生成</strong>: 訪問者（観光客）は、旅行先で場所を生成できない。現地ペルソナと行動を共にしているときに、現地ペルソナが開いた場所は、旅行先のワールドに属する（共同行動を計画の中で明示的に表す必要がある）</li>
     <li><strong>範囲</strong>: 最初は、同じホスト（同じ保存先）の中のワールド間だけ。他のユーザーのワールドへの訪問（マルチプレイ）は、セキュリティを含めて別の機能として、あとで考える</li>
