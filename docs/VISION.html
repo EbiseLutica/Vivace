@@ -210,6 +210,13 @@
   svg .box { fill: var(--surface-2); stroke: var(--line); stroke-width: 1.5; }
   svg .box.accent { fill: var(--accent-soft); stroke: var(--accent); }
   svg .box.warn { fill: var(--warn-soft); stroke: var(--warn); }
+  svg .box.good { fill: var(--good-soft); stroke: var(--good); }
+  svg .arrow.dash { stroke-dasharray: 5 4; }
+  svg .dot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+  svg .dot.ext { fill: var(--warn); }
+  svg .bar { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+  svg .bar.free { fill: var(--surface-2); stroke: var(--muted); stroke-dasharray: 4 3; }
+  svg .tick { stroke: var(--line); stroke-width: 1; }
   svg .group { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 6 5; }
   svg text { fill: var(--text); font-size: 14px; font-family: inherit; }
   svg text.sub { fill: var(--muted); font-size: 12px; }
@@ -402,6 +409,149 @@
   <h3>駆動方式</h3>
   <p>固定間隔の tick ではなく、<strong>離散イベント方式</strong>にする。次に何かが起きる時刻（予定ブロックの境界、通知の到着、タイマー）まで時計を飛ばす。</p>
   <p>この方式にすると、実時間運転、倍速、早送り（テストや追いつき処理）が同じコアで動く。「リアルタイムで回す」ことと「トークンを使う」ことは別で、<strong>ループ自体は LLM を呼ばない</strong>。</p>
+
+  <h3>イベントとループの仕組み</h3>
+  <p>ペルソナの行動は、すべて<strong>イベント</strong>で表す。行動とは、イベントが発火して、世界の状態が切り替わること。ループは、時刻順のキューから最も早いイベントを取り出し、時計をその時刻まで進めて、適用する、を繰り返すだけ。</p>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 420" role="img" aria-label="イベントループの流れ">
+      <rect class="box accent" x="40" y="30" width="200" height="96" rx="10"/>
+      <text class="title" x="140" y="56" text-anchor="middle">① イベントキュー</text>
+      <text class="sub" x="140" y="76" text-anchor="middle">時刻順の未来のイベント</text>
+      <text class="sub" x="140" y="94" text-anchor="middle">Planner の予定も入る</text>
+
+      <rect class="box" x="300" y="30" width="200" height="96" rx="10"/>
+      <text class="title" x="400" y="56" text-anchor="middle">② 時計を進める</text>
+      <text class="sub" x="400" y="76" text-anchor="middle">実時間: 待つ</text>
+      <text class="sub" x="400" y="94" text-anchor="middle">仮想: 即座に飛ぶ</text>
+
+      <rect class="box good" x="560" y="30" width="180" height="96" rx="10"/>
+      <text class="title" x="650" y="56" text-anchor="middle">③ 適用する</text>
+      <text class="sub" x="650" y="76" text-anchor="middle">決定的な処理</text>
+      <text class="sub" x="650" y="94" text-anchor="middle">同じ入力 → 同じ結果</text>
+
+      <rect class="box good" x="560" y="190" width="180" height="96" rx="10"/>
+      <text class="title" x="650" y="216" text-anchor="middle">④ 保存</text>
+      <text class="sub" x="650" y="236" text-anchor="middle">SQLite に状態と</text>
+      <text class="sub" x="650" y="254" text-anchor="middle">イベントを残す</text>
+
+      <rect class="box warn" x="300" y="190" width="200" height="96" rx="10"/>
+      <text class="title" x="400" y="216" text-anchor="middle">⑤ ハンドラが決める</text>
+      <text class="sub" x="400" y="236" text-anchor="middle">Decider / Planner / LLM</text>
+      <text class="sub" x="400" y="254" text-anchor="middle">結果をイベントで返す</text>
+
+      <rect class="box warn" x="40" y="336" width="200" height="70" rx="10"/>
+      <text class="title" x="140" y="362" text-anchor="middle">外部（IChannel）</text>
+      <text class="sub" x="140" y="382" text-anchor="middle">通知が到着イベントになる</text>
+
+      <path class="arrow" d="M240 78 H298"/>
+      <path class="arrow" d="M500 78 H558"/>
+      <path class="arrow" d="M650 126 V188"/>
+      <path class="arrow" d="M560 238 H502"/>
+      <path class="arrow" d="M300 238 C250 238 200 190 190 128"/>
+      <path class="arrow" d="M90 336 V128"/>
+      <text class="sub" x="232" y="262" text-anchor="middle">次のイベントを積む</text>
+      <text class="sub" x="100" y="300">キューに入る</text>
+
+      <rect class="box good" x="300" y="340" width="18" height="18" rx="4"/>
+      <text class="sub" x="326" y="354">決定的。状態を書き換える</text>
+      <rect class="box warn" x="300" y="372" width="18" height="18" rx="4"/>
+      <text class="sub" x="326" y="386">非決定的。決めるだけで、状態は書き換えない</text>
+    </svg>
+    <figcaption>イベントループの1周。③と④だけが状態を書き換える</figcaption>
+  </figure>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 322" role="img" aria-label="1日のタイムラインとイベント">
+      <line class="tick" x1="40" y1="44" x2="40" y2="272"/>
+      <line class="tick" x1="153" y1="44" x2="153" y2="272"/>
+      <line class="tick" x1="267" y1="44" x2="267" y2="272"/>
+      <line class="tick" x1="380" y1="44" x2="380" y2="272"/>
+      <line class="tick" x1="493" y1="44" x2="493" y2="272"/>
+      <line class="tick" x1="607" y1="44" x2="607" y2="272"/>
+      <line class="tick" x1="720" y1="44" x2="720" y2="272"/>
+      <text class="sub" x="40" y="36" text-anchor="middle">07:00</text>
+      <text class="sub" x="153" y="36" text-anchor="middle">09:00</text>
+      <text class="sub" x="267" y="36" text-anchor="middle">11:00</text>
+      <text class="sub" x="380" y="36" text-anchor="middle">13:00</text>
+      <text class="sub" x="493" y="36" text-anchor="middle">15:00</text>
+      <text class="sub" x="607" y="36" text-anchor="middle">17:00</text>
+      <text class="sub" x="720" y="36" text-anchor="middle">19:00</text>
+
+      <text class="sub" x="40" y="62">計画のブロック（Planner が積む）</text>
+      <rect class="bar" x="40" y="70" width="57" height="36" rx="6"/>
+      <text x="68" y="93" text-anchor="middle">支度</text>
+      <rect class="bar" x="97" y="70" width="56" height="36" rx="6"/>
+      <text x="125" y="93" text-anchor="middle">通学</text>
+      <rect class="bar" x="153" y="70" width="340" height="36" rx="6"/>
+      <text x="323" y="93" text-anchor="middle">授業（固定）</text>
+      <rect class="bar free" x="493" y="70" width="142" height="36" rx="6"/>
+      <text x="564" y="93" text-anchor="middle">自由時間</text>
+      <rect class="bar" x="635" y="70" width="85" height="36" rx="6"/>
+      <text x="677" y="93" text-anchor="middle">夕食</text>
+      <circle class="dot" cx="40" cy="70" r="5"/>
+      <circle class="dot" cx="97" cy="70" r="5"/>
+      <circle class="dot" cx="153" cy="70" r="5"/>
+      <circle class="dot" cx="493" cy="70" r="5"/>
+      <circle class="dot" cx="635" cy="70" r="5"/>
+
+      <path class="arrow dash" d="M493 108 V142"/>
+      <text class="sub" x="502" y="128">決めどき: Decider が次を積む</text>
+
+      <text class="sub" x="484" y="168" text-anchor="end">自由時間の中身（Decider が積む）</text>
+      <rect class="bar" x="493" y="146" width="57" height="36" rx="6"/>
+      <text x="521" y="169" text-anchor="middle">散歩</text>
+      <rect class="bar" x="550" y="146" width="85" height="36" rx="6"/>
+      <text x="592" y="169" text-anchor="middle">読書</text>
+      <circle class="dot" cx="493" cy="146" r="5"/>
+      <circle class="dot" cx="550" cy="146" r="5"/>
+
+      <text class="sub" x="40" y="212">受信箱（外部から届く）</text>
+      <line class="tick" x1="40" y1="236" x2="720" y2="236"/>
+      <circle class="dot ext" cx="267" cy="236" r="6"/>
+      <text class="sub" x="267" y="258" text-anchor="middle">通知が到着</text>
+      <path class="arrow dash" d="M277 236 H506"/>
+      <text class="sub" x="392" y="228" text-anchor="middle">授業中は開けないので積まれたまま</text>
+      <path class="dot" d="M520 227 L529 236 L520 245 L511 236 Z"/>
+      <text class="sub" x="520" y="262" text-anchor="middle">スマホを開く</text>
+      <text class="sub" x="540" y="240">→ 返信を生成</text>
+
+      <text class="sub" x="40" y="294">実時間: 各イベントの時刻まで待つ</text>
+      <text class="sub" x="40" y="312">仮想時計: 待たずに次のイベントへ飛ぶ（途中のイベントは全部、順に適用する）</text>
+    </svg>
+    <figcaption>1日のイベントの例。丸がイベント（状態が切り替わる瞬間）、帯がその間の状態</figcaption>
+  </figure>
+
+  <h3>「決める」と「適用する」を分ける</h3>
+  <div class="grid two">
+    <div class="card">
+      <h4>決める（非決定的）</h4>
+      <p>Planner、Decider、LLM、外部からの到着。結果を「イベント」として出すだけで、状態は書き換えない。乱数は <code>IRandom</code> を使う。</p>
+    </div>
+    <div class="card">
+      <h4>適用する（決定的）</h4>
+      <p><code>Apply(状態, イベント)</code>。同じ入力なら必ず同じ結果。時刻は <code>IClock</code> とイベントの時刻だけを使い、<code>DateTime.Now</code> は読まない。</p>
+    </div>
+  </div>
+  <p>決めた結果（選んだ行動、生成した投稿文）をイベントに含めて記録しておけば、再生のときは<strong>適用だけをやり直せばよく、LLM も乱数も呼ばない</strong>。状態はイベントを順に適用した結果になるので、スナップショットを持てば、任意の時点まで速く戻せる。</p>
+
+  <h3>同じループのいろいろな使い方</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>場面</th><th>時計</th><th>途中のイベント</th><th>外部出力・LLM</th></tr></thead>
+      <tbody>
+        <tr><td>実時間運転</td><td>実時刻まで待つ</td><td>外部からのイベントは到着次第、キューに入る</td><td>実際に出す・呼ぶ</td></tr>
+        <tr><td>早送り・ドライラン</td><td>待たずに飛ぶ</td><td>全部、順に適用する</td><td>null channel。LLM は記録を再生する</td></tr>
+        <tr><td>追いつき処理</td><td>実時刻に追いつくまで飛ぶ</td><td>予定時刻を「いま」として、順に適用する</td><td>粗い粒度（日次プランと要約だけ LLM を呼ぶ）</td></tr>
+        <tr><td>スナップショットから再生</td><td>戻した時刻から進める</td><td>その時刻より後のものだけ適用する</td><td>記録を再生する</td></tr>
+        <tr><td>ハンドラ単体のテスト</td><td>使わない</td><td>1つのイベントだけ呼ぶ（状態は手で用意する）</td><td>モック</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout warn">
+    <span class="label">時間を無視してイベントを直接呼んでいいのは、ハンドラ単体のテストだけ</span>
+    イベントは副作用で状態を書き換えるので、途中を飛ばすと、位置や同行者などの状態がずれる。目的の時点まで進めるときは、途中のイベントを順に適用するか、スナップショットから再生する。
+  </div>
 
   <h3>決定の分担</h3>
   <div class="table-wrap">
