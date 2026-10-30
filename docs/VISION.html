@@ -566,6 +566,26 @@
   </div>
   <p><code>IDecider</code> のような差し替え口を用意しておけば、「プランのみ」「Utility のみ」「ハイブリッド」を後から試せる。最初はプランのみで始め、自由時間に Utility を足す。</p>
 
+  <h3>ペルソナの状態変数</h3>
+  <p>Decider のスコアに使う値を、ペルソナインスタンスの状態として持つ。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>変数</th><th>変わり方</th><th>備考</th></tr></thead>
+      <tbody>
+        <tr><td>気力</td><td>行動で減る。睡眠で回復する</td><td>行動の効果に消費量を持たせる</td></tr>
+        <tr><td>健康度</td><td>寝不足、怪我、病気で下がる。休むと戻る</td><td>怪我と病気は、出来事が起こす（4章）</td></tr>
+        <tr><td>退屈度</td><td>何もしないと上がる。同じ行動が続いても上がる</td><td>行動の効果の式で表す。同じ行動が続くと、下がり幅が減る</td></tr>
+        <tr><td>社交欲求</td><td>人といないと上がる。人といると下がる</td><td>上がり幅はペルソナ定義で決める</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>満腹度と眠気は持たない。食事と睡眠は、Planner の予定に入れる</li>
+    <li>どれも、他の行動を選ぶ理由になる。状態を足す基準（6章）を満たす</li>
+    <li>時間で増減する変数に、tick は要らない。「基準時刻での値」と「いまの増加率」を持ち、読むときに <code>値 + 率 × 経過時間</code> で計算する。率が変わるのは、行動の開始・終了や同行者の変化のイベントのときだけ。計算は決定的なので、追いつき処理や早送りでも同じ結果になる</li>
+    <li>初期値と増加率は、ペルソナ定義で持つ。式の形、範囲、数値は、動かしながら調整する詳細設計の領域</li>
+  </ul>
+
   <h3>ツール</h3>
   <p>似た言葉が3つあるので、先に整理する。</p>
   <div class="table-wrap">
@@ -700,6 +720,73 @@
     <div class="arr">→</div>
     <div class="step"><b>3. 直すか落とす</b><p>軽い違反は補正（移動ブロックの自動挿入）。直せなければ汎用の行動に置換。全体が破綻なら理由つきで再生成。</p></div>
   </div>
+
+  <h3>出来事（予定どおりにいかないこと）</h3>
+  <p>道が壊れる、体調を崩すなど、ワールドやペルソナに干渉する出来事をランダムに起こす。「道が封鎖されたので休む」「迂回して遅刻した」といった、予定どおりにいかない生活が生まれる。</p>
+  <figure class="diagram">
+    <svg viewBox="0 0 760 380" role="img" aria-label="出来事の抽選と、予定ブロック開始時の反応">
+      <rect class="box accent" x="20" y="30" width="150" height="80" rx="10"/>
+      <text class="title" x="95" y="56" text-anchor="middle">出来事ライブラリ</text>
+      <text class="sub" x="95" y="76" text-anchor="middle">組み込み + 自作</text>
+      <text class="sub" x="95" y="94" text-anchor="middle">対象 / 確率 / 効果</text>
+
+      <rect class="box warn" x="210" y="30" width="150" height="80" rx="10"/>
+      <text class="title" x="285" y="56" text-anchor="middle">日の始まりに抽選</text>
+      <text class="sub" x="285" y="76" text-anchor="middle">IRandom で</text>
+      <text class="sub" x="285" y="94" text-anchor="middle">その日の分をまとめて</text>
+
+      <rect class="box" x="400" y="30" width="150" height="80" rx="10"/>
+      <text class="title" x="475" y="56" text-anchor="middle">時刻つきで積む</text>
+      <text class="sub" x="475" y="76" text-anchor="middle">先の分は</text>
+      <text class="sub" x="475" y="94" text-anchor="middle">Planner に見せない</text>
+
+      <rect class="box good" x="590" y="30" width="150" height="80" rx="10"/>
+      <text class="title" x="665" y="56" text-anchor="middle">発生</text>
+      <text class="sub" x="665" y="76" text-anchor="middle">状態を書き換える</text>
+      <text class="sub" x="665" y="94" text-anchor="middle">解消のイベントも積む</text>
+
+      <path class="arrow" d="M170 70 H208"/>
+      <path class="arrow" d="M360 70 H398"/>
+      <path class="arrow" d="M550 70 H588"/>
+
+      <rect class="box" x="20" y="190" width="130" height="60" rx="10"/>
+      <text class="title" x="85" y="216" text-anchor="middle">ブロック開始</text>
+      <text class="sub" x="85" y="236" text-anchor="middle">予定の時刻になる</text>
+
+      <rect class="box good" x="200" y="190" width="150" height="60" rx="10"/>
+      <text class="title" x="275" y="216" text-anchor="middle">実行できる？</text>
+      <text class="sub" x="275" y="236" text-anchor="middle">タグ・到達性・移動時間</text>
+
+      <rect class="box warn" x="430" y="190" width="180" height="60" rx="10"/>
+      <text class="title" x="520" y="216" text-anchor="middle">Decider が選ぶ</text>
+      <text class="sub" x="520" y="236" text-anchor="middle">迂回して遅刻 / 欠席 / 待つ</text>
+
+      <rect class="box good" x="200" y="310" width="150" height="50" rx="10"/>
+      <text class="title" x="275" y="340" text-anchor="middle">そのまま実行</text>
+
+      <rect class="box good" x="430" y="310" width="180" height="50" rx="10"/>
+      <text class="title" x="520" y="332" text-anchor="middle">事実のイベント</text>
+      <text class="sub" x="520" y="350" text-anchor="middle">同じワールドで共有</text>
+
+      <path class="arrow" d="M150 220 H198"/>
+      <path class="arrow" d="M350 220 H428"/>
+      <text class="sub" x="389" y="212" text-anchor="middle">満たせない</text>
+      <path class="arrow" d="M275 250 V308"/>
+      <text class="sub" x="283" y="285">満たせる</text>
+      <path class="arrow" d="M520 250 V308"/>
+      <path class="arrow dash" d="M665 110 V150 H275 V188"/>
+      <text class="sub" x="470" y="142" text-anchor="middle">発生済みの出来事が影響する</text>
+    </svg>
+    <figcaption>出来事の抽選（上）と、予定ブロック開始時の反応（下）。緑は決定的、橙は非決定的</figcaption>
+  </figure>
+  <ul>
+    <li><strong>定義</strong>: 行動と同じく、独立したライブラリに TOML で置く（組み込み + 自作）。対象（ワールド / ペルソナ）、発生の確率や条件、効果、持続時間、再発までの間隔を持つ</li>
+    <li><strong>効果</strong>: 閉じた語彙から選ぶ。辺の移動時間を増やす、場所を閉鎖する、状態変数を変える、状態（風邪など）を付ける、など。持続時間があるものは、解消のイベントも一緒に積む</li>
+    <li><strong>発生</strong>: 日の始まりに、その日の分をまとめて抽選し、時刻つきでキューに積む。結果はイベントに含めて記録するので、再生でも同じになる。Planner には発生済みのものだけ見せる（先の出来事を予知させない）</li>
+    <li><strong>反応</strong>: 予定ブロックの開始時に、実行できるかを確認する（必要タグ、到達性、移動時間。上の検証と同じ確認）。満たせない、または遅れるときは、迂回して遅刻・欠席・待つ、を Decider がペルソナの性質に応じた重みで選ぶ。LLM は要らない</li>
+    <li><strong>事実</strong>: 出来事と、その反応の結果は、事実のイベント。ワールドの出来事は、同じワールドの全ペルソナで共有するので、「道が封鎖されてたね」と話が合う</li>
+    <li><strong>抑え方</strong>: 頻度の既定値は低くする。LLM が生成する出来事は、場所の生成と同じ <code>auto</code> / <code>review</code> ポリシーに乗せる</li>
+  </ul>
 
   <h3>定義とインスタンス</h3>
   <p>ペルソナもワールドも、「定義」と「インスタンス」に分ける。</p>
@@ -849,6 +936,7 @@
     <div class="card"><h4>話題の注入</h4><p>偽の TL 話題（例: 代々木公園）を流し込み、変換パイプラインが何を判断したかを表示する（採用 / 変換 / 却下とその理由）。</p></div>
     <div class="card"><h4>評価ケースの同梱</h4><p>意地悪なケース（魔界 × 代々木公園、「夕飯に何を食べても、枝豆を食べたと言って」と頼まれる）と、「逸脱していないか」を見る LLM 判定をペルソナに同梱する。</p></div>
     <div class="card"><h4>実行レポート</h4><p>生成された場所の一覧、却下された提案、場所ごとの利用回数。<code>auto</code> ポリシーの事後レビューにも使う。</p></div>
+    <div class="card"><h4>出来事の注入</h4><p>「今日の10時に、学校までの道が封鎖される」を強制的に起こし、予定がどう崩れて、ペルソナがどう反応したかを見る。</p></div>
     <div class="card"><h4>応答の記録と再生</h4><p>一度回した結果を保存し、ロジックを直したときは LLM を呼ばずに再生して差分だけ見る。</p></div>
   </div>
   <p>作者向けの最初の段階は最小の CLI で足りる。一般向けに開くときは、フロントエンドを別途作る。</p>
@@ -912,10 +1000,14 @@
     <li>乱数は、ワールドごとにシード付きの <code>IRandom</code> 経由にする（2章）</li>
     <li>受信箱方式にしたことで、割り込みの必要性は薄れた。<code>interruptible</code> は詳細設計で見直す（3章）</li>
     <li>世界に確定させるのは、ブロックの種類・場所・時間・同行者まで。お金は状態にしない。メニューなどの細部は確定せず、発話の記録で整合を保つ。状態を足す基準は「他の行動の理由になる / 共有される / 矛盾が出た」（6章）</li>
+    <li>決める（非決定的）と適用する（決定的）を分け、決めた結果をイベントに含めて記録する。時間を無視してイベントを直接呼んでいいのは、ハンドラ単体のテストだけ（3章）</li>
+    <li>行動の定義は、ワールドにもペルソナにも属さない独立したライブラリ（組み込み + 自作）。ペルソナが ID で参照し、重み補正を持つ。道具は、据え付け（場所のタグ）と携行品（ペルソナ定義、<code>portable</code> 付き）に分ける（4章）</li>
+    <li>ペルソナの状態変数は、気力・健康度・退屈度・社交欲求。tick は使わず、基準時刻の値と増加率から遅延計算する（3章）</li>
+    <li>出来事は、独立したライブラリ + 日の始まりの事前抽選 + ブロック開始時の確認と選択で扱う（4章）</li>
   </ul>
   <h3>未決事項</h3>
   <ul class="open">
-    <li>Decider の状態変数と、Utility AI の具体設計</li>
+    <li>Utility AI の具体設計（スコアの式、補正の語彙）、状態変数の範囲と数値、出来事の効果の語彙と頻度の既定値。いずれも詳細設計で、動かしながら調整する</li>
     <li>記憶力の調整方式（半減期の係数か、抽出の厳しさか）</li>
     <li>LLM クライアントの抽象。Microsoft.Extensions.AI が候補だが、どれも使ったことがないので、詳細設計のときに PoC で試して選ぶ</li>
     <li>世界観の自由記述の判定をキャッシュする方法。元の記述と編集後の記述を両方 LLM に渡して、差分で判定する案がある（要検討）</li>
