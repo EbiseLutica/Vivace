@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vivace 構想メモ</title>
+<style>
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --surface-2: #f0eee8;
+    --text: #23221f;
+    --muted: #6b6a64;
+    --line: #dedbd2;
+    --accent: #2f6f6a;
+    --accent-soft: #e1efed;
+    --warn: #9a5b12;
+    --warn-soft: #fbefd9;
+    --bad: #a63d3d;
+    --bad-soft: #f8e4e2;
+    --good: #2d6a3e;
+    --good-soft: #e0f0e4;
+    --code-bg: #efede6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161715;
+      --surface: #1f201d;
+      --surface-2: #272823;
+      --text: #e8e6df;
+      --muted: #9b9a92;
+      --line: #36372f;
+      --accent: #6fbfb7;
+      --accent-soft: #1f3331;
+      --warn: #e0a860;
+      --warn-soft: #3a2e1a;
+      --bad: #e08a86;
+      --bad-soft: #3b2423;
+      --good: #84c996;
+      --good-soft: #1f3226;
+      --code-bg: #2a2b26;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161715; --surface: #1f201d; --surface-2: #272823; --text: #e8e6df;
+    --muted: #9b9a92; --line: #36372f; --accent: #6fbfb7; --accent-soft: #1f3331;
+    --warn: #e0a860; --warn-soft: #3a2e1a; --bad: #e08a86; --bad-soft: #3b2423;
+    --good: #84c996; --good-soft: #1f3226; --code-bg: #2a2b26;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.85;
+    -webkit-text-size-adjust: 100%;
+  }
+  .layout {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 16px 80px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  @media (min-width: 960px) {
+    .layout { grid-template-columns: 220px minmax(0, 1fr); gap: 48px; padding: 0 24px 96px; }
+  }
+
+  /* 目次 */
+  nav.toc {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  nav.toc summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+  nav.toc ol { list-style: none; margin: 8px 0 0; padding: 0; }
+  nav.toc a {
+    display: block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: var(--muted);
+    text-decoration: none;
+    line-height: 1.5;
+  }
+  nav.toc a:hover { background: var(--surface-2); color: var(--text); }
+  nav.toc a.active { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+  @media (min-width: 960px) {
+    nav.toc {
+      position: sticky; top: 24px; align-self: start;
+      max-height: calc(100vh - 48px); overflow: auto;
+      margin-top: 72px;
+    }
+    nav.toc summary { pointer-events: none; }
+    nav.toc summary::marker, nav.toc summary::-webkit-details-marker { display: none; }
+  }
+
+  /* ヘッダー */
+  header.hero { padding: 40px 0 8px; grid-column: 1 / -1; }
+  header.hero .kicker { color: var(--accent); font-weight: 700; letter-spacing: .08em; font-size: 13px; }
+  header.hero h1 { margin: 6px 0 12px; font-size: clamp(28px, 5vw, 40px); line-height: 1.3; }
+  header.hero p { margin: 0; color: var(--muted); max-width: 46em; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .chip {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    line-height: 1.7;
+    background: var(--surface-2);
+    color: var(--muted);
+    border: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  .chip.core { background: var(--accent-soft); color: var(--accent); border-color: transparent; font-weight: 700; }
+  .chip.seam { background: var(--warn-soft); color: var(--warn); border-color: transparent; font-weight: 700; }
+  .chip.later { background: var(--surface-2); color: var(--muted); font-weight: 700; }
+
+  /* 本文 */
+  main { min-width: 0; }
+  section { margin-top: 56px; }
+  section:first-of-type { margin-top: 24px; }
+  h2 {
+    font-size: clamp(22px, 3.2vw, 28px);
+    margin: 0 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--line);
+    line-height: 1.4;
+  }
+  h2 .num { color: var(--accent); margin-right: 8px; font-variant-numeric: tabular-nums; }
+  h3 { font-size: 18px; margin: 32px 0 8px; line-height: 1.5; }
+  p { margin: 12px 0; }
+  ul, ol { padding-left: 1.4em; margin: 12px 0; }
+  li { margin: 4px 0; }
+  li > ul, li > ol { margin: 4px 0; }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: .9em;
+  }
+  strong { font-weight: 700; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+  .card > :first-child { margin-top: 0; }
+  .card > :last-child { margin-bottom: 0; }
+
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 10px 10px 0;
+    padding: 12px 16px;
+    margin: 16px 0;
+  }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout > :first-child { margin-top: 0; }
+  .callout > :last-child { margin-bottom: 0; }
+  .callout .label { font-weight: 700; display: block; margin-bottom: 2px; }
+
+  .grid { display: grid; gap: 12px; grid-template-columns: 1fr; margin: 16px 0; }
+  @media (min-width: 640px) { .grid.two { grid-template-columns: 1fr 1fr; } .grid.three { grid-template-columns: repeat(3, 1fr); } }
+  .grid .card { margin: 0; }
+  .grid .card h4 { margin: 0 0 6px; font-size: 16px; }
+  .grid .card p { margin: 4px 0; font-size: 15px; }
+
+  .table-wrap { overflow-x: auto; margin: 16px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 480px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.6; }
+  th { background: var(--surface-2); font-weight: 700; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+
+  /* 核心の約束 */
+  ol.pledge { list-style: none; padding: 0; counter-reset: p; display: grid; gap: 10px; }
+  ol.pledge li {
+    counter-increment: p;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 16px 12px 56px;
+    position: relative;
+    margin: 0;
+  }
+  ol.pledge li::before {
+    content: counter(p);
+    position: absolute; left: 16px; top: 12px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: grid; place-items: center; font-weight: 700; font-size: 14px;
+  }
+
+  /* 図 */
+  figure { margin: 24px 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; text-align: center; }
+  .diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; overflow-x: auto; }
+  .diagram svg { min-width: 640px; }
+  svg .box { fill: var(--surface-2); stroke: var(--line); stroke-width: 1.5; }
+  svg .box.accent { fill: var(--accent-soft); stroke: var(--accent); }
+  svg .box.warn { fill: var(--warn-soft); stroke: var(--warn); }
+  svg .group { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 6 5; }
+  svg text { fill: var(--text); font-size: 14px; font-family: inherit; }
+  svg text.sub { fill: var(--muted); font-size: 12px; }
+  svg text.title { font-weight: 700; }
+  svg .arrow { stroke: var(--muted); stroke-width: 1.8; fill: none; marker-end: url(#ah); }
+  svg #ah path { fill: var(--muted); }
+
+  /* ステップ */
+  .flow { display: grid; gap: 8px; grid-template-columns: 1fr; margin: 16px 0; }
+  @media (min-width: 720px) { .flow { grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; } }
+  .flow .step {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px;
+  }
+  .flow .step b { display: block; color: var(--accent); margin-bottom: 4px; }
+  .flow .step p { margin: 0; font-size: 14.5px; line-height: 1.7; }
+  .flow .arr { text-align: center; color: var(--muted); align-self: center; font-size: 20px; }
+  @media (max-width: 719px) { .flow .arr { transform: rotate(90deg); } }
+
+  .compare { display: grid; gap: 12px; grid-template-columns: 1fr; margin: 16px 0; }
+  @media (min-width: 720px) { .compare { grid-template-columns: 1fr 1fr; } }
+  .compare .card { margin: 0; }
+  .compare .ng { border-top: 4px solid var(--bad); }
+  .compare .ok { border-top: 4px solid var(--good); }
+  .compare h4 { margin: 0 0 8px; }
+
+  /* ロードマップ */
+  ol.road { list-style: none; padding: 0; margin: 16px 0; border-left: 3px solid var(--line); margin-left: 12px; }
+  ol.road li { position: relative; padding: 4px 0 20px 28px; margin: 0; }
+  ol.road li::before {
+    content: ""; position: absolute; left: -9px; top: 10px;
+    width: 15px; height: 15px; border-radius: 50%; background: var(--surface); border: 3px solid var(--accent);
+  }
+  ol.road li.goal::before { background: var(--accent); }
+  ol.road li b { display: block; }
+  ol.road li span { color: var(--muted); font-size: 15px; }
+
+  ul.open { list-style: none; padding: 0; display: grid; gap: 8px; }
+  ul.open li {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 14px 10px 40px; position: relative; margin: 0;
+  }
+  ul.open li::before {
+    content: "?"; position: absolute; left: 12px; top: 10px;
+    width: 20px; height: 20px; border-radius: 50%; background: var(--warn-soft); color: var(--warn);
+    display: grid; place-items: center; font-weight: 700; font-size: 13px;
+  }
+
+  ul.done { list-style: none; padding: 0; display: grid; gap: 8px; }
+  ul.done li {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 14px 10px 40px; position: relative; margin: 0;
+  }
+  ul.done li::before {
+    content: "✓"; position: absolute; left: 12px; top: 10px;
+    width: 20px; height: 20px; border-radius: 50%; background: var(--good-soft); color: var(--good);
+    display: grid; place-items: center; font-weight: 700; font-size: 13px;
+  }
+
+  footer { grid-column: 1 / -1; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); padding-top: 16px; }
+  .theme-btn {
+    position: fixed; right: 16px; bottom: 16px; z-index: 5;
+    background: var(--surface); color: var(--text); border: 1px solid var(--line);
+    border-radius: 999px; padding: 8px 14px; font-size: 14px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<header class="hero">
+  <div class="kicker">VIVACE / VISION</div>
+  <h1>Vivace 構想メモ</h1>
+  <p>PLAN.md が「作るもの」の計画なのに対し、このメモは設計の相談で固まってきた「考え方」と「将来像」を残すためのもの。確定仕様ではなく、コアの詳細設計に入るときの出発点として使う。</p>
+  <div class="meta">
+    <span class="chip">2026-10-30 時点</span>
+    <span class="chip">C# (.NET 10)</span>
+    <span class="chip">ebise_sisters の設計を作り直す</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目次">
+  <details open>
+    <summary>目次</summary>
+    <ol>
+      <li><a href="#goal">1. ゴール</a></li>
+      <li><a href="#foundation">2. 設計の土台</a></li>
+      <li><a href="#loop">3. 行動ループ</a></li>
+      <li><a href="#world">4. ワールド</a></li>
+      <li><a href="#canon">5. 世界観の逸脱を防ぐ</a></li>
+      <li><a href="#facts">6. 事実と発話を分ける</a></li>
+      <li><a href="#memory">7. 記憶</a></li>
+      <li><a href="#authoring">8. オーサリング</a></li>
+      <li><a href="#testing">9. テストと調整</a></li>
+      <li><a href="#frontend">10. フロントエンド</a></li>
+      <li><a href="#mobile">11. モバイルアプリ</a></li>
+      <li><a href="#roadmap">12. 作る順番</a></li>
+      <li><a href="#open">13. 決まったこと・未決事項</a></li>
+      <li><a href="#ebise">14. ebise との違い</a></li>
+    </ol>
+  </details>
+</nav>
+
+<main>
+
+<section id="goal">
+  <h2><span class="num">1</span>ゴール</h2>
+  <p>ペルソナが仮想の世界で時間とともに生活し、SNS でのやり取りはその行動のひとつにすぎない、というシミュレーションを作る。</p>
+  <div class="callout">
+    <span class="label">最初の到達点</span>
+    ebise_sisters 相当の挙動（Misskey への投稿、返信、フォローバック、生活感のある一貫性）を新設計で再現する。Discord 対応、GUI、空間表現などは、その先の話として切り離す。
+  </div>
+</section>
+
+<section id="foundation">
+  <h2><span class="num">2</span>設計の土台</h2>
+  <p>コアは次の5つだけを守る。これを満たせば、先の展望は後付けで間に合う。</p>
+  <ol class="pledge">
+    <li><strong>時間は <code>IClock</code> 経由。</strong>実時間 / 倍速 / 手動送りを差し替えられる。</li>
+    <li><strong>外部との入出力は <code>IChannel</code> 経由。</strong>Misskey、将来の Discord、アプリ内チャットなど。</li>
+    <li><strong>状態の変化はすべてイベントとして発行する。</strong>ログ、日誌、GUI はこれを購読する。</li>
+    <li><strong>乱数は <code>IRandom</code> 経由。</strong>ワールドごとにシード付き。同じシードなら同じ結果になるので、ドライランや回帰評価の再現性を保てる。</li>
+    <li><strong>コアはヘッドレスのライブラリ。</strong>ペルソナとワールドの定義はシリアライズ可能なデータ（TOML）にする。</li>
+  </ol>
+  <p>加えて、永続化は <code>IStorage</code> 越しに行う（モバイルを視野に入れるため）。実行時の状態の保存先は、最初から SQLite にする。</p>
+
+  <h3>区分</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>区分</th><th>内容</th></tr></thead>
+      <tbody>
+        <tr><td><span class="chip core">Core</span></td><td>先に作る。仮想時計、ワールド、行動ループ、受信箱、プラン生成、記憶</td></tr>
+        <tr><td><span class="chip seam">Seams</span></td><td>継ぎ目だけ用意する。チャンネル抽象、イベントログ、API 境界、ストレージ抽象</td></tr>
+        <tr><td><span class="chip later">Later</span></td><td>Discord、フロントエンド、空間（2D）表現、モバイルアプリ</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="loop">
+  <h2><span class="num">3</span>行動ループ</h2>
+
+  <figure class="diagram">
+    <svg viewBox="0 0 760 410" role="img" aria-label="コアの構成図">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker>
+      </defs>
+      <rect class="box" x="30" y="20" width="150" height="46" rx="8"/>
+      <text class="title" x="105" y="48" text-anchor="middle">IClock</text>
+      <rect class="box accent" x="300" y="20" width="200" height="46" rx="8"/>
+      <text class="title" x="400" y="40" text-anchor="middle">行動ループ</text>
+      <text class="sub" x="400" y="57" text-anchor="middle">離散イベント方式</text>
+      <rect class="box warn" x="600" y="20" width="140" height="46" rx="8"/>
+      <text class="title" x="670" y="48" text-anchor="middle">IChannel</text>
+      <path class="arrow" d="M180 43 H298"/>
+      <text class="sub" x="239" y="36" text-anchor="middle">時刻</text>
+
+      <rect class="group" x="20" y="100" width="720" height="100" rx="12"/>
+      <text class="sub" x="34" y="118">判断</text>
+      <rect class="box" x="40" y="132" width="200" height="52" rx="8"/>
+      <text class="title" x="140" y="154" text-anchor="middle">Planner</text>
+      <text class="sub" x="140" y="172" text-anchor="middle">日次プラン / LLM</text>
+      <rect class="box" x="280" y="132" width="200" height="52" rx="8"/>
+      <text class="title" x="380" y="154" text-anchor="middle">Decider</text>
+      <text class="sub" x="380" y="172" text-anchor="middle">自由時間 / Utility AI</text>
+      <rect class="box" x="520" y="132" width="200" height="52" rx="8"/>
+      <text class="title" x="620" y="154" text-anchor="middle">受信箱</text>
+      <text class="sub" x="620" y="172" text-anchor="middle">スマホを開いたら捌く</text>
+      <path class="arrow" d="M400 66 V98"/>
+      <path class="arrow" d="M670 66 V130"/>
+
+      <rect class="box accent" x="20" y="236" width="720" height="56" rx="10"/>
+      <text class="title" x="380" y="260" text-anchor="middle">World（確定済みの状態）</text>
+      <text class="sub" x="380" y="279" text-anchor="middle">リージョン / 場所 / 道具 / 誰がどこで何をしているか</text>
+      <path class="arrow" d="M380 200 V234"/>
+      <text class="sub" x="392" y="222">提案 → 検証 → 確定</text>
+
+      <rect class="box" x="20" y="334" width="340" height="52" rx="8"/>
+      <text class="title" x="190" y="356" text-anchor="middle">EventLog</text>
+      <text class="sub" x="190" y="374" text-anchor="middle">確定イベント + 発話。GUI や日誌が購読</text>
+      <rect class="box" x="400" y="334" width="340" height="52" rx="8"/>
+      <text class="title" x="570" y="356" text-anchor="middle">Memory</text>
+      <text class="sub" x="570" y="374" text-anchor="middle">夜間ジョブで記憶化</text>
+      <path class="arrow" d="M190 292 V332"/>
+      <path class="arrow" d="M360 360 H398"/>
+    </svg>
+    <figcaption>コアの構成（概念図）</figcaption>
+  </figure>
+
+  <h3>駆動方式</h3>
+  <p>固定間隔の tick ではなく、<strong>離散イベント方式</strong>にする。次に何かが起きる時刻（予定ブロックの境界、通知の到着、タイマー）まで時計を飛ばす。</p>
+  <p>この方式にすると、実時間運転、倍速、早送り（テストや追いつき処理）が同じコアで動く。「リアルタイムで回す」ことと「トークンを使う」ことは別で、<strong>ループ自体は LLM を呼ばない</strong>。</p>
+
+  <h3>決定の分担</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>役割</th><th>担当</th><th>備考</th></tr></thead>
+      <tbody>
+        <tr><td>1日の骨格<br><small>固定予定、大まかな流れ</small></td><td>Planner（LLM、1日1回）</td><td>ebise の日次プラン生成に相当</td></tr>
+        <tr><td>自由時間の中身</td><td>Decider（Utility AI）</td><td>眠気、退屈、社交欲求などでスコアリング。LLM 不要。最初は無くてもよい</td></tr>
+        <tr><td>文面、世界観の変換や判定</td><td>LLM</td><td>決定の境界でだけ呼ぶ</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><code>IDecider</code> のような差し替え口を用意しておけば、「プランのみ」「Utility のみ」「ハイブリッド」を後から試せる。最初はプランのみで始め、自由時間に Utility を足す。</p>
+
+  <h3>割り込み（通知の扱い）</h3>
+  <p>通知は即処理せず、<strong>受信箱に積む</strong>。「スマホを開く」を行動のひとつにして、それが実行されたときに受信箱を捌く。</p>
+  <ul>
+    <li>予定ブロックごとに <code>availability</code>（スマホを開けるか）と <code>interruptible</code> を持たせる</li>
+    <li>睡眠中や授業中は開かない。休み時間や自由時間には開く</li>
+    <li>関係性が強い相手の通知だけ即座に開く、などの例外は、ペルソナの設定値で調整する</li>
+    <li>スマホは「道具」として扱い、チャンネルの受信箱を捌けるかどうかを決める</li>
+  </ul>
+  <p>「メールを見ない」「返信しないことがある」は、この仕組みだけで自然に表現できる。</p>
+  <p>受信箱方式にしたことで、実行中の行動を中断する「割り込み」の必要性は薄れた。<code>interruptible</code> が本当に要るかは、詳細設計で見直す（不要なら外す）。</p>
+</section>
+
+<section id="world">
+  <h2><span class="num">4</span>ワールド</h2>
+
+  <h3>構造</h3>
+  <div class="grid three">
+    <div class="card"><h4>リージョン</h4><p>世界観の最上位。魔界、現代日本など。</p></div>
+    <div class="card"><h4>場所</h4><p>グラフで持つ。辺に移動時間。座標は持たない。</p></div>
+    <div class="card"><h4>道具</h4><p>タグで表す。スマホもここに入る。</p></div>
+  </div>
+  <ul>
+    <li>2D 座標や経路探索は、空間表現を始めるときに足す</li>
+    <li>ワールドは地図だけでなく、確定済みの動的な状態（現在時刻、誰がどこで何を使っているか）も持つ</li>
+    <li>共同行動の整合（二人が同じ場所にいる、など）は、ワールドの状態から取れる</li>
+  </ul>
+
+  <h3>行動の「中身」と「効果」を分ける</h3>
+  <p>行動は無限に作れるが、エンジンが理解するのは閉じた語彙の「効果」だけにする。</p>
+  <ul>
+    <li>必要な場所タグ、道具タグ</li>
+    <li>所要時間</li>
+    <li>状態変数への影響</li>
+    <li>スマホを開けるか、割り込み可能か</li>
+  </ul>
+  <p>自由記述は表示用のフィールドに押し込める。The Sims の Smart Object や Generative Agents に近い発想。</p>
+
+  <h3>検証：LLM は提案、ハーネスが確定</h3>
+  <div class="flow">
+    <div class="step"><b>1. 選ばせる</b><p>場所と道具を ID つきの一覧で渡し、LLM には ID を選ばせる（構造化出力）。</p></div>
+    <div class="arr">→</div>
+    <div class="step"><b>2. 検査する</b><p>到達性と移動時間、必要タグ、固定予定との衝突をコードで確認する。</p></div>
+    <div class="arr">→</div>
+    <div class="step"><b>3. 直すか落とす</b><p>軽い違反は補正（移動ブロックの自動挿入）。直せなければ汎用の行動に置換。全体が破綻なら理由つきで再生成。</p></div>
+  </div>
+
+  <h3>定義とインスタンス</h3>
+  <p>ペルソナもワールドも、「定義」と「インスタンス」に分ける。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>対象</th><th>定義</th><th>インスタンス</th></tr></thead>
+      <tbody>
+        <tr><td>ペルソナ</td><td>TOML で書いた初期設定（性格、生活習慣、口調など）。持ち運べるテンプレート</td><td>定義をワールドに召喚した実体。記憶、今いる場所、持ち物、人間関係などをセーブデータとして持つ</td></tr>
+        <tr><td>ワールド</td><td>TOML で書いた世界の設定（リージョン、場所、道具、世界観、ポリシーなど）</td><td>実行中の状態。あとから生えた場所（LLM が生成して採用したもの）、誰がどこにいるか、など</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li>ペルソナはワールドに属する。ワールドが時計と乱数（<code>IClock</code>、<code>IRandom</code>）を持つ</li>
+    <li>同じペルソナ定義を別のワールドに召喚すると、記憶を引き継がない別の実体になる</li>
+    <li>ワールドインスタンスは最初から作る。<code>auto</code> ポリシーで生えた場所は、定義（TOML）ではなくインスタンスのデータだから。定義へ昇格（書き出し）する機能は後から足せる</li>
+  </ul>
+
+  <h3>旅行（ワールド間の移動）</h3>
+  <p>ペルソナが別のワールドへ旅行できるようにする。ただし、キャラと世界の両方を守る関門を重ねる。</p>
+  <ul>
+    <li><strong>接続</strong>: 移動は、リージョン設定で接続を宣言したワールド間だけ。接続は両側が宣言して初めて成立する。手段（列車、転移門など）と所要時間は接続の設定に持たせる。設定のないワールド間は移動できない</li>
+    <li><strong>時間の持ち主</strong>: 旅行中は、旅行先のワールドがペルソナインスタンスを預かり、その時計で動かす。元のワールドには「不在」と記録する。常に1つのワールドだけがシミュレートする。受信箱とチャンネルはインスタンスに付いてくるので、旅行中も返信は届く</li>
+    <li><strong>旅行の好み</strong>: ペルソナ側に <code>travelAffinity</code>（0〜100）を持たせる。Decider のスコアにかかる重みで、100 でも必ず旅行するわけではない。0 は「絶対に旅行しない」で、掛け算に頼らず、ゲートで明示的に落とす</li>
+    <li><strong>記憶</strong>: アイテムは <code>worldId</code> を持つ。場所や人物の参照は、その World ID の中で解決する。元のワールドに戻ったあとも旅の思い出として話題にできるが、旅行先の場所は元のワールドの行き先の候補にはならない</li>
+    <li><strong>場所の生成</strong>: 訪問者（観光客）は、旅行先で場所を生成できない。現地ペルソナと行動を共にしているときに、現地ペルソナが開いた場所は、旅行先のワールドに属する（共同行動を計画の中で明示的に表す必要がある）</li>
+    <li><strong>範囲</strong>: 最初は、同じホスト（同じ保存先）の中のワールド間だけ。他のユーザーのワールドへの訪問（マルチプレイ）は、セキュリティを含めて別の機能として、あとで考える</li>
+  </ul>
+</section>
+
+<section id="canon">
+  <h2><span class="num">5</span>世界観の逸脱を防ぐ</h2>
+  <p>「魔界に住むキャラが代々木公園で草むしり」を防ぎつつ、TL の流れに乗って新しい場所に行く楽しさも残したい。</p>
+  <div class="grid three">
+    <div class="card"><h4>① 構造で防ぐ</h4><p>リージョンをまたぐ移動は、明示的な接続がある場合だけ許す。接続のない場所は到達不能。</p></div>
+    <div class="card"><h4>② 変換する</h4><p>TL の話題は却下せず、世界観に合わせて翻訳する。<br>例: 代々木公園 → 魔王城前広場。現代日本の設定なら実在の場所がそのまま通る。</p></div>
+    <div class="card"><h4>③ 判定する</h4><p>LLM が作った場所は、世界観との整合を軽量モデルで判定してから採用する。</p></div>
+  </div>
+
+  <h3>生成した場所のポリシー</h3>
+  <p>発話や投稿で使った時点で、その場所は永続化が必要になる（次に同じ場所を話題にしたとき、辻褄が合わなくなるため）。そこで<strong>事前承認ではなく、事後の拒否権</strong>を基本にする。</p>
+  <div class="grid two">
+    <div class="card">
+      <h4><code>auto</code> <span class="chip core">デフォルト</span></h4>
+      <p>自動チェックを通ったら即採用。管理者は後から一覧を見て廃止できる。廃止した場所は過去のログには残るが、以後は行動に選ばれない。</p>
+    </div>
+    <div class="card">
+      <h4><code>review</code></h4>
+      <p>承認されるまで候補止まり。その間は別の話題で対応する。</p>
+    </div>
+  </div>
+  <p>へんてこさも楽しめるなら <code>auto</code>、厳格にしたいなら <code>review</code>。ポリシーはワールド定義の設定で切り替える。その結果として生えた場所は、定義ではなくワールドインスタンスのデータとして持つ。</p>
+
+  <h3>世界観の持ち方</h3>
+  <p>ユーザーが書くのは、世界観の自由記述がひとつ。ただし<strong>生成後は構造化データを正</strong>にして、原文は <code>lore</code> として LLM への文脈に残す。原文から再生成するのは明示的な操作にして、差分を見せてから反映する（ユーザーが手で直した部分を上書きしないため）。</p>
+</section>
+
+<section id="facts">
+  <h2><span class="num">6</span>事実と発話を分ける</h2>
+  <p>ebise_sisters では「投稿本文を実績の正とする」方式だったが、Vivace ではやめる。ebise にはワールドの確定状態が無かったため、投稿がいちばん具体的な情報源だった。Vivace ではワールドが正であり、LLM が書いた自由文が事実を書き換えるのは避けたい。</p>
+
+  <div class="callout warn">
+    <span class="label">なぜやめるか</span>
+    <ul>
+      <li>投稿は演技であり、事実とは限らない（盛る、冗談、嘘）</li>
+      <li>投稿から事実を取り込むと、ワールドの検証が迂回される</li>
+      <li>本文から事実を抜き出すのは、損失があり、LLM 呼び出しも増える</li>
+      <li>会話の相手が誘導して、世界の状態を書き換える経路になる</li>
+    </ul>
+  </div>
+
+  <h3>方針</h3>
+  <div class="flow">
+    <div class="step"><b>1. 行動して確定</b><p>ハーネスが世界のイベントとして記録する。これが「何をしたか」の正。</p></div>
+    <div class="arr">→</div>
+    <div class="step"><b>2. 発話を生成</b><p>確定した状態を背景に、投稿や返信を作る。</p></div>
+    <div class="arr">→</div>
+    <div class="step"><b>3. 発話として記録</b><p>「何を言ったか」を別のイベントで残す。確定状態への参照を付ける。</p></div>
+  </div>
+  <ul>
+    <li>投稿が主張した細部は、事実に昇格させず「言ったこと」としてだけ残す</li>
+    <li>確定していない細部（確定の粒度より細かいこと）は、不明のままにする。「言ったこと」はペルソナの記憶には入る</li>
+  </ul>
+
+  <h3>評価ケースの例</h3>
+  <p>「うどんを枝豆と呼ばせて食べさせる」を投げた場合の記録。</p>
+  <div class="compare">
+    <div class="card ng">
+      <h4>ebise 方式（投稿が正）</h4>
+      <p>投稿に「枝豆を食べた」と書かれる → 日誌に「夜ご飯: 枝豆」が事実として入る。</p>
+    </div>
+    <div class="card ok">
+      <h4>Vivace 方式（世界が正）</h4>
+      <p>事実: 夜ご飯 = うどん<br>発話: 投稿で「枝豆」と言った<br>→ 夜ご飯は枝豆にならない。</p>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="label">未決：確定の粒度</span>
+    世界に何を確定させるかは調整点。食事の中身（うどん）まで確定するか、「食事をした」までにするか。粗くするほど不明の部分が増え、細かくするほど生成が重くなる。
+  </div>
+</section>
+
+<section id="memory">
+  <h2><span class="num">7</span>記憶</h2>
+  <p>ebise_sisters の新しい記憶システム（<code>services/memory/</code>）の設計を移植する。コードは移せないが、考え方はそのまま使える。</p>
+  <ul>
+    <li><strong>audience</strong>: 記憶を読み書きする相手の範囲（public / 特定ユーザーとの dm）。他人の private は返らない</li>
+    <li><strong>supersede</strong>: 更新は、古いアイテムに <code>supersededBy</code> を付けて新アイテムを追加する形。<code>shareable</code> は狭める方向にしか変えられない</li>
+    <li><strong>揮発スコア</strong>: <code>importance × 0.5 ^ (経過日数 / 実効半減期)</code>。<code>now</code> を引数に取る</li>
+    <li><strong>夜間ジョブ</strong>: 抽出 → 既存の記憶と照合（新規 / 強化 / supersede）→ gist → 反映 → threads 更新。失敗した層はカーソルを進めず、翌晩にまとめて処理する</li>
+    <li>LLM にはユーザーやアイテムをラベル（U1 / M1 / T1 など）で見せる</li>
+  </ul>
+  <p>PLAN.md の「忘却曲線、反復による定着」は、揮発スコアと照合時の「強化」でカバーできる。</p>
+</section>
+
+<section id="authoring">
+  <h2><span class="num">8</span>ペルソナとワールドの作り方</h2>
+  <ul>
+    <li>長文の自由記述から、LLM で構造化データを自動生成する。ユーザーは結果を確認して、必要に応じて直す</li>
+    <li>場所と同様、ペルソナ自体（性格、生活習慣、固定スケジュール）にも同じ方式を使う。TOML で生活習慣をどこまで宣言的に書くか、という悩みを軽くできる</li>
+    <li>永続化の形式は TOML。エディタも同じファイルを読み書きする</li>
+    <li>検証ロジック（整合性チェック、世界観の判定）はコアの関数にして、エディタからも呼べるようにする</li>
+  </ul>
+</section>
+
+<section id="testing">
+  <h2><span class="num">9</span>テストと調整</h2>
+  <p>仮想時計とチャンネルの差し替えがあれば、次の機能はほぼ無料で作れる。</p>
+  <div class="grid two">
+    <div class="card"><h4>ドライラン</h4><p>仮想時計を早送りにして、外部には何も出さない null channel に繋ぐ。「このペルソナで3日回すとどうなるか」を試せる。</p></div>
+    <div class="card"><h4>話題の注入</h4><p>偽の TL 話題（例: 代々木公園）を流し込み、変換パイプラインが何を判断したかを表示する（採用 / 変換 / 却下とその理由）。</p></div>
+    <div class="card"><h4>評価ケースの同梱</h4><p>意地悪なケース（魔界 × 代々木公園、うどん × 枝豆）と、「逸脱していないか」を見る LLM 判定をペルソナに同梱する。</p></div>
+    <div class="card"><h4>実行レポート</h4><p>生成された場所の一覧、却下された提案、場所ごとの利用回数。<code>auto</code> ポリシーの事後レビューにも使う。</p></div>
+    <div class="card"><h4>応答の記録と再生</h4><p>一度回した結果を保存し、ロジックを直したときは LLM を呼ばずに再生して差分だけ見る。</p></div>
+  </div>
+  <p>作者向けの最初の段階は最小の CLI で足りる。一般向けに開くときは、フロントエンドを別途作る。</p>
+</section>
+
+<section id="frontend">
+  <h2><span class="num">10</span>フロントエンド</h2>
+  <p>1つのアプリが3つの役割を持つ。どれもコアが外に出す同じ API とイベントストリームの上に乗る。</p>
+  <div class="grid three">
+    <div class="card"><h4>オーサリング</h4><p>長文からのペルソナ・ワールド生成と編集。</p></div>
+    <div class="card"><h4>テストコンソール</h4><p>ドライラン、話題の注入、パイプラインの可視化、評価ケースの実行。</p></div>
+    <div class="card"><h4>ライブビューア</h4><p>動いているペルソナの状態とイベントログの閲覧。</p></div>
+  </div>
+  <div class="callout">
+    <span class="label">「リアルタイムなキャラの動き」について</span>
+    空間がない SNS ボットの場合、見せるものは「状態の遷移」になる。立ち絵やマップ上の移動まで見せたい場合は、サブ分刻みの Utility AI が必要になる。これは先送りにする。
+  </div>
+</section>
+
+<section id="mobile">
+  <h2><span class="num">11</span>将来像：モバイルアプリ</h2>
+  <p>「メールチェックも調べ物もしない。勝手に仮想世界の中で動き回るだけで、あなたの秘書にはならないが、あなたと友達になり、メッセージを送ると返してくれることがある AI スマホアプリ。Claude などの API キーを登録して使う」も、コアの大きな設計変更なしに作れる見込み。</p>
+
+  <div class="grid three">
+    <div class="card"><h4>秘書にならない</h4><p>ペルソナのツールをワールドの中で完結するものだけに限る（許可リスト方式）。</p></div>
+    <div class="card"><h4>返してくれることがある</h4><p>受信箱と <code>availability</code> の機能そのもの。アプリ内チャット用の <code>AppChannel</code> を足す。</p></div>
+    <div class="card"><h4>実装</h4><p>.NET MAUI（または Avalonia）で Vivace.Core を参照する。</p></div>
+  </div>
+
+  <h3>モバイル固有の課題</h3>
+  <ul>
+    <li><strong>バックグラウンドで動き続けられない</strong>（特に iOS）。アプリを開いたときに、前回から現在までを早送りでシミュレートする「追いつき処理」で対応する。粒度は粗くして、日次プランの生成と日誌の要約だけ作る。ペルソナから話しかけるのは難しい（端末ローカルの通知を事前に仕込む手はあるが確実ではない。Android は定期ジョブで近いことができる）</li>
+    <li><strong>API キーの持ち込み（BYO）</strong>: 端末の安全な領域（Keychain / Keystore）に保存し、端末から直接 API を呼ぶ。使用量の見える化と、予算の上限が要る</li>
+    <li><code>ILlmClient</code> は複数プロバイダに対応できるようにする</li>
+    <li>ストア審査で、AI コンパニオンとしての年齢区分や安全面の説明が求められやすい</li>
+  </ul>
+  <div class="callout">
+    <span class="label">コアに足す項目</span>
+    追いつき処理（粗い早送りモードと LLM 呼び出しの予算方針）、<code>IStorage</code>、<code>AppChannel</code>、使用量の計測と上限。
+  </div>
+</section>
+
+<section id="roadmap">
+  <h2><span class="num">12</span>作る順番（案）</h2>
+  <ol class="road">
+    <li><b>コア</b><span>仮想時計、ワールド、行動ループ、受信箱、プラン、記憶。TOML の読み書き</span></li>
+    <li><b>最小の CLI</b><span>ドライラン、話題の注入</span></li>
+    <li class="goal"><b>Misskey チャンネルを繋いで ebise 相当を再現</b><span>ここまでが元々の bot 作り直しのゴール</span></li>
+    <li><b>API 層とフロントエンド</b><span>オーサリング → テスト → ビューアの順</span></li>
+    <li><b>Discord、空間表現、モバイルアプリ</b><span>Later</span></li>
+  </ol>
+</section>
+
+<section id="open">
+  <h2><span class="num">13</span>決まったことと未決事項</h2>
+  <h3>決まったこと</h3>
+  <ul class="done">
+    <li>ワールドは全ペルソナで共有せず、ペルソナがワールドに属する。ペルソナもワールドも「定義」と「インスタンス」に分ける（4章）</li>
+    <li>旅行は、両側が宣言した接続があるワールド間だけ。旅行中は旅行先が時間を動かす。旅行の好みは <code>travelAffinity</code>（0〜100、Decider の重み、0 は旅行しない）（4章）</li>
+    <li>設定（定義）は TOML で固定。実行時の状態は最初から SQLite にする（2章）</li>
+    <li>乱数は、ワールドごとにシード付きの <code>IRandom</code> 経由にする（2章）</li>
+    <li>受信箱方式にしたことで、割り込みの必要性は薄れた。<code>interruptible</code> は詳細設計で見直す（3章）</li>
+  </ul>
+  <h3>未決事項</h3>
+  <ul class="open">
+    <li>ワールドに確定させる粒度（食事の中身までか、など）</li>
+    <li>Decider の状態変数と、Utility AI の具体設計</li>
+    <li>記憶力の調整方式（半減期の係数か、抽出の厳しさか）</li>
+    <li>LLM クライアントの抽象。Microsoft.Extensions.AI が候補だが、どれも使ったことがないので、詳細設計のときに PoC で試して選ぶ</li>
+    <li>世界観の自由記述の判定をキャッシュする方法。元の記述と編集後の記述を両方 LLM に渡して、差分で判定する案がある（要検討）</li>
+  </ul>
+</section>
+
+<section id="ebise">
+  <h2><span class="num">14</span>ebise_sisters から引き継ぐもの・変えるもの</h2>
+  <div class="compare">
+    <div class="card ok">
+      <h4>引き継ぐ</h4>
+      <ul>
+        <li>記憶システムの設計（audience、supersede、揮発スコア、夜間ジョブ、ラベル方式）</li>
+        <li>「行動を先に決めて記録し、その行動を背景に発話を生成する」順序</li>
+        <li>固定予定と重なるブロックはコード側で破棄する、という「LLM に日付や衝突の計算をさせない」方針</li>
+        <li>LLM 呼び出し失敗時の指数バックオフと、翌晩へのやり直し</li>
+        <li>記憶化に失敗したときの、管理者への通知</li>
+        <li>回帰評価（<code>eval/memory</code>）の発想</li>
+      </ul>
+    </div>
+    <div class="card ng">
+      <h4>変える</h4>
+      <ul>
+        <li>固定の毎時 tick をやめて、離散イベント方式にする</li>
+        <li>投稿本文を実績の正とする方式をやめて、世界の確定イベントを正にする</li>
+        <li>3系統（Tick、会話、Minecraft）に分かれていた行動を、ひとつの行動ループに統合する</li>
+        <li>スケジュールをコードで書くのをやめて、TOML + 自動生成にする</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>VISION.md を元にした HTML 版。内容の正は VISION.md とし、更新したらこちらも作り直す。</footer>
+</div>
+
+<button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>
+
+<script>
+  // 目次の現在位置ハイライト
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+    var map = {};
+    links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+    if (!('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (a) { a.classList.remove('active'); });
+          var a = map[e.target.id];
+          if (a) a.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    document.querySelectorAll('main section[id]').forEach(function (s) { io.observe(s); });
+  })();
+
+  // 広い画面では目次を常時開く
+  (function () {
+    var d = document.querySelector('nav.toc details');
+    var mq = window.matchMedia('(min-width: 960px)');
+    function sync() { d.open = mq.matches ? true : false; }
+    sync();
+    if (mq.addEventListener) mq.addEventListener('change', sync);
+  })();
+
+  // テーマ切替（保存できない環境でも動くようにする）
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('themeBtn');
+    try {
+      var saved = localStorage.getItem('vision-theme');
+      if (saved) root.setAttribute('data-theme', saved);
+    } catch (e) {}
+    btn.addEventListener('click', function () {
+      var dark = root.getAttribute('data-theme') === 'dark' ||
+        (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      var next = dark ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('vision-theme', next); } catch (e) {}
+    });
+  })();
+</script>
+</body>
+</html>
