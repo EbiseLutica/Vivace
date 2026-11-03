@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://koruri.shrimpia.network/koruri.css" />
+<link rel="stylesheet" href="style.css" />
+<title>D2 イベントと語彙</title>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+</svg>
+<div class="layout">
+
+<header class="hero">
+  <div class="kicker">VIVACE / DESIGN / D2</div>
+  <h1>イベントと語彙</h1>
+  <p>Apply が理解する「閉じた語彙」のカタログ。イベントの種別、行動の効果、requires と制限、出来事の効果、投入できるイベント。語彙を足せるのはコードだけで、TOML はこの組み合わせで書く（VISION 7章）。</p>
+  <div class="meta">
+    <span class="chip">2026-11-03 時点</span>
+    <span class="chip draft">案を含む</span>
+    <span class="chip">VISION 2章、4章、7章、9章、15章</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目次">
+  <details open>
+    <summary>目次</summary>
+    <ol>
+      <li class="part">D2 イベントと語彙</li>
+      <li><a href="#envelope">2.1 イベントの共通の項目</a></li>
+      <li><a href="#stages">2.2 段と種別の一覧</a></li>
+      <li><a href="#kinds">2.3 種別ごとの Apply</a></li>
+      <li><a href="#chain">2.4 行動の鎖</a></li>
+      <li><a href="#effects">2.5 行動の効果の語彙</a></li>
+      <li><a href="#requires">2.6 requires と制限の語彙</a></li>
+      <li><a href="#incident-effects">2.7 出来事の効果の語彙</a></li>
+      <li><a href="#injection">2.8 投入できるイベント</a></li>
+      <li><a href="#origin">2.9 origin と痕跡</a></li>
+      <li class="part">詳細設計</li>
+      <li><a href="index.html">目次と決めること</a></li>
+      <li><a href="1-execution.html">D1 実行モデル</a></li>
+      <li><a href="2-events.html">D2 イベントと語彙</a></li>
+      <li><a href="3-data.html">D3 データ</a></li>
+      <li><a href="4-components.html">D4 コンポーネント</a></li>
+      <li><a href="5-decision.html">D5 決定と状態変数</a></li>
+      <li><a href="6-llm.html">D6 LLM と記憶</a></li>
+      <li><a href="7-operations.html">D7 運用とテスト</a></li>
+      <li><a href="8-stack.html">D8 技術スタック</a></li>
+      <li class="part">構想</li>
+      <li><a href="../VISION.html">VISION.html</a></li>
+    </ol>
+  </details>
+</nav>
+
+<main>
+
+<section id="envelope">
+  <h2><span class="num">2.1</span>イベントの共通の項目</h2>
+  <p>VISION 2章の項目を、次の形で持つ。保存の列は D3、状態の遷移は D1 を参照。</p>
+<pre><code>record SimEvent(
+    long Seq,                    // 連番 = ID（P-17）
+    DateTimeOffset Time,         // 絶対時刻（UTC）
+    Stage Stage,                 // 1〜7（種別から決まる）
+    string Kind,                 // "action.started" など
+    WorldId? World,
+    PersonaId? Persona,
+    EventPayload Payload,        // 種別ごとの中身。決めた結果もここに入る
+    Guard? Guard,                // 適用前の検査（D1 1.7）
+    long? Batch,                 // 同じハンドラの出力のまとまり（契機の決めどきの Seq）
+    long? Cause,                 // このイベントを生んだイベントの Seq
+    Origin Origin,               // 2.9
+    JsonObject? Trace,           // 痕跡（2.9）
+    DateTimeOffset? RealTime);   // 実時刻（送信完了、外部からの元の到着）</code></pre>
+  <ul>
+    <li><strong>段</strong>は、種別から一意に決まる（2.2）。イベントごとには選ばない</li>
+    <li><strong>版番号</strong>は、種別ごとの意味が違うので、ペイロードの中に持つ（行動の版、状態変数の版、プランの版）。古いものを捨てる判定に使う</li>
+    <li><strong>Cause</strong> は、VISION にない項目。後続のイベントやハンドラの出力が、どのイベントから生まれたかを辿れるようにする。ビューアと実行レポートで「なぜこれが起きたか」を表示するのに使う</li>
+  </ul>
+  <div class="draft">
+    <span class="label">案 P-17　イベントの ID は連番と兼ねる</span>
+    1プロセス・1ファイルなので、連番（SQLite の <code>INTEGER PRIMARY KEY</code>）で一意に指せる。別に UUID を持たない。発話から確定状態への参照、記憶の出所、Cause は、すべて連番で指す。
+    <p class="alt">ログを別のデータベースと突き合わせる用途（モバイルとの同期など）が出たら、そのときに UUIDv7 の列を足す。.NET 9 以降の <code>Guid.CreateVersion7()</code> で作れる。</p>
+  </div>
+</section>
+
+<section id="stages">
+  <h2><span class="num">2.2</span>段と種別の一覧</h2>
+  <p>段の意味と並びは VISION 4章のとおり。ここでは、各段に入る種別を確定させる。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>段</th><th>意味</th><th>種別</th></tr>
+      <tr><td><span class="stage">1</span></td><td>日付が変わる</td><td><code>day.started</code></td></tr>
+      <tr><td><span class="stage">2</span></td><td>終わることが終わる</td><td><code>action.ended</code> <code>travel.arrived</code> <code>incident.resolved</code></td></tr>
+      <tr><td><span class="stage">3</span></td><td>世界が変わる</td><td><code>incident.occurred</code> <code>place.added</code> <code>place.adopted</code> <code>place.retired</code> <code>term.recorded</code> <code>vital.adjusted</code> <code>condition.attached</code> <code>condition.detached</code> <code>persona.summoned</code> <code>persona.dismissed</code> <code>persona.gap</code> <code>world.created</code> <code>world.stopped</code> <code>definitions.reloaded</code></td></tr>
+      <tr><td><span class="stage">4</span></td><td>体が反応する</td><td><code>vital.threshold</code></td></tr>
+      <tr><td><span class="stage">5</span></td><td>外から届く</td><td><code>notification.arrived</code> <code>outbound.sent</code> <code>outbound.failed</code> <code>outbound.unknown</code></td></tr>
+      <tr><td><span class="stage">6</span></td><td>予定の時刻になる</td><td><code>plan.committed</code> <code>block.started</code> <code>phone.opportunity</code></td></tr>
+      <tr><td><span class="stage">7</span></td><td>決めて始める</td><td><code>decision.requested</code> <code>activity.chosen</code> <code>block.responded</code> <code>travel.started</code> <code>action.started</code> <code>outbound.speech</code> <code>outbound.operation</code> <code>inbox.handled</code> <code>post.skipped</code></td></tr>
+    </table>
+  </div>
+  <div class="draft">
+    <span class="label">案 P-11　イベントの種別の一覧</span>
+    上の表で確定させる。ペルソナとワールドの作成・停止（<code>persona.summoned</code> など）は、「世界が変わる」の段に置く。状態変数の設定（<code>vital.adjusted</code>）と状態の付与（<code>condition.attached</code>）は、外からの投入でしか起きないが、出来事と同じく「世界が変わる」に置く。
+  </div>
+</section>
+
+<section id="kinds">
+  <h2><span class="num">2.3</span>種別ごとの Apply</h2>
+  <p>「出す者」は、そのイベントを積む者。<em>Apply</em> は後続のイベント、<em>ハンドラ</em>は決める側の出力、<em>窓口</em>は外からの投入（2.8）。</p>
+
+  <h3>時間と予定</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>種別</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
+      <tr><td><code>day.started</code></td><td>Apply、窓口（ワールドの作成時）</td><td>ワールド、現地の日付</td><td>翌日の分を積む。出来事の抽選と、各ペルソナの Planner の <code>StartHandler</code> を出す。追いつき中の過去の日は、Planner に「LLM を呼ばない」を指示する</td></tr>
+      <tr><td><code>plan.committed</code></td><td>ハンドラ（Planner）</td><td>ペルソナ、日付、ブロックの列、由来（llm / fallback）、プランの版</td><td>プランを差し替え、版を上げる。3:00 以降の各ブロックの開始を <code>block.started</code> で積む。3:00 をまたいで続いているブロックは、積み直さない（D5）</td></tr>
+      <tr><td><code>block.started</code></td><td>Apply</td><td>ペルソナ、ブロック ID、プランの版</td><td>版が古ければ捨てる。自由時間なら決めどきを積む。固定・計画のブロックなら、開始時の確認をする。満たせば <code>action.started</code>、満たせなければ決めどき（予定の乱れ）を積む。スマホが開けるブロックなら <code>phone.opportunity</code> も積む</td></tr>
+      <tr><td><code>phone.opportunity</code></td><td>Apply</td><td>ペルソナ、ブロック ID</td><td>決めどき（スマホを開く機会）を積む。長いブロックで間隔が決まっていれば、次の機会も積む（D5）</td></tr>
+    </table>
+  </div>
+
+  <h3>決定と行動</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>種別</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
+      <tr><td><code>decision.requested</code></td><td>Apply</td><td>ペルソナ、理由（下表）、ブロック ID</td><td>状態は変えない。processing にして、<code>StartHandler</code> を出す（D1 1.8）</td></tr>
+      <tr><td><code>activity.chosen</code></td><td>ハンドラ（Decider）</td><td>行動、場所、経路、移動時間、所要時間、副行動か、乱数の範囲、候補の要約（痕跡）</td><td>guard（行動の版、実行できること、乱数の位置）を確かめる。行動の版を上げ、乱数の位置を進める。場所が違えば <code>travel.started</code>、同じなら <code>action.started</code> を同じ時刻に積む</td></tr>
+      <tr><td><code>block.responded</code></td><td>ハンドラ（予定の乱れへの対応）</td><td>ブロック ID、選んだもの（遅刻 / 欠席 / 待つ）</td><td>遅刻は、ブロックの場所への移動を始める。欠席は、そのブロックを自由時間として扱い、決めどきを積む。待つは、出来事の解消かブロックの終わりの早いほうまで待機し、そこで開始時の確認をやり直す</td></tr>
+      <tr><td><code>travel.started</code></td><td>Apply</td><td>出発地、目的地、経路（辺の列）、到着の時刻、行動の版</td><td>移動中にする。居合わせが変わるので、社交欲求の率を出発地の全員について計算し直す。<code>travel.arrived</code> を積む</td></tr>
+      <tr><td><code>travel.arrived</code></td><td>Apply</td><td>場所、行動の版</td><td>版が古ければ捨てる。居場所を書き換え、着いた場所の全員の率を計算し直す。続きの行動があれば <code>action.started</code>、待機なら待機中にする</td></tr>
+      <tr><td><code>action.started</code></td><td>Apply</td><td>行動、場所、所要時間、理由（chosen / block / reflex / late）、行動の版</td><td>行動中にし、率を切り替え、開始時の効果を当てる。<code>action.ended</code> を積む。効果に応じて <code>StartHandler</code>（受信箱、投稿）や <code>Consolidate</code>（睡眠）を出す</td></tr>
+      <tr><td><code>action.ended</code></td><td>Apply</td><td>行動、行動の版</td><td>版が古ければ捨てる。終了時の効果を当て、率を戻す。同じ時刻にブロックの開始がなく、自由時間の中なら、決めどきを積む</td></tr>
+    </table>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <tr><th>決めどきの理由</th><th>いつ</th><th>候補</th></tr>
+      <tr><td><code>free</code></td><td>自由時間のブロックが始まった</td><td>Decider の通常の候補</td></tr>
+      <tr><td><code>ended</code></td><td>自由時間の中で、行動が終わった</td><td>Decider の通常の候補</td></tr>
+      <tr><td><code>interrupted</code></td><td>出来事で行動が中断された</td><td>いまの場所から帰還できる候補</td></tr>
+      <tr><td><code>disruption</code></td><td>ブロックの開始時の確認が通らない</td><td>遅刻 / 欠席 / 待つ</td></tr>
+      <tr><td><code>phone</code></td><td>スマホを開く機会</td><td>スマホを開く / 何もしない</td></tr>
+      <tr><td><code>retry</code></td><td>出力が guard で却下された</td><td>元の理由と同じ</td></tr>
+    </table>
+  </div>
+  <div class="draft">
+    <span class="label">案 P-12　Decider の出力は <code>activity.chosen</code> 1件にし、移動と行動の開始・終了は Apply が積む</span>
+    VISION は「決定のイベントが、移動の開始と到着、行動の開始と終了のイベントを積む」としている。これを、Decider は選んだ結果を1件だけ出し、残りは Apply が鎖のように積む形で実現する（2.4）。出来事で到着が遅れたときは、到着だけを積み直せば、その先の行動の開始と終了は、到着の Apply が新しい時刻で積む。先にすべてを積んでおくと、遅れたときに全部を無効にして積み直す必要がある。
+  </div>
+
+  <h3>状態変数と反射</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>種別</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
+      <tr><td><code>vital.threshold</code></td><td>Apply（率が変わるたびに予測）</td><td>変数、しきい値、状態変数の版</td><td>版が古ければ捨てる。反射の行動を、Decider を通さずに始める（実行中の行動は打ち切り、版を上げる）。<code>CancelHandler</code> を出す</td></tr>
+      <tr><td><code>vital.adjusted</code></td><td>窓口</td><td>変数、増減か設定か、値、理由</td><td>値を書き換え、基準時刻を更新し、版を上げて、到達を予測し直す</td></tr>
+      <tr><td><code>condition.attached</code> / <code>detached</code></td><td>Apply（出来事）、窓口</td><td>状態 ID、持続時間</td><td>付いている状態を書き換え、率を計算し直す</td></tr>
+    </table>
+  </div>
+
+  <h3>世界</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>種別</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
+      <tr><td><code>incident.occurred</code></td><td>ハンドラ（出来事の抽選）、窓口</td><td>出来事の ID（またはその場の定義）、対象、持続時間、抽選の結果</td><td>効果を当てる。持続時間があれば <code>incident.resolved</code> を積む。影響を受けうるペルソナの実行中の行動を検査し、通らなければ中断して決めどきを積む。移動中に辺が伸びたら、到着を積み直す（VISION 9章）</td></tr>
+      <tr><td><code>incident.resolved</code></td><td>Apply</td><td>発生中の出来事の ID</td><td>効果を戻す。最短経路のキャッシュを作り直す</td></tr>
+      <tr><td><code>place.added</code></td><td>ハンドラ（投稿する）、窓口</td><td>場所（id、name、tags、links）、状態（採用済み / 候補）</td><td>guard（同じ名前がない）を確かめ、生えた場所に入れる。採用済みなら最短経路を作り直す</td></tr>
+      <tr><td><code>place.adopted</code> / <code>retired</code></td><td>窓口</td><td>場所 ID</td><td>候補を採用する / 廃止する。廃止した場所に誰かがいれば、その人の行動はそのまま終わらせ、次の決めどきから候補に出さない</td></tr>
+      <tr><td><code>term.recorded</code></td><td>ハンドラ（投稿する）</td><td>語、判定（通す / 変換する / 却下する）、変換先、構造に載るかの分類</td><td>guard（語がまだない）を確かめ、辞書に足す</td></tr>
+    </table>
+  </div>
+
+  <h3>SNS と外向きの操作</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>種別</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
+      <tr><td><code>notification.arrived</code></td><td>窓口（チャンネル）</td><td>ペルソナ、チャンネル、通知の種類、送り主、audience、本文などの中身、元の到着時刻</td><td>受信箱に積む。処理はしない（VISION 10章）</td></tr>
+      <tr><td><code>outbound.speech</code></td><td>ハンドラ（受信箱、投稿）</td><td>チャンネル、投稿か返信か、本文、返信先、audience、確定状態への参照（連番の列）、チャンネルが解釈する中身</td><td>「言ったこと」として残り、未送信の操作を作る。<code>Deliver</code> を出す</td></tr>
+      <tr><td><code>outbound.operation</code></td><td>ハンドラ（受信箱、プラグインの規則）</td><td>チャンネル、操作の種類（reaction、follow など）、チャンネルが解釈する中身</td><td>未送信の操作を作る。<code>Deliver</code> を出す。「言ったこと」には入らない</td></tr>
+      <tr><td><code>outbound.sent</code> / <code>failed</code> / <code>unknown</code></td><td>窓口（配信役）、起動処理</td><td>操作の ID、外部 ID、失敗の理由、次に投稿できる時刻</td><td>操作の状態を書き換える。失敗に次に投稿できる時刻があれば、投稿のクールダウンの基準を更新する</td></tr>
+      <tr><td><code>inbox.handled</code></td><td>ハンドラ（受信箱）</td><td>捌いた通知の ID と、それぞれの結果（返信 / リアクション / 何もしない）</td><td>受信箱の通知を処理済みにする。行動の途中で届いた通知は含まれないので、受信箱に残る</td></tr>
+      <tr><td><code>post.skipped</code></td><td>ハンドラ（投稿する）</td><td>理由（話題が全部却下、生成の失敗、締め切り）</td><td>空振りのクールダウンの基準を更新する（D6）</td></tr>
+    </table>
+  </div>
+  <div class="draft">
+    <span class="label">案 P-13　発話と、発話でない操作を、別の種別にする</span>
+    VISION 10章は、両方を「外向きの操作」として同じ道で送る。送る道（未送信の操作の表と配信役）は共通にしたまま、イベントの種別だけを分ける。「言ったこと」を引くとき（日誌、記憶の整理、文脈）に、種別だけで絞れるから。
+  </div>
+
+  <h3>管理</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>種別</th><th>出す者</th><th>Apply</th></tr>
+      <tr><td><code>world.created</code> / <code>stopped</code></td><td>窓口</td><td>ワールドインスタンスを作る（乱数の種を決め、最初の <code>day.started</code> を積む） / 止める（以後、そのワールドのイベントを捨てる）</td></tr>
+      <tr><td><code>persona.summoned</code> / <code>dismissed</code></td><td>窓口</td><td>インスタンスを作り、居場所と状態変数の初期値を決める。最初の日は Planner を呼ばない（D5） / 実行中の行動を打ち切り、以後のイベントを捨てる</td></tr>
+      <tr><td><code>persona.gap</code></td><td>起動処理（追いつきの上限）</td><td>空白の区間を飛ばす（D1 1.11）</td></tr>
+      <tr><td><code>definitions.reloaded</code></td><td>エンジン</td><td>状態は変えない。どの定義で動いているかの記録（D1 1.12）</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="chain">
+  <h2><span class="num">2.4</span>行動の鎖</h2>
+  <p>自由時間の1回の決定から、次の決めどきまでの流れ。灰色は Apply が積む後続のイベント。</p>
+  <figure class="diagram">
+    <svg viewBox="0 0 760 200" role="img" aria-label="行動の鎖">
+      <path class="tick" d="M30 120 H740"/>
+      <circle class="dot" cx="60" cy="120" r="8"/>
+      <circle class="dot ext" cx="150" cy="120" r="8"/>
+      <circle class="dot" cx="240" cy="120" r="8"/>
+      <circle class="dot" cx="390" cy="120" r="8"/>
+      <circle class="dot" cx="470" cy="120" r="8"/>
+      <circle class="dot" cx="640" cy="120" r="8"/>
+      <circle class="dot" cx="720" cy="120" r="8"/>
+      <text class="mono" x="60" y="96" text-anchor="middle">decision</text>
+      <text class="mono" x="60" y="80" text-anchor="middle">.requested</text>
+      <text class="mono" x="150" y="96" text-anchor="middle">activity</text>
+      <text class="mono" x="150" y="80" text-anchor="middle">.chosen</text>
+      <text class="mono" x="240" y="96" text-anchor="middle">travel</text>
+      <text class="mono" x="240" y="80" text-anchor="middle">.started</text>
+      <text class="mono" x="390" y="96" text-anchor="middle">travel</text>
+      <text class="mono" x="390" y="80" text-anchor="middle">.arrived</text>
+      <text class="mono" x="470" y="96" text-anchor="middle">action</text>
+      <text class="mono" x="470" y="80" text-anchor="middle">.started</text>
+      <text class="mono" x="640" y="96" text-anchor="middle">action</text>
+      <text class="mono" x="640" y="80" text-anchor="middle">.ended</text>
+      <text class="mono" x="720" y="96" text-anchor="middle">decision</text>
+      <text class="mono" x="720" y="80" text-anchor="middle">.requested</text>
+      <rect class="bar free" x="248" y="136" width="134" height="20" rx="4"/>
+      <text class="sub" x="315" y="151" text-anchor="middle">移動中</text>
+      <rect class="bar" x="478" y="136" width="154" height="20" rx="4"/>
+      <text class="sub" x="555" y="151" text-anchor="middle">行動中</text>
+      <text class="sub" x="60" y="184" text-anchor="middle">10:00</text>
+      <text class="sub" x="150" y="184" text-anchor="middle">10:00</text>
+      <text class="sub" x="240" y="184" text-anchor="middle">10:00</text>
+      <text class="sub" x="390" y="184" text-anchor="middle">10:15</text>
+      <text class="sub" x="470" y="184" text-anchor="middle">10:15</text>
+      <text class="sub" x="640" y="184" text-anchor="middle">11:00</text>
+      <text class="sub" x="720" y="184" text-anchor="middle">11:00</text>
+      <text class="sub" x="150" y="40" text-anchor="middle">Decider の出力（橙）</text>
+      <text class="sub" x="470" y="40" text-anchor="middle">ほかはすべて Apply の後続（青）</text>
+    </svg>
+    <figcaption>公園で 45 分散歩する例。移動 15 分。出来事で辺が伸びれば、travel.arrived だけを積み直す</figcaption>
+  </figure>
+</section>
+
+<section id="effects">
+  <h2><span class="num">2.5</span>行動の効果の語彙</h2>
+  <p>行動の TOML の <code>[effects]</code> に書けるもの。Apply が解釈する決定的な効果と、決める側のハンドラを起こす効果の2種類がある。</p>
+  <h3>決定的な効果</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>キー</th><th>意味</th><th>例</th></tr>
+      <tr><td><code>rate.&lt;変数&gt;</code></td><td>行動の間の、その変数の増加率（1時間あたり）。書いた変数は、既定の率の代わりにこの率を使う</td><td><code>rate.energy = -8</code></td></tr>
+      <tr><td><code>on_start.&lt;変数&gt;</code> / <code>on_end.&lt;変数&gt;</code></td><td>開始時 / 終了時の増減</td><td><code>on_end.boredom = -30</code></td></tr>
+      <tr><td><code>restore.&lt;変数&gt;</code></td><td>終了時に、その値にする（増減ではなく設定）</td><td><code>restore.energy = 100</code></td></tr>
+      <tr><td><code>repeat_decay</code></td><td>同じ行動が続いたときの、退屈度の下がり幅の減り方（VISION 6章）。直前に同じ行動を k 回続けていたら、退屈度の減少に decay<sup>k</sup> を掛ける</td><td><code>repeat_decay = 0.6</code></td></tr>
+      <tr><td><code>sleep</code></td><td>睡眠として扱う。<code>consolidate</code>（記憶の整理を起こすか）と <code>debt</code>（寝不足の判定をするか）を持つ。起床の判定（日誌の範囲）にも使う</td><td><code>sleep = { consolidate = true, debt = true }</code></td></tr>
+    </table>
+  </div>
+  <h3>ハンドラを起こす効果</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>キー</th><th>意味</th><th>出力</th></tr>
+      <tr><td><code>handler = "sns.inbox"</code></td><td>受信箱を捌く（VISION 10章）</td><td><code>outbound.speech</code> <code>outbound.operation</code> <code>inbox.handled</code></td></tr>
+      <tr><td><code>handler = "sns.post"</code></td><td>話題の抽出から文面の生成まで（VISION 10章、11章）</td><td><code>term.recorded</code> <code>place.added</code> <code>outbound.speech</code> <code>post.skipped</code></td></tr>
+      <tr><td><code>handler = "&lt;プラグイン&gt;.&lt;名前&gt;"</code></td><td>プラグインが足すハンドラ</td><td>コアの種別のイベント（中身はチャンネルが解釈する）</td></tr>
+    </table>
+  </div>
+  <h3>組み込みの行動</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>ID</th><th>中身</th></tr>
+      <tr><td><code>core.go_to_next</code></td><td>次の予定の場所へ向かい、着いたら待つ。条件が成り立つ限り、いつでも候補に入る（VISION 5章）</td></tr>
+      <tr><td><code>core.idle</code></td><td>何もしない（スマホを開く機会の「ブロックを続ける」、待機）</td></tr>
+      <tr><td><code>core.sleep</code></td><td>睡眠。<code>rate.energy = 0</code>、<code>restore.energy = 100</code>、<code>sleep = { consolidate = true, debt = true }</code></td></tr>
+      <tr><td><code>core.faint</code></td><td>気絶。所要時間は固定。<code>restore.energy = 50</code>、<code>sleep = { consolidate = true, debt = false }</code></td></tr>
+      <tr><td><code>core.go_home_rest</code></td><td>早退して家で休む。家（ペルソナ定義の <code>home</code>）へ移動して、休む</td></tr>
+    </table>
+  </div>
+  <div class="draft">
+    <span class="label">案 P-14　行動の効果の語彙</span>
+    上の3表で確定させる。率は「足す」ではなく「置き換える」にする。睡眠中は気力が減らない、のような表現が、打ち消しの数値を書かずに済むから。社交欲求の既定の率は、居合わせ（一人か、同席か）で変わる（D5）。行動が <code>rate.social</code> を書けば、居合わせに関係なく、その率を使う。
+  </div>
+</section>
+
+<section id="requires">
+  <h2><span class="num">2.6</span>requires と制限の語彙</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>キー</th><th>意味</th></tr>
+      <tr><td><code>requires.place_tags</code></td><td>場所が、これらのタグをすべて持つ。空なら、どの場所でもよい</td></tr>
+      <tr><td><code>requires.items</code></td><td>ペルソナが、これらの携行品のタグをすべて持つ</td></tr>
+      <tr><td><code>requires.channel</code></td><td>ペルソナが、この能力を持つチャンネルにつながっていて、圏外ではない。<code>{ capability = "post" }</code> など。能力の語彙はチャンネルの章（D4）</td></tr>
+      <tr><td><code>limits.cooldown</code></td><td>前回の開始から、この時間が経つまで候補にしない（<code>"90m"</code>、<code>"1d"</code>）</td></tr>
+      <tr><td><code>limits.max_per_day</code></td><td>現地の1日（0:00 から）に、この回数まで</td></tr>
+      <tr><td><code>limits.hours</code></td><td>現地の時刻がこの範囲にあるときだけ（<code>["06:00", "23:00"]</code>）</td></tr>
+    </table>
+  </div>
+  <ul>
+    <li>「投稿する」のクールダウンには、チャンネルの <code>postRateLimit</code> と、空振りのクールダウンも重ねる（VISION 10章、11章）。どれも、イベントログの最後の時刻とイベントの時刻だけから計算する</li>
+    <li>制限の判定に要る「前回の時刻」「今日の回数」は、ペルソナインスタンスの状態に、行動ごとに持つ（D3）。ログを毎回引かずに済み、Apply の中で決定的に更新できる</li>
+  </ul>
+  <div class="draft">
+    <span class="label">案 P-15　制限に <code>max_per_day</code> と <code>hours</code> を足す</span>
+    VISION は「クールダウンなどの制限」とだけ書いている。クールダウンだけでは、「深夜 3 時に銭湯」「1日に5回カフェ」を防げないので、回数と時刻の範囲を足す。場所の営業時間は持たない（行動の時刻の範囲で足りるうちは）。
+  </div>
+</section>
+
+<section id="incident-effects">
+  <h2><span class="num">2.7</span>出来事の効果の語彙</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>キー</th><th>対象</th><th>意味</th><th>戻し方</th></tr>
+      <tr><td><code>close_place</code></td><td>ワールド</td><td>場所を閉鎖する。閉鎖中の場所は、候補にも経路の途中にもならない</td><td>解消で開く</td></tr>
+      <tr><td><code>slow_place</code></td><td>ワールド</td><td>その場所につながる辺の移動時間を増やす（<code>add</code> 分、または <code>factor</code> 倍）。道の工事や渋滞</td><td>解消で戻す</td></tr>
+      <tr><td><code>vital</code></td><td>ペルソナ</td><td>状態変数を増減する</td><td>戻さない</td></tr>
+      <tr><td><code>condition</code></td><td>ペルソナ</td><td>状態（風邪など）を付ける</td><td>解消で外す</td></tr>
+    </table>
+  </div>
+  <p>対象の場所は、<code>place = "id"</code> で決め打ちするか、<code>place_tag = "road"</code> で、そのタグを持つ場所から抽選する。抽選の結果は、イベントに記録する。</p>
+  <h3>状態（コンディション）</h3>
+  <p>風邪のような、ペルソナに付く状態は、出来事のライブラリの中に <code>[[condition]]</code> として定義する。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>キー</th><th>意味</th></tr>
+      <tr><td><code>rate.&lt;変数&gt;</code></td><td>付いている間、既定の率に足す（行動の率とは違い、置き換えない。体調は何をしていても効くから）</td></tr>
+      <tr><td><code>weight.&lt;行動 ID か tag:行動タグ&gt;</code></td><td>Decider の重みに掛ける（<code>weight."tag:outdoor" = 0.3</code>）</td></tr>
+      <tr><td><code>forbid</code></td><td>候補から外す行動 ID か行動タグ</td></tr>
+      <tr><td><code>threshold.&lt;変数&gt;</code></td><td>反射のしきい値をずらす（風邪のときは早退しやすい）</td></tr>
+    </table>
+  </div>
+  <div class="draft">
+    <span class="label">案 P-16　出来事の効果の語彙</span>
+    上の2表で確定させる（VISION 付録「出来事の効果の語彙」）。頻度の既定値は D5。
+  </div>
+</section>
+
+<section id="injection">
+  <h2><span class="num">2.8</span>投入できるイベント</h2>
+  <p>投入の窓口（VISION 15章）が受け付ける種別。時刻は指定するか「いま」。過去は不可。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>種別</th><th>検査</th></tr>
+      <tr><td><code>incident.occurred</code></td><td>ライブラリの ID があるか、その場の定義が語彙だけで書かれているか。対象が存在するか</td></tr>
+      <tr><td><code>vital.adjusted</code></td><td>変数が4つのどれかか。理由が書かれているか（訂正として残す）</td></tr>
+      <tr><td><code>condition.attached</code> / <code>detached</code></td><td>状態の ID があるか</td></tr>
+      <tr><td><code>notification.arrived</code></td><td>ペルソナがそのチャンネルにつながっているか</td></tr>
+      <tr><td><code>place.added</code> / <code>adopted</code> / <code>retired</code></td><td>場所の検証（D6「新しい場所のつなぎ方」と同じ）</td></tr>
+      <tr><td><code>persona.summoned</code> / <code>dismissed</code></td><td>定義があるか。召喚先のワールドが動いているか</td></tr>
+      <tr><td><code>world.created</code> / <code>stopped</code></td><td>定義があるか</td></tr>
+    </table>
+  </div>
+  <p>窓口は、検査を通ったものをエンジンへのコマンドにし、結果（受け付けたイベントの連番、または拒否の理由）を返す。誰に投入を許すかは、コアの外（API 層）が決める。</p>
+</section>
+
+<section id="origin">
+  <h2><span class="num">2.9</span>origin と痕跡</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>origin</th><th>意味</th></tr>
+      <tr><td><code>sim</code></td><td>通常の運転で、Apply かハンドラが積んだ</td></tr>
+      <tr><td><code>catchup</code></td><td>追いつきの間に積んだ</td></tr>
+      <tr><td><code>admin</code></td><td>管理者が窓口から投入した</td></tr>
+      <tr><td><code>test</code></td><td>テストやドライランで注入した</td></tr>
+      <tr><td><code>channel:&lt;種類&gt;</code></td><td>チャンネルの到着（<code>channel:misskey</code>）</td></tr>
+      <tr><td><code>plugin:&lt;名前&gt;</code></td><td>プラグインが窓口から投入した</td></tr>
+    </table>
+  </div>
+  <p>後続のイベントは、契機のイベントの origin を引き継ぐ（追いつきの中で積まれたものは、すべて <code>catchup</code>）。</p>
+  <p>痕跡（trace）は、イベントにしない途中の結果を、JSON で付ける。Decider の候補とスコアの上位、話題の抽出と判定、LLM の呼び出しの記録（目的、モデル、トークン数、所要時間）など。ビューアと実行レポートが読む。中身の形は、ハンドラごとに決め、Apply は読まない。</p>
+</section>
+
+</main>
+
+<footer>Vivace 詳細設計 D2。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。</footer>
+</div>
+
+<button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>
+<script src="page.js"></script>
+</body>
+</html>
