@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://koruri.shrimpia.network/koruri.css" />
+<link rel="stylesheet" href="style.css" />
+<title>D4 コンポーネント</title>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+</svg>
+<div class="layout">
+
+<header class="hero">
+  <div class="kicker">VIVACE / DESIGN / D4</div>
+  <h1>コンポーネント</h1>
+  <p>アセンブリの分け方、コアが外に求める口（ポート）、コアの中の部品、ホストから使う公開 API、プラグインの仕組み。</p>
+  <div class="meta">
+    <span class="chip">2026-11-03 時点</span>
+    <span class="chip draft">案を含む</span>
+    <span class="chip">VISION 1章、10章、15章</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目次">
+  <details open>
+    <summary>目次</summary>
+    <ol>
+      <li class="part">D4 コンポーネント</li>
+      <li><a href="#assemblies">4.1 アセンブリ</a></li>
+      <li><a href="#ports">4.2 ポート</a></li>
+      <li><a href="#channel">4.3 チャンネル</a></li>
+      <li><a href="#llm-port">4.4 LLM クライアント</a></li>
+      <li><a href="#inside">4.5 コアの中の部品</a></li>
+      <li><a href="#api">4.6 公開 API</a></li>
+      <li><a href="#plugins">4.7 プラグイン</a></li>
+      <li class="part">詳細設計</li>
+      <li><a href="index.html">目次と決めること</a></li>
+      <li><a href="1-execution.html">D1 実行モデル</a></li>
+      <li><a href="2-events.html">D2 イベントと語彙</a></li>
+      <li><a href="3-data.html">D3 データ</a></li>
+      <li><a href="4-components.html">D4 コンポーネント</a></li>
+      <li><a href="5-decision.html">D5 決定と状態変数</a></li>
+      <li><a href="6-llm.html">D6 LLM と記憶</a></li>
+      <li><a href="7-operations.html">D7 運用とテスト</a></li>
+      <li><a href="8-stack.html">D8 技術スタック</a></li>
+      <li class="part">構想</li>
+      <li><a href="../VISION.html">VISION.html</a></li>
+    </ol>
+  </details>
+</nav>
+
+<main>
+
+<section id="assemblies">
+  <h2><span class="num">4.1</span>アセンブリ</h2>
+  <figure class="diagram">
+    <svg viewBox="0 0 760 290" role="img" aria-label="アセンブリの依存関係">
+      <rect class="box accent" x="270" y="120" width="220" height="56" rx="10"/>
+      <text class="title" x="380" y="144" text-anchor="middle">Vivace.Core</text>
+      <text class="sub" x="380" y="163" text-anchor="middle">ドメイン、エンジン、ポート</text>
+
+      <rect class="box" x="20" y="20" width="200" height="50" rx="8"/>
+      <text class="title" x="120" y="42" text-anchor="middle">Vivace.Storage.Sqlite</text>
+      <text class="sub" x="120" y="60" text-anchor="middle">IStorage の実装</text>
+      <rect class="box" x="280" y="20" width="200" height="50" rx="8"/>
+      <text class="title" x="380" y="42" text-anchor="middle">Vivace.Llm.*</text>
+      <text class="sub" x="380" y="60" text-anchor="middle">ILlmClient の実装</text>
+      <rect class="box warn" x="540" y="20" width="200" height="50" rx="8"/>
+      <text class="title" x="640" y="42" text-anchor="middle">Vivace.Channels.Misskey</text>
+      <text class="sub" x="640" y="60" text-anchor="middle">プラグイン</text>
+
+      <rect class="box" x="20" y="226" width="200" height="50" rx="8"/>
+      <text class="title" x="120" y="248" text-anchor="middle">Vivace.Testing</text>
+      <text class="sub" x="120" y="266" text-anchor="middle">台本の LLM、null channel</text>
+      <rect class="box good" x="280" y="226" width="200" height="50" rx="8"/>
+      <text class="title" x="380" y="248" text-anchor="middle">Vivace.Cli</text>
+      <text class="sub" x="380" y="266" text-anchor="middle">最小のホスト</text>
+      <rect class="box warn" x="540" y="226" width="200" height="50" rx="8"/>
+      <text class="title" x="640" y="248" text-anchor="middle">Vivace.Calendars.Japan</text>
+      <text class="sub" x="640" y="266" text-anchor="middle">日本の祝日（プラグイン）</text>
+
+      <path class="arrow" d="M120 70 L300 118"/>
+      <path class="arrow" d="M380 70 V118"/>
+      <path class="arrow" d="M640 70 L460 118"/>
+      <path class="arrow" d="M120 226 L300 178"/>
+      <path class="arrow" d="M380 226 V178"/>
+      <path class="arrow" d="M640 226 L460 178"/>
+    </svg>
+    <figcaption>矢印は参照の向き。コアは、ほかのどれも参照しない。ホスト（CLI）が全部を組み立てる</figcaption>
+  </figure>
+  <ul>
+    <li><strong>Vivace.Core</strong>：ドメイン型、定義の読み込みと検証、Apply、エンジン、Decider、Planner の手順、効果のハンドラ（受信箱、投稿）、文脈の組み立て、記憶の整理、ポート。依存は TOML のライブラリとログの抽象だけ</li>
+    <li><strong>Vivace.Storage.Sqlite</strong>：SQLite の実装を分けて、コアから SQL を追い出す。モバイルで別のストレージを使うときも、コアは変えない（VISION 1章）</li>
+    <li><strong>Vivace.Llm.*</strong>：LLM の実装。どの SDK を使うかは、PoC で決める（D8）</li>
+    <li><strong>Vivace.Testing</strong>：テストとドライランの部品。台本どおりに返す LLM、何も送らないチャンネル、仮想時計、シナリオを書くための補助</li>
+  </ul>
+  <div class="draft">
+    <span class="label">案 P-25　アセンブリの分け方</span>
+    上の6つ。最初の到達点（ebise 相当）までは、これ以上分けない。API 層とフロントエンドは、そのときに足す（FUTURE.html）。
+  </div>
+</section>
+
+<section id="ports">
+  <h2><span class="num">4.2</span>ポート</h2>
+  <p>コアが外に求める口。実装はホストが渡す。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>ポート</th><th>役目</th><th>コアに同梱する実装</th></tr>
+      <tr><td><code>IClock</code></td><td>時刻と待ち（D1 1.10）</td><td><code>SystemClock</code> <code>ScaledClock</code> <code>VirtualClock</code></td></tr>
+      <tr><td><code>IRandomSource</code></td><td>用途ごとの乱数の列を開く（D5）</td><td><code>SplitMixRandomSource</code></td></tr>
+      <tr><td><code>IStorage</code></td><td>状態とイベントの保存、ログと記憶の読み書き</td><td>なし（Vivace.Storage.Sqlite）</td></tr>
+      <tr><td><code>IChannel</code></td><td>外のサービスとの取得と送信（4.3）</td><td><code>NullChannel</code>（Testing）</td></tr>
+      <tr><td><code>ILlmClient</code></td><td>LLM の呼び出し（4.4）</td><td>なし（Vivace.Llm.*）</td></tr>
+      <tr><td><code>IHolidayCalendar</code></td><td>祝日の判定（D3 P-21）</td><td><code>NoHolidays</code></td></tr>
+      <tr><td><code>IAdminNotifier</code></td><td>管理者への通知（記憶化の失敗など）</td><td>ログに出すだけのもの</td></tr>
+      <tr><td><code>IDecider</code></td><td>自由時間の決定。差し替えて試せるようにする（VISION 5章）</td><td><code>UtilityDecider</code></td></tr>
+    </table>
+  </div>
+<pre><code>public interface IRandom
+{
+    ulong Position { get; }                     // 引いた回数（状態として保存する位置）
+    ulong NextUInt64();
+    double NextDouble();                        // [0, 1)
+    int NextInt(int minInclusive, int maxExclusive);
+}
+
+public interface IRandomSource
+{
+    IRandom Open(ulong worldSeed, string owner, string purpose, ulong position);
+}
+
+public interface IStorage : IAsyncDisposable
+{
+    Task&lt;LoadedState&gt; LoadAsync(CancellationToken ct);          // 状態、未適用と処理中のイベント、未送信
+    Task CommitAsync(StorageBatch batch, CancellationToken ct);  // エンジンの1トランザクション（D1 1.9）
+    IEventLog Events { get; }                                    // ログの読み取り
+    IMemoryStore Memory { get; }                                 // 記憶（整理ジョブと文脈）
+}
+
+public interface IDecider
+{
+    DeciderOutput Decide(DecisionContext context);               // 同期。LLM は使わない
+}</code></pre>
+  <ul>
+    <li>連番はエンジンが振る（単独の書き手なので、起動時の最大値から数えればよい）。<code>StorageBatch</code> は、連番の決まったイベントと、変わった状態の行を持ち、<code>CommitAsync</code> は1つのトランザクションで書くだけ</li>
+    <li><code>IEventLog</code> は、日誌（ペルソナの適用済みの事実を時刻順に）、「言ったこと」（スコープつき）、ビューアと実行レポートの検索を提供する</li>
+  </ul>
+</section>
+
+<section id="channel">
+  <h2><span class="num">4.3</span>チャンネル</h2>
+<pre><code>public interface IChannel
+{
+    string Kind { get; }                                      // "misskey"
+    ChannelCapabilities Capabilities { get; }
+    Task StartAsync(IChannelHost host, CancellationToken ct);
+    Task&lt;IReadOnlyList&lt;TimelineItem&gt;&gt; ReadTimelineAsync(PersonaId persona, int limit, CancellationToken ct);
+    Task&lt;SendResult&gt; SendAsync(OutboundRequest request, CancellationToken ct);
+    Task RecoverAsync(PersonaId persona, DateTimeOffset from, DateTimeOffset to, CancellationToken ct);
+}
+
+public interface IChannelHost
+{
+    IReadOnlyList&lt;PersonaId&gt; Personas { get; }               // このチャンネルにつながるインスタンス
+    ValueTask&lt;InjectResult&gt; ArriveAsync(Arrival arrival, CancellationToken ct);   // 投入の窓口へ
+}
+
+public abstract record SendResult
+{
+    public sealed record Sent(string ExternalId) : SendResult;
+    public sealed record Failed(string Reason, bool SurelyNotSent, DateTimeOffset? RetryAfter) : SendResult;
+}</code></pre>
+  <div class="table-wrap">
+    <table>
+      <tr><th>能力</th><th>意味</th><th>使うところ</th></tr>
+      <tr><td><code>timeline</code></td><td>タイムラインを読める</td><td>投稿する（話題の抽出）</td></tr>
+      <tr><td><code>notifications</code></td><td>通知を受け取れ、取りこぼしを取り直せる</td><td>受信箱、圏外明けの再取得</td></tr>
+      <tr><td><code>post</code> / <code>reply</code> / <code>react</code> / <code>follow</code></td><td>それぞれの外向きの操作ができる</td><td>requires、受信箱の判断の選択肢</td></tr>
+      <tr><td><code>postRateLimit</code></td><td>投稿の間隔の下限（値つき）</td><td>投稿のクールダウン（VISION 10章）</td></tr>
+    </table>
+  </div>
+  <ul>
+    <li>通知の audience（public か、相手1人との dm か、記憶にしないか）は、チャンネルが決めて <code>Arrival</code> に入れる（VISION 13章）。Misskey では、ebise の <code>audienceOf</code> の規則（返信チェーンのうち最も狭い範囲に合わせる）をそのまま移す</li>
+    <li>送信の再試行は、<code>SurelyNotSent</code> が真のとき（接続できなかった、など）だけ、配信役が短い間隔で 3 回まで行う。届いたかわからない失敗は、再試行せずに失敗にする（二重投稿より欠けるほうがまし。VISION 10章）</li>
+    <li>アカウントとトークンの対応は、チャンネルの設定として、ホストからチャンネルの実装に渡す。コアは知らない</li>
+  </ul>
+</section>
+
+<section id="llm-port">
+  <h2><span class="num">4.4</span>LLM クライアント</h2>
+<pre><code>public interface ILlmClient
+{
+    Task&lt;LlmResult&lt;T&gt;&gt; GenerateAsync&lt;T&gt;(LlmRequest request, CancellationToken ct);   // 構造化出力
+    Task&lt;LlmResult&lt;string&gt;&gt; GenerateTextAsync(LlmRequest request, CancellationToken ct);
+}
+
+public sealed record LlmRequest(
+    LlmTier Tier,                        // Main / Light（D6）
+    string Purpose,                      // "planner"、"inbox.triage" など。計測と痕跡に使う
+    string System,
+    IReadOnlyList&lt;LlmMessage&gt; Messages,
+    IReadOnlyList&lt;ITool&gt;? Tools = null,
+    double? Temperature = null,
+    int? MaxOutputTokens = null);
+
+public sealed record LlmResult&lt;T&gt;(T Value, LlmUsage Usage);   // モデル名、入出力のトークン数、所要時間
+
+public interface ITool                   // 副作用のない参照系だけ（VISION 7章）
+{
+    string Name { get; }                 // "memory.search"
+    string Description { get; }
+    JsonElement ParameterSchema { get; }
+    Task&lt;string&gt; InvokeAsync(ToolContext context, JsonElement arguments, CancellationToken ct);
+}</code></pre>
+  <ul>
+    <li>モデル名はコアに書かない。<code>Tier</code> から実際のモデルへの対応は、LLM の実装の設定に持つ</li>
+    <li>ツールの呼び出しの往復は、実装の側で回す。<code>ToolContext</code> には、呼び出し元のペルソナと audience を入れ、記憶の検索が dm の記憶を返さないようにする（VISION 13章）</li>
+    <li>再試行（指数バックオフ）は、コアの側で、目的ごとの方針で包む（D7）。実装は1回の呼び出しだけを担う</li>
+  </ul>
+  <div class="draft">
+    <span class="label">案 P-28　LLM クライアントは、コア独自の薄い口にする</span>
+    VISION 付録「LLM クライアントの抽象」への案。コアは Microsoft.Extensions.AI の <code>IChatClient</code> に直接依存せず、上の小さな口だけを持つ。理由は2つ。コアが求めるのは「目的」と「段」で、モデル名やプロバイダの設定ではないこと。テストの台本の LLM（目的ごとに決まった応答を返す）が書きやすいこと。実装の側で <code>IChatClient</code> を使うのは自由で、Anthropic の公式 SDK は <code>IChatClient</code> を実装している（D8）。
+  </div>
+</section>
+
+<section id="inside">
+  <h2><span class="num">4.5</span>コアの中の部品</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>部品</th><th>役目</th><th>詳細</th></tr>
+      <tr><td><code>Engine</code></td><td>コマンドの処理、キュー、ホライズンの壁、締め切り、適用、シグナルの実行</td><td>D1</td></tr>
+      <tr><td><code>Rules</code></td><td>Apply 本体。種別ごとの関数の集まり。static で、副作用を持たない</td><td>D2</td></tr>
+      <tr><td><code>Guards</code></td><td>適用前の検査の評価</td><td>D1 1.7</td></tr>
+      <tr><td><code>Lanes</code></td><td>レーンごとの直列の実行と、LLM の同時実行数の制限</td><td>D1 1.5</td></tr>
+      <tr><td><code>Dispatcher</code></td><td>配信役。未送信の操作を送り、結果をコマンドで返す</td><td>VISION 10章</td></tr>
+      <tr><td><code>Ingress</code></td><td>投入の窓口。検査して、コマンドにする</td><td>D2 2.8</td></tr>
+      <tr><td><code>DefinitionLoader</code> / <code>DefinitionValidator</code></td><td>TOML の読み込みと検証。エディタからも呼べる</td><td>D3、D7</td></tr>
+      <tr><td><code>RouteTable</code></td><td>最短経路の表（グラフの版ごとにキャッシュ）</td><td>D5</td></tr>
+      <tr><td><code>UtilityDecider</code></td><td>候補の絞り込み、スコア、抽選</td><td>D5</td></tr>
+      <tr><td><code>DayPlanner</code> / <code>PlanValidator</code></td><td>Planner の手順と、出力の検査・補正</td><td>D5、D6</td></tr>
+      <tr><td><code>IncidentLottery</code></td><td>日の始まりの出来事の抽選</td><td>D5</td></tr>
+      <tr><td><code>InboxHandler</code> / <code>PostHandler</code></td><td>効果のハンドラ（受信箱を捌く、投稿する）</td><td>D6</td></tr>
+      <tr><td><code>TopicPipeline</code></td><td>話題の抽出、辞書、判定、場所の生成</td><td>D6</td></tr>
+      <tr><td><code>ContextBuilder</code> / <code>Diary</code></td><td>LLM に渡す文脈の組み立てと、日誌の整形</td><td>D6</td></tr>
+      <tr><td><code>MemoryConsolidator</code> / <code>MemoryRetriever</code></td><td>記憶の整理ジョブと、文脈に入れる記憶の選び方</td><td>D6</td></tr>
+      <tr><td><code>StateView</code> / <code>RunReport</code></td><td>読み取り用のビューと、実行レポート</td><td>D7</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="api">
+  <h2><span class="num">4.6</span>公開 API</h2>
+<pre><code>await using var engine = VivaceEngine.CreateBuilder()
+    .UseDefinitions("defs/")
+    .UseStorage(new SqliteStorage("vivace.db"))
+    .UseLlm(llm)
+    .AddPlugin(new MisskeyPlugin(misskeyOptions))
+    .UseLoggerFactory(loggerFactory)
+    .Build();                                   // 時計を省略すると実時間
+
+await engine.StartAsync(ct);                    // 起動と追いつき（D1 1.11）
+
+InjectResult r = await engine.InjectAsync(request, ct);       // 投入の窓口
+StateView view = engine.View;                                // いまの状態（不変）
+IAsyncEnumerable&lt;AppliedEvent&gt; feed = engine.Subscribe(ct);  // 適用済みのイベントの購読
+IEventLog log = engine.Events;                               // ログの検索
+ReloadResult rr = await engine.ReloadDefinitionsAsync(ct);   // 定義の読み直し
+
+// ドライラン：仮想時計で、外に何も出さずに進める
+await using var dry = VivaceEngine.CreateBuilder()
+    .UseDefinitions("defs/").UseStorage(SqliteStorage.InMemory())
+    .UseLlm(llm).UseClock(new VirtualClock(start)).DryRun()
+    .Build();
+await dry.RunUntilAsync(start.AddDays(3), ct);
+
+// 話題の注入：ループを回さず、判定と変換を1回だけ呼ぶ（VISION 16章）
+TopicProbeResult probe = await engine.ProbeTopicsAsync(personaId, ["代々木公園"], ct);
+
+// 定義の検証だけ（エディタから）
+ValidationReport report = DefinitionLoader.Validate("defs/", plugins);</code></pre>
+  <ul>
+    <li><code>DryRun()</code> は、チャンネルをすべて <code>NullChannel</code> に替え、配信役を止める</li>
+    <li><code>Subscribe</code> は、適用済みのイベントを、コミットのあとに流す。遅い購読者は、バッファがあふれたら切断する（エンジンを止めない）</li>
+    <li>DI コンテナには依存しない。ASP.NET Core などから使うときのための <code>services.AddVivace(...)</code> は、API 層を作るときに別のパッケージで足す</li>
+  </ul>
+  <div class="draft">
+    <span class="label">案 P-27　公開 API はビルダーとエンジンの1クラス</span>
+    上の形。コアはヘッドレスのライブラリ（VISION 1章）なので、ホストの作り（CLI、Web、モバイル）を選ばない形にする。
+  </div>
+</section>
+
+<section id="plugins">
+  <h2><span class="num">4.7</span>プラグイン</h2>
+<pre><code>public interface IVivacePlugin
+{
+    string Name { get; }                                       // "misskey"。ID の名前空間になる
+    void Register(IPluginRegistry registry);
+}
+
+public interface IPluginRegistry
+{
+    void AddChannel(IChannel channel);
+    void AddEffectHandler(IEffectHandler handler);             // handler = "misskey.xxx"
+    void AddNotificationRule(INotificationRule rule);          // 規則で捌く通知（フォローバックなど）
+    void AddTool(ITool tool);
+    void AddDefinitions(string resourceName, Func&lt;Stream&gt; open); // 同梱の行動の TOML
+    void AddHolidayCalendar(string name, IHolidayCalendar calendar);
+}
+
+public interface IEffectHandler
+{
+    string Name { get; }
+    Task&lt;HandlerOutput&gt; RunAsync(EffectContext context, CancellationToken ct);
+}
+
+public interface INotificationRule
+{
+    bool Matches(InboxItem item);                              // 例：フォローの通知
+    RuleOutcome Handle(InboxItem item, RuleContext context);   // LLM を使わず、出力のイベントを返す
+}</code></pre>
+  <ul>
+    <li>プラグインが足せるのは、ハンドラ、規則、ツール、行動の定義、チャンネル、暦だけ。イベントの種別と、決定的な効果の語彙は足せない。外に出すものは、コアの <code>outbound.*</code> の中身（チャンネルが解釈する JSON）として表す（VISION 10章）</li>
+    <li>プラグインが同梱する行動の ID は、プラグインの名前で始める（<code>misskey.open_phone</code>）</li>
+  </ul>
+  <div class="draft">
+    <span class="label">案 P-26　プラグインは、ホストがコードで登録する</span>
+    フォルダに置いた DLL を読み込む方式（動的ロード）にはしない。最初のプラグインは Misskey だけで、ホストの CLI と一緒にビルドすれば足りる。動的ロードは、配布やバージョンの不一致、信頼の問題を連れてくるので、要るようになってから考える。
+  </div>
+</section>
+
+</main>
+
+<footer>Vivace 詳細設計 D4。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。</footer>
+</div>
+
+<button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>
+<script src="page.js"></script>
+</body>
+</html>

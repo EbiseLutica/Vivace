@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://koruri.shrimpia.network/koruri.css" />
+<link rel="stylesheet" href="style.css" />
+<title>D3 データ</title>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+</svg>
+<div class="layout">
+
+<header class="hero">
+  <div class="kicker">VIVACE / DESIGN / D3</div>
+  <h1>データ</h1>
+  <p>VISION 2章のデータモデルを、3つの層に落とす。定義の TOML、メモリの上のドメイン型、SQLite のスキーマ。項目の意味は VISION 2章が正で、ここでは形を決める。</p>
+  <div class="meta">
+    <span class="chip">2026-11-03 時点</span>
+    <span class="chip draft">案を含む</span>
+    <span class="chip">VISION 2章</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目次">
+  <details open>
+    <summary>目次</summary>
+    <ol>
+      <li class="part">D3 データ</li>
+      <li><a href="#layers">3.1 3つの層</a></li>
+      <li><a href="#files">3.2 定義ファイルの配置</a></li>
+      <li><a href="#world-def">3.3 ワールド定義</a></li>
+      <li><a href="#persona-def">3.4 ペルソナ定義</a></li>
+      <li><a href="#schedule">3.5 固定予定</a></li>
+      <li><a href="#action-def">3.6 行動と出来事の定義</a></li>
+      <li><a href="#domain">3.7 ドメイン型</a></li>
+      <li><a href="#sqlite">3.8 SQLite のスキーマ</a></li>
+      <li><a href="#json">3.9 JSON とバージョン</a></li>
+      <li class="part">詳細設計</li>
+      <li><a href="index.html">目次と決めること</a></li>
+      <li><a href="1-execution.html">D1 実行モデル</a></li>
+      <li><a href="2-events.html">D2 イベントと語彙</a></li>
+      <li><a href="3-data.html">D3 データ</a></li>
+      <li><a href="4-components.html">D4 コンポーネント</a></li>
+      <li><a href="5-decision.html">D5 決定と状態変数</a></li>
+      <li><a href="6-llm.html">D6 LLM と記憶</a></li>
+      <li><a href="7-operations.html">D7 運用とテスト</a></li>
+      <li><a href="8-stack.html">D8 技術スタック</a></li>
+      <li class="part">構想</li>
+      <li><a href="../VISION.html">VISION.html</a></li>
+    </ol>
+  </details>
+</nav>
+
+<main>
+
+<section id="layers">
+  <h2><span class="num">3.1</span>3つの層</h2>
+  <figure class="diagram">
+    <svg viewBox="0 0 760 200" role="img" aria-label="データの3つの層">
+      <rect class="box" x="20" y="40" width="200" height="120" rx="10"/>
+      <text class="title" x="120" y="66" text-anchor="middle">定義（TOML）</text>
+      <text class="sub" x="120" y="92" text-anchor="middle">ワールド / ペルソナ</text>
+      <text class="sub" x="120" y="112" text-anchor="middle">行動 / 出来事 / 状態</text>
+      <text class="sub" x="120" y="140" text-anchor="middle">人が書く。読み直しで効く</text>
+
+      <rect class="box accent" x="280" y="40" width="200" height="120" rx="10"/>
+      <text class="title" x="380" y="66" text-anchor="middle">ドメイン型（メモリ）</text>
+      <text class="sub" x="380" y="92" text-anchor="middle">Definitions（不変）</text>
+      <text class="sub" x="380" y="112" text-anchor="middle">SimState（不変）</text>
+      <text class="sub" x="380" y="140" text-anchor="middle">Apply が読み、返す</text>
+
+      <rect class="box good" x="540" y="40" width="200" height="120" rx="10"/>
+      <text class="title" x="640" y="66" text-anchor="middle">SQLite</text>
+      <text class="sub" x="640" y="92" text-anchor="middle">状態の表 / イベント</text>
+      <text class="sub" x="640" y="112" text-anchor="middle">受信箱 / 送信 / 記憶</text>
+      <text class="sub" x="640" y="140" text-anchor="middle">変わった行だけ書く</text>
+
+      <path class="arrow" d="M220 100 H278"/>
+      <text class="sub" x="249" y="92" text-anchor="middle">読む</text>
+      <path class="arrow" d="M480 90 H538"/>
+      <text class="sub" x="509" y="82" text-anchor="middle">書く</text>
+      <path class="arrow dash" d="M538 120 H482"/>
+      <text class="sub" x="509" y="140" text-anchor="middle">起動時</text>
+    </svg>
+    <figcaption>定義は TOML が正、実行時のデータは SQLite が正。メモリの上の型は、その写し</figcaption>
+  </figure>
+  <p>ホストの設定（SQLite のファイルの場所、LLM の API キー、チャンネルのアカウントとトークン）は、定義に含めない。ホストのアプリが持ち、コアには構築時に渡す（D4）。</p>
+</section>
+
+<section id="files">
+  <h2><span class="num">3.2</span>定義ファイルの配置</h2>
+<pre><code>defs/
+  worlds/<em>*.toml</em>        1ファイルに1ワールド
+  personas/<em>*.toml</em>      1ファイルに1ペルソナ
+  actions/<em>*.toml</em>       [[action]] を何件でも
+  incidents/<em>*.toml</em>     [[incident]] と [[condition]] を何件でも</code></pre>
+  <ul>
+    <li>組み込みの行動（<code>core.*</code>）と、プラグインが同梱する行動（<code>misskey.*</code> など）は、アセンブリに埋め込んだ TOML から読む。形式はユーザーの TOML と同じ</li>
+    <li>ID は、英小文字・数字・<code>_</code> と、名前空間の <code>.</code> だけ。ユーザーの定義は名前空間なしで書く。同じ ID が2つあれば、読み込みのエラー</li>
+    <li>未知のキーは、エラーにせず警告にする（VISION 2章「スキーマは、未知のフィールドで壊れないように」）。タイプミスに気づけるよう、警告にはキーの場所を出す</li>
+    <li>時間の長さは、<code>"45m"</code>、<code>"1h30m"</code>、<code>"3d"</code> のように単位つきの文字列で書く。時刻は <code>"HH:mm"</code>（現地時刻）、年をまたぐ期間は <code>"MM-DD"</code></li>
+  </ul>
+  <div class="draft">
+    <span class="label">案 P-19　定義ファイルの配置と ID の名前空間</span>
+    上のとおり。ワールドとペルソナは、1ファイル1件にして、ファイルの差分と編集の単位を揃える。行動と出来事は、似たものをまとめて書けるよう、1ファイルに何件でも書けるようにする。
+  </div>
+</section>
+
+<section id="world-def">
+  <h2><span class="num">3.3</span>ワールド定義</h2>
+<pre><code>id = "tokyo"
+name = "東京の郊外"
+lore = """
+現代日本の東京。主人公たちは高校生で、郊外の住宅地に住んでいる。
+"""
+utc_offset = "+09:00"            # 時差
+generated_places = "auto"        # auto | review（VISION 11章）
+not_exist = "魔法や超常現象は存在しない。"   # 存在しないものの一覧（任意）
+
+[calendar]
+holidays = "jp"                  # 祝日の暦の提供元（P-21）。省略時は祝日なし
+events = { "12-24" = "クリスマスイブ", "10-31" = "ハロウィン" }   # 年中行事（Planner への手がかり）
+
+[[term]]                         # 変換の辞書の初期値
+from = "代々木公園"
+verdict = "pass"                 # pass | convert | reject
+
+[[place]]
+id = "kaori_room"
+name = "香織の部屋"
+tags = ["bed", "desk"]
+group = "家"
+links = { home_living = 1 }      # つながる場所の ID と移動時間（分）
+
+[[place]]
+id = "home_living"
+name = "居間"
+tags = ["sofa", "tv", "kitchen"]
+group = "家"
+links = { street_home = 1 }</code></pre>
+  <ul>
+    <li>辺は、片方に書けば逆向きにも張る。両方に書いて時間が食い違えば、読み込みのエラー（VISION 8章）</li>
+    <li>場所のタグのうち、どの行動の requires にも出てこないものは、読み込み時に警告する（効果がないので）</li>
+  </ul>
+  <div class="draft">
+    <span class="label">案 P-21　祝日と年中行事は、ワールドの暦に持つ</span>
+    ebise は、内閣府の祝日 CSV を取得して、学校の休みを判定していた。魔界に日本の祝日はないので、祝日はワールドが決めるものにする。<code>calendar.holidays</code> は提供元の名前で、コアは <code>IHolidayCalendar</code> の口だけを持ち、日本の祝日は別のパッケージ（または同梱のデータ）で提供する。年中行事は、ワールド定義に直接書く。
+  </div>
+</section>
+
+<section id="persona-def">
+  <h2><span class="num">3.4</span>ペルソナ定義</h2>
+<pre><code>id = "kaori"
+name = "香織"
+world = "tokyo"
+home = "kaori_room"              # 早退して帰る場所（P-20b）
+lore = """
+高校2年生。本が好きで、図書委員。一人称は「わたし」。...
+"""
+examples = ["今日の図書室、ずっと静かだったな", "..."]   # 発言例（任意）
+channels = ["misskey"]
+items = ["smartphone", "book"]   # 携行品のタグ
+tools = ["memory.search", "places.list"]
+
+[actions]
+use = ["core.*", "misskey.*", "read_book", "walk_park", "cafe"]
+prefs = { read_book = "like", "tag:exercise" = "dislike", karaoke = "forbid", cafe = 1.5 }
+
+[vitals]                         # 省略したものはコアの既定値（D5）
+energy = { initial = 80 }
+social = { rate_alone = 2.0, rate_together = -4.0, floor = -40 }
+health = { sleep_target = "7h" }
+
+[reflexes]                       # しきい値と、そのとき始める行動の上書き
+health = { threshold = 15, action = "core.go_home_rest" }
+
+[disruption]                     # 予定の乱れへの反応の重み（D5）
+late = 1.0
+absent = 0.2
+wait = 0.6
+
+[memory]
+half_life = 1.2                  # 記憶の半減期の倍率（D6）</code></pre>
+  <ul>
+    <li><code>use</code> はワイルドカード（<code>misskey.*</code>）を許す。プラグインを足すと、その行動が自動で使えるようになる</li>
+    <li><code>prefs</code> の語彙（<code>like</code>、<code>dislike</code>、<code>forbid</code>、数値）と、<code>tag:</code> による行動タグの指定は D5</li>
+    <li>固定予定は、次の節</li>
+  </ul>
+  <div class="draft">
+    <span class="label">案 P-20b　ペルソナ定義に <code>home</code> を足す</span>
+    VISION のペルソナ定義の項目にはないが、反射の「早退して家で休む」の行き先に要る。睡眠ブロックの場所から推すこともできるが、曜日で変わりうるので、明示する。
+  </div>
+</section>
+
+<section id="schedule">
+  <h2><span class="num">3.5</span>固定予定</h2>
+  <p>ebise の書き方（期間ごとのセット、曜日、祝日に休むか、睡眠のブロック）を引き継ぎ、TOML で書きやすい形にする。</p>
+<pre><code>[[schedule.period]]              # 期間（毎年繰り返す）
+id = "summer"
+from = "07-21"
+to = "08-31"
+
+[[schedule.period]]
+id = "winter"
+from = "12-25"
+to = "01-07"                     # from &gt; to は年をまたぐ
+
+[[schedule.block]]
+id = "sleep_weekday"
+days = ["mon", "tue", "wed", "thu", "fri"]
+from = "23:45"
+to = "06:30"                     # to &lt; from は日をまたぐ
+action = "core.sleep"
+place = "kaori_room"
+
+[[schedule.block]]
+id = "school"
+in = ["default"]                 # 期間に当たらない日だけ
+days = ["mon", "tue", "wed", "thu", "fri"]
+from = "08:30"
+to = "15:40"
+action = "attend_class"
+place = "classroom_2a"
+skip_holiday = true
+phone = "closed"
+
+[[schedule.block]]
+id = "lunch_break"
+in = ["default"]
+days = ["mon", "tue", "wed", "thu", "fri"]
+from = "12:20"
+to = "13:00"
+action = "eat_lunch"
+place = "classroom_2a"
+phone = "open"
+with = ["shiori"]                # 同行（相手の定義にも書く）
+on_partner_absent = "continue"   # continue | cancel（D5）
+
+[[schedule.exception]]
+date = "2026-12-24"
+skip = ["school"]
+[[schedule.exception.block]]
+id = "xmas_party"
+from = "18:00"
+to = "21:00"
+action = "party"
+place = "home_living"</code></pre>
+  <div class="table-wrap">
+    <table>
+      <tr><th>規則</th><th>内容</th></tr>
+      <tr><td>その日の期間</td><td>日付が当たる期間のうち、いちばん短いもの。どれにも当たらなければ <code>default</code>（ebise と同じ）</td></tr>
+      <tr><td>ブロックの所属</td><td><code>in</code> に、その日の期間があるブロックだけを使う。<code>in</code> を省略したブロックは、すべての期間で使う（睡眠など、期間で変わらないもの）</td></tr>
+      <tr><td>重なり</td><td>同じ日のブロックが重なれば、読み込みのエラー。短いブロック（昼休み）を長いブロック（授業）の中に置きたいときは、授業を2つに分ける</td></tr>
+      <tr><td>日をまたぐブロック</td><td>開始した日のブロックとして扱う。月曜 23:45〜火曜 6:30 の睡眠は、月曜の <code>sleep_weekday</code></td></tr>
+      <tr><td>スマホ</td><td><code>phone</code> は、行動定義の既定値を上書きする。長いブロックの途中の機会は <code>phone_every</code>（D5）</td></tr>
+      <tr><td>例外日</td><td><code>skip</code> でその日のブロックを外し、<code>block</code> で足す。足したブロックも、重なりの検査を通す</td></tr>
+      <tr><td>ブロックの ID</td><td>プランの中では「定義の ID@開始日」（<code>sleep_weekday@2026-11-02</code>）で指す。3:00 をまたいで続いているかの判定に使う（D5）</td></tr>
+    </table>
+  </div>
+  <div class="draft">
+    <span class="label">案 P-20　固定予定と生活リズムの書き方</span>
+    上のとおり（VISION 付録「固定予定と生活リズムの書き方」）。生活リズム（起床・就寝の目安）は、別の項目にせず、睡眠のブロックそのものとする。ebise はセットごとにブロックの配列を持っていたが、TOML では配列を共有できないので、ブロックの側に「どの期間で使うか」（<code>in</code>）を書く形に変える。
+  </div>
+</section>
+
+<section id="action-def">
+  <h2><span class="num">3.6</span>行動と出来事の定義</h2>
+<pre><code>[[action]]
+id = "walk_park"
+display = "公園を散歩する"
+description = "近所の公園をゆっくり歩く。"
+tags = ["outdoor", "exercise"]   # 行動タグ（好みと状態の補正に使う）
+duration = ["20m", "60m"]        # 範囲か、固定の "45m"
+weight = 1.0                     # 基本の重み
+phone = "open"                   # 行動中にスマホを開けるか
+requires.place_tags = ["park"]
+limits.hours = ["06:00", "21:00"]
+effects.rate.energy = -6
+effects.on_end.boredom = -25
+effects.repeat_decay = 0.6</code></pre>
+<pre><code>[[incident]]
+id = "road_work"
+display = "道路工事"
+target = "world"                 # world | persona
+chance = 0.03                    # 1日あたりの発生確率
+hours = ["08:00", "18:00"]       # 発生する時刻の範囲（現地）
+duration = ["2h", "8h"]
+cooldown = "7d"                  # 再発までの間隔
+effects.slow_place = { place_tag = "road", add = "15m" }
+
+[[incident]]
+id = "catch_cold"
+display = "風邪をひく"
+target = "persona"
+chance = 0.01
+duration = ["1d", "3d"]
+cooldown = "30d"
+effects.condition = "cold"
+
+[[condition]]
+id = "cold"
+display = "風邪"
+rate.health = -0.5
+weight."tag:outdoor" = 0.3
+threshold.health = 25</code></pre>
+  <p>効果、requires、制限の語彙は D2。組み込みの反射の行動（<code>core.faint</code> など）は、所要時間を固定で書く（反射は Apply が乱数を引かずに始めるため）。</p>
+</section>
+
+<section id="domain">
+  <h2><span class="num">3.7</span>ドメイン型</h2>
+  <p>状態は、<code>record</code> と <code>System.Collections.Immutable</code> の不変オブジェクトで持つ。Apply は、変わったところだけを作り直した新しい状態を返す。</p>
+<pre><code>sealed record SimState(
+    Position Position,                                  // 最後に適用した（時刻、段、連番）と適用番号
+    ImmutableDictionary&lt;WorldId, WorldState&gt; Worlds,
+    ImmutableDictionary&lt;PersonaId, PersonaState&gt; Personas);
+
+sealed record WorldState(
+    WorldId Id, string DefId, ulong Seed, WorldStatus Status,
+    ImmutableDictionary&lt;PlaceId, RuntimePlace&gt; GeneratedPlaces,   // 生えた場所（候補、採用、廃止）
+    ImmutableDictionary&lt;string, TermEntry&gt; Terms,                 // 変換の辞書の実行中の記録
+    ImmutableDictionary&lt;long, ActiveIncident&gt; Incidents,          // 発生中の出来事
+    long GraphVersion);                                           // 場所のグラフが変わるたびに上げる
+
+sealed record PersonaState(
+    PersonaId Id, string DefId, WorldId World, PersonaStatus Status,
+    Location Location,                                  // 場所 ID、または移動中（経路と出発時刻）
+    Activity? Activity, long ActivityVersion,           // 実行中の行動（D1 1.8）
+    Activity? Overlay,                                  // 固定ブロック中にスマホを開いている間だけ
+    Vitals Vitals,                                      // 4変数の基準時刻・値・率と、状態変数の版
+    ImmutableArray&lt;AttachedCondition&gt; Conditions,
+    DayPlan? Plan, long PlanVersion,
+    ImmutableDictionary&lt;string, ActionUsage&gt; Usage,    // 行動ごとの前回の開始、今日の回数、連続回数
+    ImmutableDictionary&lt;string, ulong&gt; Rng,            // 用途ごとの乱数の位置（D5）
+    PostingState Posting,                               // 最後の投稿、空振り、サーバーの制限
+    ImmutableList&lt;InboxItem&gt; Inbox,                    // 未処理の通知だけ
+    ImmutableList&lt;OutboundOp&gt; Outbound,                // 未送信の操作だけ
+    DateTimeOffset? LastWake);                          // 日誌の範囲の起点（VISION 13章）</code></pre>
+  <ul>
+    <li>ID は <code>readonly record struct</code> で型を分ける（<code>PersonaId</code>、<code>WorldId</code>、<code>PlaceId</code>）。文字列の取り違えをコンパイラで防ぐ</li>
+    <li>受信箱と未送信の操作は、処理が済んだら状態から外し、SQLite の表にだけ残す。状態は、決める側に渡す写しでもあるので、小さく保つ</li>
+    <li>居合わせ（誰と同じ場所にいるか）は、状態に持たない。<code>Personas</code> の <code>Location</code> から導く（VISION 2章）</li>
+    <li>定義も同じく不変の <code>Definitions</code> にし、Apply と決める側に引数で渡す（VISION 4章）。最短経路のような導出データは、<code>Definitions</code> と <code>GraphVersion</code> をキーにしたキャッシュに持ち、保存しない</li>
+  </ul>
+  <div class="draft">
+    <span class="label">案 P-02　状態は不変オブジェクトで持ち、写しは参照を渡す</span>
+    VISION 付録「決める側に渡す状態の写しの作り方」への案。状態が不変なら、写しは参照を渡すだけでよく、コピーもロックも要らない。前提の規模（最大 10 人）なら、Apply のたびに数個の record を作り直すコストは無視できる。
+  </div>
+  <div class="draft">
+    <span class="label">案 P-23　インスタンス ID は「定義 ID@ワールド ID」</span>
+    <code>kaori@tokyo</code>。送還したあとに同じワールドに召喚し直したら、<code>kaori@tokyo#2</code> のように番号を付ける。ログと記憶の表で、人が読んで誰かわかる形にする。
+  </div>
+</section>
+
+<section id="sqlite">
+  <h2><span class="num">3.8</span>SQLite のスキーマ</h2>
+  <p>よく絞り込む項目は列にし、構造が深いものは JSON の列にする。同梱の SQLite には JSON 関数が入っているので、JSON の中身でも絞り込める。</p>
+  <figure class="diagram">
+    <svg viewBox="0 0 760 270" role="img" aria-label="表の関係">
+      <rect class="box accent" x="290" y="20" width="180" height="56" rx="8"/>
+      <text class="title" x="380" y="44" text-anchor="middle">events</text>
+      <text class="sub" x="380" y="63" text-anchor="middle">キューとログ</text>
+
+      <rect class="box good" x="40" y="130" width="160" height="50" rx="8"/>
+      <text class="title" x="120" y="152" text-anchor="middle">worlds</text>
+      <text class="sub" x="120" y="170" text-anchor="middle">ワールドインスタンス</text>
+      <rect class="box good" x="300" y="130" width="160" height="50" rx="8"/>
+      <text class="title" x="380" y="152" text-anchor="middle">personas</text>
+      <text class="sub" x="380" y="170" text-anchor="middle">ペルソナインスタンス</text>
+      <rect class="box" x="560" y="130" width="160" height="50" rx="8"/>
+      <text class="title" x="640" y="152" text-anchor="middle">memory_*</text>
+      <text class="sub" x="640" y="170" text-anchor="middle">記憶（派生ストア）</text>
+
+      <rect class="box good" x="20" y="210" width="110" height="44" rx="8"/>
+      <text x="75" y="237" text-anchor="middle">world_places</text>
+      <rect class="box good" x="140" y="210" width="110" height="44" rx="8"/>
+      <text x="195" y="237" text-anchor="middle">world_terms</text>
+      <rect class="box good" x="270" y="210" width="110" height="44" rx="8"/>
+      <text x="325" y="237" text-anchor="middle">inbox</text>
+      <rect class="box good" x="390" y="210" width="110" height="44" rx="8"/>
+      <text x="445" y="237" text-anchor="middle">outbound</text>
+      <rect class="box good" x="520" y="210" width="110" height="44" rx="8"/>
+      <text x="575" y="237" text-anchor="middle">incidents</text>
+
+      <path class="arrow" d="M120 180 V208"/>
+      <path class="arrow" d="M140 180 L190 208"/>
+      <path class="arrow" d="M360 180 L330 208"/>
+      <path class="arrow" d="M400 180 L440 208"/>
+      <path class="arrow" d="M200 160 Q 400 120 560 210"/>
+      <path class="arrow dash" d="M290 60 Q 160 80 120 128"/>
+      <path class="arrow dash" d="M380 76 V128"/>
+      <path class="arrow dash" d="M470 60 Q 600 80 640 128"/>
+      <text class="sub" x="160" y="96">適用で書く</text>
+      <text class="sub" x="560" y="96">整理ジョブが読む</text>
+    </svg>
+    <figcaption>緑はエンジンが書く状態の表。記憶の表は整理ジョブが書く</figcaption>
+  </figure>
+<pre><code>-- キューとログ（VISION 2章「イベント」）
+CREATE TABLE events (
+  seq            INTEGER PRIMARY KEY,      -- 連番 = ID
+  time_utc       INTEGER NOT NULL,         -- 絶対時刻（Unix ミリ秒）
+  stage          INTEGER NOT NULL,         -- 1〜7
+  kind           TEXT    NOT NULL,
+  world_id       TEXT,
+  persona_id     TEXT,
+  status         TEXT    NOT NULL,         -- pending / processing / done / applied / skipped / rejected
+  status_reason  TEXT,
+  apply_no       INTEGER UNIQUE,           -- 適用番号
+  batch          INTEGER,
+  cause          INTEGER,
+  payload        TEXT    NOT NULL,         -- JSON。決めた結果もここ
+  guard          TEXT,                     -- JSON
+  origin         TEXT    NOT NULL,
+  trace          TEXT,                     -- JSON
+  real_time_utc  INTEGER,                  -- 実時刻（送信完了、元の到着）
+  enqueued_utc   INTEGER NOT NULL,         -- 積んだ実時刻（遅れの計測用）
+  applied_utc    INTEGER                   -- 適用した実時刻
+);
+CREATE INDEX ix_events_queue   ON events(time_utc, stage, seq) WHERE status IN ('pending', 'processing');
+CREATE INDEX ix_events_persona ON events(persona_id, apply_no);
+CREATE INDEX ix_events_kind    ON events(persona_id, kind, time_utc);
+
+-- 状態の表
+CREATE TABLE worlds (
+  id TEXT PRIMARY KEY, def_id TEXT NOT NULL, seed INTEGER NOT NULL,
+  status TEXT NOT NULL, graph_version INTEGER NOT NULL, created_seq INTEGER NOT NULL
+);
+CREATE TABLE world_places (                -- 生えた場所
+  world_id TEXT NOT NULL, place_id TEXT NOT NULL,
+  name TEXT NOT NULL, tags TEXT NOT NULL, links TEXT NOT NULL, grp TEXT,
+  status TEXT NOT NULL,                    -- candidate / adopted / retired
+  created_seq INTEGER NOT NULL, updated_seq INTEGER NOT NULL,
+  PRIMARY KEY (world_id, place_id)
+);
+CREATE TABLE world_terms (                 -- 変換の辞書の実行中の記録
+  world_id TEXT NOT NULL, term TEXT NOT NULL,
+  verdict TEXT NOT NULL, mapped TEXT, category TEXT, created_seq INTEGER NOT NULL,
+  PRIMARY KEY (world_id, term)
+);
+CREATE TABLE incidents (                   -- 発生中の出来事
+  id INTEGER PRIMARY KEY,                  -- incident.occurred の seq
+  world_id TEXT NOT NULL, persona_id TEXT, def_id TEXT,
+  effects TEXT NOT NULL, started_utc INTEGER NOT NULL, ends_utc INTEGER
+);
+CREATE TABLE personas (
+  id TEXT PRIMARY KEY, def_id TEXT NOT NULL, world_id TEXT NOT NULL, status TEXT NOT NULL,
+  location TEXT NOT NULL,                  -- JSON
+  activity TEXT, overlay TEXT, activity_version INTEGER NOT NULL,
+  vitals TEXT NOT NULL, conditions TEXT NOT NULL,
+  plan TEXT, plan_version INTEGER NOT NULL,
+  usage TEXT NOT NULL, rng TEXT NOT NULL, posting TEXT NOT NULL,
+  last_wake_utc INTEGER, created_seq INTEGER NOT NULL, updated_seq INTEGER NOT NULL
+);
+CREATE TABLE inbox (
+  id INTEGER PRIMARY KEY,                  -- notification.arrived の seq
+  persona_id TEXT NOT NULL, channel TEXT NOT NULL, kind TEXT NOT NULL,
+  sender TEXT, audience TEXT NOT NULL, body TEXT NOT NULL,
+  original_arrived_utc INTEGER,
+  status TEXT NOT NULL,                    -- unread / handled
+  handled_seq INTEGER, outcome TEXT
+);
+CREATE TABLE outbound (
+  id INTEGER PRIMARY KEY,                  -- outbound.speech / operation の seq
+  persona_id TEXT NOT NULL, channel TEXT NOT NULL, op_kind TEXT NOT NULL,
+  is_speech INTEGER NOT NULL, payload TEXT NOT NULL,
+  status TEXT NOT NULL,                    -- pending / sent / failed / unknown
+  external_id TEXT, result_seq INTEGER, sent_utc INTEGER, error TEXT
+);
+
+-- 記憶（VISION 13章、D6）
+CREATE TABLE memory_items (
+  id INTEGER PRIMARY KEY, persona_id TEXT NOT NULL, world_id TEXT NOT NULL,
+  kind TEXT NOT NULL,                      -- fact / episode
+  audience TEXT NOT NULL,                  -- 'public' / 'dm:&lt;channel&gt;:&lt;userId&gt;'
+  subjects TEXT NOT NULL, text TEXT NOT NULL, gist TEXT NOT NULL,
+  shareable INTEGER NOT NULL, importance INTEGER NOT NULL, tags TEXT NOT NULL,
+  reinforce_count INTEGER NOT NULL, last_reinforced_utc INTEGER NOT NULL,
+  half_life_days REAL, superseded_by INTEGER, sources TEXT NOT NULL,
+  created_utc INTEGER NOT NULL
+);
+CREATE TABLE memory_threads (
+  id INTEGER PRIMARY KEY, persona_id TEXT NOT NULL, audience TEXT NOT NULL,
+  title TEXT NOT NULL, summary TEXT NOT NULL, status TEXT NOT NULL,
+  updated_utc INTEGER NOT NULL, sources TEXT NOT NULL
+);
+CREATE TABLE memory_cursors (
+  persona_id TEXT NOT NULL, layer TEXT NOT NULL, apply_no INTEGER NOT NULL,
+  PRIMARY KEY (persona_id, layer)
+);</code></pre>
+  <ul>
+    <li>ペルソナの行は、変わるたびに行ごと書き直す。1行は数 KB で、前提の規模なら十分に軽い</li>
+    <li>イベントは消さない。1人あたり1日 150 件ほどとして、10 人で年 55 万件。SQLite で問題のない量</li>
+    <li>スキーマの版は <code>PRAGMA user_version</code> で持つ。マイグレーションは、アセンブリに埋め込んだ番号つきの SQL で、起動時に足りない分を1つのトランザクションで当てる</li>
+    <li>接続の設定は <code>journal_mode=WAL</code>、<code>synchronous=NORMAL</code>、<code>busy_timeout=5000</code>、<code>foreign_keys=ON</code></li>
+  </ul>
+  <div class="draft">
+    <span class="label">案 P-22　表の構成は「よく使う列 + JSON」</span>
+    完全に正規化すると、ペルソナの状態だけで 10 表近くになり、Apply のたびの書き込みが煩雑になる。状態の表は、絞り込みに使う列（ID、所属、状態）だけを列にし、残りを JSON にする。生えた場所、辞書、受信箱、送信、記憶のように、ビューアや実行レポートで一覧にするものは、別の表にする。
+  </div>
+  <div class="draft">
+    <span class="label">案 P-24　時刻は UTC の Unix ミリ秒で保存する</span>
+    比較と並べ替えが整数で済み、インデックスが効く。C# では <code>DateTimeOffset</code>（オフセット 0）で持つ。現地時刻は、ワールドの時差を足して、その場で計算する。時差は固定なので、タイムゾーンのライブラリは使わない。
+  </div>
+</section>
+
+<section id="json">
+  <h2><span class="num">3.9</span>JSON とバージョン</h2>
+  <ul>
+    <li>イベントのペイロードは、種別ごとの record にし、<code>System.Text.Json</code> で読み書きする。種別は列（<code>kind</code>）で持つので、JSON の中には型の印を入れない</li>
+    <li>ペイロードには <code>"v": 1</code> のように、種別ごとの版を入れる。項目を足すときは、版を上げずに省略可能な項目として足す。意味を変えるときだけ版を上げ、読み込み時に古い版を新しい形に変換する</li>
+    <li>知らない種別のイベント（新しい版で書かれたもの）を読んだら、起動を止める。黙って捨てると、状態がずれるから</li>
+    <li>チャンネルが解釈する中身（返信先のノート ID など）は、コアが中を見ない JSON として持つ（VISION 10章）</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>Vivace 詳細設計 D3。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。</footer>
+</div>
+
+<button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>
+<script src="page.js"></script>
+</body>
+</html>
