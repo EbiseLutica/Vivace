@@ -185,7 +185,10 @@ absent = 0.2
 wait = 0.6
 
 [memory]
-half_life = 1.2                  # 記憶の半減期の倍率（D6）</code></pre>
+half_life = 1.2                  # 記憶の半減期の倍率（D6）
+
+[channel.misskey]                # チャンネルごとの設定。コアは中を見ず、プラグインに渡す
+follow_back = "always"           # フォローバックの方針（D6）</code></pre>
   <ul>
     <li><code>use</code> はワイルドカード（<code>misskey.*</code>）を許す。プラグインを足すと、その行動が自動で使えるようになる</li>
     <li><code>prefs</code> の語彙（<code>like</code>、<code>dislike</code>、<code>forbid</code>、数値）と、<code>tag:</code> による行動タグの指定は D5</li>

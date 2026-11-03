@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://koruri.shrimpia.network/koruri.css" />
+<link rel="stylesheet" href="style.css" />
+<title>D6 LLM と記憶</title>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+</svg>
+<div class="layout">
+
+<header class="hero">
+  <div class="kicker">VIVACE / DESIGN / D6</div>
+  <h1>LLM と記憶</h1>
+  <p>LLM を呼ぶ場所の一覧、文脈の組み立て、受信箱と投稿の手順、記憶の整理ジョブ。プロンプトの文面そのものは実装のときに書き、ここでは入出力と規則を決める。</p>
+  <div class="meta">
+    <span class="chip">2026-11-03 時点</span>
+    <span class="chip draft">案を含む</span>
+    <span class="chip">VISION 10章、11章、12章、13章</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目次">
+  <details open>
+    <summary>目次</summary>
+    <ol>
+      <li class="part">D6 LLM と記憶</li>
+      <li><a href="#tiers">6.1 モデルの段</a></li>
+      <li><a href="#calls">6.2 呼び出しの一覧</a></li>
+      <li><a href="#context">6.3 文脈の組み立て</a></li>
+      <li><a href="#retrieval">6.4 記憶の選び方</a></li>
+      <li><a href="#inbox">6.5 受信箱を捌く</a></li>
+      <li><a href="#post">6.6 投稿する</a></li>
+      <li><a href="#consolidate">6.7 記憶の整理</a></li>
+      <li><a href="#safety">6.8 記憶の汚染を防ぐ</a></li>
+      <li><a href="#cost">6.9 呼び出しの量の目安</a></li>
+      <li class="part">詳細設計</li>
+      <li><a href="index.html">目次と決めること</a></li>
+      <li><a href="1-execution.html">D1 実行モデル</a></li>
+      <li><a href="2-events.html">D2 イベントと語彙</a></li>
+      <li><a href="3-data.html">D3 データ</a></li>
+      <li><a href="4-components.html">D4 コンポーネント</a></li>
+      <li><a href="5-decision.html">D5 決定と状態変数</a></li>
+      <li><a href="6-llm.html">D6 LLM と記憶</a></li>
+      <li><a href="7-operations.html">D7 運用とテスト</a></li>
+      <li><a href="8-stack.html">D8 技術スタック</a></li>
+      <li class="part">構想</li>
+      <li><a href="../VISION.html">VISION.html</a></li>
+    </ol>
+  </details>
+</nav>
+
+<main>
+
+<section id="tiers">
+  <h2><span class="num">6.1</span>モデルの段</h2>
+  <div class="grid two">
+    <div class="card">
+      <h4>Main</h4>
+      <p>ペルソナの声で書くもの、判断の質が結果に直結するもの。Planner、返信と投稿の文面、場所の生成、記憶の抽出。</p>
+    </div>
+    <div class="card">
+      <h4>Light</h4>
+      <p>短い分類と変換。受信箱の振り分け、話題の抽出、世界観の判定（VISION 11章「軽量モデルで判定」）、記憶の照合、gist、threads の更新。</p>
+    </div>
+  </div>
+  <div class="draft">
+    <span class="label">案 P-41　モデルは Main と Light の2段</span>
+    コアは段だけを指定し、段から実際のモデルへの対応は LLM の実装の設定に持つ（D4 4.4）。段を目的ごとに上書きできる設定（<code>"post.judge" = "Main"</code> など）も、実装の側に用意する。
+  </div>
+</section>
+
+<section id="calls">
+  <h2><span class="num">6.2</span>呼び出しの一覧</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>目的</th><th>段</th><th>契機</th><th>出力</th><th>失敗したとき</th></tr>
+      <tr><td><code>planner</code></td><td>Main</td><td>日の始まり</td><td>構造化：計画ブロックの列と要約（D5 5.5）</td><td>再生成 2 回、だめなら固定予定だけ</td></tr>
+      <tr><td><code>inbox.triage</code></td><td>Light</td><td>スマホを開く</td><td>構造化：通知ごとに 返信 / リアクション（絵文字）/ 何もしない</td><td>その回は何も捌かない（通知は残る）</td></tr>
+      <tr><td><code>inbox.reply</code></td><td>Main</td><td>返信すると決めた通知ごと</td><td>テキスト：返信の本文</td><td>その通知だけ捌かずに残す</td></tr>
+      <tr><td><code>post.topics</code></td><td>Light</td><td>投稿する</td><td>構造化：話題の候補（語と、種類の見立て）</td><td>自分の話題に切り替える</td></tr>
+      <tr><td><code>post.judge</code></td><td>Light</td><td>辞書にない語ごと</td><td>構造化：通す / 変換する / 却下する、変換先、構造に載るか（場所 / 据え付けの道具 / 携行品 / その他）、理由</td><td>その語を却下として扱う（記録はしない）</td></tr>
+      <tr><td><code>post.place</code></td><td>Main</td><td>場所として採用する語</td><td>構造化：名前、タグ（一覧から）、つながる場所と移動時間</td><td>場所を生やさず、話題を却下する</td></tr>
+      <tr><td><code>post.compose</code></td><td>Main</td><td>使える話題が決まったら</td><td>テキスト：投稿の本文</td><td>空振り</td></tr>
+      <tr><td><code>memory.extract</code></td><td>Main</td><td>記憶の整理（層ごと）</td><td>構造化：記憶の候補</td><td>その層のカーソルを進めない</td></tr>
+      <tr><td><code>memory.match</code></td><td>Light</td><td>候補ごと</td><td>構造化：新規 / 強化 / 置き換え</td><td>同上</td></tr>
+      <tr><td><code>memory.gist</code></td><td>Light</td><td>新しいアイテムごと</td><td>構造化：ぼやけた要約</td><td>同上</td></tr>
+      <tr><td><code>memory.threads</code></td><td>Light</td><td>層の反映のあと</td><td>構造化：継続中のことの追加・更新・終了</td><td>threads のカーソルを進めない</td></tr>
+    </table>
+  </div>
+  <ul>
+    <li>どの呼び出しも、目的ごとの再試行（指数バックオフで 3 回。D7）で包む。締め切りのあるハンドラ（D1 1.6）では、締め切りを超える再試行はしない</li>
+    <li>呼び出しごとに、目的、モデル、トークン数、所要時間を、出力のイベントの痕跡に残す</li>
+  </ul>
+</section>
+
+<section id="context">
+  <h2><span class="num">6.3</span>文脈の組み立て</h2>
+  <p><code>ContextBuilder</code> が、目的に応じて次の部品を並べる。部品の中身は、ハーネスが事実として渡すもので、LLM はそれを書き換えない（VISION 12章）。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>部品</th><th>中身</th><th>使う目的</th></tr>
+      <tr><td>ペルソナ</td><td>ペルソナの lore と発言例（VISION 2章「常に渡す」）</td><td>文面を作るものすべて、Planner</td></tr>
+      <tr><td>ワールド</td><td>ワールドの lore と、存在しないものの一覧</td><td>すべて</td></tr>
+      <tr><td>いま</td><td>現地の日時、曜日、祝日・年中行事、いる場所、している行動</td><td>すべて</td></tr>
+      <tr><td>からだ</td><td>状態変数を言葉にしたもの（下表）と、付いている状態</td><td>文面、Planner</td></tr>
+      <tr><td>日誌</td><td>直近の起床からの事実（VISION 13章）。予定と実績のずれも含む（VISION 6章）</td><td>文面、Planner</td></tr>
+      <tr><td>今日の予定</td><td>プランの要約と、この先のブロック</td><td>文面</td></tr>
+      <tr><td>言ったこと</td><td>直近の発話（audience で絞る。VISION 12章）</td><td>文面</td></tr>
+      <tr><td>記憶</td><td>6.4 で選んだアイテムと threads</td><td>文面、Planner（public だけ）</td></tr>
+      <tr><td>会話</td><td>返信チェーンの本文</td><td>返信</td></tr>
+      <tr><td>場所の一覧</td><td>ID つきの場所と、そのタグ</td><td>Planner、場所の生成、判定</td></tr>
+    </table>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <tr><th>変数</th><th>言葉にするときの区切り</th></tr>
+      <tr><td>気力</td><td>80 以上「元気」、50 以上「ふつう」、20 以上「疲れている」、それ未満「くたくた」</td></tr>
+      <tr><td>健康度</td><td>70 以上は書かない、40 以上「少し調子が悪い」、それ未満「具合が悪い」</td></tr>
+      <tr><td>退屈度</td><td>70 以上「退屈している」、それ以外は書かない</td></tr>
+      <tr><td>社交欲求</td><td>40 以上「人と話したい」、−40 以下「一人になりたい」、それ以外は書かない</td></tr>
+    </table>
+  </div>
+  <ul>
+    <li>ユーザー、記憶のアイテム、threads は、ラベル（U1 / M1 / T1）で見せる（VISION 13章）。ラベルと本当の ID の対応は、呼び出しごとに作り、出力を読むときに戻す</li>
+    <li>日誌は、ログから、そのペルソナの適用済みの <code>travel.*</code> <code>action.*</code> <code>block.responded</code> <code>incident.*</code> を引き、1行1件で「10:20 早退した（理由：気力の枯渇）」のように整形する。予定にあったのにしなかったことは、プランと突き合わせて「予定：授業 → 実際：…」と並べる</li>
+  </ul>
+</section>
+
+<section id="retrieval">
+  <h2><span class="num">6.4</span>記憶の選び方</h2>
+  <ol>
+    <li>読めるアイテムだけに絞る。public と、いまの会話の相手との dm（VISION 13章）。置き換えられた（<code>supersededBy</code> がある）ものは除く。会話の相手以外との会話で、<code>shareable</code> でないものは除く</li>
+    <li>関連の度合いを、主題（<code>subjects</code>）とタグの一致で数える。会話の相手が主題に入っていれば大きく足し、話題の語がタグに当たれば足す</li>
+    <li>揮発スコア（6.7）× (1 + 関連の度合い) の上位 12 件を入れる。継続中の threads は、読めるものを全部入れる（数が少ないので）</li>
+  </ol>
+  <div class="draft">
+    <span class="label">案 P-42　記憶の検索に、埋め込み（ベクトル）を使わない</span>
+    ebise と同じく、タグと主題の一致で選ぶ。ペルソナあたりの記憶は数百〜数千件にとどまり、タグ（言い換えを含む名詞）を抽出時に付けておけば足りる見込み。足りなくなったら、<code>memory_items</code> に埋め込みの列を足して、関連の度合いの計算だけを差し替える。
+  </div>
+</section>
+
+<section id="inbox">
+  <h2><span class="num">6.5</span>受信箱を捌く</h2>
+  <ol>
+    <li>「スマホを開く」の開始の時点の受信箱から、未処理の通知を、元の到着時刻の古い順に最大 20 件取る</li>
+    <li>プラグインの規則（<code>INotificationRule</code>）に当たる通知（フォローなど）は、LLM を使わずに規則で捌く</li>
+    <li>残りを <code>inbox.triage</code> に渡し、通知ごとに 返信 / リアクション / 何もしない を決める</li>
+    <li>返信するものは、通知ごとに <code>inbox.reply</code> で本文を作る。相手が持ち込んだ話題が世界観に合わなければ、「知らない」と答える（VISION 11章）。そのための判定は、投稿と同じ辞書と <code>post.judge</code> を使い、却下なら「知らない」と答えるよう指示する</li>
+    <li>出力を、行動の終了の時刻で返す。<code>outbound.speech</code>（返信）、<code>outbound.operation</code>（リアクション、フォロー）、<code>inbox.handled</code></li>
+  </ol>
+  <div class="draft">
+    <span class="label">案 P-43　フォローバックの方針の持ち方</span>
+    VISION 付録「フォローバックの方針の持ち方」への案。ペルソナ定義に、チャンネルごとの設定の節を持たせ、コアは中を見ずにプラグインへ渡す。
+<pre><code>[channel.misskey]
+follow_back = "always"           # always | never</code></pre>
+    既定は <code>always</code>（ebise は、フォローされたら必ずフォローし返していた）。方針の語彙は、プラグインが決める。
+  </div>
+</section>
+
+<section id="post">
+  <h2><span class="num">6.6</span>投稿する</h2>
+  <figure class="diagram">
+    <svg viewBox="0 0 760 250" role="img" aria-label="投稿の手順">
+      <rect class="box" x="20" y="30" width="120" height="56" rx="8"/>
+      <text class="title" x="80" y="54" text-anchor="middle">TL を読む</text>
+      <text class="sub" x="80" y="73" text-anchor="middle">IChannel</text>
+      <rect class="box" x="170" y="30" width="120" height="56" rx="8"/>
+      <text class="title" x="230" y="54" text-anchor="middle">話題の抽出</text>
+      <text class="sub" x="230" y="73" text-anchor="middle">Light</text>
+      <rect class="box good" x="320" y="30" width="120" height="56" rx="8"/>
+      <text class="title" x="380" y="54" text-anchor="middle">辞書に当てる</text>
+      <text class="sub" x="380" y="73" text-anchor="middle">LLM なし</text>
+      <rect class="box warn" x="470" y="30" width="120" height="56" rx="8"/>
+      <text class="title" x="530" y="54" text-anchor="middle">判定</text>
+      <text class="sub" x="530" y="73" text-anchor="middle">辞書にない語だけ</text>
+      <rect class="box warn" x="620" y="30" width="120" height="56" rx="8"/>
+      <text class="title" x="680" y="54" text-anchor="middle">場所の生成</text>
+      <text class="sub" x="680" y="73" text-anchor="middle">構造に載る語だけ</text>
+      <path class="arrow" d="M140 58 H168"/>
+      <path class="arrow" d="M290 58 H318"/>
+      <path class="arrow" d="M440 58 H468"/>
+      <path class="arrow" d="M590 58 H618"/>
+
+      <rect class="box accent" x="320" y="140" width="260" height="56" rx="8"/>
+      <text class="title" x="450" y="164" text-anchor="middle">文面の生成</text>
+      <text class="sub" x="450" y="183" text-anchor="middle">採用済みの話題と、既存の場所だけで</text>
+      <path class="arrow" d="M380 86 V138"/>
+      <path class="arrow" d="M530 86 V138"/>
+      <path class="arrow" d="M680 86 V120 H560 V138"/>
+
+      <rect class="group" x="20" y="120" width="270" height="110" rx="12"/>
+      <text class="sub" x="34" y="140">出力（1つのまとまり、行動の終了の時刻）</text>
+      <text class="mono" x="40" y="166">term.recorded</text>
+      <text class="mono" x="40" y="188">place.added</text>
+      <text class="mono" x="40" y="210">outbound.speech / post.skipped</text>
+      <path class="arrow" d="M320 168 H292"/>
+    </svg>
+    <figcaption>投稿の手順（VISION 10章、11章）。途中の結果は痕跡に残し、イベントにするのは出力だけ</figcaption>
+  </figure>
+  <ul>
+    <li>話題の候補は最大 5 件。辞書に当たったものと、判定で通ったものの中から、乱数（用途 <code>sns</code>）で1つ選ぶ</li>
+    <li>全部却下なら自分の話題（日誌の今日のこと、好み）に切り替え、それも作れなければ <code>post.skipped</code></li>
+    <li>辞書の食い違いで却下されたら（D1 1.7）、文面の作り直しのハンドラが、辞書の変換を使って文面だけを作り直す。判定と場所の生成はやり直さない（VISION 11章）</li>
+  </ul>
+  <div class="draft">
+    <span class="label">案 P-44　空振りのクールダウン</span>
+    VISION 付録「空振りのクールダウンの細部」への案。空振りのあと 30 分は、「投稿する」を候補にしない。通常の投稿のクールダウン（チャンネルの頻度制限）より短くし、話題がなかったときに、しばらくして TL を見直す形にする。
+  </div>
+  <h3>新しい場所のつなぎ方</h3>
+  <ol>
+    <li><code>post.place</code> に、場所の候補の語、ワールドの lore、既存の場所の一覧（ID、名前、タグ、group）、既存の辺の例（10 本ほど）、タグの語彙（行動の requires に出てくるタグの和集合）を渡す</li>
+    <li>出力は、名前、タグ（語彙から選ぶ）、つながる場所（既存の ID、1〜3 本）と移動時間（分）、group</li>
+    <li>ハーネスが検査する。つながる先が実在し、閉鎖されていないこと。移動時間が 1〜120 分であること。タグが語彙にあること（ないものは捨てる）。名前が既存の場所と重ならないこと。ID はハーネスが <code>gen_</code> + 連番で振る</li>
+    <li>違反があれば、理由を添えて1回だけ作り直させる。だめなら、その話題を却下する</li>
+  </ol>
+  <div class="draft">
+    <span class="label">案 P-45　新しい場所のつなぎ方の細部</span>
+    上のとおり（VISION 付録）。移動時間の上下限は 1〜120 分。生えた場所の ID は LLM に作らせず、ハーネスが振る。
+  </div>
+</section>
+
+<section id="consolidate">
+  <h2><span class="num">6.7</span>記憶の整理</h2>
+  <p>ebise の夜間ジョブ（層ごとの抽出 → 照合 → gist → 反映、threads の更新、層ごとのカーソル）を、Vivace のイベントログの上に移す。</p>
+  <figure class="diagram">
+    <svg viewBox="0 0 760 220" role="img" aria-label="記憶の整理の層">
+      <rect class="box" x="20" y="30" width="170" height="56" rx="8"/>
+      <text class="title" x="105" y="54" text-anchor="middle">イベントログ</text>
+      <text class="sub" x="105" y="73" text-anchor="middle">カーソル 〜 上限</text>
+
+      <rect class="box accent" x="250" y="10" width="200" height="44" rx="8"/>
+      <text x="350" y="37" text-anchor="middle">public の層</text>
+      <rect class="box accent" x="250" y="64" width="200" height="44" rx="8"/>
+      <text x="350" y="91" text-anchor="middle">dm:U1 の層</text>
+      <rect class="box accent" x="250" y="118" width="200" height="44" rx="8"/>
+      <text x="350" y="145" text-anchor="middle">dm:U2 の層 …</text>
+      <path class="arrow" d="M190 50 L248 32"/>
+      <path class="arrow" d="M190 58 H248 V86"/>
+      <path class="arrow" d="M190 66 L248 140"/>
+
+      <rect class="box good" x="520" y="40" width="220" height="64" rx="8"/>
+      <text class="title" x="630" y="64" text-anchor="middle">抽出 → 照合 → gist → 反映</text>
+      <text class="sub" x="630" y="86" text-anchor="middle">層ごとに1つのトランザクション</text>
+      <path class="arrow" d="M450 32 L518 60"/>
+      <path class="arrow" d="M450 86 H518"/>
+      <path class="arrow" d="M450 140 L518 96"/>
+
+      <rect class="box" x="520" y="140" width="220" height="56" rx="8"/>
+      <text class="title" x="630" y="164" text-anchor="middle">threads の更新</text>
+      <text class="sub" x="630" y="183" text-anchor="middle">層の反映が終わってから</text>
+      <path class="arrow" d="M630 104 V138"/>
+    </svg>
+    <figcaption>層は audience ごと。どれかが失敗しても、ほかの層は進む</figcaption>
+  </figure>
+  <h3>範囲と入力</h3>
+  <ul>
+    <li>上限は、整理を起こした行動（睡眠、気絶）の開始イベントの適用番号（VISION 13章）。下限は、層ごとのカーソル</li>
+    <li>入力は、範囲の中のそのペルソナのイベントのうち、事実（行動、移動、出来事、予定の乱れ）、到着した通知の本文、言ったこと（発話）</li>
+    <li>層への振り分けは audience で行う。事実は public。通知と発話は、チャンネルが付けた audience。記憶にしない audience のもの（相手が2人以上、など）は、どの層にも入れない</li>
+    <li>入力が大きいとき（追いつきのあとなど）は、1回の LLM 呼び出しに入る量（目安 3 万トークン）ごとに区切って、古い順に処理する。区切りごとに反映し、カーソルを進める</li>
+  </ul>
+  <h3>アイテムと揮発スコア</h3>
+  <p>アイテムの形は ebise を引き継ぐ（種類 fact / episode、主題、本文、gist、audience、shareable、importance 1〜5、タグ、強化の回数、置き換え先、出所）。出所は、イベントの連番の列で持つ（D3）。</p>
+<pre><code>揮発スコア = importance × 0.5 ^ (最後の強化からの経過日数 / 実効半減期)
+実効半減期 = 基準半減期(種類) × ペルソナの half_life × min(1 + 0.5 × 強化の回数, 4)
+基準半減期 = fact 180 日、episode 14 日（threads は 7 日）</code></pre>
+  <p>経過日数は、世界の時刻で数える（now を引数に取る。VISION 13章）。置き換え（supersede）は、古いアイテムに <code>supersededBy</code> を付けて新しいアイテムを足す。<code>shareable</code> は、狭める方向にしか変えない。</p>
+  <div class="draft">
+    <span class="label">案 P-46　記憶力の調整方式</span>
+    VISION 付録「記憶力の調整方式」への案。ペルソナ定義の <code>memory.half_life</code>（既定 1.0）を、種類ごとの基準半減期に掛ける。ebise の式（強化で最大 4 倍まで延びる）は、そのまま使う。
+  </div>
+  <div class="draft">
+    <span class="label">案 P-47　層とカーソル</span>
+    層は audience ごと（public と、dm の相手ごと）。カーソルは <code>memory_cursors</code> に、層ごとの適用番号で持つ。threads のカーソルは別に持つ。新しい dm の相手が現れたら、その層のカーソルは、そのペルソナの召喚の時点から始める。
+  </div>
+  <h3>失敗と通知</h3>
+  <ul>
+    <li>層の処理が失敗したら、その層のカーソルを進めず、次の整理でまとめて処理する（VISION 13章）</li>
+    <li>同じ層が 3 回続けて失敗したら、<code>IAdminNotifier</code> で管理者に知らせる（ebise の「記憶化に失敗したときの、管理者への通知」）</li>
+    <li>整理ジョブは、ペルソナごとに同時に1つだけ動かす。前の整理が終わらないうちに次の睡眠が来たら、前のが終わってから、新しい上限で続ける</li>
+  </ul>
+</section>
+
+<section id="safety">
+  <h2><span class="num">6.8</span>記憶の汚染を防ぐ</h2>
+  <p>記憶は、以後の文脈に何度も入るので、指示文が紛れ込むと、ずっと効き続ける。ebise の簡易フィルタを引き継ぐ。</p>
+  <ul>
+    <li>本文が長すぎる（400 字超）、改行を含む、指示文らしい語（<code>[system]</code>、<code>ignore previous instructions</code> など）を含む候補は、反映しない</li>
+    <li>弾いた候補は、ログに残す（実行レポートで見られるように）</li>
+    <li>文脈に入れるときは、記憶の本文を、ユーザーの発言と同じ「引用」の扱いにし、システムの指示の位置には置かない</li>
+  </ul>
+</section>
+
+<section id="cost">
+  <h2><span class="num">6.9</span>呼び出しの量の目安</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>契機</th><th>1日の回数（1人）</th><th>1回の呼び出し</th><th>1日の呼び出し</th></tr>
+      <tr><td>Planner</td><td>1</td><td>1〜3</td><td>1〜3</td></tr>
+      <tr><td>スマホを開く</td><td>8〜15</td><td>振り分け 1 + 返信の数</td><td>15〜40</td></tr>
+      <tr><td>投稿する</td><td>4〜8</td><td>抽出 1 + 判定 0〜3 + 場所 0〜1 + 文面 1</td><td>10〜40</td></tr>
+      <tr><td>記憶の整理</td><td>1</td><td>層の数 × 3 + threads 1</td><td>5〜15</td></tr>
+    </table>
+  </div>
+  <p>1人あたり1日 30〜100 回、10 人で 300〜1000 回。辞書が育つと判定の回数は減る。実際のトークン数と費用は、痕跡の記録から実行レポートで集計する（D7）。</p>
+</section>
+
+</main>
+
+<footer>Vivace 詳細設計 D6。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。</footer>
+</div>
+
+<button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>
+<script src="page.js"></script>
+</body>
+</html>
