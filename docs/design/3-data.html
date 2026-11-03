@@ -106,7 +106,7 @@
     <li>時間の長さは、<code>"45m"</code>、<code>"1h30m"</code>、<code>"3d"</code> のように単位つきの文字列で書く。時刻は <code>"HH:mm"</code>（現地時刻）、年をまたぐ期間は <code>"MM-DD"</code></li>
   </ul>
   <div class="draft">
-    <span class="label">案 P-19　定義ファイルの配置と ID の名前空間</span>
+    <span class="label">案 P-17　定義ファイルの配置と ID の名前空間</span>
     上のとおり。ワールドとペルソナは、1ファイル1件にして、ファイルの差分と編集の単位を揃える。行動と出来事は、似たものをまとめて書けるよう、1ファイルに何件でも書けるようにする。
   </div>
 </section>
@@ -123,7 +123,7 @@ generated_places = "auto"        # auto | review（VISION 11章）
 not_exist = "魔法や超常現象は存在しない。"   # 存在しないものの一覧（任意）
 
 [calendar]
-holidays = "jp"                  # 祝日の暦の提供元（P-21）。省略時は祝日なし
+holidays = "jp"                  # 祝日の暦の提供元（P-18）。省略時は祝日なし
 events = { "12-24" = "クリスマスイブ", "10-31" = "ハロウィン" }   # 年中行事（Planner への手がかり）
 
 [[term]]                         # 変換の辞書の初期値
@@ -148,7 +148,7 @@ links = { street_home = 1 }</code></pre>
     <li>場所のタグのうち、どの行動の requires にも出てこないものは、読み込み時に警告する（効果がないので）</li>
   </ul>
   <div class="draft">
-    <span class="label">案 P-21　祝日と年中行事は、ワールドの暦に持つ</span>
+    <span class="label">案 P-18　祝日と年中行事は、ワールドの暦に持つ</span>
     ebise は、内閣府の祝日 CSV を取得して、学校の休みを判定していた。魔界に日本の祝日はないので、祝日はワールドが決めるものにする。<code>calendar.holidays</code> は提供元の名前で、コアは <code>IHolidayCalendar</code> の口だけを持ち、日本の祝日は別のパッケージ（または同梱のデータ）で提供する。年中行事は、ワールド定義に直接書く。
   </div>
 </section>
@@ -158,7 +158,7 @@ links = { street_home = 1 }</code></pre>
 <pre><code>id = "kaori"
 name = "香織"
 world = "tokyo"
-home = "kaori_room"              # 早退して帰る場所（P-20b）
+home = "kaori_room"              # 早退して帰る場所（P-19）
 lore = """
 高校2年生。本が好きで、図書委員。一人称は「わたし」。...
 """
@@ -195,7 +195,7 @@ follow_back = "always"           # フォローバックの方針（D6）</code>
     <li>固定予定は、次の節</li>
   </ul>
   <div class="draft">
-    <span class="label">案 P-20b　ペルソナ定義に <code>home</code> を足す</span>
+    <span class="label">案 P-19　ペルソナ定義に <code>home</code> を足す</span>
     VISION のペルソナ定義の項目にはないが、反射の「早退して家で休む」の行き先に要る。睡眠ブロックの場所から推すこともできるが、曜日で変わりうるので、明示する。
   </div>
 </section>
@@ -350,11 +350,11 @@ sealed record PersonaState(
     <li>定義も同じく不変の <code>Definitions</code> にし、Apply と決める側に引数で渡す（VISION 4章）。最短経路のような導出データは、<code>Definitions</code> と <code>GraphVersion</code> をキーにしたキャッシュに持ち、保存しない</li>
   </ul>
   <div class="draft">
-    <span class="label">案 P-02　状態は不変オブジェクトで持ち、写しは参照を渡す</span>
+    <span class="label">案 P-21　状態は不変オブジェクトで持ち、写しは参照を渡す</span>
     VISION 付録「決める側に渡す状態の写しの作り方」への案。状態が不変なら、写しは参照を渡すだけでよく、コピーもロックも要らない。前提の規模（最大 10 人）なら、Apply のたびに数個の record を作り直すコストは無視できる。
   </div>
   <div class="draft">
-    <span class="label">案 P-23　インスタンス ID は「定義 ID@ワールド ID」</span>
+    <span class="label">案 P-22　インスタンス ID は「定義 ID@ワールド ID」</span>
     <code>kaori@tokyo</code>。送還したあとに同じワールドに召喚し直したら、<code>kaori@tokyo#2</code> のように番号を付ける。ログと記憶の表で、人が読んで誰かわかる形にする。
   </div>
 </section>
@@ -393,12 +393,12 @@ sealed record PersonaState(
       <path class="arrow" d="M140 180 L190 208"/>
       <path class="arrow" d="M360 180 L330 208"/>
       <path class="arrow" d="M400 180 L440 208"/>
-      <path class="arrow" d="M200 160 Q 400 120 560 210"/>
+      <path class="arrow" d="M460 176 L560 210"/>
       <path class="arrow dash" d="M290 60 Q 160 80 120 128"/>
       <path class="arrow dash" d="M380 76 V128"/>
       <path class="arrow dash" d="M470 60 Q 600 80 640 128"/>
-      <text class="sub" x="160" y="96">適用で書く</text>
-      <text class="sub" x="560" y="96">整理ジョブが読む</text>
+      <text class="sub" x="300" y="110" text-anchor="end">適用で書く</text>
+      <text class="sub" x="460" y="110">整理ジョブが読む</text>
     </svg>
     <figcaption>緑はエンジンが書く状態の表。記憶の表は整理ジョブが書く</figcaption>
   </figure>
@@ -501,7 +501,7 @@ CREATE TABLE memory_cursors (
     <li>接続の設定は <code>journal_mode=WAL</code>、<code>synchronous=NORMAL</code>、<code>busy_timeout=5000</code>、<code>foreign_keys=ON</code></li>
   </ul>
   <div class="draft">
-    <span class="label">案 P-22　表の構成は「よく使う列 + JSON」</span>
+    <span class="label">案 P-23　表の構成は「よく使う列 + JSON」</span>
     完全に正規化すると、ペルソナの状態だけで 10 表近くになり、Apply のたびの書き込みが煩雑になる。状態の表は、絞り込みに使う列（ID、所属、状態）だけを列にし、残りを JSON にする。生えた場所、辞書、受信箱、送信、記憶のように、ビューアや実行レポートで一覧にするものは、別の表にする。
   </div>
   <div class="draft">

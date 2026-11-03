@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://koruri.shrimpia.network/koruri.css" />
+<link rel="stylesheet" href="style.css" />
+<title>D7 運用とテスト</title>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+</svg>
+<div class="layout">
+
+<header class="hero">
+  <div class="kicker">VIVACE / DESIGN / D7</div>
+  <h1>運用とテスト</h1>
+  <p>失敗したときの振る舞い、定義の検証、観測、テストの層、最小の CLI。</p>
+  <div class="meta">
+    <span class="chip">2026-11-03 時点</span>
+    <span class="chip draft">案を含む</span>
+    <span class="chip">VISION 16章</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目次">
+  <details open>
+    <summary>目次</summary>
+    <ol>
+      <li class="part">D7 運用とテスト</li>
+      <li><a href="#errors">7.1 失敗したとき</a></li>
+      <li><a href="#validation">7.2 定義の検証</a></li>
+      <li><a href="#observability">7.3 観測</a></li>
+      <li><a href="#testing">7.4 テストの層</a></li>
+      <li><a href="#cli">7.5 最小の CLI</a></li>
+      <li class="part">詳細設計</li>
+      <li><a href="index.html">目次と決めること</a></li>
+      <li><a href="1-execution.html">D1 実行モデル</a></li>
+      <li><a href="2-events.html">D2 イベントと語彙</a></li>
+      <li><a href="3-data.html">D3 データ</a></li>
+      <li><a href="4-components.html">D4 コンポーネント</a></li>
+      <li><a href="5-decision.html">D5 決定と状態変数</a></li>
+      <li><a href="6-llm.html">D6 LLM と記憶</a></li>
+      <li><a href="7-operations.html">D7 運用とテスト</a></li>
+      <li><a href="8-stack.html">D8 技術スタック</a></li>
+      <li class="part">構想</li>
+      <li><a href="../VISION.html">VISION.html</a></li>
+    </ol>
+  </details>
+</nav>
+
+<main>
+
+<section id="errors">
+  <h2><span class="num">7.1</span>失敗したとき</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>失敗</th><th>振る舞い</th><th>管理者への通知</th></tr>
+      <tr><td>定義の検証のエラー</td><td>起動しない。読み直しなら拒否して、古い定義で動き続ける</td><td>読み直しの結果として返す</td></tr>
+      <tr><td>LLM の一時的な失敗（タイムアウト、429、5xx）</td><td>指数バックオフで 3 回まで再試行する。ループの中のハンドラは 2 秒から、記憶の整理は 10 秒から倍にする。尽きたら、ハンドラごとの代わりの出力（D6 6.2）</td><td>同じ目的が 1 時間に 5 回尽きたら</td></tr>
+      <tr><td>LLM の恒久的な失敗（認証、不正なリクエスト）</td><td>再試行しない。代わりの出力にする</td><td>すぐに</td></tr>
+      <tr><td>構造化出力が読めない</td><td>理由を添えて1回だけ作り直させる。だめなら、代わりの出力</td><td>しない（痕跡に残す）</td></tr>
+      <tr><td>ハンドラの例外（バグ）</td><td>LLM の失敗と同じく代わりの出力にする。Decider なら <code>core.go_to_next</code> を選んだことにする</td><td>すぐに</td></tr>
+      <tr><td>Apply の例外（バグ）</td><td>エンジンを止める。イベントを飛ばして進めると、状態の不変条件が崩れるから。メモリの状態は不変なので、コミット前の状態がそのまま残る</td><td>すぐに</td></tr>
+      <tr><td>SQLite の書き込みの失敗</td><td>エンジンを止める（状態とログがずれるのを防ぐ）</td><td>すぐに</td></tr>
+      <tr><td>送信の失敗</td><td>D4 4.3 のとおり。確実に送れていないときだけ再試行する</td><td>同じチャンネルが 1 時間に 5 回失敗したら</td></tr>
+      <tr><td>チャンネルの切断</td><td>チャンネルが再接続し、切れていた間の通知を取り直して、いまの到着として積む（VISION 10章）</td><td>30 分つながらなければ</td></tr>
+      <tr><td>記憶の整理の失敗</td><td>D6 6.7</td><td>同じ層が 3 回続けて失敗したら</td></tr>
+    </table>
+  </div>
+  <div class="draft">
+    <span class="label">案 P-49　Apply の例外では、エンジンを止める</span>
+    止まったままだと、ペルソナの生活も止まる。管理者は、原因を直して再起動するか、CLI で問題のイベントを却下にして（<code>vivace events reject &lt;seq&gt;</code>）再起動する。自動で飛ばす仕組みは作らない。どのイベントで止まったかは、ログと通知に連番を出す。
+  </div>
+</section>
+
+<section id="validation">
+  <h2><span class="num">7.2</span>定義の検証</h2>
+  <p>検証はコアの関数で、エディタからも呼べる（VISION 2章）。結果は、ファイルと行の位置つきのエラーと警告の一覧。</p>
+  <div class="grid two">
+    <div class="card">
+      <h4>エラー（読み込まない）</h4>
+      <ul>
+        <li>TOML の構文</li>
+        <li>必須の項目がない（id、lore など）</li>
+        <li>ID の重複、名前空間の違反</li>
+        <li>参照先がない（辺、居住ワールド、固定予定の行動と場所、home、同行者）</li>
+        <li>両側に書いた辺の時間の食い違い</li>
+        <li>固定予定のブロックの重なり</li>
+        <li>反射の行動の所要時間が範囲になっている</li>
+        <li>値の型と範囲（確率が 0〜1 の外、など）</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>警告（読み込む）</h4>
+      <ul>
+        <li>未知のキー（効果の語彙にないキーも含む）</li>
+        <li>どの行動も要求しない場所のタグ</li>
+        <li>requires のタグを、どの場所も持っていない</li>
+        <li>このワールドで一度も実行できない行動（VISION 7章）</li>
+        <li>片側にしか書いていない同行</li>
+        <li>タイムラインを読めないチャンネルで「投稿する」を使う（VISION 10章）</li>
+        <li>固定予定の隙間が、場所の間の移動時間より短い</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="observability">
+  <h2><span class="num">7.3</span>観測</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>手段</th><th>中身</th></tr>
+      <tr><td>ログ（<code>ILogger</code>）</td><td>カテゴリは部品ごと（<code>Vivace.Engine</code>、<code>Vivace.Llm</code> など）。イベントの適用は Debug、決定と送信は Information、代わりの出力への切り替えは Warning</td></tr>
+      <tr><td>計測（<code>System.Diagnostics.Metrics</code>）</td><td>適用の遅れ（実時刻 − イベントの時刻）、キューの長さ、ホライズンで待った時間、ハンドラの所要時間、LLM のトークン数（目的ごと）、却下と破棄の数</td></tr>
+      <tr><td>痕跡</td><td>イベントに付けた途中の結果（D2 2.9）。ビューアで決定の理由を読む</td></tr>
+      <tr><td>実行レポート</td><td>ログの集計。生成された場所の一覧、却下された話題と理由、場所ごとの利用回数（VISION 16章）。加えて、LLM の目的ごとの呼び出し数とトークン数、却下と破棄の内訳、適用の遅れの分布</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="testing">
+  <h2><span class="num">7.4</span>テストの層</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>層</th><th>対象</th><th>書き方</th></tr>
+      <tr><td>Apply の単体</td><td>種別ごとの Apply と guard</td><td>（状態、イベント、定義）を手で作り、新しい状態、後続のイベント、シグナルを比べる。純粋な関数なので、モックは要らない</td></tr>
+      <tr><td>決める側の単体</td><td>Decider、Planner の検査と補正、話題の手順、文脈の組み立て</td><td>写しと now と乱数の位置を与える。LLM は台本で返す</td></tr>
+      <tr><td>シナリオ</td><td>数日分の通しの動き</td><td>仮想時計、メモリの SQLite、台本の LLM、null channel で N 日回し、事実のイベントの列を正規化して、保存しておいた期待値と比べる（スナップショット）</td></tr>
+      <tr><td>不変条件</td><td>シナリオの全適用</td><td>適用のたびに検査する：時刻が戻らない、状態変数が範囲の中、各ペルソナに次の自分のイベントがある（止まっていない）、未適用のイベントの時刻がいまの位置より前にない</td></tr>
+      <tr><td>再起動</td><td>落ちても壊れないこと</td><td>シナリオの途中のランダムな位置でエンジンを止め、再起動して最後まで回す。止めなかったときと、事実のイベントの列が一致することを確かめる</td></tr>
+      <tr><td>評価ケース</td><td>世界観の逸脱、事実と発話の分離</td><td>VISION 16章の意地悪なケースを、本物の LLM と LLM 判定で回す。費用がかかるので、CI では回さず、手動で回す</td></tr>
+    </table>
+  </div>
+  <ul>
+    <li>台本の LLM（<code>ScriptedLlm</code>）は、目的（<code>Purpose</code>）と、入力に含まれる文字列で応答を引く。当たらなければテストを失敗させる（黙って空を返さない）</li>
+    <li>再起動のテストが通るのは、乱数がカウンタ方式で、台本の LLM が決定的だから。本物の LLM では一致しない（決め直しで違う結果になる）が、それは仕様どおり</li>
+  </ul>
+  <div class="draft">
+    <span class="label">案 P-50　テストの層</span>
+    上の6層。最初に作るのは、Apply の単体と、シナリオと、不変条件。再起動のテストは、永続化を作った段階で足す。
+  </div>
+</section>
+
+<section id="cli">
+  <h2><span class="num">7.5</span>最小の CLI</h2>
+  <p>作る順番（VISION 1章）の「最小の CLI」。コアの外だが、コアの公開 API で何ができればよいかの確認として書いておく。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>コマンド</th><th>すること</th></tr>
+      <tr><td><code>vivace validate</code></td><td>定義を検証して、エラーと警告を出す</td></tr>
+      <tr><td><code>vivace run</code></td><td>実時間で運転する</td></tr>
+      <tr><td><code>vivace dry-run --days 3</code></td><td>早送りで回し、終わったら実行レポートを出す</td></tr>
+      <tr><td><code>vivace probe &lt;persona&gt; &lt;語...&gt;</code></td><td>話題の注入（VISION 16章）</td></tr>
+      <tr><td><code>vivace inject &lt;file.toml&gt;</code></td><td>投入の窓口にイベントを出す（出来事の注入など）</td></tr>
+      <tr><td><code>vivace events tail / show / reject</code></td><td>ログを見る。問題のイベントを却下にする（P-49）</td></tr>
+      <tr><td><code>vivace report</code></td><td>実行レポートを出す</td></tr>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<footer>Vivace 詳細設計 D7。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。</footer>
+</div>
+
+<button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>
+<script src="page.js"></script>
+</body>
+</html>

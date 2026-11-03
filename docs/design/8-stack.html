@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://koruri.shrimpia.network/koruri.css" />
+<link rel="stylesheet" href="style.css" />
+<title>D8 技術スタック</title>
+</head>
+<body>
+<div class="layout">
+
+<header class="hero">
+  <div class="kicker">VIVACE / DESIGN / D8</div>
+  <h1>技術スタック</h1>
+  <p>C# と SQLite は確定。それ以外は、D1〜D7 で決めた「やること」から選んだ候補で、ライブラリのバージョンは実装を始めるときに NuGet で確かめて固定する。</p>
+  <div class="meta">
+    <span class="chip">2026-11-03 時点</span>
+    <span class="chip fixed">C# / SQLite は確定</span>
+    <span class="chip draft">ほかは案</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目次">
+  <details open>
+    <summary>目次</summary>
+    <ol>
+      <li class="part">D8 技術スタック</li>
+      <li><a href="#fixed">8.1 確定</a></li>
+      <li><a href="#libraries">8.2 ライブラリ</a></li>
+      <li><a href="#not-used">8.3 使わないもの</a></li>
+      <li><a href="#poc">8.4 LLM の PoC</a></li>
+      <li class="part">詳細設計</li>
+      <li><a href="index.html">目次と決めること</a></li>
+      <li><a href="1-execution.html">D1 実行モデル</a></li>
+      <li><a href="2-events.html">D2 イベントと語彙</a></li>
+      <li><a href="3-data.html">D3 データ</a></li>
+      <li><a href="4-components.html">D4 コンポーネント</a></li>
+      <li><a href="5-decision.html">D5 決定と状態変数</a></li>
+      <li><a href="6-llm.html">D6 LLM と記憶</a></li>
+      <li><a href="7-operations.html">D7 運用とテスト</a></li>
+      <li><a href="8-stack.html">D8 技術スタック</a></li>
+      <li class="part">構想</li>
+      <li><a href="../VISION.html">VISION.html</a></li>
+    </ol>
+  </details>
+</nav>
+
+<main>
+
+<section id="fixed">
+  <h2><span class="num">8.1</span>確定</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>項目</th><th>内容</th></tr>
+      <tr><td>言語とランタイム</td><td>C# 14 / .NET 10（<code>Vivace.Core.csproj</code> は <code>net10.0</code>、<code>Nullable</code> 有効）</td></tr>
+      <tr><td>実行時の状態の保存先</td><td>SQLite（VISION 1章）</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="libraries">
+  <h2><span class="num">8.2</span>ライブラリ</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>用途</th><th>候補</th><th>選ぶ理由（どの設計から来るか）</th></tr>
+      <tr><td>SQLite のドライバ</td><td><code>Microsoft.Data.Sqlite</code>（10.x）</td><td>.NET の標準。既定の同梱 SQLite（<code>e_sqlite3</code>）に JSON 関数が入っていて、JSON の列を絞り込める（D3 3.8）</td></tr>
+      <tr><td>SQL の書き方</td><td>手書きの SQL（ORM なし）</td><td>表は十数個、書き込みはエンジンの <code>StorageBatch</code> だけ（D4 4.2）。リフレクションに頼らないので、モバイル（NativeAOT）でも動く</td></tr>
+      <tr><td>TOML</td><td><code>Tomlyn</code>（2.x、TOML 1.1）</td><td>構文木を持ち、未知のキーの警告に行と列を出せる（D7 7.2）。NativeAOT 対応をうたっている</td></tr>
+      <tr><td>JSON</td><td><code>System.Text.Json</code> + ソース生成</td><td>BCL。ペイロードの record の読み書き（D3 3.9）。ソース生成で AOT でも動く</td></tr>
+      <tr><td>不変のコレクション</td><td><code>System.Collections.Immutable</code></td><td>BCL。状態を不変にして、写しを参照で渡す（D3 P-21）</td></tr>
+      <tr><td>コマンドのキュー</td><td><code>System.Threading.Channels</code></td><td>BCL。エンジンを唯一の書き手にするアクター（D1 P-01）</td></tr>
+      <tr><td>ハッシュ</td><td><code>System.Security.Cryptography.SHA256</code></td><td>BCL。乱数のシードの導出（D5 5.9）</td></tr>
+      <tr><td>ログ</td><td><code>Microsoft.Extensions.Logging.Abstractions</code></td><td>コアは抽象だけに依存し、出力先はホストが選ぶ</td></tr>
+      <tr><td>計測</td><td><code>System.Diagnostics.Metrics</code></td><td>BCL（D7 7.3）</td></tr>
+      <tr><td>LLM</td><td>コア独自の <code>ILlmClient</code> と、その実装（8.4 の PoC で決める）</td><td>D4 P-26</td></tr>
+      <tr><td>テスト</td><td>xUnit v3 + Verify（スナップショット）</td><td>シナリオのテストは、イベントの列のスナップショットを比べる（D7 7.4）。xUnit は 4.0 で Microsoft Testing Platform v2 が既定になったので、.NET 10 SDK では <code>global.json</code> の設定が要る。始めるときに安定版を確かめる</td></tr>
+      <tr><td>CLI</td><td><code>System.CommandLine</code>（2.0 系）</td><td>2.0 で安定版になった。最小の CLI（D7 7.5）のコマンドの解析だけに使う</td></tr>
+      <tr><td>Misskey のクライアント</td><td>自前の薄いクライアント（HTTP + WebSocket）</td><td>使う API は投稿、返信、リアクション、フォロー、通知の取得、タイムラインの取得、ストリーミングくらい。以前に作った Misskey.NET は 2023 年から更新がないので、移すなら必要な部分だけにする</td></tr>
+    </table>
+  </div>
+  <div class="draft">
+    <span class="label">案 P-51　ライブラリの選定</span>
+    上の表。BCL で足りるものは BCL を使い、外のパッケージは Microsoft.Data.Sqlite、Tomlyn、ログの抽象、テストの道具、CLI の解析にとどめる。コア（Vivace.Core）が参照する外のパッケージは、Tomlyn とログの抽象の2つだけになる（D4 4.1）。
+  </div>
+</section>
+
+<section id="not-used">
+  <h2><span class="num">8.3</span>使わないもの</h2>
+  <div class="table-wrap">
+    <table>
+      <tr><th>もの</th><th>使わない理由</th></tr>
+      <tr><td>EF Core</td><td>イベント表は追記と状態の更新だけで、変更追跡もマイグレーションの生成も要らない。トランザクションの境界（D1 1.9）を自分で決めたい</td></tr>
+      <tr><td>NodaTime などのタイムゾーンのライブラリ</td><td>ワールドの時差は固定のずれで、夏時間を扱わない（VISION 4章）。<code>DateTimeOffset</code> と <code>TimeSpan</code> で足りる</td></tr>
+      <tr><td><code>System.Random</code></td><td>バージョン間で同じ列になる保証がない（VISION 4章）。自前の SplitMix64（D5 5.9）</td></tr>
+      <tr><td>ベクトル検索</td><td>記憶の検索は、タグと主題の一致から始める（D6 P-43）</td></tr>
+      <tr><td>DI コンテナ（コアの中）</td><td>コアはビルダーで組み立てる（D4 4.6）。ホストが DI を使うのは自由</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="poc">
+  <h2><span class="num">8.4</span>LLM の PoC</h2>
+  <p>VISION 1章「LLM クライアントの実装は、詳細設計で PoC をして選ぶ」。候補は2つ。</p>
+  <div class="grid two">
+    <div class="card">
+      <h4>A. Anthropic の公式 C# SDK を直接</h4>
+      <p>NuGet の <code>Anthropic</code>（10 系以降が公式。ベータ）。プロンプトキャッシュなど、Claude の機能をそのまま使える。</p>
+    </div>
+    <div class="card">
+      <h4>B. Microsoft.Extensions.AI の <code>IChatClient</code> 越し</h4>
+      <p>公式 SDK は <code>AsIChatClient()</code> で <code>IChatClient</code> を返す。構造化出力（<code>ChatResponse&lt;T&gt;</code>）やツールの往復を、M.E.AI の仕組みで回せる。ほかのプロバイダにも替えやすい（FUTURE.html のモバイルの BYO キー）。</p>
+    </div>
+  </div>
+  <p>どちらでも、コアから見えるのは <code>ILlmClient</code> だけ（D4 4.4）。PoC では、次を確かめる。</p>
+  <ol>
+    <li><strong>構造化出力</strong>：Planner と判定の出力スキーマで、形の崩れた出力がどのくらい出るか</li>
+    <li><strong>ツールの往復</strong>：記憶の検索のツールを、ペルソナと audience の文脈つきで呼べるか（D4 4.4）</li>
+    <li><strong>プロンプトキャッシュ</strong>：ペルソナの lore とワールドの lore を固定の前置きにして、キャッシュが効くか。1人1日 30〜100 回の呼び出し（D6 6.9）の費用に直結する</li>
+    <li><strong>使用量</strong>：トークン数とモデル名を、呼び出しごとに取れるか（痕跡と実行レポート）</li>
+    <li><strong>取り消し</strong>：<code>CancellationToken</code> で、締め切り（D1 1.6）に呼び出しを止められるか</li>
+  </ol>
+  <p>B で 3 が効かない、または A に比べて手間が大きければ A にする。どちらも満たすなら、プロバイダを替えやすい B にする。</p>
+</section>
+
+</main>
+
+<footer>Vivace 詳細設計 D8。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。</footer>
+</div>
+
+<button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>
+<script src="page.js"></script>
+</body>
+</html>

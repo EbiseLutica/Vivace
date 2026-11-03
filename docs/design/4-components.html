@@ -116,7 +116,7 @@
       <tr><td><code>IStorage</code></td><td>状態とイベントの保存、ログと記憶の読み書き</td><td>なし（Vivace.Storage.Sqlite）</td></tr>
       <tr><td><code>IChannel</code></td><td>外のサービスとの取得と送信（4.3）</td><td><code>NullChannel</code>（Testing）</td></tr>
       <tr><td><code>ILlmClient</code></td><td>LLM の呼び出し（4.4）</td><td>なし（Vivace.Llm.*）</td></tr>
-      <tr><td><code>IHolidayCalendar</code></td><td>祝日の判定（D3 P-21）</td><td><code>NoHolidays</code></td></tr>
+      <tr><td><code>IHolidayCalendar</code></td><td>祝日の判定（D3 P-18）</td><td><code>NoHolidays</code></td></tr>
       <tr><td><code>IAdminNotifier</code></td><td>管理者への通知（記憶化の失敗など）</td><td>ログに出すだけのもの</td></tr>
       <tr><td><code>IDecider</code></td><td>自由時間の決定。差し替えて試せるようにする（VISION 5章）</td><td><code>UtilityDecider</code></td></tr>
     </table>
@@ -223,7 +223,7 @@ public interface ITool                   // 副作用のない参照系だけ（
     <li>再試行（指数バックオフ）は、コアの側で、目的ごとの方針で包む（D7）。実装は1回の呼び出しだけを担う</li>
   </ul>
   <div class="draft">
-    <span class="label">案 P-28　LLM クライアントは、コア独自の薄い口にする</span>
+    <span class="label">案 P-26　LLM クライアントは、コア独自の薄い口にする</span>
     VISION 付録「LLM クライアントの抽象」への案。コアは Microsoft.Extensions.AI の <code>IChatClient</code> に直接依存せず、上の小さな口だけを持つ。理由は2つ。コアが求めるのは「目的」と「段」で、モデル名やプロバイダの設定ではないこと。テストの台本の LLM（目的ごとに決まった応答を返す）が書きやすいこと。実装の側で <code>IChatClient</code> を使うのは自由で、Anthropic の公式 SDK は <code>IChatClient</code> を実装している（D8）。
   </div>
 </section>
@@ -328,7 +328,7 @@ public interface INotificationRule
     <li>プラグインが同梱する行動の ID は、プラグインの名前で始める（<code>misskey.open_phone</code>）</li>
   </ul>
   <div class="draft">
-    <span class="label">案 P-26　プラグインは、ホストがコードで登録する</span>
+    <span class="label">案 P-28　プラグインは、ホストがコードで登録する</span>
     フォルダに置いた DLL を読み込む方式（動的ロード）にはしない。最初のプラグインは Misskey だけで、ホストの CLI と一緒にビルドすれば足りる。動的ロードは、配布やバージョンの不一致、信頼の問題を連れてくるので、要るようになってから考える。
   </div>
 </section>

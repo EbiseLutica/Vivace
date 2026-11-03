@@ -116,7 +116,7 @@
       <text class="title" x="110" y="262" text-anchor="middle">IStorage</text>
       <text class="sub" x="110" y="280" text-anchor="middle">SQLite</text>
       <path class="arrow" d="M250 84 H225 V265 H202"/>
-      <text class="sub" x="230" y="226">1つのトランザクション</text>
+      <text class="sub" x="230" y="198">1つのトランザクション</text>
       <path class="arrow" d="M265 90 V105 H110 V128"/>
       <text class="sub" x="118" y="100">睡眠のシグナル</text>
       <path class="arrow" d="M110 180 V238"/>
@@ -152,7 +152,7 @@
     <li><strong>配信役</strong>と<strong>記憶の整理</strong>は、エンジンからのシグナルで動く。配信役の結果はコマンドで戻り、記憶の整理はイベントの外の表にだけ書く</li>
   </ul>
   <div class="draft">
-    <span class="label">案 P-03　エンジンを唯一の書き手にする</span>
+    <span class="label">案 P-01　エンジンを唯一の書き手にする</span>
     イベント表と状態の表への書き込みを、すべてエンジンのスレッドに集める。ほかのスレッドは、コマンドを <code>System.Threading.Channels</code> のキューに入れるだけにする。ロックの設計が要らなくなり、「状態はイベントの適用でのみ変わる」（VISION 1章）を、コードの構造で守れる。
     <p class="alt">代わりの案：イベント表への挿入を各スレッドから直接行い、SQLite のロックに任せる。書き手が増え、連番と適用番号の順序の保証が難しくなるので採らない。</p>
   </div>
@@ -179,7 +179,7 @@ record ApplyResult(
     </div>
   </div>
   <div class="draft">
-    <span class="label">案 P-01　Apply は後続のイベントとシグナルを返す</span>
+    <span class="label">案 P-02　Apply は後続のイベントとシグナルを返す</span>
     VISION では「日の始まりを処理するときに、翌日の分を積む」「率が変わるたびに到達時刻を予測し直して積む」と書かれているが、それを誰が積むかは決まっていない。Apply の戻り値に含めることにする。これで「乱数も LLM も使わずに決まる次のイベント」は、すべて Apply の中に閉じ、単体テストで検査できる。
   </div>
   <p>シグナルは、再起動したときに状態から復元できるものだけにする。メモリの上にしかない依頼は、落ちたら失われるから。</p>
@@ -194,7 +194,7 @@ record ApplyResult(
     </table>
   </div>
   <div class="draft">
-    <span class="label">案 P-10　割り込まれた行動のハンドラは取り消す</span>
+    <span class="label">案 P-03　割り込まれた行動のハンドラは取り消す</span>
     「投稿する」の文面を作っている途中に、反射で行動が打ち切られたら、そのハンドラはもう要らない。Apply が行動の版番号を上げるときに <code>CancelHandler</code> を出し、エンジンはそのハンドラを <code>CancellationToken</code> で止めて、ホライズンの待ちからも外す。止めきれずに出力が返ってきても、版番号の検査（1.7）で弾かれるので、取り消しは最適化にすぎない。
   </div>
 </section>
@@ -367,8 +367,8 @@ record ApplyResult(
       <text class="sub" x="470" y="66">決めどき</text>
       <path class="arrow" d="M640 108 V168"/>
       <text class="sub" x="648" y="142">出力を取り込んだ</text>
-      <path class="arrow dash" d="M600 108 C 560 150, 260 170, 172 140"/>
-      <text class="sub" x="500" y="160">再起動</text>
+      <path class="arrow dash" d="M720 74 C 756 66, 756 102, 722 96"/>
+      <text class="sub" x="640" y="50" text-anchor="middle">再起動：処理中のまま起動し直す</text>
     </svg>
     <figcaption>イベントの状態。行は消さず、中身も書き換えない（VISION 4章）。変わるのは状態と適用番号だけ</figcaption>
   </figure>
@@ -403,15 +403,15 @@ record ApplyResult(
       <path class="arrow" d="M180 104 L298 56"/>
       <text class="sub" x="180" y="66">別の場所を選んだ</text>
       <path class="arrow" d="M180 132 L298 180"/>
-      <text class="sub" x="150" y="184" text-anchor="end">同じ場所を選んだ</text>
+      <text class="sub" x="250" y="146">同じ場所を選んだ</text>
       <path class="arrow" d="M380 76 V158"/>
       <text class="sub" x="388" y="122">到着</text>
       <path class="arrow" d="M460 56 L578 104"/>
       <text class="sub" x="500" y="66">次の予定の場所へ</text>
       <path class="arrow" d="M578 132 L462 182"/>
       <text class="sub" x="540" y="182">ブロックの開始</text>
-      <path class="arrow dash" d="M298 196 C 220 210, 140 190, 105 148"/>
-      <text class="sub" x="120" y="222">終了・中断</text>
+      <path class="arrow dash" d="M298 205 C 200 235, 110 225, 105 150"/>
+      <text class="sub" x="40" y="200">終了・中断</text>
     </svg>
     <figcaption>ペルソナの行動の状態。どの遷移でも、行動の版番号が上がる</figcaption>
   </figure>

@@ -84,7 +84,7 @@
     <li><strong>次の予定の場所へ向かう</strong>：<code>core.go_to_next</code> を必ず足す。これで候補は空にならない（VISION 5章）</li>
   </ol>
   <div class="draft">
-    <span class="label">案 P-30　所要時間の引き方</span>
+    <span class="label">案 P-29　所要時間の引き方</span>
     範囲 <code>[min, max]</code> から、5 分刻みの一様分布で引く。固定の長さなら引かない（乱数を消費しない）。帰還の判定で落ちた候補は、短い値で引き直さない（候補が減るだけで、<code>go_to_next</code> が残るから）。
   </div>
 </section>
@@ -121,7 +121,7 @@ travel(p)  = exp( −移動時間（分） / 30 )</code></pre>
   </div>
   <p>抽選は、重みの合計 W に対して <code>r = NextDouble() × W</code> を引き、候補を ID の順に並べた累積で選ぶ。</p>
   <div class="draft">
-    <span class="label">案 P-29　Utility AI のスコアの式と、補正の語彙</span>
+    <span class="label">案 P-30　Utility AI のスコアの式と、補正の語彙</span>
     VISION 付録「Utility AI のスコアの式と、補正の語彙」への案。状態変数ごとの「良くなる量」を行動の効果から自動で予測するので、行動定義に「この行動は退屈に効く」のような印を別に書かなくてよい。補正の語彙は、<code>like</code> / <code>dislike</code> / <code>forbid</code> / 数値の4つと、行動タグ（<code>tag:</code>）による一括指定。
     <p class="alt">行動定義に <code>tags</code> を足す（D3 3.6）。好み（「運動が嫌い」）と状態（「風邪のときは外に出ない」）を、行動を1つずつ挙げずに書くため。</p>
   </div>
@@ -137,7 +137,7 @@ travel(p)  = exp( −移動時間（分） / 30 )</code></pre>
     <li>重みは、ペルソナの <code>disruption</code>（D3 3.4）。既定は 遅刻 1.0、欠席 0.3、待つ 0.5。遅刻の重みには、遅れる時間に応じて <code>exp(−遅れ（分）/ 60)</code> を掛ける（大遅刻なら休みやすい）</li>
   </ul>
   <div class="draft">
-    <span class="label">案 P-34　遅刻・欠席・待つの重み</span>
+    <span class="label">案 P-31　遅刻・欠席・待つの重み</span>
     上のとおり。VISION の「ペルソナの性質に応じた重み」を、ペルソナ定義の3つの数値で表す。
   </div>
 
@@ -147,11 +147,11 @@ travel(p)  = exp( −移動時間（分） / 30 )</code></pre>
     <li>開いたら、ブロックの行動はそのままにして、副行動（<code>Overlay</code>、D3 3.7）として短く実行する。所要時間は、行動定義の範囲から引く</li>
   </ul>
   <div class="draft">
-    <span class="label">案 P-35　長いブロックの途中の「スマホを開く機会」</span>
+    <span class="label">案 P-32　長いブロックの途中の「スマホを開く機会」</span>
     VISION 付録への案。既定では、ブロックの開始時に1回だけ。固定予定のブロックに <code>phone_every = "90m"</code> を書いたときだけ、その間隔で機会を出す（3時間のバイトの休憩など）。間隔は、ペルソナの書き手が決めるもので、コアの既定値は持たない。
   </div>
   <div class="draft">
-    <span class="label">案 P-18　ブロックの <code>interruptible</code> は持たない</span>
+    <span class="label">案 P-33　ブロックの <code>interruptible</code> は持たない</span>
     VISION 付録「予定ブロックの interruptible が要るか」への案。行動の中断は、反射と出来事が担う。スマホを開けるかは <code>phone</code>（availability）で足りるので、<code>interruptible</code> は作らない。
   </div>
 </section>
@@ -181,7 +181,7 @@ travel(p)  = exp( −移動時間（分） / 30 )</code></pre>
   <h3>3:00 の継ぎ目</h3>
   <p>プランは「3:00 から翌日の 3:00」の範囲を持つ。新しいプランを適用したとき、3:00 をまたいで続いているブロック（日をまたぐ睡眠など）は、同じブロック ID（<code>sleep_weekday@2026-11-02</code>）なので、積み直さずにそのまま続ける。</p>
   <div class="draft">
-    <span class="label">案 P-33　前日のプランがないとき</span>
+    <span class="label">案 P-34　前日のプランがないとき</span>
     VISION 付録「前日のプランがないときの、0:00〜3:00 の過ごし方と Planner のホライズン」への案。召喚した日は Planner を呼ばず、召喚した時刻から翌日の 3:00 までを、固定予定と Decider だけで過ごす（追いつきの過去の日と同じ扱い）。翌日の 0:00 の日の始まりから、通常の Planner が動く。召喚の直後に Planner を急いで回すより、仕組みが1つで済む。
   </div>
 </section>
@@ -200,20 +200,20 @@ travel(p)  = exp( −移動時間（分） / 30 )</code></pre>
   </div>
   <figure class="diagram">
     <svg viewBox="0 0 760 230" role="img" aria-label="気力の折れ線と到達の予測">
-      <path class="tick" d="M60 30 V190 H740"/>
+      <path class="tick" fill="none" d="M60 30 V190 H740"/>
       <text class="sub" x="52" y="36" text-anchor="end">100</text>
       <text class="sub" x="52" y="194" text-anchor="end">0</text>
-      <path class="mark" d="M60 158 H740"/>
-      <text class="sub" x="736" y="152" text-anchor="end">しきい値</text>
+      <path class="mark" d="M60 170 H740"/>
+      <text class="sub" x="736" y="164" text-anchor="end">しきい値</text>
       <polyline points="60,60 220,90 360,150 360,110 500,140" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
       <polyline points="500,140 600,190" fill="none" stroke="var(--warn)" stroke-width="2" stroke-dasharray="5 4"/>
       <circle class="dot" cx="220" cy="90" r="6"/>
       <circle class="dot" cx="360" cy="150" r="6"/>
       <circle class="dot" cx="360" cy="110" r="6"/>
       <circle class="dot" cx="500" cy="140" r="6"/>
-      <circle class="dot ext" cx="568" cy="174" r="6"/>
+      <circle class="dot ext" cx="560" cy="170" r="6"/>
       <text class="sub" x="220" y="80" text-anchor="middle">行動の開始（率が変わる）</text>
-      <text class="sub" x="372" y="166">急変動（差分を足す）</text>
+      <text class="sub" x="360" y="186" text-anchor="middle">急変動（差分を足す）</text>
       <text class="sub" x="500" y="128" text-anchor="middle">率が変わる</text>
       <text class="sub" x="578" y="210" text-anchor="middle">到達の予測（版つき）</text>
       <text class="sub" x="140" y="212" text-anchor="middle">区間ごとに一次式</text>
@@ -232,11 +232,11 @@ travel(p)  = exp( −移動時間（分） / 30 )</code></pre>
 h > 0 なら  健康度 −= min(4 × h, 20)
 h = 0 なら  健康度 += 5</code></pre>
   <div class="draft">
-    <span class="label">案 P-31　状態変数の式の形、範囲、数値</span>
+    <span class="label">案 P-35　状態変数の式の形、範囲、数値</span>
     上の表と規則（VISION 付録「状態変数の式の形、範囲、数値」）。気力は、16 時間起きていると 64 減る。行動の消費を足すと、夜には 10〜30 まで下がり、睡眠で満タンに戻る、という1日の形を狙った値。
   </div>
   <div class="draft">
-    <span class="label">案 P-32　寝不足での健康度の下がり方</span>
+    <span class="label">案 P-36　寝不足での健康度の下がり方</span>
     上の式（VISION 付録「寝不足での健康度の下がり方」）。睡眠の行動の効果（<code>sleep.debt</code>）に持たせる案を採る。気絶は寝不足の判定をしない（<code>debt = false</code>）。
   </div>
 </section>
@@ -260,7 +260,7 @@ h = 0 なら  健康度 += 5</code></pre>
     <li>結果を <code>incident.occurred</code> のまとまりとして、時刻つきで返す。ホライズンは 0:00 なので、抽選が返るまで、その日の適用は始まらない（LLM を使わないので一瞬）</li>
   </ol>
   <div class="draft">
-    <span class="label">案 P-39　出来事の頻度の既定値</span>
+    <span class="label">案 P-37　出来事の頻度の既定値</span>
     VISION 付録「出来事の効果の語彙と、頻度の既定値」の頻度の側。<code>chance</code> は定義ごとに必ず書かせ、既定値は持たない。そのうえで、1つのワールドで1日に起きる出来事は、ワールド向けとペルソナ向けを合わせて 2 件まで（超えた分は、抽選の順で後のものを捨てる）。組み込みの出来事は、道路工事（0.03）、店の臨時休業（0.02）、風邪（0.01）の3つから始める。
   </div>
 </section>
@@ -300,7 +300,7 @@ NextInt    = 乗算と棄却による偏りのない方法（Lemire）</code></p
     <li>移動の経路は、出発時に辺の列として確定させ、<code>travel.started</code> に記録する。途中で辺が伸びたら、いまどの辺の上にいるかを出発時刻と各辺の時間から計算し、残りの時間を新しい値で積み直す</li>
   </ul>
   <div class="draft">
-    <span class="label">案 P-40　移動中の居場所</span>
+    <span class="label">案 P-39　移動中の居場所</span>
     移動中のペルソナは、どの場所にもいないものとして扱う（出発した時点で元の場所から消え、到着した時点で着いた場所に現れる）。途中で通る場所（道など）での居合わせは数えない。居合わせの判定が、出発と到着の2回だけで済む。
   </div>
 </section>
@@ -313,11 +313,11 @@ NextInt    = 乗算と棄却による偏りのない方法（Lemire）</code></p
     <li>片方が欠席・早退・反射で抜けたとき、もう片方の扱いは、ブロックの <code>on_partner_absent</code> で決める。<code>continue</code>（既定）はそのまま続ける。<code>cancel</code> は、相手が抜けたイベントの Apply が、こちらのブロックを終わらせて、自由時間の決めどきを積む</li>
   </ul>
   <div class="draft">
-    <span class="label">案 P-36　同行で片方が欠席したときの扱い</span>
+    <span class="label">案 P-40　同行で片方が欠席したときの扱い</span>
     上のとおり（VISION 付録「同行で片方が欠席したときの扱い」）。予定ごとに <code>continue</code> / <code>cancel</code> を選べる。
   </div>
   <div class="draft">
-    <span class="label">案 P-37　2人のレーンをまたぐ決定は作らない</span>
+    <span class="label">案 P-41　2人のレーンをまたぐ決定は作らない</span>
     VISION 付録「同行・共同行動で、2人のレーンをまたぐ決定の扱い」への案。いまのコアの範囲では、同行は日の始まりの時点で両者の予定に確定しており、実行時の交渉が要らない。相手が抜けたときの影響は、Apply の決定的な後続（上の <code>cancel</code>）で表せる。誘う・応じるの交渉（FUTURE.html）を作るときに、改めて考える。
   </div>
 </section>
