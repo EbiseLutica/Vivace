@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://koruri.shrimpia.network/koruri.css" />
+<title>Vivace 完成後の予定</title>
+<style>
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --surface-2: #f0eee8;
+    --text: #23221f;
+    --muted: #6b6a64;
+    --line: #dedbd2;
+    --accent: #2f6f6a;
+    --accent-soft: #e1efed;
+    --warn: #9a5b12;
+    --warn-soft: #fbefd9;
+    --bad: #a63d3d;
+    --bad-soft: #f8e4e2;
+    --good: #2d6a3e;
+    --good-soft: #e0f0e4;
+    --code-bg: #efede6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161715;
+      --surface: #1f201d;
+      --surface-2: #272823;
+      --text: #e8e6df;
+      --muted: #9b9a92;
+      --line: #36372f;
+      --accent: #6fbfb7;
+      --accent-soft: #1f3331;
+      --warn: #e0a860;
+      --warn-soft: #3a2e1a;
+      --bad: #e08a86;
+      --bad-soft: #3b2423;
+      --good: #84c996;
+      --good-soft: #1f3226;
+      --code-bg: #2a2b26;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161715; --surface: #1f201d; --surface-2: #272823; --text: #e8e6df;
+    --muted: #9b9a92; --line: #36372f; --accent: #6fbfb7; --accent-soft: #1f3331;
+    --warn: #e0a860; --warn-soft: #3a2e1a; --bad: #e08a86; --bad-soft: #3b2423;
+    --good: #84c996; --good-soft: #1f3226; --code-bg: #2a2b26;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Koruri", sans-serif;
+    font-size: 16px;
+    line-height: 1.85;
+    -webkit-text-size-adjust: 100%;
+  }
+  .layout {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 16px 80px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  @media (min-width: 960px) {
+    .layout { grid-template-columns: 220px minmax(0, 1fr); gap: 48px; padding: 0 24px 96px; }
+  }
+
+  /* 目次 */
+  nav.toc {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  nav.toc summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+  nav.toc ol { list-style: none; margin: 8px 0 0; padding: 0; }
+  nav.toc li { margin: 0; }
+  nav.toc li.part {
+    padding: 12px 8px 2px;
+    font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--accent);
+  }
+  nav.toc li.part:first-child { padding-top: 2px; }
+  nav.toc a {
+    display: block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    color: var(--muted);
+    text-decoration: none;
+    line-height: 1.5;
+  }
+  nav.toc a:hover { background: var(--surface-2); color: var(--text); }
+  nav.toc a.active { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+  @media (min-width: 960px) {
+    nav.toc {
+      position: sticky; top: 24px; align-self: start;
+      max-height: calc(100vh - 48px); overflow: auto;
+      margin-top: 72px;
+    }
+    nav.toc summary { pointer-events: none; }
+    nav.toc summary::marker, nav.toc summary::-webkit-details-marker { display: none; }
+  }
+
+  /* ヘッダー */
+  header.hero { padding: 40px 0 8px; grid-column: 1 / -1; }
+  header.hero .kicker { color: var(--accent); font-weight: 700; letter-spacing: .08em; font-size: 13px; }
+  header.hero h1 { margin: 6px 0 12px; font-size: clamp(28px, 5vw, 40px); line-height: 1.3; }
+  header.hero p { margin: 0; color: var(--muted); max-width: 46em; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .chip {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 13px;
+    line-height: 1.7;
+    background: var(--surface-2);
+    color: var(--muted);
+    border: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  .chip.core { background: var(--accent-soft); color: var(--accent); border-color: transparent; font-weight: 700; }
+  .chip.seam { background: var(--warn-soft); color: var(--warn); border-color: transparent; font-weight: 700; }
+  .chip.later { background: var(--surface-2); color: var(--muted); font-weight: 700; }
+
+  /* 本文 */
+  main { min-width: 0; }
+  section { margin-top: 56px; }
+  section:first-of-type { margin-top: 24px; }
+  .part-head {
+    margin: 72px 0 -32px;
+    color: var(--accent); font-weight: 700; font-size: 13px; letter-spacing: .08em;
+  }
+  h2 {
+    font-size: clamp(22px, 3.2vw, 28px);
+    margin: 0 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--line);
+    line-height: 1.4;
+  }
+  h2 .num { color: var(--accent); margin-right: 8px; font-variant-numeric: tabular-nums; }
+  h3 { font-size: 18px; margin: 32px 0 8px; line-height: 1.5; }
+  p { margin: 12px 0; }
+  ul, ol { padding-left: 1.4em; margin: 12px 0; }
+  li { margin: 4px 0; }
+  li > ul, li > ol { margin: 4px 0; }
+  code {
+    background: var(--code-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: .9em;
+  }
+  strong { font-weight: 700; }
+  a { color: var(--accent); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+  .card > :first-child { margin-top: 0; }
+  .card > :last-child { margin-bottom: 0; }
+
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 10px 10px 0;
+    padding: 12px 16px;
+    margin: 16px 0;
+  }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout > :first-child { margin-top: 0; }
+  .callout > :last-child { margin-bottom: 0; }
+  .callout .label { font-weight: 700; display: block; margin-bottom: 2px; }
+
+  .grid { display: grid; gap: 12px; grid-template-columns: 1fr; margin: 16px 0; }
+  @media (min-width: 640px) { .grid.two { grid-template-columns: 1fr 1fr; } .grid.three { grid-template-columns: repeat(3, 1fr); } }
+  .grid .card { margin: 0; }
+  .grid .card h4 { margin: 0 0 6px; font-size: 16px; }
+  .grid .card p { margin: 4px 0; font-size: 15px; }
+
+  .table-wrap { overflow-x: auto; margin: 16px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 480px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.6; }
+  th { background: var(--surface-2); font-weight: 700; white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+
+  /* 核心の約束 */
+  ol.pledge { list-style: none; padding: 0; counter-reset: p; display: grid; gap: 10px; }
+  ol.pledge li {
+    counter-increment: p;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 16px 12px 56px;
+    position: relative;
+    margin: 0;
+  }
+  ol.pledge li::before {
+    content: counter(p);
+    position: absolute; left: 16px; top: 12px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: grid; place-items: center; font-weight: 700; font-size: 14px;
+  }
+
+  /* 図 */
+  figure { margin: 24px 0; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; text-align: center; }
+  .diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; overflow-x: auto; }
+  .diagram svg { min-width: 640px; }
+  svg .box { fill: var(--surface-2); stroke: var(--line); stroke-width: 1.5; }
+  svg .box.accent { fill: var(--accent-soft); stroke: var(--accent); }
+  svg .box.warn { fill: var(--warn-soft); stroke: var(--warn); }
+  svg .box.good { fill: var(--good-soft); stroke: var(--good); }
+  svg .arrow.dash { stroke-dasharray: 5 4; }
+  svg .dot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+  svg .dot.ext { fill: var(--warn); }
+  svg .bar { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+  svg .bar.free { fill: var(--surface-2); stroke: var(--muted); stroke-dasharray: 4 3; }
+  svg .tick { stroke: var(--line); stroke-width: 1; }
+  svg .mark { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 4; }
+  svg .group { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 6 5; }
+  svg text { fill: var(--text); font-size: 14px; font-family: inherit; }
+  svg text.sub { fill: var(--muted); font-size: 12px; }
+  svg text.title { font-weight: 700; }
+  svg .arrow { stroke: var(--muted); stroke-width: 1.8; fill: none; marker-end: url(#ah); }
+  svg #ah path { fill: var(--muted); }
+
+  /* ステップ */
+  .flow { display: grid; gap: 8px; grid-template-columns: 1fr; margin: 16px 0; }
+  @media (min-width: 720px) { .flow { grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; } }
+  .flow .step {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px;
+  }
+  .flow .step b { display: block; color: var(--accent); margin-bottom: 4px; }
+  .flow .step p { margin: 0; font-size: 14.5px; line-height: 1.7; }
+  .flow .arr { text-align: center; color: var(--muted); align-self: center; font-size: 20px; }
+  @media (max-width: 719px) { .flow .arr { transform: rotate(90deg); } }
+
+  .compare { display: grid; gap: 12px; grid-template-columns: 1fr; margin: 16px 0; }
+  @media (min-width: 720px) { .compare { grid-template-columns: 1fr 1fr; } }
+  .compare .card { margin: 0; }
+  .compare .ng { border-top: 4px solid var(--bad); }
+  .compare .ok { border-top: 4px solid var(--good); }
+  .compare h4 { margin: 0 0 8px; }
+
+  /* ユースケース */
+  .uc { padding: 14px 18px; }
+  .uc h4 { margin: 0 0 8px; font-size: 16px; line-height: 1.5; }
+  .uc h4 .id { color: var(--accent); margin-right: 8px; font-variant-numeric: tabular-nums; }
+  .uc dl { margin: 0; display: grid; grid-template-columns: 3.5em minmax(0, 1fr); gap: 6px 12px; font-size: 15px; line-height: 1.7; }
+  .uc dt { color: var(--muted); font-weight: 700; }
+  .uc dd { margin: 0; }
+  .uc dd ol { margin: 0; padding-left: 1.3em; }
+  .uc dd li { margin: 2px 0; }
+
+  /* ロードマップ */
+  ol.road { list-style: none; padding: 0; margin: 16px 0; border-left: 3px solid var(--line); margin-left: 12px; }
+  ol.road li { position: relative; padding: 4px 0 20px 28px; margin: 0; }
+  ol.road li::before {
+    content: ""; position: absolute; left: -9px; top: 10px;
+    width: 15px; height: 15px; border-radius: 50%; background: var(--surface); border: 3px solid var(--accent);
+  }
+  ol.road li.goal::before { background: var(--accent); }
+  ol.road li b { display: block; }
+  ol.road li span { color: var(--muted); font-size: 15px; }
+
+  ul.open { list-style: none; padding: 0; display: grid; gap: 8px; }
+  ul.open li {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 14px 10px 40px; position: relative; margin: 0;
+  }
+  ul.open li::before {
+    content: "?"; position: absolute; left: 12px; top: 10px;
+    width: 20px; height: 20px; border-radius: 50%; background: var(--warn-soft); color: var(--warn);
+    display: grid; place-items: center; font-weight: 700; font-size: 13px;
+  }
+
+  footer { grid-column: 1 / -1; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); padding-top: 16px; }
+  .theme-btn {
+    position: fixed; right: 16px; bottom: 16px; z-index: 5;
+    background: var(--surface); color: var(--text); border: 1px solid var(--line);
+    border-radius: 999px; padding: 8px 14px; font-size: 14px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<header class="hero">
+  <div class="kicker">VIVACE / FUTURE</div>
+  <h1>Vivace 完成後の予定</h1>
+  <p>最初の到達点（<a href="VISION.html">VISION.html</a> の1章「作る順番」の3まで）のあとに足す機能をまとめる。コアの詳細設計には使わない。</p>
+  <p style="margin-top: 8px;">文中の「N章」は、VISION.html の章を指す。</p>
+  <div class="meta">
+    <span class="chip">2026-11-04 時点</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目次">
+  <details open>
+    <summary>目次</summary>
+    <ol>
+      <li><a href="#frontend">フロントエンド</a></li>
+      <li><a href="#authoring">オーサリング支援：長文からの生成</a></li>
+      <li><a href="#mobile">モバイルアプリ</a></li>
+      <li><a href="#travel">旅行</a></li>
+      <li><a href="#others">その他の後から足すもの</a></li>
+    </ol>
+  </details>
+</nav>
+
+<main>
+
+<section id="frontend">
+  <h2>フロントエンド</h2>
+  <p>1つのアプリが3つの役割を持つ。どれもコアが外に出す同じ API とイベントストリームの上に乗る。</p>
+  <div class="grid three">
+    <div class="card"><h4>オーサリング</h4><p>長文からのペルソナ・ワールド生成と編集。</p></div>
+    <div class="card"><h4>テストコンソール</h4><p>ドライラン、話題の注入、パイプラインの可視化、評価ケースの実行。</p></div>
+    <div class="card"><h4>ライブビューア</h4><p>動いているペルソナの状態とイベントログの閲覧。</p></div>
+  </div>
+  <div class="callout">
+    <span class="label">「リアルタイムなキャラの動き」について</span>
+    空間がない SNS ボットの場合、見せるものは「状態の遷移」になる。立ち絵やマップ上の移動まで見せたい場合は、決定の粒度ではなく、表示側で移動を補間する仕組みが要る。これは先送りにする。
+  </div>
+</section>
+
+<section id="authoring">
+  <h2>オーサリング支援：長文からの生成</h2>
+  <p>長文の自由記述から、LLM で構造化データ（ワールドの場所、ペルソナの性格や生活習慣など）を生成する機能は、<strong>コアには入れない</strong>。TOML を書き出す入力手段として、コアの外の作者向けツール（CLI やフロントエンド）に、後から足す。最初の到達点（ebise 相当の再現）には要らない。方式は未決で、いまの案は次のとおり。</p>
+  <ul>
+        <li>全体を再生成せず、<code>lore</code> の変更を<strong>パッチ</strong>として提案させる。LLM には、旧 lore、新 lore、現在の構造化データ（手直し込み）を渡し、追加・変更・削除を出させて、ユーザーが差分を見て承認する</li>
+        <li>構造化データから lore への同期はしない。lore は元の設定メモで、実行時の正ではない</li>
+        <li>構造化データの各項目に「生成 / 手直し」の印を付け、手直し済みの項目に触れるパッチは個別に確認する</li>
+        <li>生成時の lore のハッシュを持ち、変わっていなければ LLM を呼ばない</li>
+        <li>ワールドとペルソナで、同じ部品（原文 + 構造化 + パッチ）を使う</li>
+  </ul>
+</section>
+
+<section id="mobile">
+  <h2>モバイルアプリ</h2>
+  <p>「メールチェックも調べ物もしない。勝手に仮想世界の中で動き回るだけで、あなたの秘書にはならないが、あなたと友達になり、メッセージを送ると返してくれることがある AI スマホアプリ。Claude などの API キーを登録して使う」も、コアの大きな設計変更なしに作れる見込み。</p>
+  <div class="grid three">
+    <div class="card"><h4>秘書にならない</h4><p>ペルソナの行動とツールを、ユーザーの外部資源（メール、Web など）に触れないものだけに限る（許可リスト方式。7章）。</p></div>
+    <div class="card"><h4>返してくれることがある</h4><p>受信箱と <code>availability</code> の機能そのもの。アプリ内チャット用の <code>AppChannel</code>（チャンネルのプラグイン）を足す。</p></div>
+    <div class="card"><h4>実装</h4><p>.NET MAUI（または Avalonia）で Vivace.Core を参照する。</p></div>
+  </div>
+  <ul>
+    <li><strong>バックグラウンドで動き続けられない</strong>（特に iOS）。アプリを開いたときに、前回から現在までを早送りでシミュレートする追いつき（4章）で対応する。ペルソナから話しかけるのは難しい（端末ローカルの通知を事前に仕込む手はあるが確実ではない。Android は定期ジョブで近いことができる）</li>
+    <li><strong>API キーの持ち込み（BYO）</strong>: 端末の安全な領域（Keychain / Keystore）に保存し、端末から直接 API を呼ぶ。使用量の見える化と、予算の上限が要る</li>
+    <li><code>ILlmClient</code> は複数プロバイダに対応できるようにする</li>
+    <li>ストア審査で、AI コンパニオンとしての年齢区分や安全面の説明が求められやすい</li>
+  </ul>
+  <div class="callout">
+    <span class="label">コアに足す項目</span>
+    <code>AppChannel</code>、使用量の計測と上限。追いつきは、コアの標準機能（4章）。
+  </div>
+</section>
+
+<section id="travel">
+  <h2>旅行</h2>
+  <p>ペルソナが別のワールドへ旅行する機能。旅行がなくても、ワールドが複数あれば要る決めごと（時計とループはホストに1つ、時刻は UTC、ペルソナごとの乱数、記憶の <code>worldId</code>）は、本文に入れてある。作るときの要点は次のとおり。</p>
+  <ul>
+    <li><strong>接続</strong>: ワールド定義に、出口の場所（駅など）と、相手ワールドの到着の場所（転移門など）を結ぶ接続を宣言する。両側が宣言して初めて成立する。到着の場所を省略したら、相手ワールドの既定の入口にする。手段と所要時間は、接続に持たせる</li>
+    <li><strong>前もって計画する</strong>: 旅行は、前もって決めた日に行く。最初は、作者が固定予定に書き、家と出口の間の移動は Planner が挿入する。行けなくなったら、ブロックの開始時の確認で中止する（欠席と同じ）。旅行の好み（<code>travelAffinity</code>）で計画を抽選するのは、事前に予定を組む仕組み（下表）と一緒に考える</li>
+    <li><strong>時間の持ち主</strong>: 出発の時点で、ペルソナの所属を旅行先のワールドに書き換える。キューとループはホストに1つ（4章）なので、受け渡しは所属の書き換えで済む。居住ワールドには「不在」と記録する。受信箱とチャンネルはインスタンスに付いてくる</li>
+    <li><strong>旅行先で</strong>: 携行品に、持っていけるか（<code>portable</code>）を付け、持っていけない物が要る行動は候補から外す。話題の判定は、いまいるワールドの <code>lore</code> と場所で行う。訪問者は、旅行先で場所を生成しない</li>
+    <li><strong>記憶</strong>: 旅の思い出は、元のワールドでも話題にできる。ただし、旅行先の場所は、元のワールドの行き先の候補にしない。複数のワールドにまたがる記憶の <code>worldId</code> の扱いは、このとき決める</li>
+    <li><strong>同行</strong>: 旅行先での同行は、ペルソナ同士の関わり（14章）と一緒に設計する。同行中に現地のペルソナが生成した場所は、旅行先のワールドに属する</li>
+    <li><strong>他のユーザーのワールドへの訪問</strong>（マルチプレイ）は、セキュリティを含めて、さらに別の機能として考える</li>
+  </ul>
+</section>
+
+<section id="others">
+  <h2>その他の後から足すもの</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>項目</th><th>内容</th><th>関連</th></tr></thead>
+      <tbody>
+        <tr><td>Discord チャンネル</td><td><code>IChannel</code> の実装を足す。手順と汎用の効果はコアのものを使う</td><td>10章</td></tr>
+        <tr><td>空間（2D）表現</td><td>場所に座標と経路探索を足す。表示側で移動を補間する</td><td>8章</td></tr>
+        <tr><td>応答の記録と再生</td><td>一度回した結果を保存し、ロジックを直したときは LLM を呼ばずに再生して差分だけ見る。<code>ILlmClient</code> を包む形で足せるので、コアの設計には影響しない</td><td>16章</td></tr>
+        <tr><td>ペルソナが事前に予定を組む仕組み</td><td>旅行の計画（<code>travelAffinity</code> の抽選。上の節）、自由時間に他のペルソナを誘う（誘う、応じる、断るの交渉）、通知から予定を足す。これらを、共通の仕組みとして検討する。先の予定の追加は投入の窓口から入る。方式は未決</td><td>14章、15章</td></tr>
+        <tr><td>対面の会話</td><td>ペルソナ同士の対面の会話の生成</td><td>14章</td></tr>
+        <tr><td>通知による反応の変化</td><td>通知の内容や送り主で、気づき方や状態、予定を変える（親しい相手の通知で、閉じた時間帯にも「スマホを開く機会」を出す、内容で状態変数を動かす、空き時間に予定を足す、など）。親しさは、状態として別に持たず、記憶から導く。どの記憶から導くかは、記憶のスコープの規則（13章）に合わせて、そのとき決める</td><td>10章</td></tr>
+        <tr><td>出来事の LLM 生成</td><td>コアの外のプログラムが、投入の窓口に出来事を投入する。効果を閉じた語彙で書かせ、ハーネスが検証し、場所の生成と同じ <code>auto</code> / <code>review</code> のポリシーに乗せる。出来事の定義の下書きを LLM に作らせるのは、オーサリング支援の領域</td><td>9章、15章</td></tr>
+        <tr><td>携行品の増減</td><td>拾う・失くす・買うイベント</td><td>7章</td></tr>
+        <tr><td>生えた場所の定義への昇格</td><td>ワールドインスタンスの場所を、定義（TOML）に書き出す</td><td>2章</td></tr>
+        <tr><td>確定のスロット</td><td>メニューなどの細部を世界に確定させる仕組み。必要になったら足す</td><td>12章</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<footer>Vivace 完成後の予定。構想の本体は VISION.html。</footer>
+</div>
+
+<button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>
+
+<script>
+  // 目次の現在位置ハイライト
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+    var map = {};
+    links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+    if (!('IntersectionObserver' in window)) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          links.forEach(function (a) { a.classList.remove('active'); });
+          var a = map[e.target.id];
+          if (a) a.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    document.querySelectorAll('main section[id]').forEach(function (s) { io.observe(s); });
+  })();
+
+  // 広い画面では目次を常時開く
+  (function () {
+    var d = document.querySelector('nav.toc details');
+    var mq = window.matchMedia('(min-width: 960px)');
+    function sync() { d.open = mq.matches ? true : false; }
+    sync();
+    if (mq.addEventListener) mq.addEventListener('change', sync);
+  })();
+
+  // テーマ切替（保存できない環境でも動くようにする）
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('themeBtn');
+    try {
+      var saved = localStorage.getItem('vision-theme');
+      if (saved) root.setAttribute('data-theme', saved);
+    } catch (e) {}
+    btn.addEventListener('click', function () {
+      var dark = root.getAttribute('data-theme') === 'dark' ||
+        (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      var next = dark ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('vision-theme', next); } catch (e) {}
+    });
+  })();
+</script>
+</body>
+</html>
