@@ -406,14 +406,14 @@ sealed record PersonaState(
 CREATE TABLE events (
   seq            INTEGER PRIMARY KEY,      -- 連番 = ID
   time_utc       INTEGER NOT NULL,         -- 絶対時刻（Unix ミリ秒）
-  type           TEXT    NOT NULL,         -- イベントタイプ（段は保存せず、ここから引く）
+  event_type     TEXT    NOT NULL,         -- イベントタイプ（段は保存せず、ここから引く）
   world_id       TEXT,
   persona_id     TEXT,
   status         TEXT    NOT NULL,         -- pending / processing / applied / skipped / rejected
   status_reason  TEXT,
   apply_no       INTEGER UNIQUE,           -- 適用番号
-  batch          INTEGER,
-  cause          INTEGER,
+  batch_seq      INTEGER,
+  cause_seq      INTEGER,
   payload        TEXT    NOT NULL,         -- JSON。決めた結果もここ
   guard          TEXT,                     -- JSON
   origin         TEXT    NOT NULL,
@@ -424,7 +424,7 @@ CREATE TABLE events (
 );
 CREATE INDEX ix_events_open    ON events(status) WHERE status IN ('pending', 'processing');   -- 起動時にキューを作る
 CREATE INDEX ix_events_persona ON events(persona_id, apply_no);
-CREATE INDEX ix_events_type    ON events(persona_id, type, time_utc);
+CREATE INDEX ix_events_type    ON events(persona_id, event_type, time_utc);
 
 -- 状態の表
 CREATE TABLE worlds (
@@ -513,7 +513,7 @@ CREATE TABLE memory_cursors (
 <section id="json">
   <h2><span class="num">3.9</span>JSON とバージョン</h2>
   <ul>
-    <li>イベントのペイロードは、イベントタイプごとの record にし、<code>System.Text.Json</code> で読み書きする。イベントタイプは列（<code>type</code>）で持つので、JSON の中には型の印を入れない</li>
+    <li>イベントのペイロードは、イベントタイプごとの record にし、<code>System.Text.Json</code> で読み書きする。イベントタイプは列（<code>event_type</code>）で持つので、JSON の中には型の印を入れない</li>
     <li>ペイロードには <code>"v": 1</code> のように、イベントタイプごとの版を入れる。項目を足すときは、版を上げずに省略可能な項目として足す。意味を変えるときだけ版を上げ、読み込み時に古い版を新しい形に変換する</li>
     <li>知らないイベントタイプのイベント（新しい版で書かれたもの）を読んだら、起動を止める。黙って捨てると、状態がずれるから</li>
     <li>チャンネルが解釈する中身（返信先のノート ID など）は、コアが中を見ない JSON として持つ（VISION 10章）</li>

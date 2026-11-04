@@ -64,20 +64,21 @@
 <pre><code>record SimEvent(
     long Seq,                    // 連番 = ID（P-10）
     DateTimeOffset Time,         // 絶対時刻（UTC）
-    string Type,                 // イベントタイプ（"action.started" など）
-    WorldId? World,
-    PersonaId? Persona,
+    string EventType,            // イベントタイプ（"action.started" など）
+    string? WorldId,
+    string? PersonaId,
     EventPayload Payload,        // イベントタイプごとの中身（D3 3.9）。決めた結果もここに入る
     Guard? Guard,                // 適用前の検査（D1 1.7）
-    long? Batch,                 // 同じハンドラの出力のまとまり（契機の決めどきの Seq）
-    long? Cause,                 // このイベントを生んだイベントの Seq
+    long? BatchSeq,              // 同じハンドラの出力のまとまり（契機の決めどきの Seq）
+    long? CauseSeq,              // このイベントを生んだイベントの Seq
     Origin Origin,               // 2.9
     JsonObject? Trace,           // 痕跡（2.9）
     DateTimeOffset? RealTime);   // 実時刻（送信完了、外部からの元の到着）</code></pre>
   <ul>
     <li><strong>段</strong>は、イベントタイプから一意に決まる（2.2）。だから項目としては持たず、保存もしない。並べるときに、イベントタイプから引く</li>
     <li><strong>版番号</strong>は、イベントタイプごとの意味が違うので、ペイロードの中に持つ（行動の版、状態変数の版、プランの版）。古いものを捨てる判定に使う</li>
-    <li><strong>Cause</strong> は、VISION にない項目。後続のイベントやハンドラの出力が、どのイベントから生まれたかを辿れるようにする。ビューアと実行レポートで「なぜこれが起きたか」を表示するのに使う</li>
+    <li>ワールドとペルソナは、オブジェクトではなく ID で指す。状態は Apply のたびに新しいオブジェクトに置き換わる（P-21）ので、参照で持つと古い時点の写しを指し続けてしまうから。中身が要るときは、その時点の状態から <code>state.Personas[ev.PersonaId]</code> のように引く</li>
+    <li><strong>CauseSeq</strong> は、VISION にない項目。後続のイベントやハンドラの出力が、どのイベントから生まれたかを辿れるようにする。ビューアと実行レポートで「なぜこれが起きたか」を表示するのに使う</li>
   </ul>
   <div class="callout">
     <span class="label">決定 P-10　イベントの ID は連番と兼ねる</span>

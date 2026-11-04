@@ -225,7 +225,7 @@
       <tr><td>J-43</td><td>固定予定のブロックの重なりは、読み込みのエラー（昼休みを入れるなら、授業を2つに分ける）。日をまたぐブロックは、開始した日のもの</td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
       <tr><td>J-44</td><td>反射の行動は、所要時間を固定で書く（範囲ならエラー）</td><td><a href="3-data.html#action-def">D3 3.6</a></td></tr>
       <tr><td>J-45</td><td>ペルソナの状態に、副行動（Overlay）、行動ごとの利用（前回の開始、今日の回数、連続回数）、投稿の状態、用途ごとの乱数の位置、最後の起床を持つ</td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
-      <tr><td>J-46</td><td>ID を <code>readonly record struct</code> で型ごとに分ける</td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>J-46</td><td>ID を <code>readonly record struct</code> で型ごとに分ける。<strong>D2 のイベントは、レビューで <code>string?</code> にした。ほかの章（D3 3.7、D4 のインターフェース）でも型を分けないかは、D3 のレビューで決める</strong></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>J-47</td><td>SQLite の表と列、インデックス、接続の設定（WAL、<code>synchronous=NORMAL</code>）、<code>user_version</code> によるマイグレーション</td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
       <tr><td>J-48</td><td>ペイロードにイベントタイプごとの版（<code>"v"</code>）を入れる。知らないイベントタイプのイベントを読んだら、起動を止める</td><td><a href="3-data.html#json">D3 3.9</a></td></tr>
       <tr><td>J-49</td><td>ポートの一覧とシグネチャ（<code>IRandomSource</code>、<code>IStorage.CommitAsync</code>、<code>IAdminNotifier</code> など）。連番はエンジンが振る</td><td><a href="4-components.html#ports">D4 4.2</a></td></tr>
