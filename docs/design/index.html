@@ -17,8 +17,8 @@
   <div class="meta">
     <span class="chip">2026-11-03 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
-    <span class="chip fixed">合意 15 件</span>
-    <span class="chip draft">案 36 件と、枠の外の判断 82 件が合意待ち</span>
+    <span class="chip fixed">合意 16 件</span>
+    <span class="chip draft">案 35 件と、枠の外の判断 82 件が合意待ち</span>
   </div>
 </header>
 
@@ -118,7 +118,7 @@
       <tr><td>P-06</td><td><strong>適用前の検査は、イベントに付けた guard として Apply が評価する</strong> <span class="chip fixed">合意</span></td><td><a href="1-execution.html#guard">D1 1.7</a></td></tr>
       <tr><td>P-07</td><td>決めどきの適用番号は、処理中に入るときに振る。処理済みは applied にまとめる <span class="chip fixed">合意</span></td><td><a href="1-execution.html#states">D1 1.8</a></td></tr>
       <tr><td>P-08</td><td>追いつきの上限は 14 日。超えた分は空白として飛ばす <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
-      <tr><td>P-09</td><td>読み直しはホストが API で呼ぶ（CLI はフォルダを監視）。消えた行動は終了まで続ける</td><td><a href="1-execution.html#reload">D1 1.12</a></td></tr>
+      <tr><td>P-09</td><td>読み直しはホストが API で呼ぶ（CLI はフォルダを監視）。消えた行動は終了まで続ける <span class="chip fixed">合意</span></td><td><a href="1-execution.html#reload">D1 1.12</a></td></tr>
       <tr><td>P-10</td><td>イベントの ID は連番と兼ねる <span class="chip fixed">合意</span></td><td><a href="2-events.html#envelope">D2 2.1</a></td></tr>
       <tr><td>P-11</td><td><strong>イベントタイプの一覧と、段への割り当て</strong> <span class="chip fixed">合意</span></td><td><a href="2-events.html#stages">D2 2.2</a></td></tr>
       <tr><td>P-12</td><td><strong>Decider の出力は <code>activity.chosen</code> 1件。開始・終了は Apply がチェーンで積む</strong> <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
@@ -279,7 +279,7 @@
   <h3>反映したもの</h3>
   <ul>
     <li>1章の用語の表で、「投入の窓口」の章が 16 になっていた誤りを、15 に直した</li>
-    <li>合意した P-02、P-04、P-05、P-06、P-07、P-08、P-10、P-12、P-15、P-16 を、VISION の2章、4章、5章、9章、付録に反映した</li>
+    <li>合意した P-02、P-04、P-05、P-06、P-07、P-08、P-09、P-10、P-12、P-15、P-16 を、VISION の2章、4章、5章、9章、付録に反映した</li>
     <li>レビューで決めた用語（「種別」を「イベントタイプ」にする、段を項目として持たない）を、VISION の2章と4章に反映した</li>
   </ul>
   <h3>合意したら、VISION にも反映が要るもの</h3>
