@@ -19,3 +19,4 @@
 - 詳細設計は `docs/design/` に章ごとの HTML（D1〜D8）で書く。目次と案の一覧は `index.html`。CSS とスクリプトは `style.css` と `page.js` を共有する
 - VISION.html の章は「VISION 4章」、詳細設計の章は「D1」「D5 5.3」と書く。仕組みの考え方は VISION を正とし、繰り返さずに参照する
 - 合意待ちの提案は「案 P-xx」の枠（`.draft`）で書き、`index.html` の案の一覧と揃える。合意したら枠を外し、VISION に反映が要るものは VISION も直す
+- 枠に入れずに本文で決めた判断（VISION の解釈、仕組みの細部、調整前提の数値）も、`index.html` の「枠の外の判断」に J-xx の番号で載せる。判断を足したら、一覧も足す
