@@ -1,0 +1,3 @@
+# Cloudflare Pages のヘッダー設定。公開するまでは、検索エンジンに載せない
+/*
+  X-Robots-Tag: noindex
