@@ -65,8 +65,8 @@
     long Seq,                    // 連番 = ID（P-10）
     DateTimeOffset Time,         // 絶対時刻（UTC）
     string EventType,            // イベントタイプ（"action.started" など）
-    string? WorldId,
-    string? PersonaId,
+    WorldId? WorldId,            // ID の型は D3 3.7
+    PersonaId? PersonaId,
     EventPayload Payload,        // イベントタイプごとの中身（D3 3.9）。決めた結果もここに入る
     Guard? Guard,                // 適用前の検査（D1 1.7）
     long? BatchSeq,              // 同じハンドラの出力のまとまり（契機の決めどきの Seq）
