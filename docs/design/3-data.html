@@ -406,11 +406,10 @@ sealed record PersonaState(
 CREATE TABLE events (
   seq            INTEGER PRIMARY KEY,      -- 連番 = ID
   time_utc       INTEGER NOT NULL,         -- 絶対時刻（Unix ミリ秒）
-  stage          INTEGER NOT NULL,         -- 1〜7
-  kind           TEXT    NOT NULL,
+  type           TEXT    NOT NULL,         -- イベントタイプ（段は保存せず、ここから引く）
   world_id       TEXT,
   persona_id     TEXT,
-  status         TEXT    NOT NULL,         -- pending / processing / done / applied / skipped / rejected
+  status         TEXT    NOT NULL,         -- pending / processing / applied / skipped / rejected
   status_reason  TEXT,
   apply_no       INTEGER UNIQUE,           -- 適用番号
   batch          INTEGER,
@@ -423,9 +422,9 @@ CREATE TABLE events (
   enqueued_utc   INTEGER NOT NULL,         -- 積んだ実時刻（遅れの計測用）
   applied_utc    INTEGER                   -- 適用した実時刻
 );
-CREATE INDEX ix_events_queue   ON events(time_utc, stage, seq) WHERE status IN ('pending', 'processing');
+CREATE INDEX ix_events_open    ON events(status) WHERE status IN ('pending', 'processing');   -- 起動時にキューを作る
 CREATE INDEX ix_events_persona ON events(persona_id, apply_no);
-CREATE INDEX ix_events_kind    ON events(persona_id, kind, time_utc);
+CREATE INDEX ix_events_type    ON events(persona_id, type, time_utc);
 
 -- 状態の表
 CREATE TABLE worlds (
@@ -496,6 +495,7 @@ CREATE TABLE memory_cursors (
 );</code></pre>
   <ul>
     <li>ペルソナの行は、変わるたびに行ごと書き直す。1行は数 KB で、前提の規模なら十分に軽い</li>
+    <li>キューの順序（時刻、段、連番）は、メモリの上で並べる（D1 1.4）。段は列に持たないので、SQL では並べない</li>
     <li>イベントは消さない。1人あたり1日 150 件ほどとして、10 人で年 55 万件。SQLite で問題のない量</li>
     <li>スキーマの版は <code>PRAGMA user_version</code> で持つ。マイグレーションは、アセンブリに埋め込んだ番号つきの SQL で、起動時に足りない分を1つのトランザクションで当てる</li>
     <li>接続の設定は <code>journal_mode=WAL</code>、<code>synchronous=NORMAL</code>、<code>busy_timeout=5000</code>、<code>foreign_keys=ON</code></li>
@@ -513,16 +513,16 @@ CREATE TABLE memory_cursors (
 <section id="json">
   <h2><span class="num">3.9</span>JSON とバージョン</h2>
   <ul>
-    <li>イベントのペイロードは、種別ごとの record にし、<code>System.Text.Json</code> で読み書きする。種別は列（<code>kind</code>）で持つので、JSON の中には型の印を入れない</li>
-    <li>ペイロードには <code>"v": 1</code> のように、種別ごとの版を入れる。項目を足すときは、版を上げずに省略可能な項目として足す。意味を変えるときだけ版を上げ、読み込み時に古い版を新しい形に変換する</li>
-    <li>知らない種別のイベント（新しい版で書かれたもの）を読んだら、起動を止める。黙って捨てると、状態がずれるから</li>
+    <li>イベントのペイロードは、イベントタイプごとの record にし、<code>System.Text.Json</code> で読み書きする。イベントタイプは列（<code>type</code>）で持つので、JSON の中には型の印を入れない</li>
+    <li>ペイロードには <code>"v": 1</code> のように、イベントタイプごとの版を入れる。項目を足すときは、版を上げずに省略可能な項目として足す。意味を変えるときだけ版を上げ、読み込み時に古い版を新しい形に変換する</li>
+    <li>知らないイベントタイプのイベント（新しい版で書かれたもの）を読んだら、起動を止める。黙って捨てると、状態がずれるから</li>
     <li>チャンネルが解釈する中身（返信先のノート ID など）は、コアが中を見ない JSON として持つ（VISION 10章）</li>
   </ul>
 </section>
 
 </main>
 
-<footer>Vivace 詳細設計 D3。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。</footer>
+<footer>Vivace 詳細設計 D3。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。「決定」は合意したもの。</footer>
 </div>
 
 <button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>

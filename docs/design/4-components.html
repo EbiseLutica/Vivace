@@ -234,7 +234,7 @@ public interface ITool                   // 副作用のない参照系だけ（
     <table>
       <tr><th>部品</th><th>役目</th><th>詳細</th></tr>
       <tr><td><code>Engine</code></td><td>コマンドの処理、キュー、ホライズンの壁、締め切り、適用、シグナルの実行</td><td>D1</td></tr>
-      <tr><td><code>Rules</code></td><td>Apply 本体。種別ごとの関数の集まり。static で、副作用を持たない</td><td>D2</td></tr>
+      <tr><td><code>Rules</code></td><td>Apply 本体。イベントタイプごとの関数の集まり。static で、副作用を持たない</td><td>D2</td></tr>
       <tr><td><code>Guards</code></td><td>適用前の検査の評価</td><td>D1 1.7</td></tr>
       <tr><td><code>Lanes</code></td><td>レーンごとの直列の実行と、LLM の同時実行数の制限</td><td>D1 1.5</td></tr>
       <tr><td><code>Dispatcher</code></td><td>配信役。未送信の操作を送り、結果をコマンドで返す</td><td>VISION 10章</td></tr>
@@ -324,7 +324,7 @@ public interface INotificationRule
     RuleOutcome Handle(InboxItem item, RuleContext context);   // LLM を使わず、出力のイベントを返す
 }</code></pre>
   <ul>
-    <li>プラグインが足せるのは、ハンドラ、規則、ツール、行動の定義、チャンネル、暦だけ。イベントの種別と、決定的な効果の語彙は足せない。外に出すものは、コアの <code>outbound.*</code> の中身（チャンネルが解釈する JSON）として表す（VISION 10章）</li>
+    <li>プラグインが足せるのは、ハンドラ、規則、ツール、行動の定義、チャンネル、暦だけ。イベントタイプと、決定的な効果の語彙は足せない。外に出すものは、コアの <code>outbound.*</code> の中身（チャンネルが解釈する JSON）として表す（VISION 10章）</li>
     <li>プラグインが同梱する行動の ID は、プラグインの名前で始める（<code>misskey.open_phone</code>）</li>
   </ul>
   <div class="draft">
@@ -335,7 +335,7 @@ public interface INotificationRule
 
 </main>
 
-<footer>Vivace 詳細設計 D4。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。</footer>
+<footer>Vivace 詳細設計 D4。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。「決定」は合意したもの。</footer>
 </div>
 
 <button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>

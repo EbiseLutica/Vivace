@@ -127,7 +127,7 @@
   <div class="table-wrap">
     <table>
       <tr><th>層</th><th>対象</th><th>書き方</th></tr>
-      <tr><td>Apply の単体</td><td>種別ごとの Apply と guard</td><td>（状態、イベント、定義）を手で作り、新しい状態、後続のイベント、シグナルを比べる。純粋な関数なので、モックは要らない</td></tr>
+      <tr><td>Apply の単体</td><td>イベントタイプごとの Apply と guard</td><td>（状態、イベント、定義）を手で作り、新しい状態、後続のイベント、シグナルを比べる。純粋な関数なので、モックは要らない</td></tr>
       <tr><td>決める側の単体</td><td>Decider、Planner の検査と補正、話題の手順、文脈の組み立て</td><td>写しと now と乱数の位置を与える。LLM は台本で返す</td></tr>
       <tr><td>シナリオ</td><td>数日分の通しの動き</td><td>仮想時計、メモリの SQLite、台本の LLM、null channel で N 日回し、事実のイベントの列を正規化して、保存しておいた期待値と比べる（スナップショット）</td></tr>
       <tr><td>不変条件</td><td>シナリオの全適用</td><td>適用のたびに検査する：時刻が戻らない、状態変数が範囲の中、各ペルソナに次の自分のイベントがある（止まっていない）、未適用のイベントの時刻がいまの位置より前にない</td></tr>
@@ -152,7 +152,7 @@
     <table>
       <tr><th>コマンド</th><th>すること</th></tr>
       <tr><td><code>vivace validate</code></td><td>定義を検証して、エラーと警告を出す</td></tr>
-      <tr><td><code>vivace run</code></td><td>実時間で運転する</td></tr>
+      <tr><td><code>vivace run</code></td><td>実時間で運転する。<code>--watch</code> を付けると、定義のフォルダを監視して読み直す（P-09）</td></tr>
       <tr><td><code>vivace dry-run --days 3</code></td><td>早送りで回し、終わったら実行レポートを出す</td></tr>
       <tr><td><code>vivace probe &lt;persona&gt; &lt;語...&gt;</code></td><td>話題の注入（VISION 16章）</td></tr>
       <tr><td><code>vivace inject &lt;file.toml&gt;</code></td><td>投入の窓口にイベントを出す（出来事の注入など）</td></tr>
@@ -164,7 +164,7 @@
 
 </main>
 
-<footer>Vivace 詳細設計 D7。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。</footer>
+<footer>Vivace 詳細設計 D7。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。「決定」は合意したもの。</footer>
 </div>
 
 <button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>

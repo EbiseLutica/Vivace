@@ -151,8 +151,8 @@
     <li><strong>決める側</strong>（Planner、Decider、効果のハンドラ、出来事の抽選）は、レーンの上で並列に動く。受け取るのは状態の写しと、契機のイベントの時刻（now）だけ</li>
     <li><strong>配信役</strong>と<strong>記憶の整理</strong>は、エンジンからのシグナルで動く。配信役の結果はコマンドで戻り、記憶の整理はイベントの外の表にだけ書く</li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-01　エンジンを唯一の書き手にする</span>
+  <div class="callout">
+    <span class="label">決定 P-01　エンジンを唯一の書き手にする</span>
     イベント表と状態の表への書き込みを、すべてエンジンのスレッドに集める。ほかのスレッドは、コマンドを <code>System.Threading.Channels</code> のキューに入れるだけにする。ロックの設計が要らなくなり、「状態はイベントの適用でのみ変わる」（VISION 1章）を、コードの構造で守れる。
     <p class="alt">代わりの案：イベント表への挿入を各スレッドから直接行い、SQLite のロックに任せる。書き手が増え、連番と適用番号の順序の保証が難しくなるので採らない。</p>
   </div>
@@ -178,8 +178,8 @@ record ApplyResult(
       <p>Apply が自分では行わない副作用の依頼。ハンドラの起動、配信、記憶の整理の起動、ハンドラの取り消し。エンジンがコミットのあとに実行する。データなので、Apply は決定的なまま。</p>
     </div>
   </div>
-  <div class="draft">
-    <span class="label">案 P-02　Apply は後続のイベントとシグナルを返す</span>
+  <div class="callout">
+    <span class="label">決定 P-02　Apply は後続のイベントとシグナルを返す</span>
     VISION では「日の始まりを処理するときに、翌日の分を積む」「率が変わるたびに到達時刻を予測し直して積む」と書かれているが、それを誰が積むかは決まっていない。Apply の戻り値に含めることにする。これで「乱数も LLM も使わずに決まる次のイベント」は、すべて Apply の中に閉じ、単体テストで検査できる。
   </div>
   <p>シグナルは、再起動したときに状態から復元できるものだけにする。メモリの上にしかない依頼は、落ちたら失われるから。</p>
@@ -193,8 +193,8 @@ record ApplyResult(
       <tr><td><code>ChannelOnline</code></td><td>圏外が明けたことをチャンネルに伝える</td><td>追いつきの終わりに、毎回出す</td></tr>
     </table>
   </div>
-  <div class="draft">
-    <span class="label">案 P-03　割り込まれた行動のハンドラは取り消す</span>
+  <div class="callout">
+    <span class="label">決定 P-03　割り込まれた行動のハンドラは取り消す</span>
     「投稿する」の文面を作っている途中に、反射で行動が打ち切られたら、そのハンドラはもう要らない。Apply が行動の版番号を上げるときに <code>CancelHandler</code> を出し、エンジンはそのハンドラを <code>CancellationToken</code> で止めて、ホライズンの待ちからも外す。止めきれずに出力が返ってきても、版番号の検査（1.7）で弾かれるので、取り消しは最適化にすぎない。
   </div>
 </section>
@@ -241,7 +241,7 @@ record ApplyResult(
       <rect class="box accent" x="30" y="206" width="160" height="40" rx="6"/>
       <text x="110" y="231" text-anchor="middle">出力を取り込む</text>
       <path class="arrow" d="M190 226 H648"/>
-      <text class="sub" x="420" y="220" text-anchor="middle">⑤ 出力を挿入、決めどきを処理済みに（tx）</text>
+      <text class="sub" x="420" y="220" text-anchor="middle">⑤ 出力を挿入、決めどきを applied に（tx）</text>
 
       <rect class="box good" x="30" y="270" width="160" height="56" rx="6"/>
       <text x="110" y="292" text-anchor="middle">出力を順に適用</text>
@@ -274,8 +274,8 @@ record ApplyResult(
     <li><strong>計画レーン</strong>を分けるのは、Planner が LLM を数十秒待つ間も、Decider を止めないため。Planner の出力は 3:00 以降の予定だけなので、Decider の決定とぶつからない</li>
     <li>乱数は、用途ごとに別の列を使う（D5「乱数」）。レーンが違えば、引く列も違うので、並列に引いても結果は変わらない</li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-04　レーンの分け方と LLM の同時実行数</span>
+  <div class="callout">
+    <span class="label">決定 P-04　レーンの分け方と LLM の同時実行数</span>
     レーンは「ペルソナごとに決定と計画の2本」と「ワールドごとに1本」。LLM の呼び出しは、ホスト全体で同時に 3 本までに絞る（<code>SemaphoreSlim</code>）。前提の規模（最大 10 人）なら、待ちが出るのは日の始まり（全員の Planner が一斉に動く）くらいで、それも 3 時間の余裕に収まる。
   </div>
 </section>
@@ -300,8 +300,8 @@ record ApplyResult(
       <tr><td>LLM を使わないもの</td><td>なし</td><td>待つ（返らないのはバグなので、ログに出す）</td></tr>
     </table>
   </div>
-  <div class="draft">
-    <span class="label">案 P-05　締め切りの猶予と、運転モードによる違い</span>
+  <div class="callout">
+    <span class="label">決定 P-05　締め切りの猶予と、運転モードによる違い</span>
     猶予は既定で 2 分（実時刻）。締め切りは、実時間運転のときだけ効かせる。早送り（ドライラン、追いつき）では、時計が待たずに進むので、ホライズンにはすぐ着いてしまう。そこでは締め切りを使わず、ハンドラが返るまで待つ。追いつきでは LLM を使うハンドラがそもそも動かない（VISION 4章）ので、待ちは起きない。
   </div>
 </section>
@@ -325,8 +325,8 @@ record ApplyResult(
     <li>まとまりには、却下されたときの動き（<code>onReject</code>）を持たせる。<code>redecide</code> は、同じ時刻（いま）に決めどきを積み直す。<code>recompose</code> は、文面の作り直しを積む（辞書の食い違い）。<code>drop</code> は何もしない（割り込みで不要になった場合）</li>
     <li>検査は、状態だけで決まるので決定的。Apply の一部として単体テストできる</li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-06　検査は、イベントに付けた guard として Apply が評価する</span>
+  <div class="callout">
+    <span class="label">決定 P-06　検査は、イベントに付けた guard として Apply が評価する</span>
     出力を取り込むとき（1.4 の手順1）に一度だけ検査する案もあるが、取り込みから適用までの間に、ほかのペルソナの出力が先に適用されることがある（同じ語の判定など）。適用の直前に、1件ずつ検査するほうが漏れがない。
   </div>
 </section>
@@ -356,29 +356,26 @@ record ApplyResult(
       <text class="title" x="640" y="82" text-anchor="middle">processing</text>
       <text class="sub" x="640" y="99" text-anchor="middle">決めどき：処理中</text>
 
-      <rect class="box good" x="560" y="170" width="160" height="48" rx="8"/>
-      <text class="title" x="640" y="192" text-anchor="middle">done</text>
-      <text class="sub" x="640" y="209" text-anchor="middle">決めどき：処理済み</text>
 
       <path class="arrow" d="M170 112 L318 50"/>
       <path class="arrow" d="M170 124 H318"/>
       <path class="arrow" d="M170 136 L318 198"/>
       <path class="arrow" d="M170 106 C 260 70, 450 70, 558 80"/>
       <text class="sub" x="470" y="66">決めどき</text>
-      <path class="arrow" d="M640 108 V168"/>
-      <text class="sub" x="648" y="142">出力を取り込んだ</text>
+      <path class="arrow" d="M600 60 C 590 24, 500 24, 452 38"/>
+      <text class="sub" x="530" y="16" text-anchor="middle">出力を取り込んだ</text>
       <path class="arrow dash" d="M720 74 C 756 66, 756 102, 722 96"/>
-      <text class="sub" x="640" y="50" text-anchor="middle">再起動：処理中のまま起動し直す</text>
+      <text class="sub" x="640" y="130" text-anchor="middle">再起動：処理中のまま起動し直す</text>
     </svg>
     <figcaption>イベントの状態。行は消さず、中身も書き換えない（VISION 4章）。変わるのは状態と適用番号だけ</figcaption>
   </figure>
   <ul>
-    <li>適用番号を持つのは、applied と、processing / done の決めどきだけ。skipped と rejected は持たない（何も適用していないから）</li>
+    <li>適用番号を持つのは、applied と processing（決めどき）だけ。skipped と rejected は持たない（何も適用していないから）</li>
     <li>rejected と skipped には、理由（<code>status_reason</code>）を残す。ビューアと実行レポートで、なぜ起きなかったかを読める</li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-07　決めどきの適用番号は、処理中に入るときに振る</span>
-    VISION は「適用番号は、適用した瞬間に振る」「決めどきは、未適用 → 処理中 → 処理済みと進む」としている。決めどきにとっての「適用」は、処理中に入る瞬間なので、そこで振る。再起動で処理中のものを決め直すときは、状態を pending に戻さず、processing のままハンドラを起動し直す（効果は「未適用に戻して決め直す」と同じで、適用番号が振り直しで飛ばない）。
+  <div class="callout">
+    <span class="label">決定 P-07　決めどきの適用番号は、処理中に入るときに振る。処理済みは applied にまとめる</span>
+    決めどきにとっての「適用」は、処理中に入る瞬間なので、そこで適用番号を振る。出力を取り込んだら、ほかのイベントと同じ applied にする（決めどきだけの「処理済み」は持たない）。再起動で処理中のものを決め直すときは、状態を pending に戻さず、processing のままハンドラを起動し直す（効果は「未適用に戻して決め直す」と同じで、適用番号が振り直しで飛ばない）。
   </div>
 
   <h3>ペルソナの行動</h3>
@@ -431,7 +428,7 @@ record ApplyResult(
     <table>
       <tr><th>処理</th><th>1つのトランザクションで書くもの</th><th>書き手</th></tr>
       <tr><td>イベントの適用</td><td>変わった状態の行、イベントの状態と適用番号、後続のイベントの挿入、付随する表（受信箱、未送信の操作、生えた場所、辞書、発生中の出来事）</td><td>エンジン</td></tr>
-      <tr><td>ハンドラの出力の取り込み</td><td>出力のイベントの挿入、決めどきを done に</td><td>エンジン</td></tr>
+      <tr><td>ハンドラの出力の取り込み</td><td>出力のイベントの挿入、決めどきを applied に</td><td>エンジン</td></tr>
       <tr><td>到着、投入、送信結果</td><td>イベントの挿入（pending）。受信箱に入るのは、そのイベントを適用したとき</td><td>エンジン</td></tr>
       <tr><td>記憶の整理（1つの層）</td><td>記憶のアイテムと threads の更新、その層のカーソル</td><td>整理ジョブ</td></tr>
     </table>
@@ -479,8 +476,8 @@ record ApplyResult(
     <li>追いつきの間に積んだイベントには、origin に <code>catchup</code> を付ける</li>
     <li>追いつきの最中に届いた到着のコマンドは、受け付けて保留し、追いつきが終わってから、いまの時刻で積む。到着のイベントは、時計の「いま」より前にできないから</li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-08　追いつきの上限は 14 日</span>
+  <div class="callout">
+    <span class="label">決定 P-08　追いつきの上限は 14 日</span>
     14 日を超える停止は、超えた分を早送りせずに飛ばす。飛ばす区間の先頭で、ペルソナを「空白」の状態にするイベント（<code>persona.gap</code>）を1件積む。状態変数は既定の初期値に戻し、居場所は睡眠ブロックの場所にして、実行中の行動は打ち切る。そこから 14 日分だけ、通常の追いつきで進める。
     <p class="alt">上限を設ける理由は、早送りの計算ではなく、記憶の整理の入力が膨らむこと。Decider だけの早送りは軽いので、上限は記憶の整理が一晩で捌ける量で決める。ebise の夜間ジョブも、遡る上限を 14 日にしている。</p>
   </div>
@@ -495,20 +492,21 @@ record ApplyResult(
 <section id="reload">
   <h2><span class="num">1.12</span>定義の読み直し</h2>
   <ul>
-    <li>読み直しは、コマンドとしてエンジンに入る。エンジンは、TOML をすべて読み直して検証し、エラーがあれば拒否して、古い定義のまま動き続ける</li>
+    <li>読み直しは、ホストが公開 API で呼び、コマンドとしてエンジンに入る（いつ呼ぶかは P-09）。エンジンは、TOML をすべて読み直して検証し、エラーがあれば拒否して、古い定義のまま動き続ける</li>
     <li>通れば、イベントとイベントの間で <code>Definitions</code> を差し替え、<code>definitions.reloaded</code> のイベント（定義のハッシュつき）を記録する。ログを読むときに、どの定義で動いていたかがわかる</li>
     <li>場所のグラフが変われば、最短経路のキャッシュ（D5）を作り直す</li>
     <li>固定予定の変更は、翌日のプランから効く（VISION 5章）</li>
   </ul>
   <div class="draft">
-    <span class="label">案 P-09　実行中の行動が、読み直しで消えたとき</span>
+    <span class="label">案 P-09　定義の読み直しの契機と、実行中の行動が消えたとき</span>
+    <p>読み直しは、コアの公開 API（<code>ReloadDefinitionsAsync</code>、D4 4.6）として持つ。コアはファイルを監視せず、いつ呼ぶかはホストが決める。最小の CLI では、<code>vivace run --watch</code> のときに定義のフォルダを監視し、変更が 1 秒落ち着いたら呼ぶ（D7 7.5）。将来の API 層やエディタは、保存したときに同じ API を呼ぶ。</p>
     実行中の行動や、いる場所が、新しい定義から消えていても、その行動は終了の時刻まで続ける（中断しない）。次の決めどきからは、新しい定義で候補を作る。ペルソナ定義が消えたインスタンスは、エラーとして読み直しを拒否する（送還を先に投入する）。
   </div>
 </section>
 
 </main>
 
-<footer>Vivace 詳細設計 D1。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。</footer>
+<footer>Vivace 詳細設計 D1。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。「決定」は合意したもの。</footer>
 </div>
 
 <button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>

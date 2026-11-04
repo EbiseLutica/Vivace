@@ -316,3 +316,4 @@ td code, th code { white-space: nowrap; }
 .stage { display: inline-block; min-width: 1.6em; text-align: center; border-radius: 6px; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 13px; }
 svg .box.bad { fill: var(--bad-soft); stroke: var(--bad); }
 svg text.mono { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12.5px; }
+.callout .alt { color: var(--muted); font-size: 15px; }

@@ -17,7 +17,8 @@
   <div class="meta">
     <span class="chip">2026-11-03 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
-    <span class="chip draft">案 51 件と、枠の外の判断 83 件が合意待ち</span>
+    <span class="chip fixed">合意 15 件</span>
+    <span class="chip draft">案 36 件と、枠の外の判断 83 件が合意待ち</span>
   </div>
 </header>
 
@@ -31,7 +32,7 @@
       <li><a href="#appendix">0.3 VISION の付録との対応</a></li>
       <li><a href="#drafts">0.4 案の一覧</a></li>
       <li><a href="#judgments">0.5 枠の外の判断</a></li>
-      <li><a href="#vision">0.6 VISION への指摘</a></li>
+      <li><a href="#vision">0.6 VISION への指摘と反映</a></li>
       <li><a href="#next">0.7 次にやること</a></li>
       <li class="part">詳細設計</li>
       <li><a href="1-execution.html">D1 実行モデル</a></li>
@@ -65,7 +66,7 @@
   <h2><span class="num">0.2</span>ファイル</h2>
   <div class="grid two">
     <div class="card"><h4><a href="1-execution.html">D1 実行モデル</a></h4><p>エンジン（唯一の書き手）、Apply の形、レーン、ホライズンと締め切り、適用前の検査、状態遷移、トランザクション、時計、起動と追いつき。</p></div>
-    <div class="card"><h4><a href="2-events.html">D2 イベントと語彙</a></h4><p>イベントの種別と段、種別ごとの Apply、行動の効果、requires と制限、出来事の効果、投入できるイベント、origin。</p></div>
+    <div class="card"><h4><a href="2-events.html">D2 イベントと語彙</a></h4><p>イベントタイプと段、イベントタイプごとの Apply、行動の効果、requires と制限、出来事の効果、投入できるイベント、origin。</p></div>
     <div class="card"><h4><a href="3-data.html">D3 データ</a></h4><p>定義の TOML（ワールド、ペルソナ、固定予定、行動、出来事）、ドメイン型、SQLite のスキーマ、JSON の版。</p></div>
     <div class="card"><h4><a href="4-components.html">D4 コンポーネント</a></h4><p>アセンブリ、ポート（IClock、IStorage、IChannel、ILlmClient など）、コアの中の部品、公開 API、プラグイン。</p></div>
     <div class="card"><h4><a href="5-decision.html">D5 決定と状態変数</a></h4><p>Decider のスコアの式、Planner の検査と補正、状態変数の既定値、反射、出来事の抽選、乱数、最短経路、同行。</p></div>
@@ -83,15 +84,15 @@
       <tr><th>VISION 付録の項目</th><th>案</th><th>場所</th></tr>
       <tr><td>LLM クライアントの抽象（1章）</td><td>P-26（実装は PoC で選ぶ）</td><td><a href="4-components.html#llm-port">D4 4.4</a>、<a href="8-stack.html#poc">D8 8.4</a></td></tr>
       <tr><td>固定予定と生活リズムの書き方（2章）</td><td>P-20</td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
-      <tr><td>イベント ID の形式（2章）</td><td>P-10</td><td><a href="2-events.html#envelope">D2 2.1</a></td></tr>
+      <tr><td>イベント ID の形式（2章）</td><td>P-10 <span class="chip fixed">合意</span></td><td><a href="2-events.html#envelope">D2 2.1</a></td></tr>
       <tr><td>決める側に渡す状態の写しの作り方（4章）</td><td>P-21</td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>同行・共同行動で、2人のレーンをまたぐ決定の扱い（4章、14章）</td><td>P-41</td><td><a href="5-decision.html#together">D5 5.11</a></td></tr>
       <tr><td>前日のプランがないときの、0:00〜3:00 の過ごし方と Planner のホライズン（4章）</td><td>P-34</td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
-      <tr><td>追いつきの上限日数（4章）</td><td>P-08</td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
+      <tr><td>追いつきの上限日数（4章）</td><td>P-08 <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
       <tr><td>Utility AI のスコアの式と、補正の語彙（5章）</td><td>P-30</td><td><a href="5-decision.html#score">D5 5.3</a></td></tr>
       <tr><td>状態変数の式の形、範囲、数値（6章）</td><td>P-35</td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
       <tr><td>寝不足での健康度の下がり方（6章）</td><td>P-36</td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
-      <tr><td>出来事の効果の語彙と、頻度の既定値（9章）</td><td>P-16、P-37</td><td><a href="2-events.html#incident-effects">D2 2.7</a>、<a href="5-decision.html#incidents">D5 5.8</a></td></tr>
+      <tr><td>出来事の効果の語彙と、頻度の既定値（9章）</td><td>P-16 <span class="chip fixed">合意</span>、P-37</td><td><a href="2-events.html#incident-effects">D2 2.7</a>、<a href="5-decision.html#incidents">D5 5.8</a></td></tr>
       <tr><td>予定ブロックの interruptible が要るか（10章）</td><td>P-33</td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
       <tr><td>長い固定ブロックの途中の「スマホを開く機会」（10章）</td><td>P-32</td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
       <tr><td>フォローバックの方針の持ち方（10章）</td><td>P-44</td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
@@ -105,26 +106,26 @@
 
 <section id="drafts">
   <h2><span class="num">0.4</span>案の一覧</h2>
-  <p><strong>太字</strong>は、ほかの設計を大きく左右するもの。先にこれらを見てもらえると、残りの手戻りが少ない。<span class="chip">確認だけ</span> は、VISION の本文や一般的なやり方からほぼ導けるもの（VISION の付録にあったので枠に入れた）。</p>
+  <p><strong>太字</strong>は、ほかの設計を大きく左右するもの。先にこれらを見てもらえると、残りの手戻りが少ない。<span class="chip">確認だけ</span> は、VISION の本文や一般的なやり方からほぼ導けるもの（VISION の付録にあったので枠に入れた）。<span class="chip fixed">合意</span> は、レビューで合意したもの。本文では「決定」の枠にし、VISION に反映した。</p>
   <div class="table-wrap">
     <table>
       <tr><th>ID</th><th>案</th><th>場所</th></tr>
-      <tr><td>P-01</td><td><strong>エンジンを唯一の書き手にする（アクター）</strong></td><td><a href="1-execution.html#structure">D1 1.2</a></td></tr>
-      <tr><td>P-02</td><td><strong>Apply は後続のイベントとシグナルを返す</strong></td><td><a href="1-execution.html#apply">D1 1.3</a></td></tr>
-      <tr><td>P-03</td><td>割り込まれた行動のハンドラは取り消す</td><td><a href="1-execution.html#apply">D1 1.3</a></td></tr>
-      <tr><td>P-04</td><td>レーンは「ペルソナごとに決定と計画」「ワールドごと」。LLM の同時実行は 3</td><td><a href="1-execution.html#lanes">D1 1.5</a></td></tr>
-      <tr><td>P-05</td><td>締め切りの猶予は 2 分。早送りでは締め切りを使わない</td><td><a href="1-execution.html#horizon">D1 1.6</a></td></tr>
-      <tr><td>P-06</td><td><strong>適用前の検査は、イベントに付けた guard として Apply が評価する</strong></td><td><a href="1-execution.html#guard">D1 1.7</a></td></tr>
-      <tr><td>P-07</td><td>決めどきの適用番号は、処理中に入るときに振る</td><td><a href="1-execution.html#states">D1 1.8</a></td></tr>
-      <tr><td>P-08</td><td>追いつきの上限は 14 日。超えた分は空白として飛ばす</td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
-      <tr><td>P-09</td><td>読み直しで消えた行動は、終了まで続ける</td><td><a href="1-execution.html#reload">D1 1.12</a></td></tr>
-      <tr><td>P-10</td><td>イベントの ID は連番と兼ねる</td><td><a href="2-events.html#envelope">D2 2.1</a></td></tr>
-      <tr><td>P-11</td><td><strong>イベントの種別の一覧と、段への割り当て</strong> <span class="chip">確認だけ</span></td><td><a href="2-events.html#stages">D2 2.2</a></td></tr>
-      <tr><td>P-12</td><td><strong>Decider の出力は <code>activity.chosen</code> 1件。開始・終了は Apply が鎖で積む</strong></td><td><a href="2-events.html#kinds">D2 2.3</a></td></tr>
-      <tr><td>P-13</td><td>発話（<code>outbound.speech</code>）と操作（<code>outbound.operation</code>）を別の種別にする</td><td><a href="2-events.html#kinds">D2 2.3</a></td></tr>
-      <tr><td>P-14</td><td><strong>行動の効果の語彙。率は「置き換え」</strong></td><td><a href="2-events.html#effects">D2 2.5</a></td></tr>
-      <tr><td>P-15</td><td>制限に <code>max_per_day</code> と <code>hours</code> を足す</td><td><a href="2-events.html#requires">D2 2.6</a></td></tr>
-      <tr><td>P-16</td><td>出来事の効果の語彙と、状態（コンディション）の定義</td><td><a href="2-events.html#incident-effects">D2 2.7</a></td></tr>
+      <tr><td>P-01</td><td><strong>エンジンを唯一の書き手にする（アクター）</strong> <span class="chip fixed">合意</span></td><td><a href="1-execution.html#structure">D1 1.2</a></td></tr>
+      <tr><td>P-02</td><td><strong>Apply は後続のイベントとシグナルを返す</strong> <span class="chip fixed">合意</span></td><td><a href="1-execution.html#apply">D1 1.3</a></td></tr>
+      <tr><td>P-03</td><td>割り込まれた行動のハンドラは取り消す <span class="chip fixed">合意</span></td><td><a href="1-execution.html#apply">D1 1.3</a></td></tr>
+      <tr><td>P-04</td><td>レーンは「ペルソナごとに決定と計画」「ワールドごと」。LLM の同時実行は 3 <span class="chip fixed">合意</span></td><td><a href="1-execution.html#lanes">D1 1.5</a></td></tr>
+      <tr><td>P-05</td><td>締め切りの猶予は 2 分。早送りでは締め切りを使わない <span class="chip fixed">合意</span></td><td><a href="1-execution.html#horizon">D1 1.6</a></td></tr>
+      <tr><td>P-06</td><td><strong>適用前の検査は、イベントに付けた guard として Apply が評価する</strong> <span class="chip fixed">合意</span></td><td><a href="1-execution.html#guard">D1 1.7</a></td></tr>
+      <tr><td>P-07</td><td>決めどきの適用番号は、処理中に入るときに振る。処理済みは applied にまとめる <span class="chip fixed">合意</span></td><td><a href="1-execution.html#states">D1 1.8</a></td></tr>
+      <tr><td>P-08</td><td>追いつきの上限は 14 日。超えた分は空白として飛ばす <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
+      <tr><td>P-09</td><td>読み直しはホストが API で呼ぶ（CLI はフォルダを監視）。消えた行動は終了まで続ける</td><td><a href="1-execution.html#reload">D1 1.12</a></td></tr>
+      <tr><td>P-10</td><td>イベントの ID は連番と兼ねる <span class="chip fixed">合意</span></td><td><a href="2-events.html#envelope">D2 2.1</a></td></tr>
+      <tr><td>P-11</td><td><strong>イベントタイプの一覧と、段への割り当て</strong> <span class="chip fixed">合意</span></td><td><a href="2-events.html#stages">D2 2.2</a></td></tr>
+      <tr><td>P-12</td><td><strong>Decider の出力は <code>activity.chosen</code> 1件。開始・終了は Apply がチェーンで積む</strong> <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>P-13</td><td>発話（<code>outbound.speech</code>）と操作（<code>outbound.operation</code>）を別のイベントタイプにする <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>P-14</td><td><strong>行動の効果の語彙。率は「置き換え」</strong> <span class="chip fixed">合意</span></td><td><a href="2-events.html#effects">D2 2.5</a></td></tr>
+      <tr><td>P-15</td><td>制限に <code>max_per_day</code> と <code>hours</code> を足す <span class="chip fixed">合意</span></td><td><a href="2-events.html#requires">D2 2.6</a></td></tr>
+      <tr><td>P-16</td><td>出来事の効果の語彙と、状態（コンディション）の定義 <span class="chip fixed">合意</span></td><td><a href="2-events.html#incident-effects">D2 2.7</a></td></tr>
       <tr><td>P-17</td><td>定義ファイルの配置と ID の名前空間</td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
       <tr><td>P-18</td><td>祝日と年中行事は、ワールドの暦に持つ</td><td><a href="3-data.html#world-def">D3 3.3</a></td></tr>
       <tr><td>P-19</td><td>ペルソナ定義に <code>home</code> を足す</td><td><a href="3-data.html#persona-def">D3 3.4</a></td></tr>
@@ -177,12 +178,12 @@
       <tr><td>J-03</td><td>追いつきの最中に届いた到着は保留し、追いつきが終わってから「いま」の時刻で積む</td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
       <tr><td>J-04</td><td>停止するとき、送信中の操作は結果を待たずに閉じる（次の起動で「送信不明」になる）</td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
       <tr><td>J-05</td><td>固定ブロックの開始は、実行中の行動を終わらせる</td><td><a href="1-execution.html#states">D1 1.8</a></td></tr>
-      <tr><td>J-06</td><td>Planner の出力は 3:00 の時刻のイベント（<code>plan.committed</code>）にする。3:00 の継ぎ目では、ブロック ID（定義@開始日）が同じなら続いているとみなす</td><td><a href="2-events.html#kinds">D2 2.3</a>、<a href="5-decision.html#planner">D5 5.5</a></td></tr>
-      <tr><td>J-07</td><td>欠席したブロックの残りは自由時間にする。「待つ」は、原因の解消かブロックの終わりの早いほうまで待って、開始時の確認をやり直す</td><td><a href="2-events.html#kinds">D2 2.3</a></td></tr>
+      <tr><td>J-06</td><td>Planner の出力は 3:00 の時刻のイベント（<code>plan.committed</code>）にする。3:00 の継ぎ目では、ブロック ID（定義@開始日）が同じなら続いているとみなす</td><td><a href="2-events.html#types">D2 2.3</a>、<a href="5-decision.html#planner">D5 5.5</a></td></tr>
+      <tr><td>J-07</td><td>欠席したブロックの残りは自由時間にする。「待つ」は、原因の解消かブロックの終わりの早いほうまで待って、開始時の確認をやり直す</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
       <tr><td>J-08</td><td>反射が固定ブロックの途中で起きたら、残りは欠席として記録する。反射の行動が終わってまだブロックの中なら、残りは自由時間にする</td><td><a href="5-decision.html#reflex">D5 5.7</a></td></tr>
-      <tr><td>J-09</td><td>行動が終わったときに決めどきを積むのは、自由時間の中で、同じ時刻にブロックが始まらないときだけ</td><td><a href="2-events.html#kinds">D2 2.3</a></td></tr>
-      <tr><td>J-10</td><td>廃止した場所にいる人の行動は、中断せずにそのまま終わらせる</td><td><a href="2-events.html#kinds">D2 2.3</a></td></tr>
-      <tr><td>J-11</td><td>送還したペルソナと、止めたワールドの、以後のイベントは捨てる</td><td><a href="2-events.html#kinds">D2 2.3</a></td></tr>
+      <tr><td>J-09</td><td>行動が終わったときに決めどきを積むのは、自由時間の中で、同じ時刻にブロックが始まらないときだけ</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>J-10</td><td>廃止した場所にいる人の行動は、中断せずにそのまま終わらせる</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>J-11</td><td>送還したペルソナと、止めたワールドの、以後のイベントは捨てる</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
       <tr><td>J-12</td><td>受信箱を捌く対象は、「スマホを開く」を始めた時点の通知だけ。途中で届いたものは受信箱に残る</td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
       <tr><td>J-13</td><td>投稿のクールダウンの基準（最後の投稿の時刻など）を、ログから毎回計算せず、状態に持って Apply で更新する。VISION 10章は「ログから計算する」と書いているが、値は同じになる</td><td><a href="2-events.html#requires">D2 2.6</a></td></tr>
       <tr><td>J-14</td><td>後続のイベントは、契機のイベントの origin を引き継ぐ</td><td><a href="2-events.html#origin">D2 2.9</a></td></tr>
@@ -214,7 +215,7 @@
       <tr><td>J-33</td><td>運転モードは、実時間・倍速・早送り・追いつきの4つ。倍速でも配信役は動かさない</td><td><a href="1-execution.html#clock">D1 1.10</a></td></tr>
       <tr><td>J-34</td><td>定義の読み直しを、<code>definitions.reloaded</code> のイベント（定義のハッシュつき）で記録する</td><td><a href="1-execution.html#reload">D1 1.12</a></td></tr>
       <tr><td>J-35</td><td>イベントに Batch と Cause を持たせる。版番号は独立した項目にせず、ペイロードの中に持つ</td><td><a href="2-events.html#envelope">D2 2.1</a></td></tr>
-      <tr><td>J-36</td><td>イベントの種別の名前（<code>activity.chosen</code> など）と、決めどきの理由の6種類</td><td><a href="2-events.html#kinds">D2 2.3</a></td></tr>
+      <tr><td>J-36</td><td>イベントタイプの名前（<code>activity.chosen</code> など）と、決めどきの理由の6種類</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
       <tr><td>J-37</td><td>組み込みの行動5つ（<code>core.go_to_next</code>、<code>idle</code>、<code>sleep</code>、<code>faint</code>、<code>go_home_rest</code>）</td><td><a href="2-events.html#effects">D2 2.5</a></td></tr>
       <tr><td>J-38</td><td>状態（風邪など）の率は、既定の率に「足す」（行動の率は「置き換える」）</td><td><a href="2-events.html#incident-effects">D2 2.7</a></td></tr>
       <tr><td>J-39</td><td>出来事の対象の場所は、<code>place</code> で決め打ちするか、<code>place_tag</code> で抽選する</td><td><a href="2-events.html#incident-effects">D2 2.7</a></td></tr>
@@ -226,7 +227,7 @@
       <tr><td>J-45</td><td>ペルソナの状態に、副行動（Overlay）、行動ごとの利用（前回の開始、今日の回数、連続回数）、投稿の状態、用途ごとの乱数の位置、最後の起床を持つ</td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>J-46</td><td>ID を <code>readonly record struct</code> で型ごとに分ける</td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>J-47</td><td>SQLite の表と列、インデックス、接続の設定（WAL、<code>synchronous=NORMAL</code>）、<code>user_version</code> によるマイグレーション</td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
-      <tr><td>J-48</td><td>ペイロードに種別ごとの版（<code>"v"</code>）を入れる。知らない種別のイベントを読んだら、起動を止める</td><td><a href="3-data.html#json">D3 3.9</a></td></tr>
+      <tr><td>J-48</td><td>ペイロードにイベントタイプごとの版（<code>"v"</code>）を入れる。知らないイベントタイプのイベントを読んだら、起動を止める</td><td><a href="3-data.html#json">D3 3.9</a></td></tr>
       <tr><td>J-49</td><td>ポートの一覧とシグネチャ（<code>IRandomSource</code>、<code>IStorage.CommitAsync</code>、<code>IAdminNotifier</code> など）。連番はエンジンが振る</td><td><a href="4-components.html#ports">D4 4.2</a></td></tr>
       <tr><td>J-50</td><td><code>IChannel</code> のメソッドと、能力の語彙</td><td><a href="4-components.html#channel">D4 4.3</a></td></tr>
       <tr><td>J-51</td><td><code>ILlmClient</code> のシグネチャ。モデル名はコアに書かず、段から対応させる</td><td><a href="4-components.html#llm-port">D4 4.4</a></td></tr>
@@ -274,23 +275,22 @@
 </section>
 
 <section id="vision">
-  <h2><span class="num">0.6</span>VISION への指摘</h2>
-  <p>CLAUDE.md の方針（相談中の案は、合意するまで反映しない）に従い、VISION.html はまだ直していない。</p>
-  <h3>誤り</h3>
+  <h2><span class="num">0.6</span>VISION への指摘と反映</h2>
+  <h3>反映したもの</h3>
   <ul>
-    <li>1章の用語の表で、「投入の窓口」の章が 16 になっている。正しくは 15章</li>
+    <li>1章の用語の表で、「投入の窓口」の章が 16 になっていた誤りを、15 に直した</li>
+    <li>合意した P-02、P-04、P-05、P-06、P-07、P-08、P-10、P-12、P-15、P-16 を、VISION の2章、4章、5章、9章、付録に反映した</li>
+    <li>レビューで決めた用語（「種別」を「イベントタイプ」にする、段を項目として持たない）を、VISION の2章と4章に反映した</li>
   </ul>
-  <h3>案に合意したら、VISION にも反映が要るもの</h3>
+  <h3>合意したら、VISION にも反映が要るもの</h3>
   <div class="table-wrap">
     <table>
-      <tr><th>VISION の章</th><th>反映すること</th><th>案</th></tr>
+      <tr><th>VISION の章</th><th>反映すること</th><th>案・判断</th></tr>
       <tr><td>2章 ペルソナ定義</td><td><code>home</code>、<code>disruption</code>（予定の乱れへの反応の重み）、チャンネルごとの設定の節を足す。固定予定の項目の「書き方は詳細設計で決める」を外す</td><td>P-19、P-31、P-44、P-20</td></tr>
-      <tr><td>2章 行動の定義</td><td>行動タグ（<code>tags</code>）と、制限（<code>limits</code>）を足す</td><td>P-30、P-15</td></tr>
+      <tr><td>2章 行動の定義</td><td>行動タグ（<code>tags</code>）を足す</td><td>P-30</td></tr>
       <tr><td>2章 ペルソナインスタンスの状態</td><td>副行動、行動ごとの利用、投稿の状態、用途ごとの乱数の位置、最後の起床を足す。処理済みの通知と送信済みの操作は、状態から外す</td><td>J-45、J-15</td></tr>
-      <tr><td>2章 イベント</td><td>ID は連番と兼ねる。Batch と Cause を足し、版番号はペイロードの中に持つ。状態に skipped と rejected を足す</td><td>P-10、P-06、J-35、J-31</td></tr>
-      <tr><td>4章 「決める」と「適用する」</td><td>Apply が後続のイベントとシグナルを返すこと。適用前の検査を guard で行うこと</td><td>P-02、P-06</td></tr>
+      <tr><td>2章 イベント</td><td>Batch と Cause を足し、版番号はペイロードの中に持つ</td><td>J-35</td></tr>
       <tr><td>4章 時間と順序のルール</td><td>乱数の位置を、決める側が出力に記録し、Apply が進めること。用途ごとの列</td><td>P-38</td></tr>
-      <tr><td>4章 ホライズン</td><td>Planner 以外のハンドラの締め切り</td><td>P-05</td></tr>
       <tr><td>10章 送信</td><td>投稿のクールダウンの基準を、状態に持つ</td><td>J-13</td></tr>
       <tr><td>10章 受信箱と割り込み</td><td><code>interruptible</code> の検討の記述を消す</td><td>P-33</td></tr>
       <tr><td>付録</td><td>合意した項目を、付録から消す</td><td>0.3 の表</td></tr>
@@ -313,7 +313,7 @@
 
 </main>
 
-<footer>Vivace 詳細設計の目次。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。</footer>
+<footer>Vivace 詳細設計の目次。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。「決定」は合意したもの。</footer>
 </div>
 
 <button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>
