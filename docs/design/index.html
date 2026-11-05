@@ -15,10 +15,10 @@
   <h1>Vivace コアの詳細設計</h1>
   <p>VISION.html の構想を、実装できる粒度に落とした設計書。構想の正は VISION.html で、ここでは VISION が「詳細設計で決める」とした項目を埋め、コアの実行モデル、データ、部品、数値を決める。</p>
   <div class="meta">
-    <span class="chip">2026-11-03 時点</span>
+    <span class="chip">2026-11-05 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
     <span class="chip fixed">案はすべて合意（57 件）</span>
-    <span class="chip draft">枠の外の判断 55 件が合意待ち</span>
+    <span class="chip fixed">枠の外の判断もすべて合意（93 件）</span>
   </div>
 </header>
 
@@ -57,7 +57,7 @@
   <ul>
     <li><strong>前提の規模</strong>：1ホストに 1〜2 ワールド、1ワールドあたり最大 5 人。1プロセス、SQLite のファイルは1つ</li>
     <li><strong>VISION との関係</strong>：VISION の章は「VISION 4章」、この設計書の章は「D1」「D5 5.3」のように書く。仕組みの考え方は VISION を正とし、ここでは繰り返さずに参照する</li>
-    <li><strong>案</strong>：<span class="chip draft">案</span> の枠は、ユーザーの合意を待っている提案。番号（P-01〜P-51）で返事ができる。合意したものは枠を外し、VISION に反映が要るものは VISION も直す（0.5）</li>
+    <li><strong>案</strong>：<span class="chip draft">案</span> の枠は、ユーザーの合意を待っている提案。番号（P-01〜P-57）で返事ができる。合意したものは枠を外し、VISION に反映が要るものは VISION も直す（0.5）</li>
     <li><strong>範囲</strong>：コア（Vivace.Core）と、コアが外に求める口。Misskey のプラグインと CLI は、コアとの境目だけを書いた</li>
   </ul>
 </section>
@@ -213,43 +213,43 @@
   <div class="table-wrap">
     <table>
       <tr><th>ID</th><th>判断</th><th>場所</th></tr>
-      <tr><td>J-28</td><td>シグナルの5種類（<code>StartHandler</code>、<code>CancelHandler</code>、<code>Deliver</code>、<code>Consolidate</code>、<code>ChannelOnline</code>）と、再起動での復元の仕方</td><td><a href="1-execution.html#apply">D1 1.3</a></td></tr>
-      <tr><td>J-29</td><td>キューは、未適用のイベントをメモリの優先度つきキューに写したもの。読むのはメモリだけ</td><td><a href="1-execution.html#step">D1 1.4</a></td></tr>
-      <tr><td>J-30</td><td>guard の6種類と、却下されたときの動き（<code>redecide</code> / <code>recompose</code> / <code>drop</code>）</td><td><a href="1-execution.html#guard">D1 1.7</a></td></tr>
-      <tr><td>J-31</td><td>イベントの状態に skipped と rejected を足し、理由を残す</td><td><a href="1-execution.html#states">D1 1.8</a></td></tr>
-      <tr><td>J-32</td><td>SQLite の書き込みの接続を2本（エンジン用、記憶の整理用）にし、書く表を分ける</td><td><a href="1-execution.html#tx">D1 1.9</a></td></tr>
-      <tr><td>J-33</td><td>運転モードは、実時間・倍速・早送り・追いつきの4つ。倍速でも配信役は動かさない</td><td><a href="1-execution.html#clock">D1 1.10</a></td></tr>
-      <tr><td>J-34</td><td>定義の読み直しを、<code>definitions.reloaded</code> のイベント（定義のハッシュつき）で記録する</td><td><a href="1-execution.html#reload">D1 1.12</a></td></tr>
-      <tr><td>J-35</td><td>イベントに Batch と Cause を持たせる。版番号は独立した項目にせず、ペイロードの中に持つ</td><td><a href="2-events.html#envelope">D2 2.1</a></td></tr>
-      <tr><td>J-36</td><td>イベントタイプの名前（<code>activity.chosen</code> など）と、決めどきの理由の6種類</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
-      <tr><td>J-37</td><td>組み込みの行動5つ（<code>core.go_to_next</code>、<code>idle</code>、<code>sleep</code>、<code>faint</code>、<code>go_home_rest</code>）</td><td><a href="2-events.html#effects">D2 2.5</a></td></tr>
-      <tr><td>J-38</td><td>状態（風邪など）の率は、既定の率に「足す」（行動の率は「置き換える」）</td><td><a href="2-events.html#incident-effects">D2 2.7</a></td></tr>
-      <tr><td>J-39</td><td>出来事の対象の場所は、<code>place</code> で決め打ちするか、<code>place_tag</code> で抽選する</td><td><a href="2-events.html#incident-effects">D2 2.7</a></td></tr>
-      <tr><td>J-40</td><td>origin の語彙の6種類</td><td><a href="2-events.html#origin">D2 2.9</a></td></tr>
-      <tr><td>J-41</td><td>時間の長さは、単位つきの文字列（<code>"45m"</code>）で書く</td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
-      <tr><td>J-42</td><td>定義のキーの名前と書き方（<code>utc_offset</code>、<code>not_exist</code>、<code>[[term]]</code>、<code>examples</code>、<code>tools</code>、<code>use</code> のワイルドカード、<code>[vitals]</code>、<code>[reflexes]</code>、行動と出来事のキー）</td><td><a href="3-data.html#world-def">D3 3.3</a>〜<a href="3-data.html#action-def">3.6</a></td></tr>
-      <tr><td>J-43</td><td>固定予定の日をまたぐブロックは、開始した日のもの。（重なりをエラーにする規則は、レビューでやめて P-52 に移した）</td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
-      <tr><td>J-44</td><td>反射の行動は、所要時間を固定で書く（範囲ならエラー）</td><td><a href="3-data.html#action-def">D3 3.6</a></td></tr>
-      <tr><td>J-45</td><td>ペルソナの状態に、副行動（Overlay）、行動ごとの利用（前回の開始、今日の回数、連続回数）、投稿の状態、用途ごとの乱数の位置、最後の起床を持つ</td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>J-28</td><td>シグナルの5種類（<code>StartHandler</code>、<code>CancelHandler</code>、<code>Deliver</code>、<code>Consolidate</code>、<code>ChannelOnline</code>）と、再起動での復元の仕方 <span class="chip fixed">合意</span></td><td><a href="1-execution.html#apply">D1 1.3</a></td></tr>
+      <tr><td>J-29</td><td>キューは、未適用のイベントをメモリの優先度つきキューに写したもの。読むのはメモリだけ <span class="chip fixed">合意</span></td><td><a href="1-execution.html#step">D1 1.4</a></td></tr>
+      <tr><td>J-30</td><td>guard の6種類と、却下されたときの動き（<code>redecide</code> / <code>recompose</code> / <code>drop</code>） <span class="chip fixed">合意</span></td><td><a href="1-execution.html#guard">D1 1.7</a></td></tr>
+      <tr><td>J-31</td><td>イベントの状態に skipped と rejected を足し、理由を残す <span class="chip fixed">合意</span></td><td><a href="1-execution.html#states">D1 1.8</a></td></tr>
+      <tr><td>J-32</td><td>SQLite の書き込みの接続を2本（エンジン用、記憶の整理用）にし、書く表を分ける <span class="chip fixed">合意</span></td><td><a href="1-execution.html#tx">D1 1.9</a></td></tr>
+      <tr><td>J-33</td><td>運転モードは、実時間・倍速・早送り・追いつきの4つ。倍速でも配信役は動かさない <span class="chip fixed">合意</span></td><td><a href="1-execution.html#clock">D1 1.10</a></td></tr>
+      <tr><td>J-34</td><td>定義の読み直しを、<code>definitions.reloaded</code> のイベント（定義のハッシュつき）で記録する <span class="chip fixed">合意</span></td><td><a href="1-execution.html#reload">D1 1.12</a></td></tr>
+      <tr><td>J-35</td><td>イベントに Batch と Cause を持たせる。版番号は独立した項目にせず、ペイロードの中に持つ <span class="chip fixed">合意</span></td><td><a href="2-events.html#envelope">D2 2.1</a></td></tr>
+      <tr><td>J-36</td><td>イベントタイプの名前（<code>activity.chosen</code> など）と、決めどきの理由の6種類 <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>J-37</td><td>組み込みの行動5つ（<code>core.go_to_next</code>、<code>idle</code>、<code>sleep</code>、<code>faint</code>、<code>go_home_rest</code>） <span class="chip fixed">合意</span></td><td><a href="2-events.html#effects">D2 2.5</a></td></tr>
+      <tr><td>J-38</td><td>状態（風邪など）の率は、既定の率に「足す」（行動の率は「置き換える」） <span class="chip fixed">合意</span></td><td><a href="2-events.html#incident-effects">D2 2.7</a></td></tr>
+      <tr><td>J-39</td><td>出来事の対象の場所は、<code>place</code> で決め打ちするか、<code>place_tag</code> で抽選する <span class="chip fixed">合意</span></td><td><a href="2-events.html#incident-effects">D2 2.7</a></td></tr>
+      <tr><td>J-40</td><td>origin の語彙の6種類 <span class="chip fixed">合意</span></td><td><a href="2-events.html#origin">D2 2.9</a></td></tr>
+      <tr><td>J-41</td><td>時間の長さは、単位つきの文字列（<code>"45m"</code>）で書く <span class="chip fixed">合意</span></td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
+      <tr><td>J-42</td><td>定義のキーの名前と書き方（<code>utc_offset</code>、<code>not_exist</code>、<code>[[term]]</code>、<code>examples</code>、<code>tools</code>、<code>use</code> のワイルドカード、<code>[vitals]</code>、<code>[reflexes]</code>、行動と出来事のキー） <span class="chip fixed">合意</span></td><td><a href="3-data.html#world-def">D3 3.3</a>〜<a href="3-data.html#action-def">3.6</a></td></tr>
+      <tr><td>J-43</td><td>固定予定の日をまたぐブロックは、開始した日のもの。（重なりをエラーにする規則は、レビューでやめて P-52 に移した） <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
+      <tr><td>J-44</td><td>反射の行動は、所要時間を固定で書く（範囲ならエラー） <span class="chip fixed">合意</span></td><td><a href="3-data.html#action-def">D3 3.6</a></td></tr>
+      <tr><td>J-45</td><td>ペルソナの状態に、副行動（Overlay）、行動ごとの利用（前回の開始、今日の回数、連続回数）、投稿の状態、用途ごとの乱数の位置、最後の起床を持つ <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>J-46</td><td>ID を <code>readonly record struct</code> で型ごとに分ける <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
-      <tr><td>J-47</td><td>SQLite の表と列、インデックス、接続の設定（WAL、<code>synchronous=NORMAL</code>）、<code>user_version</code> によるマイグレーション</td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
-      <tr><td>J-48</td><td>ペイロードにイベントタイプごとの版（<code>"v"</code>）を入れる。知らないイベントタイプのイベントを読んだら、起動を止める</td><td><a href="3-data.html#json">D3 3.9</a></td></tr>
-      <tr><td>J-49</td><td>ポートの一覧とシグネチャ（<code>IRandomSource</code>、<code>IStorage.CommitAsync</code>、<code>IAdminNotifier</code> など）。連番はエンジンが振る</td><td><a href="4-components.html#ports">D4 4.2</a></td></tr>
-      <tr><td>J-50</td><td><code>IChannel</code> のメソッドと、能力の語彙</td><td><a href="4-components.html#channel">D4 4.3</a></td></tr>
-      <tr><td>J-51</td><td><code>ILlmClient</code> のシグネチャ。モデル名はコアに書かず、段から対応させる</td><td><a href="4-components.html#llm-port">D4 4.4</a></td></tr>
-      <tr><td>J-52</td><td>コアの中の部品の分け方</td><td><a href="4-components.html#inside">D4 4.5</a></td></tr>
-      <tr><td>J-53</td><td>遅い購読者は切断する。<code>DryRun()</code> はチャンネルを <code>NullChannel</code> に替える</td><td><a href="4-components.html#api">D4 4.6</a></td></tr>
-      <tr><td>J-54</td><td>プラグインが登録できるものの6種類。同梱する行動の ID は、プラグインの名前で始める</td><td><a href="4-components.html#plugins">D4 4.7</a></td></tr>
-      <tr><td>J-55</td><td>固定ブロック中にスマホを開いたら、ブロックの行動を続けたまま、副行動として実行する</td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
-      <tr><td>J-56</td><td>最短経路は Floyd–Warshall。移動の経路は、出発時に辺の列として確定させる</td><td><a href="5-decision.html#routes">D5 5.10</a></td></tr>
-      <tr><td>J-57</td><td>LLM に渡す文脈の部品の一覧と、日誌の整形の仕方</td><td><a href="6-llm.html#context">D6 6.3</a></td></tr>
-      <tr><td>J-58</td><td>記憶の汚染を防ぐフィルタ（ebise から引き継ぐ）</td><td><a href="6-llm.html#safety">D6 6.8</a></td></tr>
-      <tr><td>J-59</td><td>失敗したときの振る舞いの表（P-49 以外の行）</td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
-      <tr><td>J-60</td><td>定義の検証の、エラーと警告の分け方（効果の語彙にないキーも警告）</td><td><a href="7-operations.html#validation">D7 7.2</a></td></tr>
-      <tr><td>J-61</td><td>観測の項目と、ログのレベル</td><td><a href="7-operations.html#observability">D7 7.3</a></td></tr>
-      <tr><td>J-62</td><td>CLI のコマンド（P-54 で書き直した）</td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
-      <tr><td>J-63</td><td>使わないもの（EF Core、NodaTime、ベクトル検索など）</td><td><a href="8-stack.html#not-used">D8 8.3</a></td></tr>
-      <tr><td>J-64</td><td>LLM の PoC の判定の基準（B でプロンプトキャッシュが効かなければ A）</td><td><a href="8-stack.html#poc">D8 8.4</a></td></tr>
+      <tr><td>J-47</td><td>SQLite の表と列、インデックス、接続の設定（WAL、<code>synchronous=NORMAL</code>）、<code>user_version</code> によるマイグレーション <span class="chip fixed">合意</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
+      <tr><td>J-48</td><td>ペイロードにイベントタイプごとの版（<code>"v"</code>）を入れる。知らないイベントタイプのイベントを読んだら、起動を止める <span class="chip fixed">合意</span></td><td><a href="3-data.html#json">D3 3.9</a></td></tr>
+      <tr><td>J-49</td><td>ポートの一覧とシグネチャ（<code>IRandomSource</code>、<code>IStorage.CommitAsync</code>、<code>IAdminNotifier</code> など）。連番はエンジンが振る <span class="chip fixed">合意</span></td><td><a href="4-components.html#ports">D4 4.2</a></td></tr>
+      <tr><td>J-50</td><td><code>IChannel</code> のメソッドと、能力の語彙 <span class="chip fixed">合意</span></td><td><a href="4-components.html#channel">D4 4.3</a></td></tr>
+      <tr><td>J-51</td><td><code>ILlmClient</code> のシグネチャ。モデル名はコアに書かず、段から対応させる <span class="chip fixed">合意</span></td><td><a href="4-components.html#llm-port">D4 4.4</a></td></tr>
+      <tr><td>J-52</td><td>コアの中の部品の分け方 <span class="chip fixed">合意</span></td><td><a href="4-components.html#inside">D4 4.5</a></td></tr>
+      <tr><td>J-53</td><td>遅い購読者は切断する。<code>DryRun()</code> はチャンネルを <code>NullChannel</code> に替える <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a></td></tr>
+      <tr><td>J-54</td><td>プラグインが登録できるものの6種類。同梱する行動の ID は、プラグインの名前で始める <span class="chip fixed">合意</span></td><td><a href="4-components.html#plugins">D4 4.7</a></td></tr>
+      <tr><td>J-55</td><td>固定ブロック中にスマホを開いたら、ブロックの行動を続けたまま、副行動として実行する <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
+      <tr><td>J-56</td><td>最短経路は Floyd–Warshall。移動の経路は、出発時に辺の列として確定させる <span class="chip fixed">合意</span></td><td><a href="5-decision.html#routes">D5 5.10</a></td></tr>
+      <tr><td>J-57</td><td>LLM に渡す文脈の部品の一覧と、日誌の整形の仕方 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#context">D6 6.3</a></td></tr>
+      <tr><td>J-58</td><td>記憶の汚染を防ぐフィルタ（ebise から引き継ぐ） <span class="chip fixed">合意</span></td><td><a href="6-llm.html#safety">D6 6.8</a></td></tr>
+      <tr><td>J-59</td><td>失敗したときの振る舞いの表（P-49 以外の行） <span class="chip fixed">合意</span></td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
+      <tr><td>J-60</td><td>定義の検証の、エラーと警告の分け方（効果の語彙にないキーも警告） <span class="chip fixed">合意</span></td><td><a href="7-operations.html#validation">D7 7.2</a></td></tr>
+      <tr><td>J-61</td><td>観測の項目と、ログのレベル <span class="chip fixed">合意</span></td><td><a href="7-operations.html#observability">D7 7.3</a></td></tr>
+      <tr><td>J-62</td><td>CLI のコマンド（P-54 で書き直した） <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
+      <tr><td>J-63</td><td>使わないもの（EF Core、NodaTime、ベクトル検索など） <span class="chip fixed">合意</span></td><td><a href="8-stack.html#not-used">D8 8.3</a></td></tr>
+      <tr><td>J-64</td><td>LLM の PoC の判定の基準（B でプロンプトキャッシュが効かなければ A） <span class="chip fixed">合意</span></td><td><a href="8-stack.html#poc">D8 8.4</a></td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>
@@ -257,25 +257,25 @@
   <div class="table-wrap">
     <table>
       <tr><th>ID</th><th>判断</th><th>場所</th></tr>
-      <tr><td>J-65</td><td>追いつきに入るずれ：1 分</td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
-      <tr><td>J-66</td><td>早送りでまとめてコミットする件数：数百件ごと</td><td><a href="1-execution.html#tx">D1 1.9</a></td></tr>
-      <tr><td>J-67</td><td>SQLite の <code>busy_timeout</code>：5000 ミリ秒</td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
-      <tr><td>J-68</td><td>送信の再試行：3 回（確実に送れていないときだけ）</td><td><a href="4-components.html#channel">D4 4.3</a></td></tr>
-      <tr><td>J-69</td><td>Decider の痕跡に残す候補：上位 10 件</td><td><a href="5-decision.html#decider">D5 5.1</a></td></tr>
-      <tr><td>J-70</td><td>スコアの係数：β = 3.0、like = 2.0、dislike = 0.4、繰り返し 0.7、移動 30 分（P-30 の式の中の値）</td><td><a href="5-decision.html#score">D5 5.3</a></td></tr>
-      <tr><td>J-71</td><td>スマホを開く重み：1 + 0.5 × min(未読の数, 4)</td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
-      <tr><td>J-72</td><td>Planner の再生成：2 回まで。置き換えたブロックが半分を超えたら再生成</td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
-      <tr><td>J-73</td><td>反射の行動の長さ：気絶 2 時間、早退したあとの休息 3 時間</td><td><a href="5-decision.html#reflex">D5 5.7</a></td></tr>
-      <tr><td>J-74</td><td>状態変数を言葉にする区切り（気力 80 / 50 / 20 など）</td><td><a href="6-llm.html#context">D6 6.3</a></td></tr>
-      <tr><td>J-75</td><td>文脈に入れる記憶：上位 12 件</td><td><a href="6-llm.html#retrieval">D6 6.4</a></td></tr>
-      <tr><td>J-76</td><td>受信箱を一度に捌く件数：最大 20 件</td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
-      <tr><td>J-77</td><td>話題の候補：最大 5 件</td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
-      <tr><td>J-78</td><td>記憶の整理の区切り：3 万トークン</td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
-      <tr><td>J-79</td><td>記憶の整理の失敗を通知する回数：同じ層で 3 回続けて</td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
-      <tr><td>J-80</td><td>記憶の汚染のフィルタの長さ：400 字</td><td><a href="6-llm.html#safety">D6 6.8</a></td></tr>
-      <tr><td>J-81</td><td>LLM の再試行：3 回。ループの中は 2 秒から、記憶の整理は 10 秒から倍にする</td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
-      <tr><td>J-82</td><td>構造化出力の作り直し：1 回</td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
-      <tr><td>J-83</td><td>管理者への通知：LLM と送信は 1 時間に 5 回、チャンネルの切断は 30 分</td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
+      <tr><td>J-65</td><td>追いつきに入るずれ：1 分 <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
+      <tr><td>J-66</td><td>早送りでまとめてコミットする件数：数百件ごと <span class="chip fixed">合意</span></td><td><a href="1-execution.html#tx">D1 1.9</a></td></tr>
+      <tr><td>J-67</td><td>SQLite の <code>busy_timeout</code>：5000 ミリ秒 <span class="chip fixed">合意</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
+      <tr><td>J-68</td><td>送信の再試行：3 回（確実に送れていないときだけ） <span class="chip fixed">合意</span></td><td><a href="4-components.html#channel">D4 4.3</a></td></tr>
+      <tr><td>J-69</td><td>Decider の痕跡に残す候補：上位 10 件 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#decider">D5 5.1</a></td></tr>
+      <tr><td>J-70</td><td>スコアの係数：β = 3.0、like = 2.0、dislike = 0.4、繰り返し 0.7、移動 30 分（P-30 の式の中の値） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#score">D5 5.3</a></td></tr>
+      <tr><td>J-71</td><td>スマホを開く重み：1 + 0.5 × min(未読の数, 4) <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
+      <tr><td>J-72</td><td>Planner の再生成：2 回まで。置き換えたブロックが半分を超えたら再生成 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
+      <tr><td>J-73</td><td>反射の行動の長さ：気絶 2 時間、早退したあとの休息 3 時間 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#reflex">D5 5.7</a></td></tr>
+      <tr><td>J-74</td><td>状態変数を言葉にする区切り（気力 80 / 50 / 20 など） <span class="chip fixed">合意</span></td><td><a href="6-llm.html#context">D6 6.3</a></td></tr>
+      <tr><td>J-75</td><td>文脈に入れる記憶：上位 12 件 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#retrieval">D6 6.4</a></td></tr>
+      <tr><td>J-76</td><td>受信箱を一度に捌く件数：最大 20 件 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
+      <tr><td>J-77</td><td>話題の候補：最大 5 件 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
+      <tr><td>J-78</td><td>記憶の整理の区切り：3 万トークン <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
+      <tr><td>J-79</td><td>記憶の整理の失敗を通知する回数：同じ層で 3 回続けて <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
+      <tr><td>J-80</td><td>記憶の汚染のフィルタの長さ：400 字 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#safety">D6 6.8</a></td></tr>
+      <tr><td>J-81</td><td>LLM の再試行：3 回。ループの中は 2 秒から、記憶の整理は 10 秒から倍にする <span class="chip fixed">合意</span></td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
+      <tr><td>J-82</td><td>構造化出力の作り直し：1 回 <span class="chip fixed">合意</span></td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
+      <tr><td>J-83</td><td>管理者への通知：LLM と送信は 1 時間に 5 回、チャンネルの切断は 30 分 <span class="chip fixed">合意</span></td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
       <tr><td>J-84</td><td>状態は <code>sealed record</code>（参照型）、小さな値は <code>readonly record struct</code>。レビューで足した <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>J-85</td><td>受信箱のアイテムの形（大分類、会話の鍵、それまでの会話は直近 20 件まで、添付）。チャンネルがコアの読める形に訳し、リアクションとフォローもコアが捌く。同じ会話はまとめて1回返信する。レビューで決めた <span class="chip fixed">合意</span></td><td><a href="3-data.html#inbox-item">D3 3.7.1</a>、<a href="6-llm.html#inbox">D6 6.5</a></td></tr>
       <tr><td>J-89</td><td>リアクションの通知は LLM を使わず、見たものとして処理済みにする（記憶の材料にはなる）。レビューで足した <span class="chip fixed">合意</span></td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
@@ -298,13 +298,12 @@
     <li>合意した P-02、P-04、P-05、P-06、P-07、P-08、P-09、P-10、P-12、P-15、P-16、P-18、P-19、P-20、P-21、P-26、P-29〜P-41、P-44〜P-47、P-52 を、VISION の1章、2章、4章、5章、6章、9章、10章、11章、13章、14章、付録に反映した</li>
     <li>レビューで決めた用語（「種別」を「イベントタイプ」にする、段を項目として持たない）を、VISION の2章と4章に反映した</li>
     <li>合意した J-13、J-15 を、VISION の2章（状態の表）と10章（頻度制限）に反映した。J-25 の前提（事実は public で、dm の会話からは事実を生まない）を、13章に明記した</li>
+    <li>合意した J-35、J-45 を、VISION の2章（イベントの項目と、ペルソナインスタンスの状態の表）に反映した</li>
   </ul>
   <h3>合意したら、VISION にも反映が要るもの</h3>
   <div class="table-wrap">
     <table>
       <tr><th>VISION の章</th><th>反映すること</th><th>案・判断</th></tr>
-      <tr><td>2章 ペルソナインスタンスの状態</td><td>副行動、行動ごとの利用、投稿の状態（クールダウンの基準のほか）、用途ごとの乱数の位置、最後の起床を足す</td><td>J-45</td></tr>
-      <tr><td>2章 イベント</td><td>Batch と Cause を足し、版番号はペイロードの中に持つ</td><td>J-35</td></tr>
       <tr><td>付録</td><td>合意した項目を、付録から消す</td><td>0.3 の表</td></tr>
     </table>
   </div>
@@ -313,7 +312,7 @@
 <section id="next">
   <h2><span class="num">0.7</span>次にやること</h2>
   <ol class="road">
-    <li><b>案と判断のレビュー</b><span>太字の案（0.4）と、VISION の解釈で決めたもの（0.5）から。合意したら枠を外し、VISION に反映する（0.6）</span></li>
+    <li><b>案と判断のレビュー（済）</b><span>案（0.4）と枠の外の判断（0.5）は、すべて合意した。食い違いが見つかったら、実装のときに直す</span></li>
     <li><b>LLM の PoC</b><span>D8 8.4 の5項目を確かめ、ILlmClient の実装を選ぶ</span></li>
     <li><b>ドメインと Apply</b><span>ドメイン型、定義の読み込みと検証、Apply と guard。Apply の単体テスト</span></li>
     <li><b>エンジンとシナリオ</b><span>仮想時計、レーン、ホライズン、Decider。シナリオと不変条件のテスト</span></li>
