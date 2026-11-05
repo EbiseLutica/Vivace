@@ -407,7 +407,7 @@ sealed record Attachment(string Kind, string Url, string? Description);   // Kin
       <tr><td><code>Message</code></td><td>言葉で話しかけられたもの（メンション、返信、引用、DM）。本文、添付、それまでの会話を持つ</td><td>LLM が、返信 / リアクション / 何もしない を決める</td></tr>
       <tr><td><code>Reaction</code></td><td>自分の発言へのリアクション。絵文字と、どの発言へのものかを持つ</td><td>LLM を使わない</td></tr>
       <tr><td><code>Follow</code></td><td>フォローされた</td><td>LLM を使わず、フォローバックの方針で決める</td></tr>
-      <tr><td><code>Other</code></td><td>上のどれにも当たらない、チャンネル固有のもの</td><td>プラグインの規則（<code>INotificationRule</code>）に任せる</td></tr>
+      <tr><td><code>Other</code></td><td>上のどれにも当たらない、チャンネル固有のもの</td><td>プラグインの規則（<code>INotificationRule</code>、D4 4.7）に任せる</td></tr>
     </table>
   </div>
   <ul>
