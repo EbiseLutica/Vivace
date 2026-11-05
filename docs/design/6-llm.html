@@ -72,13 +72,13 @@
   </div>
   <div class="draft">
     <span class="label">案 P-42　モデルは Main と Light の2段</span>
-    コアは段だけを指定し、段から実際のモデルへの対応は LLM の実装の設定に持つ（D4 4.4）。段を目的ごとに上書きできる設定（<code>"post.judge" = "Main"</code> など）も、実装の側に用意する。
+    コアは段だけを指定し、段から実際のモデルへの対応は LLM の実装の設定に持つ（D4 4.4）。段を目的ごとに上書きするときは、コアの目的ごとの取り決め（<code>LlmPolicy</code>、D4 4.4）に書く（<code>post.judge</code> を Main にする、など）。
   </div>
 </section>
 
 <section id="calls">
   <h2><span class="num">6.2</span>呼び出しの一覧</h2>
-  <p>「目的」は、LLM の呼び出しに付ける名前（<code>LlmRequest.Purpose</code>、D4 4.4）。LLM には見せない。使うのは、痕跡と計測（目的ごとの回数とトークン数。D7 7.3）、目的ごとの再試行と管理者への通知（D7 7.1）、段の上書きの設定（6.1）、テストの台本の LLM が応答を引くとき（D7 7.4）。</p>
+  <p>「目的」は、LLM の呼び出しに付ける名前（<code>LlmRequest.Purpose</code>、D4 4.4）。LLM には見せない。使うのは、痕跡と計測（目的ごとの回数とトークン数。D7 7.3）、目的ごとの再試行と管理者への通知（D7 7.1）、段の上書き（6.1）、テストの台本の LLM が応答を引くとき（D7 7.4）。目的は登録制で、下の表の目的は、表の段を既定としてコアが最初から登録する。新しい種類の呼び出しを足すときは、目的を登録する（D4 P-53）。</p>
   <div class="table-wrap">
     <table>
       <tr><th>目的</th><th>段</th><th>契機</th><th>出力</th><th>失敗したとき</th></tr>
