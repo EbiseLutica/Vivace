@@ -302,7 +302,16 @@ requires.place_tags = ["park"]
 limits.hours = ["06:00", "21:00"]
 effects.rate.energy = -6
 effects.on_end.boredom = -25
-effects.repeat_decay = 0.6</code></pre>
+effects.repeat_decay = 0.6
+
+[[action]]
+id = "attend_class"
+display = "授業を受ける"
+schedule_only = true             # 固定予定と反射からだけ始める（自由時間の候補にしない）
+phone = "closed"
+requires.place_tags = ["classroom"]
+effects.rate.energy = -6
+effects.rate.boredom = 4</code></pre>
 <pre><code>[[incident]]
 id = "road_work"
 display = "道路工事"
@@ -328,7 +337,7 @@ display = "風邪"
 rate.health = -0.5
 weight."tag:outdoor" = 0.3
 threshold.health = 25</code></pre>
-  <p><code>duration</code> は、その場所でする行動そのものの長さで、移動時間を含まない。移動時間は、場所のグラフから別に足す（D5 5.2 の帰還の式）。固定予定のブロックでは、<code>duration</code> は使わず、ブロックの長さで決まる（3.5）。効果、requires、制限の語彙は D2。組み込みの反射の行動（<code>core.faint</code> など）は、所要時間を固定で書く（反射は Apply が乱数を引かずに始めるため）。</p>
+  <p><code>duration</code> は、その場所でする行動そのものの長さで、移動時間を含まない。移動時間は、場所のグラフから別に足す（D5 5.2 の帰還の式）。固定予定のブロックでは、<code>duration</code> は使わず、ブロックの長さで決まる（3.5）。<code>schedule_only = true</code> の行動は、固定予定のブロックと反射からだけ始まり、Decider と Planner の候補にならない（ペルソナの <code>use</code> のワイルドカードに当たっても外す。D5 5.2）。授業やバイトのように、自由時間に選ばれると困る行動に付ける。<code>duration</code> は省略してよい（固定予定ではブロックの長さを使うため）。効果、requires、制限の語彙は D2。組み込みの反射の行動（<code>core.faint</code> など）は、所要時間を固定で書く（反射は Apply が乱数を引かずに始めるため）。</p>
 </section>
 
 <section id="domain">

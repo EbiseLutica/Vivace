@@ -75,7 +75,7 @@
 <section id="candidates">
   <h2><span class="num">5.2</span>候補の作り方</h2>
   <ol>
-    <li><strong>行動</strong>：ペルソナの <code>use</code> に当たる行動から、<code>forbid</code> に当たる行動を外す。<code>forbid</code> は2か所にある。ペルソナ定義の <code>prefs</code>（その人がしないこと）と、いま付いている状態（風邪のときは外に出ない、など。D2 2.7）</li>
+    <li><strong>行動</strong>：ペルソナの <code>use</code> に当たる行動から、<code>schedule_only</code> の行動（D3 3.6）と、<code>forbid</code> に当たる行動を外す。<code>forbid</code> は2か所にある。ペルソナ定義の <code>prefs</code>（その人がしないこと）と、いま付いている状態（風邪のときは外に出ない、など。D2 2.7）</li>
     <li><strong>場所</strong>：ワールドの場所（定義の場所 + 採用済みの生えた場所）から、閉鎖中のものを外す。場所を固定するブロックの中なら、その場所だけ</li>
     <li><strong>requires</strong>：場所のタグ、携行品、チャンネル（つながっていて、圏外でない）を満たす組だけ残す</li>
     <li><strong>制限</strong>：クールダウン、1日の回数、時刻の範囲（開始時刻で判定）。投稿は、チャンネルの頻度制限と空振りのクールダウンも重ねる</li>
@@ -223,7 +223,7 @@ travel(p)  = exp( −移動時間（分） / 30 )</code></pre>
       <tr><th>検査</th><th>違反したとき</th></tr>
       <tr><td>時刻の形式、範囲の内か</td><td>範囲の外を切り落とす</td></tr>
       <tr><td>固定ブロックと重ならないか</td><td>重なった分を切り落とす（固定予定を優先）</td></tr>
-      <tr><td>行動と場所の ID があり、そのペルソナが使えるか</td><td>そのブロックを自由時間に置き換える</td></tr>
+      <tr><td>行動と場所の ID があり、そのペルソナが使えるか（<code>schedule_only</code> の行動ではないか）</td><td>そのブロックを自由時間に置き換える</td></tr>
       <tr><td>requires（場所のタグ、携行品）を満たすか</td><td>自由時間に置き換える</td></tr>
       <tr><td>前のブロックの場所から、移動時間を空けて着けるか</td><td>ブロックの開始を移動時間の分だけ遅らせ、間を移動にあてる（移動ブロックの自動挿入）</td></tr>
       <tr><td>切り詰めたあとの長さが、行動の最短の所要時間以上か</td><td>自由時間に置き換える</td></tr>
