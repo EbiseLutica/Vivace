@@ -18,7 +18,7 @@
     <span class="chip">2026-11-03 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
     <span class="chip fixed">案はすべて合意（56 件）</span>
-    <span class="chip draft">枠の外の判断 73 件が合意待ち</span>
+    <span class="chip draft">枠の外の判断 72 件が合意待ち</span>
   </div>
 </header>
 
@@ -172,7 +172,7 @@
 
 <section id="judgments">
   <h2><span class="num">0.5</span>枠の外の判断</h2>
-  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-92）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
+  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-93）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
   <h3>VISION の解釈で決めたもの</h3>
   <p>VISION から導いたつもりで、実際には読み方を1つに決めたもの。いちばん見落としやすいので、先に見てほしい。</p>
   <div class="table-wrap">
@@ -199,7 +199,7 @@
       <tr><td>J-19</td><td>（取り下げ）Planner の「睡眠の細部を埋める」は、廃止した仕様の残骸だった。Planner は睡眠のブロックを作らず、VISION からもこの言葉を消した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
       <tr><td>J-20</td><td>しきい値の反射は、越えた瞬間だけ起こす。すでに向こう側にいれば、到達を予測しない</td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
       <tr><td>J-21</td><td>状態変数が範囲の端に着いたら、基準を端の値と到達の時刻に置き直す</td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
-      <tr><td>J-22</td><td>片側にしか <code>with</code> を書いていない同行は、警告して同行として扱わない</td><td><a href="5-decision.html#together">D5 5.11</a></td></tr>
+      <tr><td>J-22</td><td>片側にしか <code>with</code> を書いていない同行は、警告して同行として扱わない（同じ場所にいれば、居合わせにはなる） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#together">D5 5.11</a></td></tr>
       <tr><td>J-23</td><td>返信で「知らない」と答えるかの判定に、投稿と同じ辞書と <code>post.judge</code> を使う。<strong>返信のときの判定の結果を辞書に記録するかは、決めていない</strong></td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
       <tr><td>J-24</td><td><code>shareable</code> でない記憶は、会話の相手以外との会話では使わない</td><td><a href="6-llm.html#retrieval">D6 6.4</a></td></tr>
       <tr><td>J-25</td><td>記憶の整理で、事実のイベントは public の層に入れる</td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
@@ -281,6 +281,7 @@
       <tr><td>J-90</td><td>通知の規則は、チャンネルと種類で登録し、コアが振り分ける（重複は起動時のエラー）。規則は発話を出せない。レビューで決めた <span class="chip fixed">合意</span></td><td><a href="4-components.html#plugins">D4 4.7</a></td></tr>
       <tr><td>J-91</td><td>固定ブロックの「スマホを開く機会」の候補に「投稿する」を足して3択にする（VISION 10章に反映）。レビューで決めた <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
       <tr><td>J-92</td><td>行動の定義に <code>schedule_only</code> を足す。付いた行動は固定予定と反射からだけ始まり、Decider と Planner の候補にならない。ユーザーの行動にも使える。組み込みの睡眠、気絶、早退、何もしないに付ける。レビューで決めた <span class="chip fixed">合意</span></td><td><a href="3-data.html#action-def">D3 3.6</a>、<a href="2-events.html#effects">D2 2.5</a></td></tr>
+      <tr><td>J-93</td><td>日誌に居合わせの変化（着いたときにいた人、来た人、去った人）を入れる。同行と居合わせは文言で書き分ける。レビューで決めた <span class="chip fixed">合意</span></td><td><a href="6-llm.html#context">D6 6.3</a></td></tr>
       <tr><td>J-86</td><td>プラグインにエンジンそのものを渡す。起動・停止などに触らないのは、プラグインの責務として守る。決める側のハンドラは、判断には写しを使う。レビューで足した <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a>、<a href="4-components.html#plugins">4.7</a></td></tr>
       <tr><td>J-87</td><td><code>prefs</code> の数値の 0 は <code>forbid</code> の別名にする。レビューで足した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#score">D5 5.3</a></td></tr>
       <tr><td>J-88</td><td><code>core.go_to_next</code> は <code>forbid</code> の対象にしない（ペルソナ定義で明示したらエラー、状態で当たったら無視してログに警告）。レビューで足した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#candidates">D5 5.2</a></td></tr>
