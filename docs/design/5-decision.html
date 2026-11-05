@@ -81,7 +81,7 @@
     <li><strong>制限</strong>：クールダウン、1日の回数、時刻の範囲（開始時刻で判定）。投稿は、チャンネルの頻度制限と空振りのクールダウンも重ねる</li>
     <li><strong>所要時間</strong>：残った組ごとに、行動 ID と場所 ID の順に並べてから乱数で引く（並びを固定して、結果を再現できるようにする）</li>
     <li><strong>帰還できるか</strong>：VISION 5章の式で、次のブロックの開始に間に合うものだけ残す。次のブロックは、プランの中で次に来る固定か計画のブロック。なければ、プランの終わり（翌日の 3:00）</li>
-    <li><strong>次の予定の場所へ向かう</strong>：<code>core.go_to_next</code> を必ず足す。これで候補は空にならない（VISION 5章）。だから <code>core.go_to_next</code> は <code>forbid</code> の対象にしない。ペルソナ定義で外そうとしたら読み込みのエラー（D7 7.2）にし、付いている状態の <code>forbid</code> に当たっても無視する（状態の <code>forbid</code> は行動タグでも書けて、何に当たるかを前もって全部は確かめられないため）</li>
+    <li><strong>次の予定の場所へ向かう</strong>：<code>core.go_to_next</code> を必ず足す。これで候補は空にならない（VISION 5章）。だから <code>core.go_to_next</code> は <code>forbid</code> の対象にしない。ペルソナ定義で明示的に外そうとしたら、読み込みのエラー（D7 7.2）にする。付いている状態の <code>forbid</code> に当たったときは、無視して候補に残し、ログに警告を出す（本来は当たってほしくないので、気づけるようにする。状態の <code>forbid</code> は行動タグでも書けて、何に当たるかを前もって全部は確かめられないため、エラーにはしない）</li>
   </ol>
   <div class="draft">
     <span class="label">案 P-29　所要時間の引き方</span>
