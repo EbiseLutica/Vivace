@@ -105,8 +105,8 @@
     <li>未知のキーは、エラーにせず警告にする（VISION 2章「スキーマは、未知のフィールドで壊れないように」）。タイプミスに気づけるよう、警告にはキーの場所を出す</li>
     <li>時間の長さは、<code>"45m"</code>、<code>"1h30m"</code>、<code>"3d"</code> のように単位つきの文字列で書く。時刻は <code>"HH:mm"</code>（現地時刻）、年をまたぐ期間は <code>"MM-DD"</code></li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-17　定義ファイルの配置と ID の名前空間</span>
+  <div class="callout">
+    <span class="label">決定 P-17　定義ファイルの配置と ID の名前空間</span>
     上のとおり。ワールドとペルソナは、1ファイル1件にして、ファイルの差分と編集の単位を揃える。行動と出来事は、似たものをまとめて書けるよう、1ファイルに何件でも書けるようにする。
   </div>
 </section>
@@ -147,8 +147,8 @@ links = { street_home = 1 }</code></pre>
     <li>辺は、片方に書けば逆向きにも張る。両方に書いて時間が食い違えば、読み込みのエラー（VISION 8章）</li>
     <li>場所のタグのうち、どの行動の requires にも出てこないものは、読み込み時に警告する（効果がないので）</li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-18　祝日と年中行事は、ワールドの暦に持つ</span>
+  <div class="callout">
+    <span class="label">決定 P-18　祝日と年中行事は、ワールドの暦に持つ</span>
     ebise は、内閣府の祝日 CSV を取得して、学校の休みを判定していた。魔界に日本の祝日はないので、祝日はワールドが決めるものにする。<code>calendar.holidays</code> は提供元の名前で、コアは <code>IHolidayCalendar</code> の口だけを持ち、日本の祝日は別のパッケージ（または同梱のデータ）で提供する。年中行事は、ワールド定義に直接書く。
   </div>
 </section>
@@ -194,8 +194,8 @@ follow_back = "always"           # フォローバックの方針（D6）</code>
     <li><code>prefs</code> の語彙（<code>like</code>、<code>dislike</code>、<code>forbid</code>、数値）と、<code>tag:</code> による行動タグの指定は D5</li>
     <li>固定予定は、次の節</li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-19　ペルソナ定義に <code>home</code> を足す</span>
+  <div class="callout">
+    <span class="label">決定 P-19　ペルソナ定義に <code>home</code> を足す</span>
     VISION のペルソナ定義の項目にはないが、反射の「早退して家で休む」の行き先に要る。睡眠ブロックの場所から推すこともできるが、曜日で変わりうるので、明示する。
   </div>
 </section>
@@ -233,13 +233,17 @@ skip_holiday = true
 phone = "closed"
 
 [[schedule.block]]
+id = "short_break"
+within = "school"                # school の中の休み時間。書かなかった項目は school から引き継ぐ（P-52）
+times = [["10:20", "10:30"], ["11:30", "11:40"], ["14:30", "14:40"]]   # 同じ中身の時間帯を並べて書ける
+phone = "open"                   # 行動と場所は school のまま、スマホだけ開ける
+
+[[schedule.block]]
 id = "lunch_break"
-in = ["default"]
-days = ["mon", "tue", "wed", "thu", "fri"]
+within = "school"
 from = "12:20"
 to = "13:00"
 action = "eat_lunch"
-place = "classroom_2a"
 phone = "open"
 with = ["shiori"]                # 同行（相手の定義にも書く）
 on_partner_absent = "continue"   # continue | cancel（D5）
@@ -258,16 +262,25 @@ place = "home_living"</code></pre>
       <tr><th>規則</th><th>内容</th></tr>
       <tr><td>その日の期間</td><td>日付が当たる期間のうち、いちばん短いもの。どれにも当たらなければ <code>default</code>（ebise と同じ）</td></tr>
       <tr><td>ブロックの所属</td><td><code>in</code> に、その日の期間があるブロックだけを使う。<code>in</code> を省略したブロックは、すべての期間で使う（睡眠など、期間で変わらないもの）</td></tr>
-      <tr><td>重なり</td><td>同じ日のブロックが重なれば、読み込みのエラー。短いブロック（昼休み）を長いブロック（授業）の中に置きたいときは、授業を2つに分ける</td></tr>
+      <tr><td>入れ子</td><td>あるブロックが、別のブロックの時間の中にすっぽり収まっていれば、入れ子として扱う。その間は内側のブロックが優先し、終わったら外側のブロックに戻る。一部だけ重なるのは、読み込みのエラー（P-52）</td></tr>
+      <tr><td><code>within</code></td><td>親のブロックを指す。書かなかった項目（曜日、期間、行動、場所、スマホ、祝日に休むか）を親から引き継ぐ。親が休みの日（祝日、例外日の <code>skip</code>）は、子も休む。親の時間からはみ出したら、読み込みのエラー（P-52）</td></tr>
+      <tr><td><code>times</code></td><td><code>from</code> と <code>to</code> の代わりに、時間帯を並べて書ける。中身が同じで時間だけ違うブロック（休み時間）を、1つにまとめるため（P-52）</td></tr>
       <tr><td>日をまたぐブロック</td><td>開始した日のブロックとして扱う。月曜 23:45〜火曜 6:30 の睡眠は、月曜の <code>sleep_weekday</code></td></tr>
       <tr><td>スマホ</td><td><code>phone</code> は、行動定義の既定値を上書きする。長いブロックの途中の機会は <code>phone_every</code>（D5）</td></tr>
       <tr><td>例外日</td><td><code>skip</code> でその日のブロックを外し、<code>block</code> で足す。足したブロックも、重なりの検査を通す</td></tr>
-      <tr><td>ブロックの ID</td><td>プランの中では「定義の ID@開始日」（<code>sleep_weekday@2026-11-02</code>）で指す。3:00 をまたいで続いているかの判定に使う（D5）</td></tr>
+      <tr><td>ブロックの ID</td><td>プランの中では「定義の ID@開始日」（<code>sleep_weekday@2026-11-02</code>）で指す。3:00 をまたいで続いているかの判定に使う（D5）。<code>times</code> の2つ目以降と、入れ子で分かれた外側の後半は、<code>.2</code> のように番号を付ける（<code>school.2@2026-11-02</code>）</td></tr>
+      <tr><td>ブロックの長さ</td><td>固定予定のブロックでは、行動はブロックの時間いっぱい続く。行動定義の <code>duration</code> は使わない</td></tr>
     </table>
   </div>
+  <div class="callout">
+    <span class="label">決定 P-20　固定予定と生活リズムの書き方</span>
+    上のとおり（VISION 付録「固定予定と生活リズムの書き方」）。ブロックの入れ子と <code>times</code> は、下の P-52。生活リズム（起床・就寝の目安）は、別の項目にせず、睡眠のブロックそのものとする。ebise はセットごとにブロックの配列を持っていたが、TOML では配列を共有できないので、ブロックの側に「どの期間で使うか」（<code>in</code>）を書く形に変える。
+  </div>
   <div class="draft">
-    <span class="label">案 P-20　固定予定と生活リズムの書き方</span>
-    上のとおり（VISION 付録「固定予定と生活リズムの書き方」）。生活リズム（起床・就寝の目安）は、別の項目にせず、睡眠のブロックそのものとする。ebise はセットごとにブロックの配列を持っていたが、TOML では配列を共有できないので、ブロックの側に「どの期間で使うか」（<code>in</code>）を書く形に変える。
+    <span class="label">案 P-52　固定予定のブロックの入れ子と、<code>times</code></span>
+    <p>授業の中に休み時間や昼休みを置く書き方を、そのまま許す。外側のブロックを分けて書く必要はない。読み込み時に、入れ子を重ならない区間の列に展開する（授業 8:30〜10:20、休み時間 10:20〜10:30、授業 10:30〜11:30 …）。展開した区間ごとに行動が始まり直すので、Apply と Decider は、いままでどおり重ならないブロックの列だけを見ればよい。</p>
+    <p><code>within</code> は、なくても入れ子になるが、書くことを勧める。書かないと、外側のブロックが祝日や例外日で休みになった日に、内側のブロックだけが残る（クリスマスに、教室で昼休みだけをとる）。<code>within</code> を書けば、親と一緒に休む。</p>
+    <p class="alt">入れ子の深さは制限しない（いちばん内側が優先）。同じ親の子どうしが重なるのは、エラー。</p>
   </div>
 </section>
 
@@ -311,7 +324,7 @@ display = "風邪"
 rate.health = -0.5
 weight."tag:outdoor" = 0.3
 threshold.health = 25</code></pre>
-  <p>効果、requires、制限の語彙は D2。組み込みの反射の行動（<code>core.faint</code> など）は、所要時間を固定で書く（反射は Apply が乱数を引かずに始めるため）。</p>
+  <p><code>duration</code> は、その場所でする行動そのものの長さで、移動時間を含まない。移動時間は、場所のグラフから別に足す（D5 5.2 の帰還の式）。固定予定のブロックでは、<code>duration</code> は使わず、ブロックの長さで決まる（3.5）。効果、requires、制限の語彙は D2。組み込みの反射の行動（<code>core.faint</code> など）は、所要時間を固定で書く（反射は Apply が乱数を引かずに始めるため）。</p>
 </section>
 
 <section id="domain">
@@ -349,12 +362,12 @@ sealed record PersonaState(
     <li>居合わせ（誰と同じ場所にいるか）は、状態に持たない。<code>Personas</code> の <code>Location</code> から導く（VISION 2章）</li>
     <li>定義も同じく不変の <code>Definitions</code> にし、Apply と決める側に引数で渡す（VISION 4章）。最短経路のような導出データは、<code>Definitions</code> と <code>GraphVersion</code> をキーにしたキャッシュに持ち、保存しない</li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-21　状態は不変オブジェクトで持ち、写しは参照を渡す</span>
+  <div class="callout">
+    <span class="label">決定 P-21　状態は不変オブジェクトで持ち、写しは参照を渡す</span>
     VISION 付録「決める側に渡す状態の写しの作り方」への案。状態が不変なら、写しは参照を渡すだけでよく、コピーもロックも要らない。前提の規模（最大 10 人）なら、Apply のたびに数個の record を作り直すコストは無視できる。
   </div>
-  <div class="draft">
-    <span class="label">案 P-22　インスタンス ID は「定義 ID@ワールド ID」</span>
+  <div class="callout">
+    <span class="label">決定 P-22　インスタンス ID は「定義 ID@ワールド ID」</span>
     <code>kaori@tokyo</code>。送還したあとに同じワールドに召喚し直したら、<code>kaori@tokyo#2</code> のように番号を付ける。ログと記憶の表で、人が読んで誰かわかる形にする。
   </div>
 </section>
@@ -500,12 +513,12 @@ CREATE TABLE memory_cursors (
     <li>スキーマの版は <code>PRAGMA user_version</code> で持つ。マイグレーションは、アセンブリに埋め込んだ番号つきの SQL で、起動時に足りない分を1つのトランザクションで当てる</li>
     <li>接続の設定は <code>journal_mode=WAL</code>、<code>synchronous=NORMAL</code>、<code>busy_timeout=5000</code>、<code>foreign_keys=ON</code></li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-23　表の構成は「よく使う列 + JSON」</span>
+  <div class="callout">
+    <span class="label">決定 P-23　表の構成は「よく使う列 + JSON」</span>
     完全に正規化すると、ペルソナの状態だけで 10 表近くになり、Apply のたびの書き込みが煩雑になる。状態の表は、絞り込みに使う列（ID、所属、状態）だけを列にし、残りを JSON にする。生えた場所、辞書、受信箱、送信、記憶のように、ビューアや実行レポートで一覧にするものは、別の表にする。
   </div>
-  <div class="draft">
-    <span class="label">案 P-24　時刻は UTC の Unix ミリ秒で保存する</span>
+  <div class="callout">
+    <span class="label">決定 P-24　時刻は UTC の Unix ミリ秒で保存する</span>
     比較と並べ替えが整数で済み、インデックスが効く。C# では <code>DateTimeOffset</code>（オフセット 0）で持つ。現地時刻は、ワールドの時差を足して、その場で計算する。時差は固定なので、タイムゾーンのライブラリは使わない。
   </div>
 </section>

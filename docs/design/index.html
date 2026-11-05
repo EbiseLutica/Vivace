@@ -17,8 +17,8 @@
   <div class="meta">
     <span class="chip">2026-11-03 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
-    <span class="chip fixed">合意 16 件</span>
-    <span class="chip draft">案 35 件と、枠の外の判断 82 件が合意待ち</span>
+    <span class="chip fixed">合意 24 件</span>
+    <span class="chip draft">案 28 件と、枠の外の判断 82 件が合意待ち</span>
   </div>
 </header>
 
@@ -83,9 +83,9 @@
     <table>
       <tr><th>VISION 付録の項目</th><th>案</th><th>場所</th></tr>
       <tr><td>LLM クライアントの抽象（1章）</td><td>P-26（実装は PoC で選ぶ）</td><td><a href="4-components.html#llm-port">D4 4.4</a>、<a href="8-stack.html#poc">D8 8.4</a></td></tr>
-      <tr><td>固定予定と生活リズムの書き方（2章）</td><td>P-20</td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
+      <tr><td>固定予定と生活リズムの書き方（2章）</td><td>P-20 <span class="chip fixed">合意</span>、P-52</td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
       <tr><td>イベント ID の形式（2章）</td><td>P-10 <span class="chip fixed">合意</span></td><td><a href="2-events.html#envelope">D2 2.1</a></td></tr>
-      <tr><td>決める側に渡す状態の写しの作り方（4章）</td><td>P-21</td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>決める側に渡す状態の写しの作り方（4章）</td><td>P-21 <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>同行・共同行動で、2人のレーンをまたぐ決定の扱い（4章、14章）</td><td>P-41</td><td><a href="5-decision.html#together">D5 5.11</a></td></tr>
       <tr><td>前日のプランがないときの、0:00〜3:00 の過ごし方と Planner のホライズン（4章）</td><td>P-34</td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
       <tr><td>追いつきの上限日数（4章）</td><td>P-08 <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
@@ -126,14 +126,14 @@
       <tr><td>P-14</td><td><strong>行動の効果の語彙。率は「置き換え」</strong> <span class="chip fixed">合意</span></td><td><a href="2-events.html#effects">D2 2.5</a></td></tr>
       <tr><td>P-15</td><td>制限に <code>max_per_day</code> と <code>hours</code> を足す <span class="chip fixed">合意</span></td><td><a href="2-events.html#requires">D2 2.6</a></td></tr>
       <tr><td>P-16</td><td>出来事の効果の語彙と、状態（コンディション）の定義 <span class="chip fixed">合意</span></td><td><a href="2-events.html#incident-effects">D2 2.7</a></td></tr>
-      <tr><td>P-17</td><td>定義ファイルの配置と ID の名前空間</td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
-      <tr><td>P-18</td><td>祝日と年中行事は、ワールドの暦に持つ</td><td><a href="3-data.html#world-def">D3 3.3</a></td></tr>
-      <tr><td>P-19</td><td>ペルソナ定義に <code>home</code> を足す</td><td><a href="3-data.html#persona-def">D3 3.4</a></td></tr>
-      <tr><td>P-20</td><td>固定予定の書き方（期間、ブロックの <code>in</code>、例外日）</td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
-      <tr><td>P-21</td><td><strong>状態は不変オブジェクトで持ち、写しは参照を渡す</strong> <span class="chip">確認だけ</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
-      <tr><td>P-22</td><td>インスタンス ID は「定義 ID@ワールド ID」</td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
-      <tr><td>P-23</td><td>SQLite の表は「よく使う列 + JSON」</td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
-      <tr><td>P-24</td><td>時刻は UTC の Unix ミリ秒で保存する <span class="chip">確認だけ</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
+      <tr><td>P-17</td><td>定義ファイルの配置と ID の名前空間 <span class="chip fixed">合意</span></td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
+      <tr><td>P-18</td><td>祝日と年中行事は、ワールドの暦に持つ <span class="chip fixed">合意</span></td><td><a href="3-data.html#world-def">D3 3.3</a></td></tr>
+      <tr><td>P-19</td><td>ペルソナ定義に <code>home</code> を足す <span class="chip fixed">合意</span></td><td><a href="3-data.html#persona-def">D3 3.4</a></td></tr>
+      <tr><td>P-20</td><td>固定予定の書き方（期間、ブロックの <code>in</code>、例外日） <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
+      <tr><td>P-21</td><td><strong>状態は不変オブジェクトで持ち、写しは参照を渡す</strong> <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>P-22</td><td>インスタンス ID は「定義 ID@ワールド ID」 <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>P-23</td><td>SQLite の表は「よく使う列 + JSON」 <span class="chip fixed">合意</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
+      <tr><td>P-24</td><td>時刻は UTC の Unix ミリ秒で保存する <span class="chip fixed">合意</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
       <tr><td>P-25</td><td>アセンブリの分け方（6つ）</td><td><a href="4-components.html#assemblies">D4 4.1</a></td></tr>
       <tr><td>P-26</td><td>LLM クライアントは、コア独自の薄い口にする</td><td><a href="4-components.html#llm-port">D4 4.4</a></td></tr>
       <tr><td>P-27</td><td>公開 API はビルダーとエンジンの1クラス</td><td><a href="4-components.html#api">D4 4.6</a></td></tr>
@@ -161,6 +161,7 @@
       <tr><td>P-49</td><td>Apply の例外では、エンジンを止める</td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
       <tr><td>P-50</td><td>テストの層 <span class="chip">確認だけ</span></td><td><a href="7-operations.html#testing">D7 7.4</a></td></tr>
       <tr><td>P-51</td><td>ライブラリの選定</td><td><a href="8-stack.html#libraries">D8 8.2</a></td></tr>
+      <tr><td>P-52</td><td>固定予定のブロックの入れ子（<code>within</code>）と、時間帯の並べ書き（<code>times</code>）。レビューで足した</td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
     </table>
   </div>
 </section>
@@ -222,7 +223,7 @@
       <tr><td>J-40</td><td>origin の語彙の6種類</td><td><a href="2-events.html#origin">D2 2.9</a></td></tr>
       <tr><td>J-41</td><td>時間の長さは、単位つきの文字列（<code>"45m"</code>）で書く</td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
       <tr><td>J-42</td><td>定義のキーの名前と書き方（<code>utc_offset</code>、<code>not_exist</code>、<code>[[term]]</code>、<code>examples</code>、<code>tools</code>、<code>use</code> のワイルドカード、<code>[vitals]</code>、<code>[reflexes]</code>、行動と出来事のキー）</td><td><a href="3-data.html#world-def">D3 3.3</a>〜<a href="3-data.html#action-def">3.6</a></td></tr>
-      <tr><td>J-43</td><td>固定予定のブロックの重なりは、読み込みのエラー（昼休みを入れるなら、授業を2つに分ける）。日をまたぐブロックは、開始した日のもの</td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
+      <tr><td>J-43</td><td>固定予定の日をまたぐブロックは、開始した日のもの。（重なりをエラーにする規則は、レビューでやめて P-52 に移した）</td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
       <tr><td>J-44</td><td>反射の行動は、所要時間を固定で書く（範囲ならエラー）</td><td><a href="3-data.html#action-def">D3 3.6</a></td></tr>
       <tr><td>J-45</td><td>ペルソナの状態に、副行動（Overlay）、行動ごとの利用（前回の開始、今日の回数、連続回数）、投稿の状態、用途ごとの乱数の位置、最後の起床を持つ</td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>J-46</td><td>ID を <code>readonly record struct</code> で型ごとに分ける <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
@@ -279,14 +280,15 @@
   <h3>反映したもの</h3>
   <ul>
     <li>1章の用語の表で、「投入の窓口」の章が 16 になっていた誤りを、15 に直した</li>
-    <li>合意した P-02、P-04、P-05、P-06、P-07、P-08、P-09、P-10、P-12、P-15、P-16 を、VISION の2章、4章、5章、9章、付録に反映した</li>
+    <li>合意した P-02、P-04、P-05、P-06、P-07、P-08、P-09、P-10、P-12、P-15、P-16、P-18、P-19、P-20、P-21 を、VISION の2章、4章、5章、9章、付録に反映した</li>
     <li>レビューで決めた用語（「種別」を「イベントタイプ」にする、段を項目として持たない）を、VISION の2章と4章に反映した</li>
   </ul>
   <h3>合意したら、VISION にも反映が要るもの</h3>
   <div class="table-wrap">
     <table>
       <tr><th>VISION の章</th><th>反映すること</th><th>案・判断</th></tr>
-      <tr><td>2章 ペルソナ定義</td><td><code>home</code>、<code>disruption</code>（予定の乱れへの反応の重み）、チャンネルごとの設定の節を足す。固定予定の項目の「書き方は詳細設計で決める」を外す</td><td>P-19、P-31、P-44、P-20</td></tr>
+      <tr><td>2章 ペルソナ定義</td><td><code>disruption</code>（予定の乱れへの反応の重み）と、チャンネルごとの設定の節を足す</td><td>P-31、P-44</td></tr>
+      <tr><td>5章 Planner と固定予定</td><td>「授業を細分化して、休み時間のブロックだけ開ける」を、入れ子の書き方に直す</td><td>P-52</td></tr>
       <tr><td>2章 行動の定義</td><td>行動タグ（<code>tags</code>）を足す</td><td>P-30</td></tr>
       <tr><td>2章 ペルソナインスタンスの状態</td><td>副行動、行動ごとの利用、投稿の状態、用途ごとの乱数の位置、最後の起床を足す。処理済みの通知と送信済みの操作は、状態から外す</td><td>J-45、J-15</td></tr>
       <tr><td>2章 イベント</td><td>Batch と Cause を足し、版番号はペイロードの中に持つ</td><td>J-35</td></tr>
