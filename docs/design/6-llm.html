@@ -70,8 +70,8 @@
       <p>短い分類と変換。受信箱の振り分け、話題の抽出、世界観の判定（VISION 11章「軽量モデルで判定」）、記憶の照合、gist、threads の更新。</p>
     </div>
   </div>
-  <div class="draft">
-    <span class="label">案 P-42　モデルは Main と Light の2段</span>
+  <div class="callout">
+    <span class="label">決定 P-42　モデルは Main と Light の2段</span>
     コアは段だけを指定し、段から実際のモデルへの対応は LLM の実装の設定に持つ（D4 4.4）。段を目的ごとに上書きするときは、コアの目的ごとの取り決め（<code>LlmPolicy</code>、D4 4.4）に書く（<code>post.judge</code> を Main にする、など）。
   </div>
 </section>
@@ -141,8 +141,8 @@
     <li>関連の度合いを、主題（<code>subjects</code>）とタグの一致で数える。会話の相手が主題に入っていれば大きく足し、話題の語がタグに当たれば足す</li>
     <li>揮発スコア（6.7）× (1 + 関連の度合い) の上位 12 件を入れる。継続中の threads は、読めるものを全部入れる（数が少ないので）</li>
   </ol>
-  <div class="draft">
-    <span class="label">案 P-43　記憶の検索に、埋め込み（ベクトル）を使わない</span>
+  <div class="callout">
+    <span class="label">決定 P-43　記憶の検索に、埋め込み（ベクトル）を使わない</span>
     ebise と同じく、タグと主題の一致で選ぶ。ペルソナあたりの記憶は数百〜数千件にとどまり、タグ（言い換えを含む名詞）を抽出時に付けておけば足りる見込み。足りなくなったら、<code>memory_items</code> に埋め込みの列を足して、関連の度合いの計算だけを差し替える。
   </div>
 </section>
@@ -162,8 +162,8 @@
     <li>返信するものは、会話ごとに <code>inbox.reply</code> で本文を作る。文脈には、本文、添付、それまでの会話（<code>Thread</code>）を入れる（6.3）。相手が持ち込んだ話題が世界観に合わなければ、「知らない」と答える（VISION 11章）。そのための判定は、投稿と同じ辞書と <code>post.judge</code> を使い、却下なら「知らない」と答えるよう指示する</li>
     <li>出力を、行動の終了の時刻で返す。<code>outbound.speech</code>（返信）、<code>outbound.operation</code>（リアクション、フォロー）、<code>inbox.handled</code>（まとめて捌いた通知も、それぞれ処理済みにする）</li>
   </ol>
-  <div class="draft">
-    <span class="label">案 P-44　フォローバックの方針の持ち方</span>
+  <div class="callout">
+    <span class="label">決定 P-44　フォローバックの方針の持ち方</span>
     VISION 付録「フォローバックの方針の持ち方」への案。フォローはコアが捌くので（D3 3.7.1）、方針もコアが読む。ペルソナ定義の <code>[sns]</code> の節に書き、フォローできるチャンネルすべてに効く。
 <pre><code>[sns]
 follow_back = "always"           # always | never</code></pre>
@@ -216,8 +216,8 @@ follow_back = "always"           # always | never</code></pre>
     <li>全部却下なら自分の話題（日誌の今日のこと、好み）に切り替え、それも作れなければ <code>post.skipped</code></li>
     <li>辞書の食い違いで却下されたら（D1 1.7）、文面の作り直しのハンドラが、辞書の変換を使って文面だけを作り直す。判定と場所の生成はやり直さない（VISION 11章）</li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-45　空振りのクールダウン</span>
+  <div class="callout">
+    <span class="label">決定 P-45　空振りのクールダウン</span>
     VISION 付録「空振りのクールダウンの細部」への案。空振りのあと 30 分は、「投稿する」を候補にしない。通常の投稿のクールダウン（チャンネルの頻度制限）より短くし、話題がなかったときに、しばらくして TL を見直す形にする。
   </div>
   <h3>新しい場所のつなぎ方</h3>
@@ -227,8 +227,8 @@ follow_back = "always"           # always | never</code></pre>
     <li>ハーネスが検査する。つながる先が実在し、閉鎖されていないこと。移動時間が 1〜120 分であること。タグが語彙にあること（ないものは捨てる）。名前が既存の場所と重ならないこと。ID はハーネスが <code>gen_</code> + 連番で振る</li>
     <li>違反があれば、理由を添えて1回だけ作り直させる。だめなら、その話題を却下する</li>
   </ol>
-  <div class="draft">
-    <span class="label">案 P-46　新しい場所のつなぎ方の細部</span>
+  <div class="callout">
+    <span class="label">決定 P-46　新しい場所のつなぎ方の細部</span>
     上のとおり（VISION 付録）。移動時間の上下限は 1〜120 分。生えた場所の ID は LLM に作らせず、ハーネスが振る。
   </div>
 </section>
@@ -279,12 +279,12 @@ follow_back = "always"           # always | never</code></pre>
 実効半減期 = 基準半減期(種類) × ペルソナの half_life × min(1 + 0.5 × 強化の回数, 4)
 基準半減期 = fact 180 日、episode 14 日（threads は 7 日）</code></pre>
   <p>経過日数は、世界の時刻で数える（now を引数に取る。VISION 13章）。置き換え（supersede）は、古いアイテムに <code>supersededBy</code> を付けて新しいアイテムを足す。<code>shareable</code> は、狭める方向にしか変えない。</p>
-  <div class="draft">
-    <span class="label">案 P-47　記憶力の調整方式</span>
+  <div class="callout">
+    <span class="label">決定 P-47　記憶力の調整方式</span>
     VISION 付録「記憶力の調整方式」への案。ペルソナ定義の <code>memory.half_life</code>（既定 1.0）を、種類ごとの基準半減期に掛ける。ebise の式（強化で最大 4 倍まで延びる）は、そのまま使う。
   </div>
-  <div class="draft">
-    <span class="label">案 P-48　層とカーソル</span>
+  <div class="callout">
+    <span class="label">決定 P-48　層とカーソル</span>
     層は audience ごと（public と、dm の相手ごと）。カーソルは <code>memory_cursors</code> に、層ごとの適用番号で持つ。threads のカーソルは別に持つ。新しい dm の相手が現れたら、その層のカーソルは、そのペルソナの召喚の時点から始める。
   </div>
   <h3>失敗と通知</h3>
