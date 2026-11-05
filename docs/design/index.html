@@ -17,8 +17,8 @@
   <div class="meta">
     <span class="chip">2026-11-03 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
-    <span class="chip fixed">案はすべて合意（55 件）</span>
-    <span class="chip draft">枠の外の判断 75 件が合意待ち</span>
+    <span class="chip fixed">案はすべて合意（56 件）</span>
+    <span class="chip draft">枠の外の判断 74 件が合意待ち</span>
   </div>
 </header>
 
@@ -143,7 +143,7 @@
       <tr><td>P-31</td><td>遅刻・欠席・待つの重み <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
       <tr><td>P-32</td><td>長いブロックの途中の機会は <code>phone_every</code> を書いたときだけ <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
       <tr><td>P-33</td><td>ブロックの <code>interruptible</code> は持たない <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
-      <tr><td>P-34</td><td>召喚した直後は、最初の Planner のホライズンまで、固定予定と Decider だけで過ごす（P-55 に合わせて書き直した） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
+      <tr><td>P-34</td><td>生成した直後は、最初の Planner のホライズンまで、固定予定と Decider だけで過ごす（P-55 に合わせて書き直した） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
       <tr><td>P-35</td><td><strong>状態変数の範囲と既定値</strong> <span class="chip fixed">合意</span></td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
       <tr><td>P-36</td><td>寝不足での健康度の下がり方 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
       <tr><td>P-37</td><td>出来事の頻度（定義ごとに必須、1日2件まで） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#incidents">D5 5.8</a></td></tr>
@@ -165,6 +165,7 @@
       <tr><td>P-53</td><td>LLM の呼び出しの目的は登録制にし、段の上書きと再試行の方針はコアの表（<code>LlmPolicy</code>）に集める。レビューで足した <span class="chip fixed">合意</span></td><td><a href="4-components.html#llm-port">D4 4.4</a></td></tr>
       <tr><td>P-54</td><td>CLI は、エンジンを動かすデーモンと、ローカルの管理用 API（Minimal API）で話す。レビューで足した <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
       <tr><td>P-55</td><td>Planner は、日の始まりではなく、記憶の整理を起こす行動（睡眠、気絶）のときに、整理を待ってから動く。ホライズンは契機の3時間後。寝なかったら、作り直す時刻に起きたまま動く。レビューで足した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
+      <tr><td>P-56</td><td>ペルソナとワールドの「生成」と「破棄」の手順。破棄は取り消せず、データは記録として残す。時間の一時停止は作らない。レビューで足した <span class="chip fixed">合意</span></td><td><a href="1-execution.html#lifecycle">D1 1.13</a></td></tr>
     </table>
   </div>
 </section>
@@ -187,7 +188,7 @@
       <tr><td>J-08</td><td>反射の行動が終わった時点で、固定・計画のブロックの途中なら、遅刻するか欠席するかを決める（ブロックの途中で反射が起きた場合も、前から続いていた場合も同じ）。レビューで直した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#reflex">D5 5.7</a></td></tr>
       <tr><td>J-09</td><td>行動が終わったときに決めどきを積むのは、自由時間の中で、同じ時刻にブロックが始まらないときだけ</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
       <tr><td>J-10</td><td>廃止した場所にいる人の行動は、中断せずにそのまま終わらせる</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
-      <tr><td>J-11</td><td>送還したペルソナと、止めたワールドの、以後のイベントは捨てる</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>J-11</td><td>破棄したペルソナとワールドのイベントは、破棄のときに全部捨てる（P-56 で書き直した） <span class="chip fixed">合意</span></td><td><a href="1-execution.html#lifecycle">D1 1.13</a></td></tr>
       <tr><td>J-12</td><td>受信箱を捌く対象は、「スマホを開く」を始めた時点の通知だけ。途中で届いたものは受信箱に残る</td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
       <tr><td>J-13</td><td>投稿のクールダウンの基準（最後の投稿の時刻など）を、ログから毎回計算せず、状態に持って Apply で更新する。VISION 10章は「ログから計算する」と書いているが、値は同じになる</td><td><a href="2-events.html#requires">D2 2.6</a></td></tr>
       <tr><td>J-14</td><td>後続のイベントは、契機のイベントの origin を引き継ぐ</td><td><a href="2-events.html#origin">D2 2.9</a></td></tr>

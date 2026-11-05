@@ -95,7 +95,7 @@
       <tr><th>段</th><th>意味</th><th>イベントタイプ</th></tr>
       <tr><td><span class="stage">1</span></td><td>日付が変わる</td><td><code>day.started</code></td></tr>
       <tr><td><span class="stage">2</span></td><td>終わることが終わる</td><td><code>action.ended</code> <code>travel.arrived</code> <code>incident.resolved</code></td></tr>
-      <tr><td><span class="stage">3</span></td><td>世界が変わる</td><td><code>incident.occurred</code> <code>place.added</code> <code>place.adopted</code> <code>place.retired</code> <code>term.recorded</code> <code>vital.adjusted</code> <code>condition.attached</code> <code>condition.detached</code> <code>persona.summoned</code> <code>persona.dismissed</code> <code>persona.gap</code> <code>world.created</code> <code>world.stopped</code> <code>definitions.reloaded</code></td></tr>
+      <tr><td><span class="stage">3</span></td><td>世界が変わる</td><td><code>incident.occurred</code> <code>place.added</code> <code>place.adopted</code> <code>place.retired</code> <code>term.recorded</code> <code>vital.adjusted</code> <code>condition.attached</code> <code>condition.detached</code> <code>persona.created</code> <code>persona.destroyed</code> <code>persona.gap</code> <code>world.created</code> <code>world.destroyed</code> <code>definitions.reloaded</code></td></tr>
       <tr><td><span class="stage">4</span></td><td>体が反応する</td><td><code>vital.threshold</code></td></tr>
       <tr><td><span class="stage">5</span></td><td>外から届く</td><td><code>notification.arrived</code> <code>outbound.sent</code> <code>outbound.failed</code> <code>outbound.unknown</code></td></tr>
       <tr><td><span class="stage">6</span></td><td>予定の時刻になる</td><td><code>plan.committed</code> <code>plan.due</code> <code>block.started</code> <code>phone.opportunity</code></td></tr>
@@ -104,7 +104,7 @@
   </div>
   <div class="callout">
     <span class="label">決定 P-11　イベントタイプの一覧</span>
-    上の表で確定させる。ペルソナとワールドの作成・停止（<code>persona.summoned</code> など）は、「世界が変わる」の段に置く。状態変数の設定（<code>vital.adjusted</code>）と状態の付与（<code>condition.attached</code>）は、外からの投入でしか起きないが、出来事と同じく「世界が変わる」に置く。
+    上の表で確定させる。ペルソナとワールドの生成・破棄（<code>persona.created</code> など）は、「世界が変わる」の段に置く。状態変数の設定（<code>vital.adjusted</code>）と状態の付与（<code>condition.attached</code>）は、外からの投入でしか起きないが、出来事と同じく「世界が変わる」に置く。
   </div>
 </section>
 
@@ -116,7 +116,7 @@
   <div class="table-wrap">
     <table>
       <tr><th>イベントタイプ</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
-      <tr><td><code>day.started</code></td><td>Apply、窓口（ワールドの作成時）</td><td>ワールド、現地の日付</td><td>翌日の分を積む。出来事の抽選の <code>StartHandler</code> を出す（Planner は動かさない。D5 5.5）</td></tr>
+      <tr><td><code>day.started</code></td><td>Apply、窓口（ワールドの生成時）</td><td>ワールド、現地の日付</td><td>翌日の分を積む。出来事の抽選の <code>StartHandler</code> を出す（Planner は動かさない。D5 5.5）</td></tr>
       <tr><td><code>plan.committed</code></td><td>ハンドラ（Planner）</td><td>ペルソナ、期間（ホライズンから）、ブロックの列、由来（llm / fallback）、プランの版</td><td>プランを差し替え、版を上げる。ホライズン以降の各ブロックの開始を <code>block.started</code> で積む。継ぎ目をまたいで続いているブロックは、積み直さない（D5 5.5）。次に作り直す時刻を決めて、そこに <code>plan.due</code> を積む</td></tr>
       <tr><td><code>plan.due</code></td><td>Apply（<code>plan.committed</code>）</td><td>ペルソナ、プランの版</td><td>版が古ければ捨てる。このプランの期間の Planner がまだ動いていなければ（寝ていない）、起きたままの Planner の <code>StartHandler</code> を出す（D5 5.5）</td></tr>
       <tr><td><code>block.started</code></td><td>Apply</td><td>ペルソナ、ブロック ID、プランの版</td><td>版が古ければ捨てる。自由時間なら決めどきを積む。固定・計画のブロックなら、開始時の確認をする。満たせば <code>action.started</code>、満たせなければ決めどき（予定の乱れ）を積む。反射の行動の途中なら、それを打ち切らず、ブロックは始めない（反射の行動が終わったときに決める。D5 5.7）。スマホが開けるブロックなら <code>phone.opportunity</code> も積む</td></tr>
@@ -196,8 +196,8 @@
   <div class="table-wrap">
     <table>
       <tr><th>イベントタイプ</th><th>出す者</th><th>Apply</th></tr>
-      <tr><td><code>world.created</code> / <code>stopped</code></td><td>窓口</td><td>ワールドインスタンスを作る（乱数の種を決め、最初の <code>day.started</code> を積む） / 止める（以後、そのワールドのイベントを捨てる）</td></tr>
-      <tr><td><code>persona.summoned</code> / <code>dismissed</code></td><td>窓口</td><td>インスタンスを作り、居場所と状態変数の初期値を決める。最初の日は Planner を呼ばない（D5） / 実行中の行動を打ち切り、以後のイベントを捨てる</td></tr>
+      <tr><td><code>world.created</code> / <code>destroyed</code></td><td>窓口</td><td>ワールドインスタンスを生成する / 破棄する（D1 1.13）</td></tr>
+      <tr><td><code>persona.created</code> / <code>destroyed</code></td><td>窓口</td><td>ペルソナインスタンスを生成する / 破棄する（D1 1.13）</td></tr>
       <tr><td><code>persona.gap</code></td><td>起動処理（追いつきの上限）</td><td>空白の区間を飛ばす（D1 1.11）</td></tr>
       <tr><td><code>definitions.reloaded</code></td><td>エンジン</td><td>状態は変えない。どの定義で動いているかの記録（D1 1.12）</td></tr>
     </table>
@@ -352,8 +352,8 @@
       <tr><td><code>condition.attached</code> / <code>detached</code></td><td>状態の ID があるか</td></tr>
       <tr><td><code>notification.arrived</code></td><td>ペルソナがそのチャンネルにつながっているか</td></tr>
       <tr><td><code>place.added</code> / <code>adopted</code> / <code>retired</code></td><td>場所の検証（D6「新しい場所のつなぎ方」と同じ）</td></tr>
-      <tr><td><code>persona.summoned</code> / <code>dismissed</code></td><td>定義があるか。召喚先のワールドが動いているか</td></tr>
-      <tr><td><code>world.created</code> / <code>stopped</code></td><td>定義があるか</td></tr>
+      <tr><td><code>persona.created</code> / <code>destroyed</code></td><td>定義があるか。生成先のワールドが生成済みで、破棄されていないか。破棄なら、インスタンスがまだ破棄されていないか</td></tr>
+      <tr><td><code>world.created</code> / <code>destroyed</code></td><td>定義があるか。破棄なら、まだ破棄されていないか</td></tr>
     </table>
   </div>
   <p>窓口は、検査を通ったものをエンジンへのコマンドにし、結果（受け付けたイベントの連番、または拒否の理由）を返す。誰に投入を許すかは、コアの外（API 層）が決める。</p>
