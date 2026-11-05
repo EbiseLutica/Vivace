@@ -78,6 +78,7 @@
 
 <section id="calls">
   <h2><span class="num">6.2</span>呼び出しの一覧</h2>
+  <p>「目的」は、LLM の呼び出しに付ける名前（<code>LlmRequest.Purpose</code>、D4 4.4）。LLM には見せない。使うのは、痕跡と計測（目的ごとの回数とトークン数。D7 7.3）、目的ごとの再試行と管理者への通知（D7 7.1）、段の上書きの設定（6.1）、テストの台本の LLM が応答を引くとき（D7 7.4）。</p>
   <div class="table-wrap">
     <table>
       <tr><th>目的</th><th>段</th><th>契機</th><th>出力</th><th>失敗したとき</th></tr>
