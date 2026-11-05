@@ -265,18 +265,18 @@ record ApplyResult(
       <tr><td>効果「受信箱を捌く」</td><td>「スマホを開く」の開始</td><td>決定</td><td>行動の終了の時刻</td><td>使う</td></tr>
       <tr><td>効果「投稿する」</td><td>「投稿する」の開始</td><td>決定</td><td>行動の終了の時刻</td><td>使う</td></tr>
       <tr><td>文面の作り直し</td><td>辞書の食い違いで弾かれたとき（VISION 11章）</td><td>決定</td><td>契機の時刻</td><td>使う</td></tr>
-      <tr><td>Planner</td><td>日の始まり</td><td>計画</td><td>その日の 3:00</td><td>使う</td></tr>
+      <tr><td>Planner</td><td>記憶の整理を起こす行動の開始、または作り直す時刻（D5 5.5）</td><td>計画</td><td>契機の時刻 + 3時間</td><td>使う</td></tr>
       <tr><td>出来事の抽選</td><td>日の始まり</td><td>ワールド</td><td>契機の時刻（0:00）</td><td>使わない</td></tr>
     </table>
   </div>
   <ul>
     <li><strong>決定レーン</strong>は、ペルソナの「いまの行動」に関わる決定を順に処理する。同じペルソナで、2つの行動の決定が同時に走ることはない</li>
-    <li><strong>計画レーン</strong>を分けるのは、Planner が LLM を数十秒待つ間も、Decider を止めないため。Planner の出力は 3:00 以降の予定だけなので、Decider の決定とぶつからない</li>
+    <li><strong>計画レーン</strong>を分けるのは、Planner が LLM を数十秒待つ間も、Decider を止めないため。Planner の出力はホライズン（契機の3時間後）以降の予定だけなので、Decider の決定とぶつからない。Planner は、寝て起動したときは、まず記憶の整理が終わるのを待つ（D5 5.5）</li>
     <li>乱数は、用途ごとに別の列を使う（D5「乱数」）。レーンが違えば、引く列も違うので、並列に引いても結果は変わらない</li>
   </ul>
   <div class="callout">
     <span class="label">決定 P-04　レーンの分け方と LLM の同時実行数</span>
-    レーンは「ペルソナごとに決定と計画の2本」と「ワールドごとに1本」。LLM の呼び出しは、ホスト全体で同時に 3 本までに絞る（<code>SemaphoreSlim</code>）。前提の規模（最大 10 人）なら、待ちが出るのは日の始まり（全員の Planner が一斉に動く）くらいで、それも 3 時間の余裕に収まる。
+    レーンは「ペルソナごとに決定と計画の2本」と「ワールドごとに1本」。LLM の呼び出しは、ホスト全体で同時に 3 本までに絞る（<code>SemaphoreSlim</code>）。前提の規模（最大 10 人）なら、待ちが出るのは夜（何人もが続けて寝て、記憶の整理と Planner が重なる）くらいで、それも 3 時間の余裕に収まる。
   </div>
 </section>
 
@@ -293,7 +293,7 @@ record ApplyResult(
   <div class="table-wrap">
     <table>
       <tr><th>ハンドラ</th><th>締め切り</th><th>過ぎたとき</th></tr>
-      <tr><td>Planner</td><td>ホライズン（3:00）</td><td>取り消して、固定予定だけのプランを出す（VISION 4章「間に合わなかったとき」）</td></tr>
+      <tr><td>Planner</td><td>ホライズン（契機の3時間後）</td><td>取り消して、固定予定だけのプランを出す（VISION 4章「間に合わなかったとき」）</td></tr>
       <tr><td>受信箱を捌く</td><td>ホライズン + 猶予</td><td>取り消して、処理できなかった通知を受信箱に残す。何も送らない</td></tr>
       <tr><td>投稿する</td><td>ホライズン + 猶予</td><td>取り消して、空振りとして記録する</td></tr>
       <tr><td>文面の作り直し</td><td>ホライズン + 猶予</td><td>取り消して、発話を出さない</td></tr>
@@ -453,7 +453,7 @@ record ApplyResult(
       <tr><td>実時間</td><td><code>SystemClock</code></td><td>効かせる</td><td>動く</td><td>実物</td></tr>
       <tr><td>倍速</td><td><code>ScaledClock</code>（開始点からの経過を n 倍）</td><td>効かせる（仮想の時刻で）</td><td>動かさない</td><td>実物かダミー</td></tr>
       <tr><td>早送り（ドライラン）</td><td><code>VirtualClock</code></td><td>効かせない</td><td>動かさない</td><td>実物かダミー</td></tr>
-      <tr><td>追いつき</td><td><code>VirtualClock</code> から <code>SystemClock</code> へ切り替え</td><td>効かせない</td><td>動かさない（圏外）</td><td>Planner は呼ばない。SNS の行動は候補にならない</td></tr>
+      <tr><td>追いつき</td><td><code>VirtualClock</code> から <code>SystemClock</code> へ切り替え</td><td>効かせない</td><td>動かさない（圏外）</td><td>追いつきの中で使い終わるプランは、Planner が LLM を呼ばない（D5 5.5）。SNS の行動は候補にならない</td></tr>
     </table>
   </div>
   <p>時計を読むのは、エンジンと配信役と到着の受付だけ。決める側には、契機のイベントの時刻を now として渡す（VISION 4章）。到着のイベントの時刻は、受付が時計の「いま」を読んで付ける。</p>
@@ -495,7 +495,7 @@ record ApplyResult(
     <li>読み直しは、ホストが公開 API で呼び、コマンドとしてエンジンに入る（いつ呼ぶかは P-09）。エンジンは、TOML をすべて読み直して検証し、エラーがあれば拒否して、古い定義のまま動き続ける</li>
     <li>通れば、イベントとイベントの間で <code>Definitions</code> を差し替え、<code>definitions.reloaded</code> のイベント（定義のハッシュつき）を記録する。ログを読むときに、どの定義で動いていたかがわかる</li>
     <li>場所のグラフが変われば、最短経路のキャッシュ（D5）を作り直す</li>
-    <li>固定予定の変更は、翌日のプランから効く（VISION 5章）</li>
+    <li>固定予定の変更は、次のプランから効く（VISION 5章）</li>
   </ul>
   <div class="callout">
     <span class="label">決定 P-09　定義の読み直しの契機と、実行中の行動が消えたとき</span>

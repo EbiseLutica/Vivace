@@ -82,7 +82,7 @@
   <div class="table-wrap">
     <table>
       <tr><th>目的</th><th>段</th><th>契機</th><th>出力</th><th>失敗したとき</th></tr>
-      <tr><td><code>planner</code></td><td>Main</td><td>日の始まり</td><td>構造化：計画ブロックの列と要約（D5 5.5）</td><td>再生成 2 回、だめなら固定予定だけ</td></tr>
+      <tr><td><code>planner</code></td><td>Main</td><td>記憶の整理のあと（寝たとき）、または作り直す時刻（D5 5.5）</td><td>構造化：計画ブロックの列と要約（D5 5.5）</td><td>再生成 2 回、だめなら固定予定だけ</td></tr>
       <tr><td><code>inbox.triage</code></td><td>Light</td><td>スマホを開く</td><td>構造化：通知ごとに 返信 / リアクション（絵文字）/ 何もしない</td><td>その回は何も捌かない（通知は残る）</td></tr>
       <tr><td><code>inbox.reply</code></td><td>Main</td><td>返信すると決めた通知ごと</td><td>テキスト：返信の本文</td><td>その通知だけ捌かずに残す</td></tr>
       <tr><td><code>post.topics</code></td><td>Light</td><td>投稿する</td><td>構造化：話題の候補（語と、種類の見立て）</td><td>自分の話題に切り替える</td></tr>
@@ -292,6 +292,7 @@ follow_back = "always"           # always | never</code></pre>
     <li>層の処理が失敗したら、その層のカーソルを進めず、次の整理でまとめて処理する（VISION 13章）</li>
     <li>同じ層が 3 回続けて失敗したら、<code>IAdminNotifier</code> で管理者に知らせる（ebise の「記憶化に失敗したときの、管理者への通知」）</li>
     <li>整理ジョブは、ペルソナごとに同時に1つだけ動かす。前の整理が終わらないうちに次の睡眠が来たら、前のが終わってから、新しい上限で続ける</li>
+    <li>整理が終わったら（すべての層の反映と threads の更新のあと）、それを待っている Planner に知らせる（D5 5.5）。失敗した層があっても、終わったことにして知らせる（未処理の分は次に持ち越すだけなので）</li>
   </ul>
 </section>
 
@@ -310,7 +311,7 @@ follow_back = "always"           # always | never</code></pre>
   <div class="table-wrap">
     <table>
       <tr><th>契機</th><th>1日の回数（1人）</th><th>1回の呼び出し</th><th>1日の呼び出し</th></tr>
-      <tr><td>Planner</td><td>1</td><td>1〜3</td><td>1〜3</td></tr>
+      <tr><td>Planner</td><td>1（睡眠ごと）</td><td>1〜3</td><td>1〜3</td></tr>
       <tr><td>スマホを開く</td><td>8〜15</td><td>振り分け 1 + 返信の数</td><td>15〜40</td></tr>
       <tr><td>投稿する</td><td>4〜8</td><td>抽出 1 + 判定 0〜3 + 場所 0〜1 + 文面 1</td><td>10〜40</td></tr>
       <tr><td>記憶の整理</td><td>1</td><td>層の数 × 3 + threads 1</td><td>5〜15</td></tr>

@@ -272,7 +272,7 @@ place = "home_living"</code></pre>
       <tr><td>日をまたぐブロック</td><td>開始した日のブロックとして扱う。月曜 23:45〜火曜 6:30 の睡眠は、月曜の <code>sleep_weekday</code></td></tr>
       <tr><td>スマホ</td><td><code>phone</code> は、行動定義の既定値を上書きする。長いブロックの途中の機会は <code>phone_every</code>（D5）</td></tr>
       <tr><td>例外日</td><td><code>skip</code> でその日のブロックを外し、<code>block</code> で足す。足したブロックも、重なりの検査を通す</td></tr>
-      <tr><td>ブロックの ID</td><td>プランの中では「定義の ID@開始日」（<code>sleep_weekday@2026-11-02</code>）で指す。3:00 をまたいで続いているかの判定に使う（D5）。<code>times</code> の2つ目以降と、入れ子で分かれた外側の後半は、<code>.2</code> のように番号を付ける（<code>school.2@2026-11-02</code>）</td></tr>
+      <tr><td>ブロックの ID</td><td>プランの中では「定義の ID@開始日」（<code>sleep_weekday@2026-11-02</code>）で指す。プランの継ぎ目をまたいで続いているかの判定に使う（D5 5.5）。<code>times</code> の2つ目以降と、入れ子で分かれた外側の後半は、<code>.2</code> のように番号を付ける（<code>school.2@2026-11-02</code>）</td></tr>
       <tr><td>ブロックの長さ</td><td>固定予定のブロックでは、行動はブロックの時間いっぱい続く。行動定義の <code>duration</code> は使わない</td></tr>
     </table>
   </div>

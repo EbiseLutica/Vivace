@@ -17,8 +17,8 @@
   <div class="meta">
     <span class="chip">2026-11-03 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
-    <span class="chip fixed">案はすべて合意（54 件）</span>
-    <span class="chip draft">枠の外の判断 76 件が合意待ち</span>
+    <span class="chip fixed">案はすべて合意（55 件）</span>
+    <span class="chip draft">枠の外の判断 75 件が合意待ち</span>
   </div>
 </header>
 
@@ -143,7 +143,7 @@
       <tr><td>P-31</td><td>遅刻・欠席・待つの重み <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
       <tr><td>P-32</td><td>長いブロックの途中の機会は <code>phone_every</code> を書いたときだけ <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
       <tr><td>P-33</td><td>ブロックの <code>interruptible</code> は持たない <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
-      <tr><td>P-34</td><td>召喚した日は Planner を呼ばない <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
+      <tr><td>P-34</td><td>召喚した直後は、最初の Planner のホライズンまで、固定予定と Decider だけで過ごす（P-55 に合わせて書き直した） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
       <tr><td>P-35</td><td><strong>状態変数の範囲と既定値</strong> <span class="chip fixed">合意</span></td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
       <tr><td>P-36</td><td>寝不足での健康度の下がり方 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
       <tr><td>P-37</td><td>出来事の頻度（定義ごとに必須、1日2件まで） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#incidents">D5 5.8</a></td></tr>
@@ -164,6 +164,7 @@
       <tr><td>P-52</td><td>固定予定のブロックの入れ子（<code>within</code> が必須）と、時間帯の並べ書き（<code>times</code>）。レビューで足した <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
       <tr><td>P-53</td><td>LLM の呼び出しの目的は登録制にし、段の上書きと再試行の方針はコアの表（<code>LlmPolicy</code>）に集める。レビューで足した <span class="chip fixed">合意</span></td><td><a href="4-components.html#llm-port">D4 4.4</a></td></tr>
       <tr><td>P-54</td><td>CLI は、エンジンを動かすデーモンと、ローカルの管理用 API（Minimal API）で話す。レビューで足した <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
+      <tr><td>P-55</td><td>Planner は、日の始まりではなく、記憶の整理を起こす行動（睡眠、気絶）のときに、整理を待ってから動く。ホライズンは契機の3時間後。寝なかったら、作り直す時刻に起きたまま動く。レビューで足した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
     </table>
   </div>
 </section>
@@ -181,7 +182,7 @@
       <tr><td>J-03</td><td>追いつきの最中に届いた到着は保留し、追いつきが終わってから、時計の「いま」（実時刻と同じ）で積む <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
       <tr><td>J-04</td><td>停止するとき、送信中の操作は結果を待たずに閉じる（次の起動で「送信不明」になる） <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
       <tr><td>J-05</td><td>固定ブロックの開始は、実行中の行動を終わらせる。ただし、反射の行動は打ち切らない。レビューで直した <span class="chip fixed">合意</span></td><td><a href="1-execution.html#states">D1 1.8</a></td></tr>
-      <tr><td>J-06</td><td>Planner の出力は 3:00 の時刻のイベント（<code>plan.committed</code>）にする。3:00 の継ぎ目では、ブロック ID（定義@開始日）が同じなら続いているとみなす</td><td><a href="2-events.html#types">D2 2.3</a>、<a href="5-decision.html#planner">D5 5.5</a></td></tr>
+      <tr><td>J-06</td><td>Planner の出力は、ホライズンの時刻のイベント（<code>plan.committed</code>）にする。継ぎ目では、ブロック ID（定義@開始日）が同じなら続いているとみなす。作り直す時刻は <code>plan.due</code> で積む（P-55 で書き直した） <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a>、<a href="5-decision.html#planner">D5 5.5</a></td></tr>
       <tr><td>J-07</td><td>欠席したブロックの残りは自由時間にする。「待つ」は、原因の解消かブロックの終わりの早いほうまで待って、開始時の確認をやり直す</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
       <tr><td>J-08</td><td>反射の行動が終わった時点で、固定・計画のブロックの途中なら、遅刻するか欠席するかを決める（ブロックの途中で反射が起きた場合も、前から続いていた場合も同じ）。レビューで直した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#reflex">D5 5.7</a></td></tr>
       <tr><td>J-09</td><td>行動が終わったときに決めどきを積むのは、自由時間の中で、同じ時刻にブロックが始まらないときだけ</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
@@ -191,7 +192,7 @@
       <tr><td>J-13</td><td>投稿のクールダウンの基準（最後の投稿の時刻など）を、ログから毎回計算せず、状態に持って Apply で更新する。VISION 10章は「ログから計算する」と書いているが、値は同じになる</td><td><a href="2-events.html#requires">D2 2.6</a></td></tr>
       <tr><td>J-14</td><td>後続のイベントは、契機のイベントの origin を引き継ぐ</td><td><a href="2-events.html#origin">D2 2.9</a></td></tr>
       <tr><td>J-15</td><td>処理済みの通知と、送信済みの操作は、状態から外して表にだけ残す</td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
-      <tr><td>J-16</td><td>帰還できるかの判定で、次のブロックがなければ、プランの終わり（翌日の 3:00）を期限にする</td><td><a href="5-decision.html#candidates">D5 5.2</a></td></tr>
+      <tr><td>J-16</td><td>帰還できるかの判定で、次のブロックがなければ、プランの終わりを期限にする</td><td><a href="5-decision.html#candidates">D5 5.2</a></td></tr>
       <tr><td>J-17</td><td>行動の時刻の範囲（<code>limits.hours</code>）は、開始時刻だけで判定する</td><td><a href="5-decision.html#candidates">D5 5.2</a></td></tr>
       <tr><td>J-18</td><td>Planner の「汎用の行動への置換」を、自由時間への置き換えで表す</td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
       <tr><td>J-19</td><td>Planner の「睡眠の細部を埋める」を、睡眠の固定ブロックがない日に、睡眠のブロックを置かせること、と読んだ</td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
