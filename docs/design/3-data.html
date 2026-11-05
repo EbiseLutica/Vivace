@@ -350,7 +350,7 @@ sealed record PersonaState(
     PersonaId Id, string DefId, WorldId World, PersonaStatus Status,
     Location Location,                                  // 場所 ID、または移動中（経路と出発時刻）
     Activity? Activity, long ActivityVersion,           // 実行中の行動（D1 1.8）
-    Activity? Overlay,                                  // 固定ブロック中にスマホを開いている間だけ
+    Activity? Overlay,                                  // 固定ブロック中にスマホを使っている間だけ（開く、投稿する）
     Vitals Vitals,                                      // 4変数の基準時刻・値・率と、状態変数の版
     ImmutableArray&lt;AttachedCondition&gt; Conditions,
     DayPlan? Plan, long PlanVersion,
