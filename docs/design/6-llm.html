@@ -40,6 +40,7 @@
       <li><a href="#consolidate">6.7 記憶の整理</a></li>
       <li><a href="#safety">6.8 記憶の汚染を防ぐ</a></li>
       <li><a href="#cost">6.9 呼び出しの量の目安</a></li>
+      <li><a href="#review">6.10 文面の校閲</a></li>
       <li class="part">詳細設計</li>
       <li><a href="index.html">目次と決めること</a></li>
       <li><a href="1-execution.html">D1 実行モデル</a></li>
@@ -84,11 +85,13 @@
       <tr><th>目的</th><th>段</th><th>契機</th><th>出力</th><th>失敗したとき</th></tr>
       <tr><td><code>planner</code></td><td>Main</td><td>記憶の整理のあと（寝たとき）、または作り直す時刻（D5 5.5）</td><td>構造化：計画ブロックの列と要約（D5 5.5）</td><td>再生成 2 回、だめなら固定予定だけ</td></tr>
       <tr><td><code>inbox.triage</code></td><td>Light</td><td>スマホを開く</td><td>構造化：通知ごとに 返信 / リアクション（絵文字）/ 何もしない</td><td>その回は何も捌かない（通知は残る）</td></tr>
-      <tr><td><code>inbox.reply</code></td><td>Main</td><td>返信すると決めた通知ごと</td><td>テキスト：返信の本文</td><td>その通知だけ捌かずに残す</td></tr>
+      <tr><td><code>inbox.reply</code></td><td>Main</td><td>返信すると決めた会話ごと</td><td>テキスト：返信の本文（校閲で却下されたら、理由つきで書き直す）</td><td>その会話だけ捌かずに残す</td></tr>
+      <tr><td><code>inbox.review</code></td><td>Light</td><td>返信の下書きごと</td><td>構造化：通すか、却下の理由（6.10）</td><td>通さない（却下として扱う）</td></tr>
       <tr><td><code>post.topics</code></td><td>Light</td><td>投稿する</td><td>構造化：話題の候補（語と、種類の見立て）</td><td>自分の話題に切り替える</td></tr>
       <tr><td><code>post.judge</code></td><td>Light</td><td>辞書にない語ごと</td><td>構造化：通す / 変換する / 却下する、変換先、構造に載るか（場所 / 据え付けの道具 / 携行品 / その他）、理由</td><td>その語を却下として扱う（記録はしない）</td></tr>
       <tr><td><code>post.place</code></td><td>Main</td><td>場所として採用する語</td><td>構造化：名前、タグ（一覧から）、つながる場所と移動時間</td><td>場所を生やさず、話題を却下する</td></tr>
-      <tr><td><code>post.compose</code></td><td>Main</td><td>使える話題が決まったら</td><td>テキスト：投稿の本文</td><td>空振り</td></tr>
+      <tr><td><code>post.compose</code></td><td>Main</td><td>使える話題が決まったら</td><td>テキスト：投稿の本文（校閲で却下されたら、理由つきで書き直す）</td><td>空振り</td></tr>
+      <tr><td><code>post.review</code></td><td>Light</td><td>投稿の下書きごと</td><td>構造化：通すか、却下の理由（6.10）</td><td>通さない（却下として扱う）</td></tr>
       <tr><td><code>memory.extract</code></td><td>Main</td><td>記憶の整理（層ごと）</td><td>構造化：記憶の候補</td><td>その層のカーソルを進めない</td></tr>
       <tr><td><code>memory.match</code></td><td>Light</td><td>候補ごと</td><td>構造化：新規 / 強化 / 置き換え</td><td>同上</td></tr>
       <tr><td><code>memory.gist</code></td><td>Light</td><td>新しいアイテムごと</td><td>構造化：ぼやけた要約</td><td>同上</td></tr>
@@ -161,7 +164,7 @@
         <li><strong>Other</strong>：プラグインの規則（<code>INotificationRule</code>、D4 4.7）に当たれば、規則で捌く。当たらなければ、何もせずに処理済みにする。規則が出せるのは発話ではない操作だけ</li>
       </ul>
     </li>
-    <li>返信するものは、会話ごとに <code>inbox.reply</code> で本文を作る。文脈には、本文、添付、それまでの会話（<code>Thread</code>）を入れる（6.3）。相手が持ち込んだ話題が世界観に合わなければ、「知らない」と答える（VISION 11章）。そのための判定は、投稿と同じ辞書と <code>post.judge</code> を使い、却下なら「知らない」と答えるよう指示する</li>
+    <li>返信するものは、会話ごとに <code>inbox.reply</code> で本文を作る。文脈には、本文、添付、それまでの会話（<code>Thread</code>）を入れる（6.3）。相手が持ち込んだ話題が世界観に合わなければ、「知らない」と答える（VISION 11章）。そのための判定は、投稿と同じ辞書と <code>post.judge</code> を使い、却下なら「知らない」と答えるよう指示する。作った本文は、送る前に校閲を通す（6.10）</li>
     <li>出力を、行動の終了の時刻で返す。<code>outbound.speech</code>（返信）、<code>outbound.operation</code>（リアクション、フォロー）、<code>inbox.handled</code>（まとめて捌いた通知も、それぞれ処理済みにする）</li>
   </ol>
   <div class="callout">
@@ -216,6 +219,7 @@ follow_back = "always"           # always | never</code></pre>
   <ul>
     <li>話題の候補は最大 5 件。辞書に当たったものと、判定で通ったものの中から、乱数（用途 <code>sns</code>）で1つ選ぶ</li>
     <li>全部却下なら自分の話題（日誌の今日のこと、好み）に切り替え、それも作れなければ <code>post.skipped</code></li>
+    <li>作った本文は、投稿する前に校閲を通す（6.10）。通らなければ <code>post.skipped</code>（理由は校閲）</li>
     <li>辞書の食い違いで却下されたら（D1 1.7）、文面の作り直しのハンドラが、辞書の変換を使って文面だけを作り直す。判定と場所の生成はやり直さない（VISION 11章）</li>
   </ul>
   <div class="callout">
@@ -314,12 +318,45 @@ follow_back = "always"           # always | never</code></pre>
     <table>
       <tr><th>契機</th><th>1日の回数（1人）</th><th>1回の呼び出し</th><th>1日の呼び出し</th></tr>
       <tr><td>Planner</td><td>1（睡眠ごと）</td><td>1〜3</td><td>1〜3</td></tr>
-      <tr><td>スマホを開く</td><td>8〜15</td><td>振り分け 1 + 返信の数</td><td>15〜40</td></tr>
-      <tr><td>投稿する</td><td>4〜8</td><td>抽出 1 + 判定 0〜3 + 場所 0〜1 + 文面 1</td><td>10〜40</td></tr>
+      <tr><td>スマホを開く</td><td>8〜15</td><td>振り分け 1 + 返信の数 ×（文面 + 校閲。書き直しで最大 3 回）</td><td>20〜60</td></tr>
+      <tr><td>投稿する</td><td>4〜8</td><td>抽出 1 + 判定 0〜3 + 場所 0〜1 +（文面 + 校閲。書き直しで最大 3 回）</td><td>15〜50</td></tr>
       <tr><td>記憶の整理</td><td>1</td><td>層の数 × 3 + threads 1</td><td>5〜15</td></tr>
     </table>
   </div>
-  <p>1人あたり1日 30〜100 回、10 人で 300〜1000 回。辞書が育つと判定の回数は減る。実際のトークン数と費用は、痕跡の記録から実行レポートで集計する（D7）。</p>
+  <p>1人あたり1日 40〜130 回、10 人で 400〜1300 回（校閲は Light なので、費用の増え方は回数ほどではない）。辞書が育つと判定の回数は減る。実際のトークン数と費用は、痕跡の記録から実行レポートで集計する（D7）。</p>
+</section>
+
+<section id="review">
+  <h2><span class="num">6.10</span>文面の校閲</h2>
+  <p>投稿と返信の本文は、送る前に、作った呼び出しとは別の呼び出しで校閲する。ebise の投稿の校閲（<code>post-review</code>）を引き継ぎ、返信にも使う。作る呼び出しの中で推敲させると、考え事がそのまま本文に漏れるので、役目を分ける。</p>
+  <div class="flow">
+    <div class="step"><b>1. 下書き</b><p><code>post.compose</code> / <code>inbox.reply</code>（Main）。前に却下されていれば、その理由を添える</p></div>
+    <div class="arr">→</div>
+    <div class="step"><b>2. 校閲</b><p><code>post.review</code> / <code>inbox.review</code>（Light）。問題を見つけるだけで、書き直さない</p></div>
+    <div class="arr">→</div>
+    <div class="step"><b>3. 通す / やり直す</b><p>通れば出力にする。却下なら 1 に戻る。下書きは最大 3 回まで</p></div>
+  </div>
+  <h3>見る観点</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>観点</th><th>中身</th></tr>
+      <tr><td>本文以外の混入</td><td>考え事、推敲のメモ、制約の確認、複数案の比較、自分への指示が混ざっていないか。段落が分かれている下書きは、LLM に頼らず、ハーネスが先に却下する（ebise と同じ）</td></tr>
+      <tr><td>矛盾</td><td>文脈（日誌、今日の予定、記憶、言ったこと）の事実と食い違っていないか。終わった予定をこれからのことのように話す、同じ場所にいただけの人と「一緒に」何かしたことにする（6.3 の書き分け）、など</td></tr>
+      <tr><td>繰り返し</td><td>直近の発話と同じ話題を、進展も別の切り口もなく、もう一度述べていないか</td></tr>
+      <tr><td>世界観</td><td>ワールドにないもの（存在しないものの一覧、辞書で却下された語）を、本文で新しく持ち込んでいないか（VISION 11章）。話題の判定を通った語や、既存の場所は問題にしない</td></tr>
+    </table>
+  </div>
+  <ul>
+    <li>口調、語尾、口癖、面白さ、上手さは見ない。キャラクターの個性で、好みの問題だから（ebise と同じ）</li>
+    <li>校閲の入力は、下書きと、下書きを作ったときと同じ文脈（ペルソナの lore は除く）。返信なら、それまでの会話（<code>Thread</code>）も入れる</li>
+    <li>校閲の応答が読めなかったときは、確かめられないものを通さないよう、却下として扱う</li>
+    <li>3 回とも通らなければ、送らない。投稿なら空振り（<code>post.skipped</code>、理由は校閲）。返信なら、その会話は「返信を見送った」として処理済みにする（受信箱に残すと、次にスマホを開いたときに、また同じことを繰り返すため）</li>
+    <li>下書きと校閲の結果は、すべて痕跡に残す。実行レポートで、どんな理由で却下されがちかを見られる</li>
+  </ul>
+  <div class="callout">
+    <span class="label">決定 P-57　投稿と返信の文面は、別の呼び出しで校閲してから送る</span>
+    上のとおり。レビューで決めた。発話は事実にならない（VISION 12章）が、事実や過去の発話と食い違う発話が続くと、ペルソナが嘘つきに見え、同じワールドのほかのペルソナとも話が合わなくなる。校閲は、その食い違いを送る前に減らす。
+  </div>
 </section>
 
 </main>
