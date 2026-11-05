@@ -13,11 +13,11 @@
 <header class="hero">
   <div class="kicker">VIVACE / DESIGN / D8</div>
   <h1>技術スタック</h1>
-  <p>C# と SQLite は確定。それ以外は、D1〜D7 で決めた「やること」から選んだ候補で、ライブラリのバージョンは実装を始めるときに NuGet で確かめて固定する。</p>
+  <p>C# と SQLite に加えて、D1〜D7 で決めた「やること」から選んだライブラリも決定した。バージョンは、実装を始めるときに NuGet で確かめて固定する。LLM の実装だけは、8.4 の PoC で選ぶ。</p>
   <div class="meta">
     <span class="chip">2026-11-03 時点</span>
-    <span class="chip fixed">C# / SQLite は確定</span>
-    <span class="chip draft">ほかは案</span>
+    <span class="chip fixed">ライブラリは決定</span>
+    <span class="chip draft">LLM の実装は PoC で選ぶ</span>
   </div>
 </header>
 
@@ -80,8 +80,8 @@
       <tr><td>Misskey のクライアント</td><td>自前の薄いクライアント（HTTP + WebSocket）</td><td>使う API は投稿、返信、リアクション、フォロー、通知の取得、タイムラインの取得、ストリーミングくらい。以前に作った Misskey.NET は 2023 年から更新がないので、移すなら必要な部分だけにする</td></tr>
     </table>
   </div>
-  <div class="draft">
-    <span class="label">案 P-51　ライブラリの選定</span>
+  <div class="callout">
+    <span class="label">決定 P-51　ライブラリの選定</span>
     上の表。BCL で足りるものは BCL を使い、外のパッケージは Microsoft.Data.Sqlite、Tomlyn、ログの抽象、テストの道具、CLI の解析にとどめる。コア（Vivace.Core）が参照する外のパッケージは、Tomlyn とログの抽象の2つだけになる（D4 4.1）。
   </div>
 </section>
