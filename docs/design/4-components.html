@@ -326,6 +326,7 @@ public interface INotificationRule
   <ul>
     <li>プラグインが足せるのは、ハンドラ、規則、ツール、行動の定義、チャンネル、暦だけ。イベントタイプと、決定的な効果の語彙は足せない。外に出すものは、コアの <code>outbound.*</code> の中身（チャンネルが解釈する JSON）として表す（VISION 10章）</li>
     <li>プラグインが同梱する行動の ID は、プラグインの名前で始める（<code>misskey.open_phone</code>）</li>
+    <li><strong>ペルソナと独立した機能</strong>：チャンネルのプラグインは、ペルソナのシミュレーションを通さない機能を、<code>IChannel.StartAsync</code> の中で動かしてよい（VISION 10章）。Misskey のリバーシは、ebise ではペルソナの機能だったが、Vivace では Misskey プラグインの中のゲーム機能として作る。対局はペルソナのアカウントで行ってよいが、ペルソナの行動、状態変数、イベント、記憶には関わらない（寝ている時間でも対局する）。シミュレーションに組み込むと複雑になりすぎるため</li>
   </ul>
   <div class="draft">
     <span class="label">案 P-28　プラグインは、ホストがコードで登録する</span>
