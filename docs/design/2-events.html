@@ -118,7 +118,7 @@
       <tr><th>イベントタイプ</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
       <tr><td><code>day.started</code></td><td>Apply、窓口（ワールドの作成時）</td><td>ワールド、現地の日付</td><td>翌日の分を積む。出来事の抽選と、各ペルソナの Planner の <code>StartHandler</code> を出す。追いつき中の過去の日は、Planner に「LLM を呼ばない」を指示する</td></tr>
       <tr><td><code>plan.committed</code></td><td>ハンドラ（Planner）</td><td>ペルソナ、日付、ブロックの列、由来（llm / fallback）、プランの版</td><td>プランを差し替え、版を上げる。3:00 以降の各ブロックの開始を <code>block.started</code> で積む。3:00 をまたいで続いているブロックは、積み直さない（D5）</td></tr>
-      <tr><td><code>block.started</code></td><td>Apply</td><td>ペルソナ、ブロック ID、プランの版</td><td>版が古ければ捨てる。自由時間なら決めどきを積む。固定・計画のブロックなら、開始時の確認をする。満たせば <code>action.started</code>、満たせなければ決めどき（予定の乱れ）を積む。スマホが開けるブロックなら <code>phone.opportunity</code> も積む</td></tr>
+      <tr><td><code>block.started</code></td><td>Apply</td><td>ペルソナ、ブロック ID、プランの版</td><td>版が古ければ捨てる。自由時間なら決めどきを積む。固定・計画のブロックなら、開始時の確認をする。満たせば <code>action.started</code>、満たせなければ決めどき（予定の乱れ）を積む。反射の行動の途中なら、それを打ち切らず、ブロックは始めない（反射の行動が終わったときに決める。D5 5.7）。スマホが開けるブロックなら <code>phone.opportunity</code> も積む</td></tr>
       <tr><td><code>phone.opportunity</code></td><td>Apply</td><td>ペルソナ、ブロック ID</td><td>決めどき（スマホを開く機会）を積む。長いブロックで間隔が決まっていれば、次の機会も積む（D5）</td></tr>
     </table>
   </div>
@@ -133,7 +133,7 @@
       <tr><td><code>travel.started</code></td><td>Apply</td><td>出発地、目的地、経路（辺の列）、到着の時刻、行動の版</td><td>移動中にする。居合わせが変わるので、社交欲求の率を出発地の全員について計算し直す。<code>travel.arrived</code> を積む</td></tr>
       <tr><td><code>travel.arrived</code></td><td>Apply</td><td>場所、行動の版</td><td>版が古ければ捨てる。居場所を書き換え、着いた場所の全員の率を計算し直す。続きの行動があれば <code>action.started</code>、待機なら待機中にする</td></tr>
       <tr><td><code>action.started</code></td><td>Apply</td><td>行動、場所、所要時間、理由（chosen / block / reflex / late）、行動の版</td><td>行動中にし、率を切り替え、開始時の効果を当てる。<code>action.ended</code> を積む。効果に応じて <code>StartHandler</code>（受信箱、投稿）や <code>Consolidate</code>（睡眠）を出す</td></tr>
-      <tr><td><code>action.ended</code></td><td>Apply</td><td>行動、行動の版</td><td>版が古ければ捨てる。終了時の効果を当て、率を戻す。同じ時刻にブロックの開始がなく、自由時間の中なら、決めどきを積む</td></tr>
+      <tr><td><code>action.ended</code></td><td>Apply</td><td>行動、行動の版</td><td>版が古ければ捨てる。終了時の効果を当て、率を戻す。同じ時刻にブロックの開始がなく、自由時間の中なら、決めどきを積む。反射の行動が終わったときに、固定・計画のブロックの途中なら、決めどき（予定の乱れ。遅刻 / 欠席）を積む（D5 5.7）</td></tr>
     </table>
   </div>
   <div class="table-wrap">
