@@ -167,6 +167,7 @@ public interface IDecider
 public interface IChannelHost
 {
     IReadOnlyList&lt;PersonaId&gt; Personas { get; }               // このチャンネルにつながるインスタンス
+    StateView View { get; }                                  // いまの状態（読み取りだけ。4.6 の engine.View と同じ）
     ValueTask&lt;InjectResult&gt; ArriveAsync(Arrival arrival, CancellationToken ct);   // 投入の窓口へ
 }
 
@@ -255,7 +256,7 @@ public interface ITool                   // 副作用のない参照系だけ（
 
 <section id="api">
   <h2><span class="num">4.6</span>公開 API</h2>
-<pre><code>await using var engine = VivaceEngine.CreateBuilder()
+<pre><code>await using var engine = VivaceEngine.Create()
     .UseDefinitions("defs/")
     .UseStorage(new SqliteStorage("vivace.db"))
     .UseLlm(llm)
@@ -272,7 +273,7 @@ IEventLog log = engine.Events;                               // ログの検索
 ReloadResult rr = await engine.ReloadDefinitionsAsync(ct);   // 定義の読み直し
 
 // ドライラン：仮想時計で、外に何も出さずに進める
-await using var dry = VivaceEngine.CreateBuilder()
+await using var dry = VivaceEngine.Create()
     .UseDefinitions("defs/").UseStorage(SqliteStorage.InMemory())
     .UseLlm(llm).UseClock(new VirtualClock(start)).DryRun()
     .Build();
@@ -326,7 +327,7 @@ public interface INotificationRule
   <ul>
     <li>プラグインが足せるのは、ハンドラ、規則、ツール、行動の定義、チャンネル、暦だけ。イベントタイプと、決定的な効果の語彙は足せない。外に出すものは、コアの <code>outbound.*</code> の中身（チャンネルが解釈する JSON）として表す（VISION 10章）</li>
     <li>プラグインが同梱する行動の ID は、プラグインの名前で始める（<code>misskey.open_phone</code>）</li>
-    <li><strong>ペルソナと独立した機能</strong>：チャンネルのプラグインは、ペルソナのシミュレーションを通さない機能を、<code>IChannel.StartAsync</code> の中で動かしてよい（VISION 10章）。Misskey のリバーシは、ebise ではペルソナの機能だったが、Vivace では Misskey プラグインの中のゲーム機能として作る。対局はペルソナのアカウントで行ってよいが、ペルソナの行動、状態変数、イベント、記憶には関わらない（寝ている時間でも対局する）。シミュレーションに組み込むと複雑になりすぎるため</li>
+    <li><strong>ペルソナと独立した機能</strong>：チャンネルのプラグインは、ペルソナのシミュレーションを通さない機能を、<code>IChannel.StartAsync</code> の中で動かしてよい（VISION 10章）。Misskey のリバーシは、ebise ではペルソナの機能だったが、Vivace では Misskey プラグインの中のゲーム機能として作る。対局はペルソナのアカウントで行ってよいが、ペルソナの行動、状態変数、イベント、記憶には関わらない（寝ている時間でも対局する）。シミュレーションに組み込むと複雑になりすぎるため。ただし、いまの状態は <code>IChannelHost.View</code> で読めるので、「睡眠中は対局を受けない」のような振る舞いは、プラグインの中で書ける（状態は読むだけで、変えない）</li>
   </ul>
   <div class="draft">
     <span class="label">案 P-28　プラグインは、ホストがコードで登録する</span>
