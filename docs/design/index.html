@@ -18,7 +18,7 @@
     <span class="chip">2026-11-03 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
     <span class="chip fixed">案はすべて合意（57 件）</span>
-    <span class="chip draft">枠の外の判断 72 件が合意待ち</span>
+    <span class="chip draft">枠の外の判断 55 件が合意待ち</span>
   </div>
 </header>
 
@@ -185,27 +185,27 @@
       <tr><td>J-04</td><td>停止するとき、送信中の操作は結果を待たずに閉じる（次の起動で「送信不明」になる） <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
       <tr><td>J-05</td><td>固定ブロックの開始は、実行中の行動を終わらせる。ただし、反射の行動は打ち切らない。レビューで直した <span class="chip fixed">合意</span></td><td><a href="1-execution.html#states">D1 1.8</a></td></tr>
       <tr><td>J-06</td><td>Planner の出力は、ホライズンの時刻のイベント（<code>plan.committed</code>）にする。継ぎ目では、ブロック ID（定義@開始日）が同じなら続いているとみなす。作り直す時刻は <code>plan.due</code> で積む（P-55 で書き直した） <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a>、<a href="5-decision.html#planner">D5 5.5</a></td></tr>
-      <tr><td>J-07</td><td>欠席したブロックの残りは自由時間にする。「待つ」は、原因の解消かブロックの終わりの早いほうまで待って、開始時の確認をやり直す</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>J-07</td><td>欠席したブロックの残りは自由時間にする。「待つ」は、原因の解消かブロックの終わりの早いほうまで待って、開始時の確認をやり直す <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
       <tr><td>J-08</td><td>反射の行動が終わった時点で、固定・計画のブロックの途中なら、遅刻するか欠席するかを決める（ブロックの途中で反射が起きた場合も、前から続いていた場合も同じ）。レビューで直した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#reflex">D5 5.7</a></td></tr>
-      <tr><td>J-09</td><td>行動が終わったときに決めどきを積むのは、自由時間の中で、同じ時刻にブロックが始まらないときだけ</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
-      <tr><td>J-10</td><td>廃止した場所にいる人の行動は、中断せずにそのまま終わらせる</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>J-09</td><td>行動が終わったときに決めどきを積むのは、自由時間の中で、同じ時刻にブロックが始まらないときだけ <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>J-10</td><td>廃止した場所にいる人の行動は、中断せずにそのまま終わらせる <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
       <tr><td>J-11</td><td>破棄したペルソナとワールドのイベントは、破棄のときに全部捨てる（P-56 で書き直した） <span class="chip fixed">合意</span></td><td><a href="1-execution.html#lifecycle">D1 1.13</a></td></tr>
-      <tr><td>J-12</td><td>受信箱を捌く対象は、「スマホを開く」を始めた時点の通知だけ。途中で届いたものは受信箱に残る</td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
-      <tr><td>J-13</td><td>投稿のクールダウンの基準（最後の投稿の時刻など）を、ログから毎回計算せず、状態に持って Apply で更新する。VISION 10章は「ログから計算する」と書いているが、値は同じになる</td><td><a href="2-events.html#requires">D2 2.6</a></td></tr>
-      <tr><td>J-14</td><td>後続のイベントは、契機のイベントの origin を引き継ぐ</td><td><a href="2-events.html#origin">D2 2.9</a></td></tr>
-      <tr><td>J-15</td><td>処理済みの通知と、送信済みの操作は、状態から外して表にだけ残す</td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
-      <tr><td>J-16</td><td>帰還できるかの判定で、次のブロックがなければ、プランの終わりを期限にする</td><td><a href="5-decision.html#candidates">D5 5.2</a></td></tr>
-      <tr><td>J-17</td><td>行動の時刻の範囲（<code>limits.hours</code>）は、開始時刻だけで判定する</td><td><a href="5-decision.html#candidates">D5 5.2</a></td></tr>
-      <tr><td>J-18</td><td>Planner の「汎用の行動への置換」を、自由時間への置き換えで表す</td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
+      <tr><td>J-12</td><td>受信箱を捌く対象は、「スマホを開く」を始めた時点の通知だけ。途中で届いたものは受信箱に残る <span class="chip fixed">合意</span></td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
+      <tr><td>J-13</td><td>投稿のクールダウンの基準（最後の投稿の時刻など）を、ログから毎回計算せず、状態に持って Apply で更新する。ログから計算しても値は同じになる（VISION 10章に反映した） <span class="chip fixed">合意</span></td><td><a href="2-events.html#requires">D2 2.6</a></td></tr>
+      <tr><td>J-14</td><td>後続のイベントは、契機のイベントの origin を引き継ぐ <span class="chip fixed">合意</span></td><td><a href="2-events.html#origin">D2 2.9</a></td></tr>
+      <tr><td>J-15</td><td>処理済みの通知と、送信済みの操作は、状態から外して表にだけ残す <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>J-16</td><td>帰還できるかの判定で、次のブロックがなければ、プランの終わりを期限にする <span class="chip fixed">合意</span></td><td><a href="5-decision.html#candidates">D5 5.2</a></td></tr>
+      <tr><td>J-17</td><td>行動の時刻の範囲（<code>limits.hours</code>）は、開始時刻だけで判定する <span class="chip fixed">合意</span></td><td><a href="5-decision.html#candidates">D5 5.2</a></td></tr>
+      <tr><td>J-18</td><td>Planner の「汎用の行動への置換」を、自由時間への置き換えで表す <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
       <tr><td>J-19</td><td>（取り下げ）Planner の「睡眠の細部を埋める」は、廃止した仕様の残骸だった。Planner は睡眠のブロックを作らず、VISION からもこの言葉を消した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
-      <tr><td>J-20</td><td>しきい値の反射は、越えた瞬間だけ起こす。すでに向こう側にいれば、到達を予測しない</td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
-      <tr><td>J-21</td><td>状態変数が範囲の端に着いたら、基準を端の値と到達の時刻に置き直す</td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
+      <tr><td>J-20</td><td>しきい値の反射は、越えた瞬間だけ起こす。すでに向こう側にいれば、到達を予測しない <span class="chip fixed">合意</span></td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
+      <tr><td>J-21</td><td>状態変数が範囲の端に着いたら、基準を端の値と到達の時刻に置き直す <span class="chip fixed">合意</span></td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
       <tr><td>J-22</td><td>片側にしか <code>with</code> を書いていない同行は、警告して同行として扱わない（同じ場所にいれば、居合わせにはなる） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#together">D5 5.11</a></td></tr>
-      <tr><td>J-23</td><td>返信で「知らない」と答えるかの判定に、投稿と同じ辞書と <code>post.judge</code> を使う。<strong>返信のときの判定の結果を辞書に記録するかは、決めていない</strong></td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
-      <tr><td>J-24</td><td><code>shareable</code> でない記憶は、会話の相手以外との会話では使わない</td><td><a href="6-llm.html#retrieval">D6 6.4</a></td></tr>
-      <tr><td>J-25</td><td>記憶の整理で、事実のイベントは public の層に入れる</td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
-      <tr><td>J-26</td><td>記憶の整理はペルソナごとに1つ。前の整理が終わらないうちに次の睡眠が来たら、前のが終わってから新しい上限で続ける</td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
-      <tr><td>J-27</td><td>Misskey の audience の決め方は、ebise の <code>audienceOf</code> の規則をそのまま移す</td><td><a href="4-components.html#channel">D4 4.3</a></td></tr>
+      <tr><td>J-23</td><td>返信で「知らない」と答えるかの判定に、投稿と同じ辞書と <code>post.judge</code> を使う。<strong>返信のときの判定の結果を辞書に記録するかは、決めていない</strong> <span class="chip fixed">合意</span></td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
+      <tr><td>J-24</td><td><code>shareable</code> でない記憶は、会話の相手以外との会話では使わない。<code>shareable</code> は抽出で LLM が付け、ハーネスは狭めるだけ（D6 6.7） <span class="chip fixed">合意</span></td><td><a href="6-llm.html#retrieval">D6 6.4</a></td></tr>
+      <tr><td>J-25</td><td>記憶の整理で、事実のイベントは public の層に入れる。前提として、dm の会話からは事実のイベントを生まない（VISION 13章に明記した） <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
+      <tr><td>J-26</td><td>記憶の整理はペルソナごとに1つ。前の整理が終わらないうちに次の睡眠が来たら、前のが終わってから新しい上限で続ける <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
+      <tr><td>J-27</td><td>Misskey の audience の決め方は、ebise の <code>audienceOf</code> の規則をそのまま移す <span class="chip fixed">合意</span></td><td><a href="4-components.html#channel">D4 4.3</a></td></tr>
     </table>
   </div>
   <h3>VISION にない仕組みと項目</h3>
@@ -297,14 +297,14 @@
     <li>1章の用語の表で、「投入の窓口」の章が 16 になっていた誤りを、15 に直した</li>
     <li>合意した P-02、P-04、P-05、P-06、P-07、P-08、P-09、P-10、P-12、P-15、P-16、P-18、P-19、P-20、P-21、P-26、P-29〜P-41、P-44〜P-47、P-52 を、VISION の1章、2章、4章、5章、6章、9章、10章、11章、13章、14章、付録に反映した</li>
     <li>レビューで決めた用語（「種別」を「イベントタイプ」にする、段を項目として持たない）を、VISION の2章と4章に反映した</li>
+    <li>合意した J-13、J-15 を、VISION の2章（状態の表）と10章（頻度制限）に反映した。J-25 の前提（事実は public で、dm の会話からは事実を生まない）を、13章に明記した</li>
   </ul>
   <h3>合意したら、VISION にも反映が要るもの</h3>
   <div class="table-wrap">
     <table>
       <tr><th>VISION の章</th><th>反映すること</th><th>案・判断</th></tr>
-      <tr><td>2章 ペルソナインスタンスの状態</td><td>副行動、行動ごとの利用、投稿の状態、用途ごとの乱数の位置、最後の起床を足す。処理済みの通知と送信済みの操作は、状態から外す</td><td>J-45、J-15</td></tr>
+      <tr><td>2章 ペルソナインスタンスの状態</td><td>副行動、行動ごとの利用、投稿の状態（クールダウンの基準のほか）、用途ごとの乱数の位置、最後の起床を足す</td><td>J-45</td></tr>
       <tr><td>2章 イベント</td><td>Batch と Cause を足し、版番号はペイロードの中に持つ</td><td>J-35</td></tr>
-      <tr><td>10章 送信</td><td>投稿のクールダウンの基準を、状態に持つ</td><td>J-13</td></tr>
       <tr><td>付録</td><td>合意した項目を、付録から消す</td><td>0.3 の表</td></tr>
     </table>
   </div>
