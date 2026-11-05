@@ -180,9 +180,9 @@
       <tr><th>イベントタイプ</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
       <tr><td><code>notification.arrived</code></td><td>窓口（チャンネル）</td><td>ペルソナ、チャンネル、通知の種類、送り主、audience、本文などの中身、元の到着時刻</td><td>受信箱に積む。処理はしない（VISION 10章）</td></tr>
       <tr><td><code>outbound.speech</code></td><td>ハンドラ（受信箱、投稿）</td><td>チャンネル、投稿か返信か、本文、返信先、audience、確定状態への参照（連番の列）、チャンネルが解釈する中身</td><td>「言ったこと」として残り、未送信の操作を作る。<code>Deliver</code> を出す</td></tr>
-      <tr><td><code>outbound.operation</code></td><td>ハンドラ（受信箱、プラグインの規則）</td><td>チャンネル、操作の種類（reaction、follow など）、チャンネルが解釈する中身</td><td>未送信の操作を作る。<code>Deliver</code> を出す。「言ったこと」には入らない</td></tr>
+      <tr><td><code>outbound.operation</code></td><td>ハンドラ（受信箱、プラグインの規則）</td><td>チャンネル、操作の種類（コアの語彙は <code>react</code> と <code>follow</code>。チャンネル固有のものは <code>other</code> と中身で表す）、チャンネルが解釈する中身</td><td>未送信の操作を作る。<code>Deliver</code> を出す。「言ったこと」には入らない</td></tr>
       <tr><td><code>outbound.sent</code> / <code>failed</code> / <code>unknown</code></td><td>窓口（配信役）、起動処理</td><td>操作の ID、外部 ID、失敗の理由、次に投稿できる時刻</td><td>操作の状態を書き換える。失敗に次に投稿できる時刻があれば、投稿のクールダウンの基準を更新する</td></tr>
-      <tr><td><code>inbox.handled</code></td><td>ハンドラ（受信箱）</td><td>捌いた通知の ID と、それぞれの結果（返信 / リアクション / 何もしない）</td><td>受信箱の通知を処理済みにする。行動の途中で届いた通知は含まれないので、受信箱に残る</td></tr>
+      <tr><td><code>inbox.handled</code></td><td>ハンドラ（受信箱）</td><td>捌いた通知の ID と、それぞれの結果（返信 / リアクション / フォローし返した / 見た / 何もしない）</td><td>受信箱の通知を処理済みにする。行動の途中で届いた通知は含まれないので、受信箱に残る</td></tr>
       <tr><td><code>post.skipped</code></td><td>ハンドラ（投稿する）</td><td>理由（話題が全部却下、生成の失敗、締め切り）</td><td>空振りのクールダウンの基準を更新する（D6）</td></tr>
     </table>
   </div>

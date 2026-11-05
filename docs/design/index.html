@@ -153,7 +153,7 @@
       <tr><td>P-41</td><td>2人のレーンをまたぐ決定は作らない <span class="chip fixed">合意</span></td><td><a href="5-decision.html#together">D5 5.11</a></td></tr>
       <tr><td>P-42</td><td>モデルは Main と Light の2段</td><td><a href="6-llm.html#tiers">D6 6.1</a></td></tr>
       <tr><td>P-43</td><td>記憶の検索に埋め込みを使わない</td><td><a href="6-llm.html#retrieval">D6 6.4</a></td></tr>
-      <tr><td>P-44</td><td>フォローバックの方針は、ペルソナ定義のチャンネルの節に持つ</td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
+      <tr><td>P-44</td><td>フォローバックの方針は、コアが読む（ペルソナ定義の <code>[sns]</code>）</td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
       <tr><td>P-45</td><td>空振りのクールダウンは 30 分</td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
       <tr><td>P-46</td><td>新しい場所のつなぎ方の細部</td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
       <tr><td>P-47</td><td>記憶力は、半減期の倍率で調整する</td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
@@ -169,7 +169,7 @@
 
 <section id="judgments">
   <h2><span class="num">0.5</span>枠の外の判断</h2>
-  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-88）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
+  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-89）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
   <h3>VISION の解釈で決めたもの</h3>
   <p>VISION から導いたつもりで、実際には読み方を1つに決めたもの。いちばん見落としやすいので、先に見てほしい。</p>
   <div class="table-wrap">
@@ -273,7 +273,8 @@
       <tr><td>J-82</td><td>構造化出力の作り直し：1 回</td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
       <tr><td>J-83</td><td>管理者への通知：LLM と送信は 1 時間に 5 回、チャンネルの切断は 30 分</td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
       <tr><td>J-84</td><td>状態は <code>sealed record</code>（参照型）、小さな値は <code>readonly record struct</code>。レビューで足した <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
-      <tr><td>J-85</td><td>受信箱のアイテムの項目。通知の種類の語彙は、チャンネルが決める。レビューで書き足した</td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>J-85</td><td>受信箱のアイテムの形（大分類、会話の鍵、それまでの会話は直近 20 件まで、添付）。チャンネルがコアの読める形に訳し、リアクションとフォローもコアが捌く。同じ会話はまとめて1回返信する。レビューで決めた <span class="chip fixed">合意</span></td><td><a href="3-data.html#inbox-item">D3 3.7.1</a>、<a href="6-llm.html#inbox">D6 6.5</a></td></tr>
+      <tr><td>J-89</td><td>リアクションの通知は LLM を使わず、見たものとして処理済みにする（記憶の材料にはなる）。レビューで足した</td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
       <tr><td>J-86</td><td>プラグインにエンジンそのものを渡す。起動・停止などに触らないのは、プラグインの責務として守る。決める側のハンドラは、判断には写しを使う。レビューで足した <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a>、<a href="4-components.html#plugins">4.7</a></td></tr>
       <tr><td>J-87</td><td><code>prefs</code> の数値の 0 は <code>forbid</code> の別名にする。レビューで足した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#score">D5 5.3</a></td></tr>
       <tr><td>J-88</td><td><code>core.go_to_next</code> は <code>forbid</code> の対象にしない（ペルソナ定義で明示したらエラー、状態で当たったら無視してログに警告）。レビューで足した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#candidates">D5 5.2</a></td></tr>
@@ -293,7 +294,7 @@
   <div class="table-wrap">
     <table>
       <tr><th>VISION の章</th><th>反映すること</th><th>案・判断</th></tr>
-      <tr><td>2章 ペルソナ定義</td><td>チャンネルごとの設定の節を足す</td><td>P-44</td></tr>
+      <tr><td>2章 ペルソナ定義</td><td><code>[sns]</code> の節（フォローバックの方針）と、チャンネルごとの設定の節を足す</td><td>P-44</td></tr>
       <tr><td>2章 ペルソナインスタンスの状態</td><td>副行動、行動ごとの利用、投稿の状態、用途ごとの乱数の位置、最後の起床を足す。処理済みの通知と送信済みの操作は、状態から外す</td><td>J-45、J-15</td></tr>
       <tr><td>2章 イベント</td><td>Batch と Cause を足し、版番号はペイロードの中に持つ</td><td>J-35</td></tr>
       <tr><td>10章 送信</td><td>投稿のクールダウンの基準を、状態に持つ</td><td>J-13</td></tr>

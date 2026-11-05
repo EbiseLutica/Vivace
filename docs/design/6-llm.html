@@ -151,17 +151,23 @@
   <h2><span class="num">6.5</span>受信箱を捌く</h2>
   <ol>
     <li>「スマホを開く」の開始の時点の受信箱から、未処理の通知を、元の到着時刻の古い順に最大 20 件取る</li>
-    <li>プラグインの規則（<code>INotificationRule</code>）に当たる通知（フォローなど）は、LLM を使わずに規則で捌く</li>
-    <li>残りを <code>inbox.triage</code> に渡し、通知ごとに 返信 / リアクション / 何もしない を決める</li>
-    <li>返信するものは、通知ごとに <code>inbox.reply</code> で本文を作る。相手が持ち込んだ話題が世界観に合わなければ、「知らない」と答える（VISION 11章）。そのための判定は、投稿と同じ辞書と <code>post.judge</code> を使い、却下なら「知らない」と答えるよう指示する</li>
-    <li>出力を、行動の終了の時刻で返す。<code>outbound.speech</code>（返信）、<code>outbound.operation</code>（リアクション、フォロー）、<code>inbox.handled</code></li>
+    <li>大分類（D3 3.7.1）ごとに捌く。
+      <ul>
+        <li><strong>Message</strong>：<code>ConversationKey</code> が同じものは1つの会話にまとめる。会話ごとに <code>inbox.triage</code> に渡し、返信 / リアクション / 何もしない を決める。同じ会話に何通も来ていれば、返信は最後の1通にまとめて1回だけ</li>
+        <li><strong>Reaction</strong>：LLM を使わない。見たものとして処理済みにする。誰がどの発言に反応したかは、記憶の整理の材料になる</li>
+        <li><strong>Follow</strong>：LLM を使わない。フォローバックの方針（P-44）に従って、フォローし返すか決める。フォローできるチャンネル（能力 <code>follow</code>）だけが対象</li>
+        <li><strong>Other</strong>：プラグインの規則（<code>INotificationRule</code>）に当たれば、規則で捌く。当たらなければ、何もせずに処理済みにする</li>
+      </ul>
+    </li>
+    <li>返信するものは、会話ごとに <code>inbox.reply</code> で本文を作る。文脈には、本文、添付、それまでの会話（<code>Thread</code>）を入れる（6.3）。相手が持ち込んだ話題が世界観に合わなければ、「知らない」と答える（VISION 11章）。そのための判定は、投稿と同じ辞書と <code>post.judge</code> を使い、却下なら「知らない」と答えるよう指示する</li>
+    <li>出力を、行動の終了の時刻で返す。<code>outbound.speech</code>（返信）、<code>outbound.operation</code>（リアクション、フォロー）、<code>inbox.handled</code>（まとめて捌いた通知も、それぞれ処理済みにする）</li>
   </ol>
   <div class="draft">
     <span class="label">案 P-44　フォローバックの方針の持ち方</span>
-    VISION 付録「フォローバックの方針の持ち方」への案。ペルソナ定義に、チャンネルごとの設定の節を持たせ、コアは中を見ずにプラグインへ渡す。
-<pre><code>[channel.misskey]
+    VISION 付録「フォローバックの方針の持ち方」への案。フォローはコアが捌くので（D3 3.7.1）、方針もコアが読む。ペルソナ定義の <code>[sns]</code> の節に書き、フォローできるチャンネルすべてに効く。
+<pre><code>[sns]
 follow_back = "always"           # always | never</code></pre>
-    既定は <code>always</code>（ebise は、フォローされたら必ずフォローし返していた）。方針の語彙は、プラグインが決める。
+    既定は <code>always</code>（ebise は、フォローされたら必ずフォローし返していた）。チャンネルごとに変えたくなったら、そのときに上書きの書き方を足す。
   </div>
 </section>
 
