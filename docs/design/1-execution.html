@@ -474,7 +474,7 @@ record ApplyResult(
   <ul>
     <li>時計を <code>VirtualClock</code> にし、チャンネルを圏外にして、いまの時刻までを早送りする。いまの時刻に着いたら、時計を <code>SystemClock</code> に替え、<code>ChannelOnline</code> を出して、記憶の整理を1回まとめて起こす（VISION 4章、UC-1）</li>
     <li>追いつきの間に積んだイベントには、origin に <code>catchup</code> を付ける</li>
-    <li>追いつきの最中に届いた到着のコマンドは、受け付けて保留し、追いつきが終わってから、いまの時刻で積む。到着のイベントは、時計の「いま」より前にできないから</li>
+    <li>追いつきの最中に届いた到着のコマンドは、受け付けて保留し、追いつきが終わってから、時計の「いま」（<code>IClock.UtcNow</code>。<code>SystemClock</code> に替わったあとなので、実時刻と同じ）で積む。追いつきの最中の時計は、早送り中の過去の時刻を指していて、そのまま積むと、チャンネルが圏外のはずの区間に到着が入ってしまうから。圏外の間に取りこぼした通知を、圏外が明けた時刻の到着として積む（VISION 10章）のと同じ扱いにする</li>
   </ul>
   <div class="callout">
     <span class="label">決定 P-08　追いつきの上限は 14 日</span>

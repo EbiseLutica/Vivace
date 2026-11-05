@@ -178,7 +178,7 @@
       <tr><th>ID</th><th>判断</th><th>場所</th></tr>
       <tr><td>J-01</td><td>ホライズンの壁と同じ時刻のイベントも待つ。VISION の「ホライズンより後」を「以上」と読んだ</td><td><a href="1-execution.html#horizon">D1 1.6</a></td></tr>
       <tr><td>J-02</td><td>時計を読むのは、エンジン、配信役、到着の受付だけ。到着のイベントの時刻は、受付が「いま」を読んで付ける</td><td><a href="1-execution.html#clock">D1 1.10</a></td></tr>
-      <tr><td>J-03</td><td>追いつきの最中に届いた到着は保留し、追いつきが終わってから「いま」の時刻で積む</td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
+      <tr><td>J-03</td><td>追いつきの最中に届いた到着は保留し、追いつきが終わってから、時計の「いま」（実時刻と同じ）で積む</td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
       <tr><td>J-04</td><td>停止するとき、送信中の操作は結果を待たずに閉じる（次の起動で「送信不明」になる）</td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
       <tr><td>J-05</td><td>固定ブロックの開始は、実行中の行動を終わらせる</td><td><a href="1-execution.html#states">D1 1.8</a></td></tr>
       <tr><td>J-06</td><td>Planner の出力は 3:00 の時刻のイベント（<code>plan.committed</code>）にする。3:00 の継ぎ目では、ブロック ID（定義@開始日）が同じなら続いているとみなす</td><td><a href="2-events.html#types">D2 2.3</a>、<a href="5-decision.html#planner">D5 5.5</a></td></tr>
