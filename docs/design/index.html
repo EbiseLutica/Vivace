@@ -273,7 +273,7 @@
       <tr><td>J-83</td><td>管理者への通知：LLM と送信は 1 時間に 5 回、チャンネルの切断は 30 分</td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
       <tr><td>J-84</td><td>状態は <code>sealed record</code>（参照型）、小さな値は <code>readonly record struct</code>。レビューで足した <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>J-85</td><td>受信箱のアイテムの項目。通知の種類の語彙は、チャンネルが決める。レビューで書き足した</td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
-      <tr><td>J-86</td><td>ホストとプラグインに、同じ読み取りの口（<code>IVivaceReader</code>）を見せる。決める側のハンドラは、判断には写しを使う。プラグインも投入の窓口を使える。レビューで足した <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a>、<a href="4-components.html#plugins">4.7</a></td></tr>
+      <tr><td>J-86</td><td>プラグインにエンジンそのものを渡す。起動・停止などに触らないのは、プラグインの責務として守る。決める側のハンドラは、判断には写しを使う。レビューで足した <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a>、<a href="4-components.html#plugins">4.7</a></td></tr>
     </table>
   </div>
 </section>
