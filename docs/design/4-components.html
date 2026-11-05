@@ -164,11 +164,11 @@ public interface IDecider
     Task RecoverAsync(PersonaId persona, DateTimeOffset from, DateTimeOffset to, CancellationToken ct);
 }
 
-public interface IChannelHost
+public interface IChannelHost : IVivaceReader                 // ホストと同じ読み取りの口（4.6）
 {
     IReadOnlyList&lt;PersonaId&gt; Personas { get; }               // このチャンネルにつながるインスタンス
-    StateView View { get; }                                  // いまの状態（読み取りだけ。4.6 の engine.View と同じ）
-    ValueTask&lt;InjectResult&gt; ArriveAsync(Arrival arrival, CancellationToken ct);   // 投入の窓口へ
+    ValueTask&lt;InjectResult&gt; ArriveAsync(Arrival arrival, CancellationToken ct);   // 到着を投入の窓口へ
+    ValueTask&lt;InjectResult&gt; InjectAsync(InjectRequest request, CancellationToken ct);  // そのほかの投入（origin は plugin:&lt;名前&gt;）
 }
 
 public abstract record SendResult
@@ -283,10 +283,19 @@ await dry.RunUntilAsync(start.AddDays(3), ct);
 TopicProbeResult probe = await engine.ProbeTopicsAsync(personaId, ["代々木公園"], ct);
 
 // 定義の検証だけ（エディタから）
-ValidationReport report = DefinitionLoader.Validate("defs/", plugins);</code></pre>
+ValidationReport report = DefinitionLoader.Validate("defs/", plugins);
+
+// 読み取りの口。エンジンが実装し、プラグインにも同じものを渡す
+public interface IVivaceReader
+{
+    StateView View { get; }                                      // いまの状態（不変）
+    IEventLog Events { get; }                                    // ログの検索
+    IAsyncEnumerable&lt;AppliedEvent&gt; Subscribe(CancellationToken ct);  // 適用済みのイベントの購読
+}</code></pre>
   <ul>
     <li><code>DryRun()</code> は、チャンネルをすべて <code>NullChannel</code> に替え、配信役を止める</li>
     <li><code>Subscribe</code> は、適用済みのイベントを、コミットのあとに流す。遅い購読者は、バッファがあふれたら切断する（エンジンを止めない）</li>
+    <li>読み取りの口は <code>IVivaceReader</code> にまとめ、ホストとプラグインに同じものを見せる。ホストに読めてプラグインに読めない情報は作らない。読めるものを足すときは、<code>IVivaceReader</code> に足す</li>
     <li>DI コンテナには依存しない。ASP.NET Core などから使うときのための <code>services.AddVivace(...)</code> は、API 層を作るときに別のパッケージで足す</li>
   </ul>
   <div class="draft">
@@ -311,6 +320,7 @@ public interface IPluginRegistry
     void AddTool(ITool tool);
     void AddDefinitions(string resourceName, Func&lt;Stream&gt; open); // 同梱の行動の TOML
     void AddHolidayCalendar(string name, IHolidayCalendar calendar);
+    IVivaceReader Reader { get; }                              // ホストと同じ読み取りの口（4.6）
 }
 
 public interface IEffectHandler
@@ -326,8 +336,10 @@ public interface INotificationRule
 }</code></pre>
   <ul>
     <li>プラグインが足せるのは、ハンドラ、規則、ツール、行動の定義、チャンネル、暦だけ。イベントタイプと、決定的な効果の語彙は足せない。外に出すものは、コアの <code>outbound.*</code> の中身（チャンネルが解釈する JSON）として表す（VISION 10章）</li>
+    <li>プラグインは、ホストと同じ読み取りの口（<code>IVivaceReader</code>、4.6）を使える。チャンネルは <code>IChannelHost</code> から、ほかの部品は <code>IPluginRegistry.Reader</code> から受け取る（エンジンが動き出してから使える）。ただし、決める側のハンドラ（効果、規則、ツール）が判断に使うのは、文脈で渡される写しにする。生きている状態を読むと、決めた時点の前提とずれるから（D1 1.7）</li>
+    <li>投入も、ホストと同じ窓口を使える。origin は <code>plugin:&lt;名前&gt;</code> になる（D2 2.9）</li>
     <li>プラグインが同梱する行動の ID は、プラグインの名前で始める（<code>misskey.open_phone</code>）</li>
-    <li><strong>ペルソナと独立した機能</strong>：チャンネルのプラグインは、ペルソナのシミュレーションを通さない機能を、<code>IChannel.StartAsync</code> の中で動かしてよい（VISION 10章）。Misskey のリバーシは、ebise ではペルソナの機能だったが、Vivace では Misskey プラグインの中のゲーム機能として作る。対局はペルソナのアカウントで行ってよいが、ペルソナの行動、状態変数、イベント、記憶には関わらない（寝ている時間でも対局する）。シミュレーションに組み込むと複雑になりすぎるため。ただし、いまの状態は <code>IChannelHost.View</code> で読めるので、「睡眠中は対局を受けない」のような振る舞いは、プラグインの中で書ける（状態は読むだけで、変えない）</li>
+    <li><strong>ペルソナと独立した機能</strong>：チャンネルのプラグインは、ペルソナのシミュレーションを通さない機能を、<code>IChannel.StartAsync</code> の中で動かしてよい（VISION 10章）。Misskey のリバーシは、ebise ではペルソナの機能だったが、Vivace では Misskey プラグインの中のゲーム機能として作る。対局はペルソナのアカウントで行ってよいが、ペルソナの行動、状態変数、イベント、記憶には関わらない（寝ている時間でも対局する）。シミュレーションに組み込むと複雑になりすぎるため。ただし、いまの状態はホストと同じ口（<code>IVivaceReader</code>）で読めるので、「睡眠中は対局を受けない」のような振る舞いは、プラグインの中で書ける（状態は読むだけで、変えない）</li>
   </ul>
   <div class="draft">
     <span class="label">案 P-28　プラグインは、ホストがコードで登録する</span>
