@@ -35,7 +35,7 @@
       <li><a href="#validation">7.2 定義の検証</a></li>
       <li><a href="#observability">7.3 観測</a></li>
       <li><a href="#testing">7.4 テストの層</a></li>
-      <li><a href="#cli">7.5 最小の CLI</a></li>
+      <li><a href="#cli">7.5 デーモンと CLI</a></li>
       <li class="part">詳細設計</li>
       <li><a href="index.html">目次と決めること</a></li>
       <li><a href="1-execution.html">D1 実行モデル</a></li>
@@ -73,7 +73,7 @@
   </div>
   <div class="draft">
     <span class="label">案 P-49　Apply の例外では、エンジンを止める</span>
-    止まったままだと、ペルソナの生活も止まる。管理者は、原因を直して再起動するか、CLI で問題のイベントを却下にして（<code>vivace events reject &lt;seq&gt;</code>）再起動する。自動で飛ばす仕組みは作らない。どのイベントで止まったかは、ログと通知に連番を出す。
+    止めるのはエンジンだけで、デーモンのプロセスは生かしておく（7.5）。止まっている間も、状態とログは読める。管理者は、原因を直して再起動するか、問題のイベントを却下にして（<code>vivace events reject &lt;seq&gt;</code>）再開する（<code>vivace resume</code>）。自動で飛ばす仕組みは作らない。どのイベントで止まったかは、ログと通知に連番を出す。
   </div>
 </section>
 
@@ -148,19 +148,53 @@
 </section>
 
 <section id="cli">
-  <h2><span class="num">7.5</span>最小の CLI</h2>
-  <p>作る順番（VISION 1章）の「最小の CLI」。コアの外だが、コアの公開 API で何ができればよいかの確認として書いておく。</p>
+  <h2><span class="num">7.5</span>デーモンと CLI</h2>
+  <p>作る順番（VISION 1章）の「最小の CLI」。エンジンを動かし続けるデーモンと、それと話す CLI に分ける。実装中に、動いているものを外から見たり触ったりしながらデバッグできるようにするため。コアの外の話で、コアの公開 API（D4 4.6）だけを使う。</p>
+  <figure class="diagram">
+    <svg viewBox="0 0 760 170" role="img" aria-label="デーモンと CLI">
+      <rect class="box" x="20" y="50" width="170" height="70" rx="10"/>
+      <text class="title" x="105" y="80" text-anchor="middle">vivace（CLI）</text>
+      <text class="sub" x="105" y="100" text-anchor="middle">status / inject / events …</text>
+      <rect class="box accent" x="290" y="30" width="250" height="110" rx="10"/>
+      <text class="title" x="415" y="58" text-anchor="middle">vivace daemon</text>
+      <text class="sub" x="415" y="80" text-anchor="middle">ローカルの管理用 API（Minimal API）</text>
+      <rect class="box good" x="320" y="92" width="190" height="36" rx="8"/>
+      <text x="415" y="115" text-anchor="middle">VivaceEngine</text>
+      <rect class="box warn" x="610" y="50" width="130" height="70" rx="10"/>
+      <text class="title" x="675" y="80" text-anchor="middle">Misskey など</text>
+      <text class="sub" x="675" y="100" text-anchor="middle">チャンネル</text>
+      <path class="arrow" d="M190 74 H288"/>
+      <text class="sub" x="239" y="66" text-anchor="middle">HTTP</text>
+      <path class="arrow dash" d="M288 98 H192"/>
+      <text class="sub" x="239" y="156" text-anchor="middle">イベントの流れ（SSE）</text>
+      <path class="arrow" d="M540 85 H608"/>
+    </svg>
+    <figcaption>デーモンがエンジンを持ち、CLI はローカルの API を叩くだけ</figcaption>
+  </figure>
   <div class="table-wrap">
     <table>
-      <tr><th>コマンド</th><th>すること</th></tr>
-      <tr><td><code>vivace validate</code></td><td>定義を検証して、エラーと警告を出す</td></tr>
-      <tr><td><code>vivace run</code></td><td>実時間で運転する。<code>--watch</code> を付けると、定義のフォルダを監視して読み直す（P-09）</td></tr>
-      <tr><td><code>vivace dry-run --days 3</code></td><td>早送りで回し、終わったら実行レポートを出す</td></tr>
-      <tr><td><code>vivace probe &lt;persona&gt; &lt;語...&gt;</code></td><td>話題の注入（VISION 16章）</td></tr>
-      <tr><td><code>vivace inject &lt;file.toml&gt;</code></td><td>投入の窓口にイベントを出す（出来事の注入など）</td></tr>
-      <tr><td><code>vivace events tail / show / reject</code></td><td>ログを見る。問題のイベントを却下にする（P-49）</td></tr>
-      <tr><td><code>vivace report</code></td><td>実行レポートを出す</td></tr>
+      <tr><th>コマンド</th><th>すること</th><th>デーモン</th></tr>
+      <tr><td><code>vivace daemon</code></td><td>エンジンを実時間で動かし続け、ローカルの管理用 API を開く。常駐のさせ方は systemd や Docker に任せる（自分でバックグラウンドに回らない）。<code>--watch</code> を付けると、定義のフォルダを監視して読み直す（P-09）</td><td>本体</td></tr>
+      <tr><td><code>vivace status</code></td><td>エンジンの状態（動いている / 止まっている）と、各ペルソナのいまの居場所、行動、状態変数を出す</td><td>使う</td></tr>
+      <tr><td><code>vivace events tail</code></td><td>適用されたイベントを、流れてくるそばから出す（動いている様子を見る）</td><td>使う</td></tr>
+      <tr><td><code>vivace events show &lt;seq&gt;</code></td><td>イベントの中身と痕跡を出す</td><td>使う</td></tr>
+      <tr><td><code>vivace events reject &lt;seq&gt;</code> / <code>vivace resume</code></td><td>止まったエンジンで、問題のイベントを却下にして、再開する（P-49）</td><td>使う</td></tr>
+      <tr><td><code>vivace inject &lt;file.toml&gt;</code></td><td>投入の窓口にイベントを出す（出来事の注入など）</td><td>使う</td></tr>
+      <tr><td><code>vivace reload</code></td><td>定義を読み直す（P-09）</td><td>使う</td></tr>
+      <tr><td><code>vivace probe &lt;persona&gt; &lt;語...&gt;</code></td><td>話題の注入（VISION 16章）</td><td>使う</td></tr>
+      <tr><td><code>vivace report</code></td><td>実行レポートを出す</td><td>使う</td></tr>
+      <tr><td><code>vivace validate</code></td><td>定義を検証して、エラーと警告を出す</td><td>使わない</td></tr>
+      <tr><td><code>vivace dry-run --days 3</code></td><td>自分でエンジンをもう1つ立てて早送りで回し、実行レポートを出す。動いているデーモンには触らない</td><td>使わない</td></tr>
     </table>
+  </div>
+  <ul>
+    <li>管理用 API は、ASP.NET Core の Minimal API で書く。.NET に同梱の共有フレームワークなので、パッケージは足さない。ルーター、JSON、イベントの流れ（.NET 10 の Server-Sent Events）が、そのまま使える</li>
+    <li>待ち受けるのは、Unix ソケットか localhost だけ。管理用で、外には開かない。認証はまだ持たない</li>
+    <li>VISION 1章の API 層（フロントエンドと一緒に作る）は、この API を広げて作る。そのときに、認証と外向けの公開を足す</li>
+  </ul>
+  <div class="callout">
+    <span class="label">決定 P-54　CLI は、デーモンとローカルの管理用 API で話す</span>
+    上のとおり。レビューで決めた。<code>vivace run</code>（1回だけ動かす形）は、<code>vivace daemon</code> に置き換える。
   </div>
 </section>
 

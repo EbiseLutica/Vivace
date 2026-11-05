@@ -279,6 +279,9 @@ StateView view = engine.View;                                // いまの状態�
 IAsyncEnumerable&lt;AppliedEvent&gt; feed = engine.Subscribe(ct);  // 適用済みのイベントの購読
 IEventLog log = engine.Events;                               // ログの検索
 ReloadResult rr = await engine.ReloadDefinitionsAsync(ct);   // 定義の読み直し
+EngineStatus st = engine.Status;                             // 動いている / 止まっている（理由と、止まったイベントの連番）
+await engine.RejectEventAsync(seq, reason, ct);               // 止まっているときに、問題のイベントを却下にする（D7 P-49）
+await engine.ResumeAsync(ct);                                // 止まったエンジンを再開する
 
 // ドライラン：仮想時計で、外に何も出さずに進める
 await using var dry = VivaceEngine.Create()

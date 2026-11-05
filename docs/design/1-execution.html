@@ -499,7 +499,7 @@ record ApplyResult(
   </ul>
   <div class="callout">
     <span class="label">決定 P-09　定義の読み直しの契機と、実行中の行動が消えたとき</span>
-    <p>読み直しは、コアの公開 API（<code>ReloadDefinitionsAsync</code>、D4 4.6）として持つ。コアはファイルを監視せず、いつ呼ぶかはホストが決める。最小の CLI では、<code>vivace run --watch</code> のときに定義のフォルダを監視し、変更が 1 秒落ち着いたら呼ぶ（D7 7.5）。将来の API 層やエディタは、保存したときに同じ API を呼ぶ。</p>
+    <p>読み直しは、コアの公開 API（<code>ReloadDefinitionsAsync</code>、D4 4.6）として持つ。コアはファイルを監視せず、いつ呼ぶかはホストが決める。最小の CLI では、<code>vivace daemon --watch</code> のときに定義のフォルダを監視し、変更が 1 秒落ち着いたら呼ぶ（D7 7.5）。将来の API 層やエディタは、保存したときに同じ API を呼ぶ。</p>
     実行中の行動や、いる場所が、新しい定義から消えていても、その行動は終了の時刻まで続ける（中断しない）。次の決めどきからは、新しい定義で候補を作る。ペルソナ定義が消えたインスタンスは、エラーとして読み直しを拒否する（送還を先に投入する）。
   </div>
 </section>

@@ -75,7 +75,8 @@
       <tr><td>計測</td><td><code>System.Diagnostics.Metrics</code></td><td>BCL（D7 7.3）</td></tr>
       <tr><td>LLM</td><td>コア独自の <code>ILlmClient</code> と、その実装（8.4 の PoC で決める）</td><td>D4 P-26</td></tr>
       <tr><td>テスト</td><td>xUnit v3 + Verify（スナップショット）</td><td>シナリオのテストは、イベントの列のスナップショットを比べる（D7 7.4）。xUnit は 4.0 で Microsoft Testing Platform v2 が既定になったので、.NET 10 SDK では <code>global.json</code> の設定が要る。始めるときに安定版を確かめる</td></tr>
-      <tr><td>CLI</td><td><code>System.CommandLine</code>（2.0 系）</td><td>2.0 で安定版になった。最小の CLI（D7 7.5）のコマンドの解析だけに使う</td></tr>
+      <tr><td>CLI</td><td><code>System.CommandLine</code>（2.0 系）</td><td>2.0 で安定版になった。CLI（D7 7.5）のコマンドの解析だけに使う</td></tr>
+      <tr><td>デーモンの管理用 API</td><td>ASP.NET Core の Minimal API（共有フレームワーク）</td><td>.NET に同梱なので、パッケージを足さない。ルーター、JSON、Server-Sent Events（.NET 10）、Unix ソケット（Kestrel）が使える。<code>HttpListener</code> は、Microsoft が新しい開発に勧めていないので使わない（D7 P-54）</td></tr>
       <tr><td>Misskey のクライアント</td><td>自前の薄いクライアント（HTTP + WebSocket）</td><td>使う API は投稿、返信、リアクション、フォロー、通知の取得、タイムラインの取得、ストリーミングくらい。以前に作った Misskey.NET は 2023 年から更新がないので、移すなら必要な部分だけにする</td></tr>
     </table>
   </div>
