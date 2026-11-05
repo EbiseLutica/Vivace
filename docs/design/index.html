@@ -18,7 +18,7 @@
     <span class="chip">2026-11-03 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
     <span class="chip fixed">案はすべて合意（54 件）</span>
-    <span class="chip draft">枠の外の判断 81 件が合意待ち</span>
+    <span class="chip draft">枠の外の判断 76 件が合意待ち</span>
   </div>
 </header>
 
@@ -176,14 +176,14 @@
   <div class="table-wrap">
     <table>
       <tr><th>ID</th><th>判断</th><th>場所</th></tr>
-      <tr><td>J-01</td><td>ホライズンの壁と同じ時刻のイベントも待つ。VISION の「ホライズンより後」を「以上」と読んだ</td><td><a href="1-execution.html#horizon">D1 1.6</a></td></tr>
-      <tr><td>J-02</td><td>時計を読むのは、エンジン、配信役、到着の受付だけ。到着のイベントの時刻は、受付が「いま」を読んで付ける</td><td><a href="1-execution.html#clock">D1 1.10</a></td></tr>
-      <tr><td>J-03</td><td>追いつきの最中に届いた到着は保留し、追いつきが終わってから、時計の「いま」（実時刻と同じ）で積む</td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
-      <tr><td>J-04</td><td>停止するとき、送信中の操作は結果を待たずに閉じる（次の起動で「送信不明」になる）</td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
+      <tr><td>J-01</td><td>ホライズンの壁と同じ時刻のイベントも待つ。VISION の「ホライズンより後」を「以上」と読んだ <span class="chip fixed">合意</span></td><td><a href="1-execution.html#horizon">D1 1.6</a></td></tr>
+      <tr><td>J-02</td><td>時計を読むのは、エンジン、配信役、到着の受付だけ。到着のイベントの時刻は、受付が「いま」を読んで付ける <span class="chip fixed">合意</span></td><td><a href="1-execution.html#clock">D1 1.10</a></td></tr>
+      <tr><td>J-03</td><td>追いつきの最中に届いた到着は保留し、追いつきが終わってから、時計の「いま」（実時刻と同じ）で積む <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
+      <tr><td>J-04</td><td>停止するとき、送信中の操作は結果を待たずに閉じる（次の起動で「送信不明」になる） <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
       <tr><td>J-05</td><td>固定ブロックの開始は、実行中の行動を終わらせる。ただし、反射の行動は打ち切らない。レビューで直した <span class="chip fixed">合意</span></td><td><a href="1-execution.html#states">D1 1.8</a></td></tr>
       <tr><td>J-06</td><td>Planner の出力は 3:00 の時刻のイベント（<code>plan.committed</code>）にする。3:00 の継ぎ目では、ブロック ID（定義@開始日）が同じなら続いているとみなす</td><td><a href="2-events.html#types">D2 2.3</a>、<a href="5-decision.html#planner">D5 5.5</a></td></tr>
       <tr><td>J-07</td><td>欠席したブロックの残りは自由時間にする。「待つ」は、原因の解消かブロックの終わりの早いほうまで待って、開始時の確認をやり直す</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
-      <tr><td>J-08</td><td>反射の行動が終わった時点で、固定・計画のブロックの途中なら、遅刻するか欠席するかを決める（ブロックの途中で反射が起きた場合も、前から続いていた場合も同じ）。レビューで直した</td><td><a href="5-decision.html#reflex">D5 5.7</a></td></tr>
+      <tr><td>J-08</td><td>反射の行動が終わった時点で、固定・計画のブロックの途中なら、遅刻するか欠席するかを決める（ブロックの途中で反射が起きた場合も、前から続いていた場合も同じ）。レビューで直した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#reflex">D5 5.7</a></td></tr>
       <tr><td>J-09</td><td>行動が終わったときに決めどきを積むのは、自由時間の中で、同じ時刻にブロックが始まらないときだけ</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
       <tr><td>J-10</td><td>廃止した場所にいる人の行動は、中断せずにそのまま終わらせる</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
       <tr><td>J-11</td><td>送還したペルソナと、止めたワールドの、以後のイベントは捨てる</td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
