@@ -81,7 +81,7 @@
     <li><strong>制限</strong>：クールダウン、1日の回数、時刻の範囲（開始時刻で判定）。投稿は、チャンネルの頻度制限と空振りのクールダウンも重ねる</li>
     <li><strong>所要時間</strong>：残った組ごとに、行動 ID と場所 ID の順に並べてから乱数で引く（並びを固定して、結果を再現できるようにする）</li>
     <li><strong>帰還できるか</strong>：VISION 5章の式で、次のブロックの開始に間に合うものだけ残す。次のブロックは、プランの中で次に来る固定か計画のブロック。なければ、プランの終わり（翌日の 3:00）</li>
-    <li><strong>次の予定の場所へ向かう</strong>：<code>core.go_to_next</code> を必ず足す。これで候補は空にならない（VISION 5章）</li>
+    <li><strong>次の予定の場所へ向かう</strong>：<code>core.go_to_next</code> を必ず足す。これで候補は空にならない（VISION 5章）。だから <code>core.go_to_next</code> は <code>forbid</code> の対象にしない。ペルソナ定義で外そうとしたら読み込みのエラー（D7 7.2）にし、付いている状態の <code>forbid</code> に当たっても無視する（状態の <code>forbid</code> は行動タグでも書けて、何に当たるかを前もって全部は確かめられないため）</li>
   </ol>
   <div class="draft">
     <span class="label">案 P-29　所要時間の引き方</span>
@@ -114,7 +114,7 @@ travel(p)  = exp( −移動時間（分） / 30 )</code></pre>
     <table>
       <tr><th>要素</th><th>決め方</th></tr>
       <tr><td><code>base</code></td><td>行動定義の <code>weight</code>（既定 1.0）</td></tr>
-      <tr><td><code>pref</code></td><td>ペルソナの <code>prefs</code>。<code>like</code> = 2.0、<code>dislike</code> = 0.4、<code>forbid</code> = 候補から外す、数値ならその値。行動 ID と <code>tag:</code>（行動タグ）の両方に当たれば、積をとる</td></tr>
+      <tr><td><code>pref</code></td><td>ペルソナの <code>prefs</code>。<code>like</code> = 2.0、<code>dislike</code> = 0.4、<code>forbid</code> = 候補から外す、数値ならその値。数値の 0 は <code>forbid</code> の別名で、同じく候補から外す（重み 0 で残すと、選ばれないのに所要時間の乱数を引いてしまうため）。行動 ID と <code>tag:</code>（行動タグ）の両方に当たれば、積をとる</td></tr>
       <tr><td><code>cond</code></td><td>付いている状態の <code>weight</code> の積（D2 2.7）</td></tr>
       <tr><td><code>β</code></td><td>状態変数の効き目。既定 3.0。大きいほど、欲求に素直になる</td></tr>
     </table>
