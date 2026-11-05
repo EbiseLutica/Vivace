@@ -17,8 +17,8 @@
   <div class="meta">
     <span class="chip">2026-11-03 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
-    <span class="chip fixed">合意 25 件</span>
-    <span class="chip draft">案 27 件と、枠の外の判断 83 件が合意待ち</span>
+    <span class="chip fixed">合意 29 件</span>
+    <span class="chip draft">案 23 件と、枠の外の判断 83 件が合意待ち</span>
   </div>
 </header>
 
@@ -82,7 +82,7 @@
   <div class="table-wrap">
     <table>
       <tr><th>VISION 付録の項目</th><th>案</th><th>場所</th></tr>
-      <tr><td>LLM クライアントの抽象（1章）</td><td>P-26（実装は PoC で選ぶ）</td><td><a href="4-components.html#llm-port">D4 4.4</a>、<a href="8-stack.html#poc">D8 8.4</a></td></tr>
+      <tr><td>LLM クライアントの抽象（1章）</td><td>P-26 <span class="chip fixed">合意</span>（実装は PoC で選ぶ）</td><td><a href="4-components.html#llm-port">D4 4.4</a>、<a href="8-stack.html#poc">D8 8.4</a></td></tr>
       <tr><td>固定予定と生活リズムの書き方（2章）</td><td>P-20、P-52 <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
       <tr><td>イベント ID の形式（2章）</td><td>P-10 <span class="chip fixed">合意</span></td><td><a href="2-events.html#envelope">D2 2.1</a></td></tr>
       <tr><td>決める側に渡す状態の写しの作り方（4章）</td><td>P-21 <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
@@ -134,10 +134,10 @@
       <tr><td>P-22</td><td>インスタンス ID は「定義 ID@ワールド ID」 <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>P-23</td><td>SQLite の表は「よく使う列 + JSON」 <span class="chip fixed">合意</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
       <tr><td>P-24</td><td>時刻は UTC の Unix ミリ秒で保存する <span class="chip fixed">合意</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
-      <tr><td>P-25</td><td>アセンブリの分け方（6つ）</td><td><a href="4-components.html#assemblies">D4 4.1</a></td></tr>
-      <tr><td>P-26</td><td>LLM クライアントは、コア独自の薄い口にする</td><td><a href="4-components.html#llm-port">D4 4.4</a></td></tr>
-      <tr><td>P-27</td><td>公開 API はビルダーとエンジンの1クラス</td><td><a href="4-components.html#api">D4 4.6</a></td></tr>
-      <tr><td>P-28</td><td>プラグインは、ホストがコードで登録する（動的ロードなし）</td><td><a href="4-components.html#plugins">D4 4.7</a></td></tr>
+      <tr><td>P-25</td><td>アセンブリの分け方（6つ） <span class="chip fixed">合意</span></td><td><a href="4-components.html#assemblies">D4 4.1</a></td></tr>
+      <tr><td>P-26</td><td>LLM クライアントは、コア独自の薄い口にする <span class="chip fixed">合意</span></td><td><a href="4-components.html#llm-port">D4 4.4</a></td></tr>
+      <tr><td>P-27</td><td>公開 API はビルダーとエンジンの1クラス <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a></td></tr>
+      <tr><td>P-28</td><td>プラグインは、ホストがコードで登録する（動的ロードなし） <span class="chip fixed">合意</span></td><td><a href="4-components.html#plugins">D4 4.7</a></td></tr>
       <tr><td>P-29</td><td>所要時間は 5 分刻みの一様分布</td><td><a href="5-decision.html#candidates">D5 5.2</a></td></tr>
       <tr><td>P-30</td><td><strong>Decider のスコアの式と、補正の語彙</strong></td><td><a href="5-decision.html#score">D5 5.3</a></td></tr>
       <tr><td>P-31</td><td>遅刻・欠席・待つの重み</td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
@@ -283,7 +283,7 @@
   <h3>反映したもの</h3>
   <ul>
     <li>1章の用語の表で、「投入の窓口」の章が 16 になっていた誤りを、15 に直した</li>
-    <li>合意した P-02、P-04、P-05、P-06、P-07、P-08、P-09、P-10、P-12、P-15、P-16、P-18、P-19、P-20、P-21、P-52 を、VISION の2章、4章、5章、9章、付録に反映した</li>
+    <li>合意した P-02、P-04、P-05、P-06、P-07、P-08、P-09、P-10、P-12、P-15、P-16、P-18、P-19、P-20、P-21、P-26、P-52 を、VISION の1章、2章、4章、5章、9章、付録に反映した</li>
     <li>レビューで決めた用語（「種別」を「イベントタイプ」にする、段を項目として持たない）を、VISION の2章と4章に反映した</li>
   </ul>
   <h3>合意したら、VISION にも反映が要るもの</h3>

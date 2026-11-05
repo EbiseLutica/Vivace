@@ -424,7 +424,7 @@
       <thead><tr><th>区分</th><th>内容</th></tr></thead>
       <tbody>
         <tr><td><span class="chip core">Core</span></td><td>先に作る。仮想時計、ワールド、行動ループ、イベントログ、受信箱、プラン生成、Decider、記憶</td></tr>
-        <tr><td><span class="chip seam">Seams</span></td><td>継ぎ目だけ用意する。チャンネル抽象、LLM クライアント抽象、API 境界、ストレージ抽象。LLM クライアントの実装は、詳細設計で PoC をして選ぶ（Microsoft.Extensions.AI が候補）</td></tr>
+        <tr><td><span class="chip seam">Seams</span></td><td>継ぎ目だけ用意する。チャンネル抽象、LLM クライアント抽象、API 境界、ストレージ抽象。LLM クライアントは、コア独自の小さな口にする（コアは目的とモデルの段だけを指定し、モデル名は持たない）。その実装は、詳細設計で PoC をして選ぶ（Microsoft.Extensions.AI が候補）</td></tr>
         <tr><td><span class="chip later">Later</span></td><td>Discord、フロントエンド、空間（2D）表現、モバイルアプリ、旅行（FUTURE.html）</td></tr>
       </tbody>
     </table>
@@ -1635,7 +1635,7 @@
   <h2><span class="num">付録</span>詳細設計で決めること</h2>
   <p>本文で「詳細設計で決める」とした項目の索引。中身は、本文のその場所に書く。</p>
   <ul class="open">
-    <li>LLM クライアントの抽象（1章）</li>
+    <li>LLM クライアントの実装（1章）</li>
     <li>同行・共同行動で、2人のレーンをまたぐ決定の扱い（4章、14章）</li>
     <li>前日のプランがないときの、0:00〜3:00 の過ごし方と Planner のホライズン（4章）</li>
     <li>Utility AI のスコアの式と、補正の語彙（5章）</li>

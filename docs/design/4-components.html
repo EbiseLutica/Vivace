@@ -99,8 +99,8 @@
     <li><strong>Vivace.Llm.*</strong>：LLM の実装。どの SDK を使うかは、PoC で決める（D8）</li>
     <li><strong>Vivace.Testing</strong>：テストとドライランの部品。台本どおりに返す LLM、何も送らないチャンネル、仮想時計、シナリオを書くための補助</li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-25　アセンブリの分け方</span>
+  <div class="callout">
+    <span class="label">決定 P-25　アセンブリの分け方</span>
     上の6つ。最初の到達点（ebise 相当）までは、これ以上分けない。API 層とフロントエンドは、そのときに足す（FUTURE.html）。
   </div>
 </section>
@@ -217,8 +217,8 @@ public interface ITool                   // 副作用のない参照系だけ（
     <li>ツールの呼び出しの往復は、実装の側で回す。<code>ToolContext</code> には、呼び出し元のペルソナと audience を入れ、記憶の検索が dm の記憶を返さないようにする（VISION 13章）</li>
     <li>再試行（指数バックオフ）は、コアの側で、目的ごとの方針で包む（D7）。実装は1回の呼び出しだけを担う</li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-26　LLM クライアントは、コア独自の薄い口にする</span>
+  <div class="callout">
+    <span class="label">決定 P-26　LLM クライアントは、コア独自の薄い口にする</span>
     VISION 付録「LLM クライアントの抽象」への案。コアは Microsoft.Extensions.AI の <code>IChatClient</code> に直接依存せず、上の小さな口だけを持つ。理由は2つ。コアが求めるのは「目的」と「段」で、モデル名やプロバイダの設定ではないこと。テストの台本の LLM（目的ごとに決まった応答を返す）が書きやすいこと。実装の側で <code>IChatClient</code> を使うのは自由で、Anthropic の公式 SDK は <code>IChatClient</code> を実装している（D8）。
   </div>
 </section>
@@ -284,8 +284,8 @@ ValidationReport report = DefinitionLoader.Validate("defs/", plugins);</code></p
     <li>プラグインにも、このエンジンそのものを渡す（4.7）。ホストに使えてプラグインに使えない口は作らない</li>
     <li>DI コンテナには依存しない。ASP.NET Core などから使うときのための <code>services.AddVivace(...)</code> は、API 層を作るときに別のパッケージで足す</li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-27　公開 API はビルダーとエンジンの1クラス</span>
+  <div class="callout">
+    <span class="label">決定 P-27　公開 API はビルダーとエンジンの1クラス</span>
     上の形。コアはヘッドレスのライブラリ（VISION 1章）なので、ホストの作り（CLI、Web、モバイル）を選ばない形にする。
   </div>
 </section>
@@ -327,8 +327,8 @@ public interface INotificationRule
     <li>プラグインが同梱する行動の ID は、プラグインの名前で始める（<code>misskey.open_phone</code>）</li>
     <li><strong>ペルソナと独立した機能</strong>：チャンネルのプラグインは、ペルソナのシミュレーションを通さない機能を、<code>IChannel.StartAsync</code> の中で動かしてよい（VISION 10章）。Misskey のリバーシは、ebise ではペルソナの機能だったが、Vivace では Misskey プラグインの中のゲーム機能として作る。対局はペルソナのアカウントで行ってよいが、ペルソナの行動、状態変数、イベント、記憶には関わらない（寝ている時間でも対局する）。シミュレーションに組み込むと複雑になりすぎるため。ただし、いまの状態はエンジン（<code>engine.View</code>）から読めるので、「睡眠中は対局を受けない」のような振る舞いは、プラグインの中で書ける（状態は読むだけで、変えない）</li>
   </ul>
-  <div class="draft">
-    <span class="label">案 P-28　プラグインは、ホストがコードで登録する</span>
+  <div class="callout">
+    <span class="label">決定 P-28　プラグインは、ホストがコードで登録する</span>
     フォルダに置いた DLL を読み込む方式（動的ロード）にはしない。最初のプラグインは Misskey だけで、ホストの CLI と一緒にビルドすれば足りる。動的ロードは、配布やバージョンの不一致、信頼の問題を連れてくるので、要るようになってから考える。
   </div>
 </section>
