@@ -445,7 +445,7 @@ record ApplyResult(
 <pre><code>public interface IClock
 {
     DateTimeOffset UtcNow { get; }
-    // t まで待つ。早送りの時計は、待たずに UtcNow を t まで進めて返す
+    // t まで待つ。早送りの時計は、待たずに UtcNow を t まで進めて完了する。t がいまより前なら進めず、いまの時刻のまま完了する（J-109）
     ValueTask WaitUntilAsync(DateTimeOffset t, CancellationToken ct);
 }</code></pre>
   <div class="table-wrap">
