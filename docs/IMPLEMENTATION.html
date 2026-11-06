@@ -193,7 +193,7 @@
   <p><strong>参照</strong>：<a href="design/1-execution.html#structure">D1 1.2</a>〜<a href="design/1-execution.html#lanes">1.5</a>、<a href="design/1-execution.html#guard">1.7</a>、<a href="design/1-execution.html#states">1.8</a>、<a href="design/2-events.html#types">D2 2.3</a>〜<a href="design/2-events.html#requires">2.6</a>、<a href="design/5-decision.html#decider">D5 5.1</a>〜<a href="design/5-decision.html#score">5.3</a>、<a href="design/5-decision.html#planner">5.5</a></p>
   <ul class="tasks">
     <li><input type="checkbox" checked disabled><code>Rules</code>：上のイベントタイプの Apply、guard、行動の決定的な効果、状態変数の読み取りと率の切り替え</li>
-    <li><input type="checkbox" disabled><code>Engine</code>：コマンドのキュー、優先度つきキュー、ホライズンの壁、適用、<code>StartHandler</code> の実行</li>
+    <li><input type="checkbox" checked disabled><code>Engine</code>：コマンドのキュー、優先度つきキュー、ホライズンの壁、適用、<code>StartHandler</code> の実行</li>
     <li><input type="checkbox" checked disabled><code>Lanes</code>：ペルソナごとの決定と計画のレーン（ワールドのレーンは、出来事を作る段階3 で足す）</li>
     <li><input type="checkbox" checked disabled><code>UtilityDecider</code>：候補、所要時間、スコア、抽選</li>
     <li><input type="checkbox" checked disabled>Planner の代わりの出力：固定予定だけのプランを出す。起動は、記憶の整理を起こす行動の開始と <code>plan.due</code>。整理の待ちは、段階7 まで入れない</li>
