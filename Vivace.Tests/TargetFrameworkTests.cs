@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.Versioning;
+using Vivace.Tests.Support;
 
 namespace Vivace.Tests;
 
@@ -15,6 +16,6 @@ public class TargetFrameworkTests
     public Task TargetFrameworkIsNet10()
     {
         var attribute = typeof(TargetFrameworkTests).Assembly.GetCustomAttribute<TargetFrameworkAttribute>();
-        return Verify(new { attribute?.FrameworkName });
+        return Snapshot.Object(new { attribute?.FrameworkName });
     }
 }
