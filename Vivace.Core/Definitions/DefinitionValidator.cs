@@ -1,3 +1,4 @@
+using Vivace.Core.Routes;
 using System.Collections.Immutable;
 using System.Globalization;
 using Vivace.Core.Domain;
@@ -476,6 +477,7 @@ public static class DefinitionValidator
     private static void CheckScheduleOverlaps(PersonaDef persona, Definitions definitions, List<DefinitionIssue> issues)
     {
         var reported = new HashSet<(string Message, SourceLocation Location)>();
+        var table = definitions.Worlds.TryGetValue(persona.World, out var world) ? RouteCache.BuildTable(world) : null;
         var first = new DateOnly(ScheduleCheckFirstYear, 1, 1);
         var last = first.AddYears(ScheduleCheckYears).AddDays(-1);
         var specials = SpecialDates(persona);
@@ -503,9 +505,15 @@ public static class DefinitionValidator
         {
             var day = own.Get(date);
             ReportScheduleIssues(day.Issues, issues, reported);
-            if (previousDate is { } before && before == date.AddDays(-1) && previousDay is not null)
+            var consecutive = previousDate is { } before && before == date.AddDays(-1) ? previousDay : null;
+            if (consecutive is not null)
             {
-                ReportCrossMidnight(previousDay, day, persona, issues, reported);
+                ReportCrossMidnight(consecutive, day, persona, issues, reported);
+            }
+
+            if (table is not null)
+            {
+                ReportScheduleGaps(consecutive, day, persona, table, issues, reported);
             }
 
             CheckPartnersOn(date, day, own.KeyOf(date), persona, definitions, partnerResolvers, checkedPairs, issues, reported);
@@ -622,6 +630,48 @@ public static class DefinitionValidator
         }
     }
 
+    /// <summary>
+    /// 固定予定の隙間が、場所の間の移動時間より短いものを警告にする（D7 7.2、J-147）。
+    /// 前の日の夜のブロックとの隙間も見る（前の日が続いているときだけ）。警告は、後のブロックの定義の位置に付ける。
+    /// </summary>
+    private static void ReportScheduleGaps(
+        ResolvedDay? previous,
+        ResolvedDay day,
+        PersonaDef persona,
+        Routes.RouteTable table,
+        List<DefinitionIssue> issues,
+        HashSet<(string Message, SourceLocation Location)> reported)
+    {
+        var sequence = (previous?.Blocks ?? ImmutableArray<ResolvedBlock>.Empty)
+            .Select(block => (Block: block, Start: block.StartMinute - MinutesPerDay, End: block.EndMinute - MinutesPerDay, Current: false))
+            .Concat(day.Blocks.Select(block => (Block: block, Start: block.StartMinute, End: block.EndMinute, Current: true)))
+            .Where(entry => entry.Block.Place is not null)
+            .OrderBy(entry => entry.Start)
+            .ThenBy(entry => entry.Block.Id, StringComparer.Ordinal)
+            .ToList();
+        for (var i = 1; i < sequence.Count; i++)
+        {
+            var before = sequence[i - 1];
+            var after = sequence[i];
+            if (!after.Current)
+            {
+                continue;
+            }
+
+            var gap = after.Start - before.End;
+            if (table.Minutes(new PlaceId(before.Block.Place!), new PlaceId(after.Block.Place!)) is not { } travel || gap >= travel)
+            {
+                continue;
+            }
+
+            var message = $"{persona.Id}: 固定予定の隙間（{before.Block.DefId} と {after.Block.DefId} の間は {gap} 分）が、移動時間（{travel} 分）より短い";
+            if (FindDefinition(after.Block.DefId, persona) is { } definition && reported.Add((message, definition.Source.Location)))
+            {
+                Add(issues, DefinitionIssueCode.ScheduleGap, definition.Source.Location, message);
+            }
+        }
+    }
+
     private static void ReportScheduleIssues(IEnumerable<ScheduleIssue> items, List<DefinitionIssue> issues, HashSet<(string Message, SourceLocation Location)> reported)
     {
         foreach (var item in items)
@@ -682,7 +732,8 @@ public static class DefinitionValidator
             or DefinitionIssueCode.UnsatisfiableRequirement
             or DefinitionIssueCode.OneSidedWith
             or DefinitionIssueCode.UnmatchedWildcard
-            or DefinitionIssueCode.PartnerMismatch => IssueSeverity.Warning,
+            or DefinitionIssueCode.PartnerMismatch
+            or DefinitionIssueCode.ScheduleGap => IssueSeverity.Warning,
         _ => IssueSeverity.Error,
     };
 }

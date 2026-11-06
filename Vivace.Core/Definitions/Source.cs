@@ -90,6 +90,9 @@ public enum DefinitionIssueCode
     /// <summary>固定予定のブロックが重なる、または親の時間からはみ出す。</summary>
     ScheduleOverlap,
 
+    /// <summary>固定予定の隙間が、場所の間の移動時間より短い（警告。D7 7.2、J-147）。</summary>
+    ScheduleGap,
+
     /// <summary>反射の行動の所要時間が範囲になっている。</summary>
     ReflexRange,
 
