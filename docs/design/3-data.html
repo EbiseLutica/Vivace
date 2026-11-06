@@ -267,13 +267,19 @@ place = "home_living"</code></pre>
       <tr><th>規則</th><th>内容</th></tr>
       <tr><td>その日の期間</td><td>日付が当たる期間のうち、いちばん短いもの。どれにも当たらなければ <code>default</code>（ebise と同じ）</td></tr>
       <tr><td>ブロックの所属</td><td><code>in</code> に、その日の期間があるブロックだけを使う。<code>in</code> を省略したブロックは、すべての期間で使う（睡眠など、期間で変わらないもの）</td></tr>
+      <tr><td>曜日</td><td><code>days</code> を省略したブロックは、毎日使う（J-102）</td></tr>
       <tr><td>入れ子</td><td>ほかのブロックの中に置けるのは、<code>within</code> で親を指したブロックだけ。その間は内側のブロックが優先し、終わったら外側のブロックに戻る。<code>within</code> のないブロックどうしが重なれば、読み込みのエラー（P-52）</td></tr>
       <tr><td><code>within</code></td><td>親のブロックを指す。書かなかった項目（曜日、期間、行動、場所、スマホ、祝日に休むか）を親から引き継ぐ。親が休みの日（祝日、例外日の <code>skip</code>）は、子も休む。親の時間からはみ出したら、読み込みのエラー（P-52）</td></tr>
       <tr><td><code>times</code></td><td><code>from</code> と <code>to</code> の代わりに、時間帯を並べて書ける。中身が同じで時間だけ違うブロック（休み時間）を、1つにまとめるため（P-52）</td></tr>
       <tr><td>日をまたぐブロック</td><td>開始した日のブロックとして扱う。月曜 23:45〜火曜 6:30 の睡眠は、月曜の <code>sleep_weekday</code></td></tr>
       <tr><td>スマホ</td><td><code>phone</code> は、行動定義の既定値を上書きする。長いブロックの途中の機会は <code>phone_every</code>（D5）</td></tr>
       <tr><td>例外日</td><td><code>skip</code> でその日のブロックを外し、<code>block</code> で足す。足したブロックも、重なりの検査を通す</td></tr>
-      <tr><td>ブロックの ID</td><td>プランの中では「定義の ID@開始日」（<code>sleep_weekday@2026-11-02</code>）で指す。プランの継ぎ目をまたいで続いているかの判定に使う（D5 5.5）。<code>times</code> の2つ目以降と、入れ子で分かれた外側の後半は、<code>.2</code> のように番号を付ける（<code>school.2@2026-11-02</code>）</td></tr>
+      <tr><td>例外日の制約</td><td>例外日のブロックには <code>within</code>、<code>in</code>、<code>days</code> を書けない。その日だけに足すため（J-103）</td></tr>
+      <tr><td>例外日の足すブロック</td><td>入れ子を持たない。<code>skip</code> は基本のブロックだけに当たり、同じ ID で足したブロックは消えず、基本のブロックの子も引き込まない（J-114）</td></tr>
+      <tr><td>例外日の日付</td><td>日付は <code>yyyy-MM-dd</code> で書く。読めない例外日（不正な日付、欠落）は例外を作らず、位置つきのエラーにする。例外日の前後の日は、日付の範囲の端（0001-01-01、9999-12-31）の手前で止める（J-130）</td></tr>
+      <tr><td>循環</td><td><code>within</code> をたどって自分に戻れば、エラー（J-115）</td></tr>
+      <tr><td>同じブロックの時間帯</td><td>同じブロックの <code>times</code> どうしが重なれば、エラー（J-116）</td></tr>
+      <tr><td>ブロックの ID</td><td>プランの中では「定義の ID@開始日」（<code>sleep_weekday@2026-11-02</code>）で指す。プランの継ぎ目をまたいで続いているかの判定に使う（D5 5.5）。<code>times</code> の2つ目以降と、入れ子で分かれた外側の後半は、<code>.2</code> のように番号を付ける（<code>school.2@2026-11-02</code>）。番号は、その日に開始する順に、2つ目から振る（J-105）</td></tr>
       <tr><td>ブロックの長さ</td><td>固定予定のブロックでは、行動はブロックの時間いっぱい続く。行動定義の <code>duration</code> は使わない</td></tr>
     </table>
   </div>
