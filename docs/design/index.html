@@ -253,6 +253,8 @@
       <tr><td>J-94</td><td>アセンブリは図の7つに合わせた（P-25 の「6つ」を直した） <span class="chip fixed">合意</span></td><td><a href="4-components.html#assemblies">D4 4.1</a></td></tr>
       <tr><td>J-95</td><td>テストは別の <code>Vivace.Tests</code> に置き、P-25 の数には入れない。パッケージのバージョンは <code>Directory.Packages.props</code> で一括して固定する <span class="chip fixed">合意</span></td><td><a href="8-stack.html#libraries">D8 8.2</a>、<a href="4-components.html#assemblies">D4 4.1</a></td></tr>
       <tr><td>J-96</td><td>テストの道具の版：Verify は 32.x に留める（33.0.0 から NuGet のパッケージのライセンスが MIT から OSMF EULA に変わり、SponsorCheck がビルドを止める。ソースは MIT のまま）。xUnit v3 は 4.x（<code>mtp-v2</code>）。xunit か Verify を上げるときは、Verify を使うテストを回す。テストは Verify を直接呼ばず、<code>Vivace.Testing</code> のヘルパーを通す <span class="chip fixed">合意</span></td><td><a href="8-stack.html#libraries">D8 8.2</a></td></tr>
+      <tr><td>J-97</td><td>乱数のシードは、SHA-256 の先頭 8 バイトをリトルエンディアンで読む。どの環境でも同じ値になるようにするため <span class="chip fixed">合意</span></td><td><a href="5-decision.html#rng">D5 5.9</a></td></tr>
+      <tr><td>J-98</td><td><code>NextInt</code> は 64 ビットの値で Lemire の方法を取り、棄却の判定も 64 ビットで行う <span class="chip fixed">合意</span></td><td><a href="5-decision.html#rng">D5 5.9</a></td></tr>
       <tr><td>J-101</td><td>時間の長さの単位は d、h、m だけ（秒は書かない）。0 の長さは読み込みのエラー <span class="chip fixed">合意</span></td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
       <tr><td>J-109</td><td>早送りの時計は、過去の時刻を指されても戻らず、いまの時刻のまま完了する <span class="chip fixed">合意</span></td><td><a href="1-execution.html#clock">D1 1.10</a></td></tr>
       <tr><td>J-113</td><td>時間の長さは各単位 9 桁まで、合計 1000 年まで。読みは例外を出さず、数字は ASCII だけ（全角は読めない） <span class="chip fixed">合意</span></td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
