@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://koruri.shrimpia.network/koruri.css" />
+<link rel="stylesheet" href="design/style.css" />
+<style>
+  ul.tasks { list-style: none; padding-left: 0; }
+  ul.tasks input { margin-right: 8px; }
+</style>
+<title>Vivace コア実装手順</title>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+</svg>
+<div class="layout">
+
+<header class="hero">
+  <div class="kicker">VIVACE / IMPLEMENTATION</div>
+  <h1>Vivace コア実装手順</h1>
+  <p>コアの実装を、段階に分けて上から順に進めるための文書。何をどの順で作り、どこまでできたら次へ進むかを決める。仕組みの正は VISION.html と詳細設計のまま。</p>
+  <div class="meta">
+    <span class="chip">2026-11-06 時点</span>
+    <span class="chip">段階0〜8</span>
+    <span class="chip fixed">到達点：ebise 相当の再現</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目次">
+  <details open>
+    <summary>目次</summary>
+    <ol>
+      <li class="part">このページ</li>
+      <li><a href="#role">この文書の役割</a></li>
+      <li><a href="#principles">進め方の原則</a></li>
+      <li><a href="#overview">全体の流れ</a></li>
+      <li class="part">各段階の手順</li>
+      <li><a href="#phase0">段階0 足場</a></li>
+      <li><a href="#phase1">段階1 型と定義</a></li>
+      <li><a href="#phase2">段階2 最初の1日</a></li>
+      <li><a href="#phase3">段階3 生活を揃える</a></li>
+      <li><a href="#phase4">段階4 永続化と再起動</a></li>
+      <li><a href="#phase5">段階5 実時間の運転</a></li>
+      <li><a href="#phase6">段階6 LLM のハンドラ</a></li>
+      <li><a href="#phase7">段階7 記憶</a></li>
+      <li><a href="#phase8">段階8 Misskey で ebise 相当を再現する</a></li>
+      <li class="part">決めること</li>
+      <li><a href="#gaps">いま見えている設計の穴</a></li>
+      <li><a href="#next">最初の一手</a></li>
+      <li class="part">関連</li>
+      <li><a href="design/index.html">詳細設計</a></li>
+      <li><a href="VISION.html">VISION.html</a></li>
+    </ol>
+  </details>
+</nav>
+
+<main>
+
+<section id="role">
+  <h2>この文書の役割</h2>
+  <p>コアの実装は、この文書の段階を上から順に進める。ここが決めるのは「何をどの順で作り、どこまでできたら次へ進むか」だけで、仕組みの正は VISION.html と詳細設計（docs/design/）のまま。</p>
+  <ul>
+    <li><strong>参照</strong>：各段階は、作るものを設計の章（D1〜D8）で指す。仕組みの説明は繰り返さない</li>
+    <li><strong>更新</strong>：終えた項目は、チェックを入れる（<code>checked</code> を足す）。設計の落とし穴が見つかったら、設計書を直し、ここは順番や範囲が変わるときだけ直す</li>
+    <li><strong>範囲</strong>：Vivace.Core と、コアが外に求める口の実装。到達点は VISION 1章の「ebise 相当の再現」</li>
+  </ul>
+</section>
+
+<section id="principles">
+  <h2>進め方の原則</h2>
+  <p>まず1人が1日を過ごす細い道を端から端まで通し、そのあとで太くする。設計の落とし穴は Apply とエンジンの境目に出やすいので、全イベントタイプの Apply を先に書き切らない。</p>
+  <ul>
+    <li><strong>決定的な部分から</strong>：LLM を使う前に、時計、乱数、Apply、エンジン、永続化を固める。段階5 までは LLM なしで動く</li>
+    <li><strong>LLM は代わりの出力から</strong>：ハンドラは失敗時の出力（<a href="design/6-llm.html#calls">D6 6.2</a>）を先に作る。固定予定だけのプランは、段階2 でもう要る</li>
+    <li><strong>テストは段階と一緒に</strong>：<a href="design/7-operations.html#testing">D7 7.4</a> の層を、段階ごとに足す。不変条件の検査は段階2 から常に回す</li>
+    <li><strong>落とし穴はその場で直す</strong>：見つけたら設計書を直し、判断を J-xx の一覧に足す。止まって相談するのは、VISION の考え方が変わるものだけ</li>
+    <li><strong>稼働データができるまでは作り直す</strong>：段階8 の運転を始めるまでは、スキーマもペイロードも最初の版を書き換えてよい。マイグレーションを積み上げない</li>
+  </ul>
+</section>
+
+<section id="overview">
+  <h2>全体の流れ</h2>
+  <p>段階0〜5 は LLM なしで動き、段階6 で LLM、段階8 で Misskey をつなぐ。</p>
+  <figure class="diagram">
+    <svg viewBox="0 0 760 840" role="img" aria-label="実装の段階の流れ">
+      <rect class="box" x="24" y="16" width="500" height="72" rx="8"/>
+      <text class="title" x="40" y="38">段階0 足場</text>
+      <text x="40" y="58">プロジェクト、テストの土台、バージョンの固定</text>
+      <text class="sub" x="40" y="76">完了：dotnet test が通る</text>
+      <path class="arrow" d="M274 88 V102"/>
+
+      <rect class="box" x="24" y="104" width="500" height="72" rx="8"/>
+      <text class="title" x="40" y="126">段階1 型と定義</text>
+      <text x="40" y="146">ドメイン型、TOML、固定予定、乱数、最短経路</text>
+      <text class="sub" x="40" y="164">完了：定義が読め、壊すと位置つきのエラーが出る</text>
+      <path class="arrow" d="M274 176 V190"/>
+
+      <rect class="box" x="24" y="192" width="500" height="72" rx="8"/>
+      <text class="title" x="40" y="214">段階2 最初の1日</text>
+      <text x="40" y="234">Apply の一部、エンジン、Decider、固定予定だけのプラン</text>
+      <text class="sub" x="40" y="252">完了：7日のシナリオがスナップショットと一致する</text>
+      <path class="arrow" d="M274 264 V278"/>
+
+      <rect class="box" x="24" y="280" width="500" height="72" rx="8"/>
+      <text class="title" x="40" y="302">段階3 生活を揃える</text>
+      <text x="40" y="322">反射、出来事、同行、残りの Apply、最初の CLI</text>
+      <text class="sub" x="40" y="340">完了：dry-run で2人の1週間を読める</text>
+      <path class="arrow" d="M274 352 V366"/>
+
+      <rect class="box" x="24" y="368" width="500" height="72" rx="8"/>
+      <text class="title" x="40" y="390">段階4 永続化と再起動</text>
+      <text x="40" y="410">SQLite、起動、追いつき、定義の読み直し</text>
+      <text class="sub" x="40" y="428">完了：途中で止めても事実の列が一致する</text>
+      <path class="arrow" d="M274 440 V454"/>
+
+      <rect class="box" x="24" y="456" width="500" height="72" rx="8"/>
+      <text class="title" x="40" y="478">段階5 実時間の運転</text>
+      <text x="40" y="498">締め切り、配信役、チャンネルの口、デーモンと CLI</text>
+      <text class="sub" x="40" y="516">完了：偽のチャンネルで実時間に動く</text>
+      <path class="arrow" d="M274 528 V542"/>
+
+      <rect class="box" x="24" y="544" width="500" height="72" rx="8"/>
+      <text class="title" x="40" y="566">段階6 LLM のハンドラ</text>
+      <text x="40" y="586">文脈、Planner、受信箱、投稿、校閲</text>
+      <text class="sub" x="40" y="604">完了：本物の LLM の3日のドライランが破綻しない</text>
+      <path class="arrow" d="M274 616 V630"/>
+
+      <rect class="box" x="24" y="632" width="500" height="72" rx="8"/>
+      <text class="title" x="40" y="654">段階7 記憶</text>
+      <text x="40" y="674">記憶の整理、選び方、評価ケース</text>
+      <text class="sub" x="40" y="692">完了：記憶が翌日の文脈に入り、dm が漏れない</text>
+      <path class="arrow" d="M274 704 V718"/>
+
+      <rect class="box accent" x="24" y="720" width="500" height="72" rx="8"/>
+      <text class="title" x="40" y="742">段階8 Misskey で ebise 相当を再現する</text>
+      <text x="40" y="762">チャンネル、祝日、ペルソナの移植、数日の運転</text>
+      <text class="sub" x="40" y="780">完了：実際の Misskey で数日続く（最初の到達点）</text>
+
+      <path d="M532 16 H540 V528 H532" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+      <text class="sub" x="552" y="150">ここまで LLM なしで動く</text>
+
+      <rect class="box warn" x="556" y="280" width="180" height="72" rx="8"/>
+      <text class="title" x="572" y="302">LLM の PoC</text>
+      <text x="572" y="322" font-size="12">D8 8.4 の5項目を確認</text>
+      <text class="sub" x="572" y="340">段階1〜5 と並行</text>
+      <path class="arrow" d="M646 352 V580 H526"/>
+      <text class="sub" x="654" y="480">段階6 の前提</text>
+    </svg>
+    <figcaption>実装の段階。9段階と、並行の PoC</figcaption>
+  </figure>
+  <p>案と判断はすべて合意済みで、残る未決は LLM の実装（<a href="design/8-stack.html#poc">D8 8.4</a>）だけ。詳細設計の旧 0.7 の順番からは、3点変えた。Apply とエンジンを別の段階にせず、1日分の縦の通しに組み替えた。LLM の PoC は、エンジンの設計を左右しないので、段階6 までの並行作業にした。<code>validate</code> と <code>dry-run</code> は、数値の調整を早く始めるため、段階3 で作る。</p>
+</section>
+
+<section id="phases">
+  <h2>各段階の手順</h2>
+  <p>段階は上から順に進め、完了条件を満たしたら次へ移る。作るものの中身は、参照の章を正とする。</p>
+</section>
+
+<section id="phase0">
+  <h3>段階0 足場</h3>
+  <p><strong>参照</strong>：<a href="design/4-components.html#assemblies">D4 4.1</a>、<a href="design/8-stack.html#fixed">D8 8.1</a>、<a href="design/8-stack.html#libraries">8.2</a></p>
+  <ul class="tasks">
+    <li><input type="checkbox" checked disabled><code>Vivace.Cli</code> と <code>Vivace.Testing</code>、テストのプロジェクトを作り、<code>Vivace.slnx</code> に入れる</li>
+    <li><input type="checkbox" checked disabled><code>global.json</code> で SDK を固定し、プロジェクト共通の設定を <code>Directory.Build.props</code> にまとめる</li>
+    <li><input type="checkbox" checked disabled>D8 8.2 のライブラリを NuGet で確かめて、バージョンを固定する</li>
+    <li><input type="checkbox" checked disabled>xUnit v3 と Verify のテストを1本通す</li>
+  </ul>
+  <p><strong>完了条件</strong>：<code>dotnet test</code> が通る。</p>
+</section>
+
+<section id="phase1">
+  <h3>段階1 型と定義</h3>
+  <p><strong>参照</strong>：<a href="design/2-events.html#envelope">D2 2.1</a>、<a href="design/2-events.html#stages">2.2</a>、<a href="design/3-data.html#files">D3 3.2</a>〜<a href="design/3-data.html#domain">3.7</a>、<a href="design/3-data.html#json">3.9</a>、<a href="design/5-decision.html#rng">D5 5.9</a>、<a href="design/5-decision.html#routes">5.10</a>、<a href="design/7-operations.html#validation">D7 7.2</a></p>
+  <ul class="tasks">
+    <li><input type="checkbox" disabled>ID の型、<code>SimState</code> 一式、<code>SimEvent</code> とペイロード、イベントタイプから段を引く表</li>
+    <li><input type="checkbox" disabled>時間の文字列（<code>"45m"</code>）と現地時刻の計算</li>
+    <li><input type="checkbox" disabled><code>DefinitionLoader</code>：TOML から <code>Definitions</code> を作る。組み込みの行動 <code>core.*</code> を埋め込む</li>
+    <li><input type="checkbox" disabled><code>DefinitionValidator</code>：エラーは全項目、警告は段階が進むにつれて足す</li>
+    <li><input type="checkbox" disabled>固定予定の解決：日付から、期間、例外日、祝日、入れ子（<code>within</code>）、時間帯の並べ書き（<code>times</code>）を踏まえたブロックを出す</li>
+    <li><input type="checkbox" disabled><code>IClock</code> と <code>VirtualClock</code>、<code>IRandom</code> と <code>SplitMixRandomSource</code>、<code>RouteTable</code></li>
+    <li><input type="checkbox" disabled>テスト用の小さな世界の定義（1ワールド、数か所の場所、2人、数個の行動）</li>
+  </ul>
+  <p><strong>完了条件</strong>：テスト用の定義が読め、壊した定義で位置つきのエラーが出る。乱数は実装を変えても同じ値になることを、既知の値で確かめる。</p>
+</section>
+
+<section id="phase2">
+  <h3>段階2 最初の1日</h3>
+  <p>1人が固定予定と Decider だけで暮らす。ここで扱うイベントタイプは、<code>world.created</code>、<code>persona.created</code>、<code>day.started</code>、<code>plan.committed</code>、<code>plan.due</code>、<code>block.started</code>、<code>decision.requested</code>、<code>activity.chosen</code>、<code>travel.*</code>、<code>action.*</code> に絞る。</p>
+  <p><strong>参照</strong>：<a href="design/1-execution.html#structure">D1 1.2</a>〜<a href="design/1-execution.html#lanes">1.5</a>、<a href="design/1-execution.html#guard">1.7</a>、<a href="design/1-execution.html#states">1.8</a>、<a href="design/2-events.html#types">D2 2.3</a>〜<a href="design/2-events.html#requires">2.6</a>、<a href="design/5-decision.html#decider">D5 5.1</a>〜<a href="design/5-decision.html#score">5.3</a>、<a href="design/5-decision.html#planner">5.5</a></p>
+  <ul class="tasks">
+    <li><input type="checkbox" disabled><code>Rules</code>：上のイベントタイプの Apply、guard、行動の決定的な効果、状態変数の読み取りと率の切り替え</li>
+    <li><input type="checkbox" disabled><code>Engine</code>：コマンドのキュー、優先度つきキュー、ホライズンの壁、適用、<code>StartHandler</code> の実行</li>
+    <li><input type="checkbox" disabled><code>Lanes</code>：ペルソナごとの決定と計画、ワールドごとのレーン</li>
+    <li><input type="checkbox" disabled><code>UtilityDecider</code>：候補、所要時間、スコア、抽選</li>
+    <li><input type="checkbox" disabled>Planner の代わりの出力：固定予定だけのプランを出す。起動は、記憶の整理を起こす行動の開始と <code>plan.due</code>。整理の待ちは、段階7 まで入れない</li>
+    <li><input type="checkbox" disabled><code>InMemoryStorage</code>（<code>Vivace.Testing</code>）：<code>IStorage</code> の最小の実装。段階4 で捨てる前提で作る</li>
+    <li><input type="checkbox" disabled><code>Ingress</code> の最小：ワールドとペルソナの生成</li>
+    <li><input type="checkbox" disabled>不変条件の検査と、シナリオのスナップショットの仕組み</li>
+  </ul>
+  <p><strong>完了条件</strong>：仮想時計で7日回し、事実のイベントの列がスナップショットと一致する。全適用で不変条件が通る。</p>
+</section>
+
+<section id="phase3">
+  <h3>段階3 生活を揃える</h3>
+  <p>LLM を除く決定的なルールを、すべて揃える。人がドライランの結果を読めるようにして、数値の調整もここから始める。</p>
+  <p><strong>参照</strong>：<a href="design/1-execution.html#lifecycle">D1 1.13</a>、<a href="design/2-events.html">D2 全体</a>、<a href="design/4-components.html#api">D4 4.6</a>、<a href="design/5-decision.html#special">D5 5.4</a>、<a href="design/5-decision.html#vitals">5.6</a>〜<a href="design/5-decision.html#incidents">5.8</a>、<a href="design/5-decision.html#routes">5.10</a>、<a href="design/5-decision.html#together">5.11</a>、<a href="design/7-operations.html#errors">D7 7.1</a>、<a href="design/7-operations.html#cli">7.5</a></p>
+  <ul class="tasks">
+    <li><input type="checkbox" disabled>しきい値の予測と反射、寝不足、居合わせと社交欲求の率</li>
+    <li><input type="checkbox" disabled>予定の乱れ（<code>block.responded</code>）</li>
+    <li><input type="checkbox" disabled>スマホを開く機会と副行動（候補はスマホを開く、投稿する、何もしない）。効果のハンドラは、何もしないものを入れておく</li>
+    <li><input type="checkbox" disabled>出来事：<code>IncidentLottery</code>、効果、状態、到着の積み直し</li>
+    <li><input type="checkbox" disabled>同行（<code>with</code>、<code>on_partner_absent</code>）</li>
+    <li><input type="checkbox" disabled>ペルソナとワールドの破棄</li>
+    <li><input type="checkbox" disabled>残りのイベントタイプの Apply と guard</li>
+    <li><input type="checkbox" disabled><code>Ingress</code> の全体、公開 API（<code>VivaceEngine.Create()</code>、<code>InjectAsync</code>、<code>View</code>、<code>Subscribe</code>、<code>RunUntilAsync</code>、<code>DryRun</code>）</li>
+    <li><input type="checkbox" disabled><code>Vivace.Cli</code>：デーモンを使わない <code>validate</code> と <code>dry-run</code>。実行レポートの最小の形</li>
+  </ul>
+  <p><strong>完了条件</strong>：<code>vivace dry-run --days 7</code> で2人の1週間が読め、反射、出来事、同行を含むシナリオが通る。全イベントタイプに Apply の単体テストがある。</p>
+</section>
+
+<section id="phase4">
+  <h3>段階4 永続化と再起動</h3>
+  <p><strong>参照</strong>：<a href="design/1-execution.html#tx">D1 1.9</a>、<a href="design/1-execution.html#startup">1.11</a>、<a href="design/1-execution.html#reload">1.12</a>、<a href="design/3-data.html#sqlite">D3 3.8</a>、<a href="design/3-data.html#json">3.9</a>、<a href="design/7-operations.html#testing">D7 7.4</a></p>
+  <ul class="tasks">
+    <li><input type="checkbox" disabled><code>Vivace.Storage.Sqlite</code>：スキーマ、接続の設定、<code>StorageBatch</code> のコミット、<code>IEventLog</code></li>
+    <li><input type="checkbox" disabled>ペイロードの JSON（ソース生成、版、知らないイベントタイプでの停止）</li>
+    <li><input type="checkbox" disabled>起動と停止の手順、ハンドラの復元</li>
+    <li><input type="checkbox" disabled>追いつき、<code>persona.gap</code>、14 日の上限</li>
+    <li><input type="checkbox" disabled>定義の読み直し（<code>ReloadDefinitionsAsync</code>）</li>
+    <li><input type="checkbox" disabled>シナリオをメモリの SQLite に切り替え、<code>InMemoryStorage</code> を消す</li>
+    <li><input type="checkbox" disabled>再起動のテスト</li>
+  </ul>
+  <p><strong>完了条件</strong>：シナリオのランダムな位置で止めて再起動しても、事実のイベントの列が止めなかったときと一致する。20 日止めても追いつける。</p>
+</section>
+
+<section id="phase5">
+  <h3>段階5 実時間の運転</h3>
+  <p><strong>参照</strong>：<a href="design/1-execution.html#horizon">D1 1.6</a>、<a href="design/1-execution.html#clock">1.10</a>、<a href="design/4-components.html#channel">D4 4.3</a>、<a href="design/4-components.html#api">4.6</a>、<a href="design/4-components.html#plugins">4.7</a>、<a href="design/7-operations.html#errors">D7 7.1</a>、<a href="design/7-operations.html#observability">7.3</a>、<a href="design/7-operations.html#cli">7.5</a></p>
+  <ul class="tasks">
+    <li><input type="checkbox" disabled><code>SystemClock</code>、<code>ScaledClock</code>、到着の受付、締め切り</li>
+    <li><input type="checkbox" disabled><code>IChannel</code>、能力の語彙、プラグインの登録。テスト用の偽のチャンネル</li>
+    <li><input type="checkbox" disabled><code>Dispatcher</code> と送信の再試行</li>
+    <li><input type="checkbox" disabled>失敗の扱い（D7 7.1）、<code>Status</code>、<code>RejectEventAsync</code>、<code>ResumeAsync</code>、ログ、計測、<code>IAdminNotifier</code></li>
+    <li><input type="checkbox" disabled><code>vivace daemon</code>（<code>--watch</code> つき）、ローカルの管理用 API、イベントの流れ（SSE）</li>
+    <li><input type="checkbox" disabled><code>Vivace.Cli</code>：デーモンと話す <code>status</code>、<code>events</code>、<code>resume</code>、<code>inject</code>、<code>reload</code>、<code>report</code></li>
+  </ul>
+  <p><strong>完了条件</strong>：偽のチャンネルを相手にデーモンが実時間で動き、到着と送信が通る。CLI から状態とイベントの流れが見える。送信中に落とすと、次の起動で「送信不明」になる。</p>
+</section>
+
+<section id="phase6">
+  <h3>段階6 LLM のハンドラ</h3>
+  <p><strong>前提</strong>：LLM の PoC（<a href="design/8-stack.html#poc">D8 8.4</a>）が終わっている。</p>
+  <p><strong>参照</strong>：<a href="design/4-components.html#llm-port">D4 4.4</a>、<a href="design/5-decision.html#planner">D5 5.5</a>、<a href="design/6-llm.html#tiers">D6 6.1</a>〜<a href="design/6-llm.html#post">6.6</a>、<a href="design/6-llm.html#review">6.10</a>、<a href="design/7-operations.html#errors">D7 7.1</a></p>
+  <ul class="tasks">
+    <li><input type="checkbox" disabled><code>Vivace.Llm.*</code>、<code>ScriptedLlm</code>、エンジンの LLM の口（<code>engine.Llm</code>）、目的の登録、<code>LlmPolicy</code></li>
+    <li><input type="checkbox" disabled><code>ContextBuilder</code> と <code>Diary</code></li>
+    <li><input type="checkbox" disabled><code>DayPlanner</code> と <code>PlanValidator</code></li>
+    <li><input type="checkbox" disabled><code>InboxHandler</code>：Message、Reaction、Follow の処理と、Other を回す <code>INotificationRule</code></li>
+    <li><input type="checkbox" disabled><code>PostHandler</code> と <code>TopicPipeline</code>（辞書、判定、場所の生成、文面の作り直し）</li>
+    <li><input type="checkbox" disabled>文面の校閲（<code>post.review</code>、<code>inbox.review</code>）</li>
+    <li><input type="checkbox" disabled><code>ProbeTopicsAsync</code> と <code>vivace probe</code></li>
+  </ul>
+  <p><strong>完了条件</strong>：台本の LLM のシナリオが通る。本物の LLM で3日のドライランを回し、実行レポートを読んで破綻がない。トークン数が痕跡に残る。</p>
+</section>
+
+<section id="phase7">
+  <h3>段階7 記憶</h3>
+  <p><strong>参照</strong>：<a href="design/3-data.html#sqlite">D3 3.8</a>、<a href="design/6-llm.html#context">D6 6.3</a>、<a href="design/6-llm.html#retrieval">6.4</a>、<a href="design/6-llm.html#consolidate">6.7</a>、<a href="design/6-llm.html#safety">6.8</a>、<a href="design/7-operations.html#testing">D7 7.4</a></p>
+  <ul class="tasks">
+    <li><input type="checkbox" disabled><code>IMemoryStore</code> と、整理用の書き込みの接続</li>
+    <li><input type="checkbox" disabled><code>MemoryConsolidator</code>：層、カーソル、threads、汚染のフィルタ</li>
+    <li><input type="checkbox" disabled>Planner が整理の完了を待つ形にする（<a href="design/5-decision.html#planner">D5 5.5</a>）</li>
+    <li><input type="checkbox" disabled><code>MemoryRetriever</code> と <code>memory.search</code> のツール</li>
+    <li><input type="checkbox" disabled>追いつきのあとのまとめての整理</li>
+    <li><input type="checkbox" disabled>評価ケース（VISION 16章）を手で回せる形にする</li>
+  </ul>
+  <p><strong>完了条件</strong>：記憶が整理されて翌日の文脈に入る。dm の記憶が別の相手の文脈に入らない。評価ケースが通る。</p>
+</section>
+
+<section id="phase8">
+  <h3>段階8 Misskey で ebise 相当を再現する</h3>
+  <p><strong>参照</strong>：<a href="design/4-components.html#channel">D4 4.3</a>、<a href="design/4-components.html#plugins">4.7</a>、<a href="design/6-llm.html#inbox">D6 6.5</a>、<a href="design/7-operations.html#cli">D7 7.5</a>、<a href="design/8-stack.html#libraries">D8 8.2</a>、VISION 1章</p>
+  <ul class="tasks">
+    <li><input type="checkbox" disabled><code>Vivace.Channels.Misskey</code>：HTTP と WebSocket の薄いクライアント、通知、タイムライン、送信、圏外明けの取り直し</li>
+    <li><input type="checkbox" disabled>ebise の <code>audienceOf</code> の規則の移植、同梱の行動 <code>misskey.*</code></li>
+    <li><input type="checkbox" disabled><code>Vivace.Calendars.Japan</code></li>
+    <li><input type="checkbox" disabled>ebise のペルソナと世界を TOML に移す</li>
+    <li><input type="checkbox" disabled>検証用のアカウントで、数日の実時間運転</li>
+  </ul>
+  <p><strong>完了条件</strong>：投稿、返信、フォローバック、生活感のある一貫性が、実際の Misskey で数日続く（VISION 1章の最初の到達点）。リバーシ（D4 4.7）は、この到達点に含めない。</p>
+</section>
+
+<section id="gaps">
+  <h2>いま見えている設計の穴</h2>
+  <p>手順を組む途中で、設計書のどうしが噛み合わない所を2つ見つけた。どれも、表の段階に入るときに決めて、設計書を直す。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>穴</th><th>場所</th><th>起きること</th><th>決める時期</th></tr>
+      <tr><td>効果のハンドラの出力が、必ず却下される</td><td>D1 1.7、1.8、D2 2.2、D6 6.5</td><td>出力は行動の終了の時刻で段7。同じ時刻の <code>action.ended</code>（段2）が先に適用される。D1 1.8 の「どの遷移でも版が上がる」のとおりなら、<code>activityVersion</code> の guard が通らない</td><td>段階2。<code>action.ended</code> は版を上げず、打ち切りだけが上げる形が有力</td></tr>
+      <tr><td>再起動で起動し直せないハンドラがある</td><td>D1 1.3、1.11、D2 2.3</td><td>復元の対象は処理中の決めどきだけ。Planner、出来事の抽選、効果のハンドラは <code>day.started</code>、<code>action.started</code>、<code>plan.due</code> から起動するので、途中で落ちると、出力が届かないまま進む</td><td>段階4</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="next">
+  <h2>最初の一手</h2>
+  <p>段階1 型と定義から進める。LLM の PoC は、段階0 が終わっているので、いつでも別に進められる。</p>
+</section>
+
+</main>
+
+<footer>Vivace コア実装手順。何をどの順で作るかの正はこの文書、仕組みの正は VISION.html と詳細設計。</footer>
+</div>
+
+<button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>
+<script src="design/page.js"></script>
+</body>
+</html>

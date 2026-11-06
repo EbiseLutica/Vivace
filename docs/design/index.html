@@ -15,10 +15,10 @@
   <h1>Vivace コアの詳細設計</h1>
   <p>VISION.html の構想を、実装できる粒度に落とした設計書。構想の正は VISION.html で、ここでは VISION が「詳細設計で決める」とした項目を埋め、コアの実行モデル、データ、部品、数値を決める。</p>
   <div class="meta">
-    <span class="chip">2026-11-05 時点</span>
+    <span class="chip">2026-11-06 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
     <span class="chip fixed">案はすべて合意（57 件）</span>
-    <span class="chip fixed">枠の外の判断もすべて合意（93 件）</span>
+    <span class="chip fixed">枠の外の判断もすべて合意（96 件）</span>
   </div>
 </header>
 
@@ -134,7 +134,7 @@
       <tr><td>P-22</td><td>インスタンス ID は「定義 ID@ワールド ID」 <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>P-23</td><td>SQLite の表は「よく使う列 + JSON」 <span class="chip fixed">合意</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
       <tr><td>P-24</td><td>時刻は UTC の Unix ミリ秒で保存する <span class="chip fixed">合意</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
-      <tr><td>P-25</td><td>アセンブリの分け方（6つ） <span class="chip fixed">合意</span></td><td><a href="4-components.html#assemblies">D4 4.1</a></td></tr>
+      <tr><td>P-25</td><td>アセンブリの分け方（7つ） <span class="chip fixed">合意</span></td><td><a href="4-components.html#assemblies">D4 4.1</a></td></tr>
       <tr><td>P-26</td><td>LLM クライアントは、コア独自の薄い口にする <span class="chip fixed">合意</span></td><td><a href="4-components.html#llm-port">D4 4.4</a></td></tr>
       <tr><td>P-27</td><td>公開 API はビルダーとエンジンの1クラス <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a></td></tr>
       <tr><td>P-28</td><td>プラグインは、ホストがコードで登録する（動的ロードなし） <span class="chip fixed">合意</span></td><td><a href="4-components.html#plugins">D4 4.7</a></td></tr>
@@ -173,7 +173,7 @@
 
 <section id="judgments">
   <h2><span class="num">0.5</span>枠の外の判断</h2>
-  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-93）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
+  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-96）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
   <h3>VISION の解釈で決めたもの</h3>
   <p>VISION から導いたつもりで、実際には読み方を1つに決めたもの。いちばん見落としやすいので、先に見てほしい。</p>
   <div class="table-wrap">
@@ -250,6 +250,9 @@
       <tr><td>J-62</td><td>CLI のコマンド（P-54 で書き直した） <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
       <tr><td>J-63</td><td>使わないもの（EF Core、NodaTime、ベクトル検索など） <span class="chip fixed">合意</span></td><td><a href="8-stack.html#not-used">D8 8.3</a></td></tr>
       <tr><td>J-64</td><td>LLM の PoC の判定の基準（B でプロンプトキャッシュが効かなければ A） <span class="chip fixed">合意</span></td><td><a href="8-stack.html#poc">D8 8.4</a></td></tr>
+      <tr><td>J-94</td><td>アセンブリは図の7つに合わせた（P-25 の「6つ」を直した） <span class="chip fixed">合意</span></td><td><a href="4-components.html#assemblies">D4 4.1</a></td></tr>
+      <tr><td>J-95</td><td>テストは別の <code>Vivace.Tests</code> に置き、P-25 の数には入れない。パッケージのバージョンは <code>Directory.Packages.props</code> で一括して固定する <span class="chip fixed">合意</span></td><td><a href="8-stack.html#libraries">D8 8.2</a>、<a href="4-components.html#assemblies">D4 4.1</a></td></tr>
+      <tr><td>J-96</td><td>テストの道具の版：Verify は 32.x に留める（33.0.0 から NuGet のパッケージのライセンスが MIT から OSMF EULA に変わり、SponsorCheck がビルドを止める。ソースは MIT のまま）。xUnit v3 は 4.x（<code>mtp-v2</code>）。xunit か Verify を上げるときは、Verify を使うテストを回す。テストは Verify を直接呼ばず、<code>Vivace.Testing</code> のヘルパーを通す <span class="chip fixed">合意</span></td><td><a href="8-stack.html#libraries">D8 8.2</a></td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>
@@ -311,15 +314,7 @@
 
 <section id="next">
   <h2><span class="num">0.7</span>次にやること</h2>
-  <ol class="road">
-    <li><b>案と判断のレビュー（済）</b><span>案（0.4）と枠の外の判断（0.5）は、すべて合意した。食い違いが見つかったら、実装のときに直す</span></li>
-    <li><b>LLM の PoC</b><span>D8 8.4 の5項目を確かめ、ILlmClient の実装を選ぶ</span></li>
-    <li><b>ドメインと Apply</b><span>ドメイン型、定義の読み込みと検証、Apply と guard。Apply の単体テスト</span></li>
-    <li><b>エンジンとシナリオ</b><span>仮想時計、レーン、ホライズン、Decider。シナリオと不変条件のテスト</span></li>
-    <li><b>永続化</b><span>SQLite のストレージ、起動、追いつき。再起動のテスト</span></li>
-    <li><b>LLM の部分</b><span>Planner、受信箱、投稿、記憶の整理。台本の LLM で通し、評価ケースを手で回す</span></li>
-    <li class="goal"><b>Misskey と CLI</b><span>最初の到達点（ebise 相当の再現。VISION 1章）</span></li>
-  </ol>
+  <p>案（0.4）と枠の外の判断（0.5）は、すべて合意した。食い違いが見つかったら、実装のときに直す。実装の順番と完了条件は、<a href="../IMPLEMENTATION.html">IMPLEMENTATION.html</a> に移した。</p>
 </section>
 
 </main>
