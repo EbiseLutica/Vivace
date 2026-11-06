@@ -276,8 +276,8 @@
   <div class="table-wrap">
     <table>
       <tr><th>ID</th><th>中身</th><th><code>schedule_only</code></th></tr>
-      <tr><td><code>core.go_to_next</code></td><td>次の予定の場所へ向かい、着いたら待つ。条件が成り立つ限り、いつでも候補に入る（VISION 5章）</td><td>いいえ（Decider が必ず足す）</td></tr>
-      <tr><td><code>core.idle</code></td><td>何もしない（スマホを開く機会の「ブロックを続ける」、待機）</td><td>はい</td></tr>
+      <tr><td><code>core.go_to_next</code></td><td>次の予定の場所へ向かい、着いたら待つ。条件が成り立つ限り、いつでも候補に入る（VISION 5章）。所要時間は持たず、待ちは次の予定の開始まで。なければプランの終わり（J-112）</td><td>いいえ（Decider が必ず足す）</td></tr>
+      <tr><td><code>core.idle</code></td><td>何もしない（スマホを開く機会の「ブロックを続ける」、待機）。スマホは開ける（J-100）</td><td>はい</td></tr>
       <tr><td><code>core.sleep</code></td><td>睡眠。<code>rate.energy = 0</code>、<code>restore.energy = 100</code>、<code>sleep = { consolidate = true, debt = true }</code></td><td>はい</td></tr>
       <tr><td><code>core.faint</code></td><td>気絶。所要時間は固定。<code>restore.energy = 50</code>、<code>sleep = { consolidate = true, debt = false }</code></td><td>はい</td></tr>
       <tr><td><code>core.go_home_rest</code></td><td>早退して家で休む。家（ペルソナ定義の <code>home</code>）へ移動して、休む</td><td>はい</td></tr>

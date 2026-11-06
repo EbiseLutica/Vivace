@@ -1,0 +1,43 @@
+# 組み込みの行動（D2 2.5、D5 5.6、5.7）。アセンブリに埋め込み、ユーザーの定義から使える。
+# 形式はユーザーの行動の定義と同じ。ID は core. の名前空間に置く。
+
+[[action]]
+id = "core.go_to_next"
+display = "次の予定の場所へ向かう"
+description = "次の予定の場所へ向かい、着いたら次の予定まで待つ。"
+phone = "closed"
+
+[[action]]
+id = "core.idle"
+display = "何もしない"
+description = "その場で何もしない。スマホを開く機会で「ブロックを続ける」を選んだときや、待機に使う。"
+phone = "open"
+schedule_only = true
+
+[[action]]
+id = "core.sleep"
+display = "眠る"
+description = "眠る。気力は睡眠の間に満タンまで戻り、記憶の整理を起こす。"
+phone = "closed"
+schedule_only = true
+effects.rate.energy = 0
+effects.restore.energy = 100
+effects.sleep = { consolidate = true, debt = true }
+
+[[action]]
+id = "core.faint"
+display = "気絶する"
+description = "気力が尽きて気絶する。所要時間は固定で、寝不足の判定はしない。"
+duration = "2h"
+phone = "closed"
+schedule_only = true
+effects.restore.energy = 50
+effects.sleep = { consolidate = true, debt = false }
+
+[[action]]
+id = "core.go_home_rest"
+display = "家に帰って休む"
+description = "早退して家（ペルソナ定義の home）へ移動し、休む。健康度が下がりきったときの反射。"
+duration = "3h"
+phone = "closed"
+schedule_only = true

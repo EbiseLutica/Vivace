@@ -147,7 +147,7 @@ group = "家"
 links = { street_home = 1 }</code></pre>
   <ul>
     <li>辺は、片方に書けば逆向きにも張る。両方に書いて時間が食い違えば、読み込みのエラー（VISION 8章）</li>
-    <li>場所のタグのうち、どの行動の requires にも出てこないものは、読み込み時に警告する（効果がないので）</li>
+    <li>場所のタグのうち、どの行動の requires にも出てこないものは、読み込み時に警告する（効果がないので）。出来事の <code>slow_place</code>、<code>close_place</code> の <code>place_tag</code> も要求とみなす（J-107）</li>
   </ul>
   <div class="callout">
     <span class="label">決定 P-18　祝日と年中行事は、ワールドの暦に持つ</span>
@@ -196,7 +196,7 @@ follow_back = "always"           # フォローバックの方針。フォロー
 reversi = true                   # 例：リバーシの対局を受けるか（プラグインが決める項目）</code></pre>
   <ul>
     <li><code>use</code> はワイルドカード（<code>misskey.*</code>）を許す。プラグインを足すと、その行動が自動で使えるようになる</li>
-    <li><code>prefs</code> の語彙（<code>like</code>、<code>dislike</code>、<code>forbid</code>、数値）と、<code>tag:</code> による行動タグの指定は D5</li>
+    <li><code>prefs</code> の語彙（<code>like</code>、<code>dislike</code>、<code>forbid</code>、数値）と、<code>tag:</code> による行動タグの指定は D5。キーは行動の ID か <code>tag:</code> の行動タグだけで、ほかは参照のエラー（J-108）</li>
     <li>固定予定は、次の節</li>
   </ul>
   <div class="callout">
@@ -272,7 +272,7 @@ place = "home_living"</code></pre>
       <tr><td><code>within</code></td><td>親のブロックを指す。書かなかった項目（曜日、期間、行動、場所、スマホ、祝日に休むか）を親から引き継ぐ。親が休みの日（祝日、例外日の <code>skip</code>）は、子も休む。親の時間からはみ出したら、読み込みのエラー（P-52）</td></tr>
       <tr><td><code>times</code></td><td><code>from</code> と <code>to</code> の代わりに、時間帯を並べて書ける。中身が同じで時間だけ違うブロック（休み時間）を、1つにまとめるため（P-52）</td></tr>
       <tr><td>日をまたぐブロック</td><td>開始した日のブロックとして扱う。月曜 23:45〜火曜 6:30 の睡眠は、月曜の <code>sleep_weekday</code></td></tr>
-      <tr><td>スマホ</td><td><code>phone</code> は、行動定義の既定値を上書きする。長いブロックの途中の機会は <code>phone_every</code>（D5）</td></tr>
+      <tr><td>スマホ</td><td><code>phone</code> は、行動定義の既定値を上書きする（行動の既定は closed。J-100）。長いブロックの途中の機会は <code>phone_every</code>（D5）</td></tr>
       <tr><td>例外日</td><td><code>skip</code> でその日のブロックを外し、<code>block</code> で足す。足したブロックも、重なりの検査を通す</td></tr>
       <tr><td>例外日の制約</td><td>例外日のブロックには <code>within</code>、<code>in</code>、<code>days</code> を書けない。その日だけに足すため（J-103）</td></tr>
       <tr><td>例外日の足すブロック</td><td>入れ子を持たない。<code>skip</code> は基本のブロックだけに当たり、同じ ID で足したブロックは消えず、基本のブロックの子も引き込まない（J-114）</td></tr>

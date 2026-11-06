@@ -9,4 +9,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Definitions\Builtin\actions\core.toml" LogicalName="builtin/actions/core.toml" />
+  </ItemGroup>
+
 </Project>
