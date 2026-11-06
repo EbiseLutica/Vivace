@@ -257,7 +257,14 @@
       <tr><td>J-98</td><td><code>NextInt</code> は 64 ビットの値で Lemire の方法を取り、棄却の判定も 64 ビットで行う <span class="chip fixed">合意</span></td><td><a href="5-decision.html#rng">D5 5.9</a></td></tr>
       <tr><td>J-101</td><td>時間の長さの単位は d、h、m だけ（秒は書かない）。0 の長さは読み込みのエラー <span class="chip fixed">合意</span></td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
       <tr><td>J-109</td><td>早送りの時計は、過去の時刻を指されても戻らず、いまの時刻のまま完了する <span class="chip fixed">合意</span></td><td><a href="1-execution.html#clock">D1 1.10</a></td></tr>
+      <tr><td>J-110</td><td>ペイロードの版は基底の <code>V</code>（JSON の <code>"v"</code>）。項目の名前は PascalCase で持ち、JSON の名前の付け方はシリアライザの段階で決める <span class="chip fixed">合意</span></td><td><a href="3-data.html#json">D3 3.9</a></td></tr>
+      <tr><td>J-111</td><td>通知の到着（<code>notification.arrived</code>）の <code>Item.Seq</code> は、チャンネルの受け付けでは 0 で積み、適用のときに入れる <span class="chip fixed">合意</span></td><td><a href="3-data.html#inbox-item">D3 3.7.1</a></td></tr>
       <tr><td>J-113</td><td>時間の長さは各単位 9 桁まで、合計 1000 年まで。読みは例外を出さず、数字は ASCII だけ（全角は読めない） <span class="chip fixed">合意</span></td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
+      <tr><td>J-119</td><td>出来事の発生は、解決済みの効果（対象の場所を含む）をペイロードと発生中の出来事に持つ。その場の定義は <code>DefId</code> を null にする。移動時間と閉鎖の両方を残せる <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a>、<a href="3-data.html#sqlite">3.8</a>、<a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>J-120</td><td>乱数を引いた出力は、引いた範囲（<code>RngDraws</code>）を持つ。対象は、行動の決定、予定の乱れへの対応、外向きの発話、受信箱の捌き、場所の追加、投稿の空振り。「何もしない」を選んだときは副行動 <code>core.idle</code> を所要時間 0 で記録する（J-129） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#rng">D5 5.9</a>、<a href="5-decision.html#special">D5 5.4</a></td></tr>
+      <tr><td>J-122</td><td>チャンネルの設定とペイロードの中身は、不変の <code>JsonElement</code> で持つ（可変の JSON を状態に入れない。P-21） <span class="chip fixed">合意</span></td><td><a href="3-data.html#json">D3 3.9</a></td></tr>
+      <tr><td>J-124</td><td>プランのブロックは、電話の指定、間隔、同行、同行者が抜けたときの扱いを、プランを作ったときの固定予定から写して持つ。<code>BlockId</code> は自由時間だけ null（固定と計画のブロックは非 null） <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>J-129</td><td>「何もしない」（スマホを開く機会）を選んだときは、副行動 <code>core.idle</code> を所要時間 0 で <code>activity.chosen</code> に記録する。抽選の範囲を残し、オーバーレイは始まらない <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>

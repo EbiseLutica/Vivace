@@ -72,7 +72,7 @@
     long? BatchSeq,              // 同じハンドラの出力のまとまり（契機の決めどきの Seq）
     long? CauseSeq,              // このイベントを生んだイベントの Seq
     Origin Origin,               // 2.9
-    JsonObject? Trace,           // 痕跡（2.9）
+    JsonElement? Trace,          // 痕跡（2.9）
     DateTimeOffset? RealTime);   // 実時刻（送信完了、外部からの元の到着）</code></pre>
   <ul>
     <li><strong>段</strong>は、イベントタイプから一意に決まる（2.2）。だから項目としては持たず、保存もしない。並べるときに、イベントタイプから引く</li>
@@ -119,7 +119,7 @@
       <tr><td><code>day.started</code></td><td>Apply、窓口（ワールドの生成時）</td><td>ワールド、現地の日付</td><td>翌日の分を積む。出来事の抽選の <code>StartHandler</code> を出す（Planner は動かさない。D5 5.5）</td></tr>
       <tr><td><code>plan.committed</code></td><td>ハンドラ（Planner）</td><td>ペルソナ、期間（ホライズンから）、ブロックの列、由来（llm / fallback）、プランの版</td><td>プランを差し替え、版を上げる。ホライズン以降の各ブロックの開始を <code>block.started</code> で積む。継ぎ目をまたいで続いているブロックは、積み直さない（D5 5.5）。次に作り直す時刻を決めて、そこに <code>plan.due</code> を積む</td></tr>
       <tr><td><code>plan.due</code></td><td>Apply（<code>plan.committed</code>）</td><td>ペルソナ、プランの版</td><td>版が古ければ捨てる。このプランの期間の Planner がまだ動いていなければ（寝ていない）、起きたままの Planner の <code>StartHandler</code> を出す（D5 5.5）</td></tr>
-      <tr><td><code>block.started</code></td><td>Apply</td><td>ペルソナ、ブロック ID、プランの版</td><td>版が古ければ捨てる。自由時間なら決めどきを積む。固定・計画のブロックなら、開始時の確認をする。満たせば <code>action.started</code>、満たせなければ決めどき（予定の乱れ）を積む。反射の行動の途中なら、それを打ち切らず、ブロックは始めない（反射の行動が終わったときに決める。D5 5.7）。スマホが開けるブロックなら <code>phone.opportunity</code> も積む</td></tr>
+      <tr><td><code>block.started</code></td><td>Apply</td><td>ペルソナ、ブロック ID（自由時間は null）、プランの版</td><td>版が古ければ捨てる。自由時間なら決めどきを積む。固定・計画のブロックなら、開始時の確認をする。満たせば <code>action.started</code>、満たせなければ決めどき（予定の乱れ）を積む。反射の行動の途中なら、それを打ち切らず、ブロックは始めない（反射の行動が終わったときに決める。D5 5.7）。スマホが開けるブロックなら <code>phone.opportunity</code> も積む</td></tr>
       <tr><td><code>phone.opportunity</code></td><td>Apply</td><td>ペルソナ、ブロック ID</td><td>決めどき（スマホを開く機会）を積む。長いブロックで間隔が決まっていれば、次の機会も積む（D5）</td></tr>
     </table>
   </div>
@@ -129,7 +129,7 @@
     <table>
       <tr><th>イベントタイプ</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
       <tr><td><code>decision.requested</code></td><td>Apply</td><td>ペルソナ、理由（下表）、ブロック ID</td><td>状態は変えない。processing にして、<code>StartHandler</code> を出す（D1 1.8）</td></tr>
-      <tr><td><code>activity.chosen</code></td><td>ハンドラ（Decider）</td><td>行動、場所、経路、移動時間、所要時間、副行動か、乱数の範囲、候補の要約（痕跡）</td><td>guard（行動の版、実行できること、乱数の位置）を確かめる。行動の版を上げ、乱数の位置を進める。場所が違えば <code>travel.started</code>、同じなら <code>action.started</code> を同じ時刻に積む</td></tr>
+      <tr><td><code>activity.chosen</code></td><td>ハンドラ（Decider）</td><td>行動、場所、経路、移動時間、所要時間、副行動か、乱数の範囲、候補の要約（痕跡）</td><td>guard（行動の版、実行できること、乱数の位置）を確かめる。行動の版を上げ、乱数の位置を進める。場所が違えば <code>travel.started</code>、同じなら <code>action.started</code> を同じ時刻に積む。所要時間 0 の <code>core.idle</code>（何もしない）は、乱数の位置だけを進め、版を上げず、後続を積まない（J-129）</td></tr>
       <tr><td><code>block.responded</code></td><td>ハンドラ（予定の乱れへの対応）</td><td>ブロック ID、選んだもの（遅刻 / 欠席 / 待つ）</td><td>遅刻は、ブロックの場所への移動を始める。欠席は、そのブロックを自由時間として扱い、決めどきを積む。待つは、出来事の解消かブロックの終わりの早いほうまで待機し、そこで開始時の確認をやり直す</td></tr>
       <tr><td><code>travel.started</code></td><td>Apply</td><td>出発地、目的地、経路（辺の列）、到着の時刻、行動の版</td><td>移動中にする。居合わせが変わるので、社交欲求の率を出発地の全員について計算し直す。<code>travel.arrived</code> を積む</td></tr>
       <tr><td><code>travel.arrived</code></td><td>Apply</td><td>場所、行動の版</td><td>版が古ければ捨てる。居場所を書き換え、着いた場所の全員の率を計算し直す。続きの行動があれば <code>action.started</code>、待機なら待機中にする</td></tr>
@@ -167,7 +167,7 @@
   <div class="table-wrap">
     <table>
       <tr><th>イベントタイプ</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
-      <tr><td><code>incident.occurred</code></td><td>ハンドラ（出来事の抽選）、窓口</td><td>出来事の ID（またはその場の定義）、対象、持続時間、抽選の結果</td><td>効果を当てる。持続時間があれば <code>incident.resolved</code> を積む。影響を受けうるペルソナの実行中の行動を検査し、通らなければ中断して決めどきを積む。移動中に辺が伸びたら、到着を積み直す（VISION 9章）</td></tr>
+      <tr><td><code>incident.occurred</code></td><td>ハンドラ（出来事の抽選）、窓口</td><td>出来事の ID（その場の定義なら null）、対象、持続時間、解決済みの効果（対象の場所を含む。D3 3.7、3.8）、抽選の結果</td><td>効果を当てる。持続時間があれば <code>incident.resolved</code> を積む。影響を受けうるペルソナの実行中の行動を検査し、通らなければ中断して決めどきを積む。移動中に辺が伸びたら、到着を積み直す（VISION 9章）</td></tr>
       <tr><td><code>incident.resolved</code></td><td>Apply</td><td>発生中の出来事の ID</td><td>効果を戻す。最短経路のキャッシュを作り直す</td></tr>
       <tr><td><code>place.added</code></td><td>ハンドラ（投稿する）、窓口</td><td>場所（id、name、tags、links）、状態（採用済み / 候補）</td><td>guard（同じ名前がない）を確かめ、生えた場所に入れる。採用済みなら最短経路を作り直す</td></tr>
       <tr><td><code>place.adopted</code> / <code>retired</code></td><td>窓口</td><td>場所 ID</td><td>候補を採用する / 廃止する。廃止した場所に誰かがいれば、その人の行動はそのまま終わらせ、次の決めどきから候補に出さない</td></tr>
