@@ -1,7 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Vivace.Core\Vivace.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Defs\worlds\*.toml" LogicalName="defs/worlds/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Defs\personas\*.toml" LogicalName="defs/personas/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Defs\actions\*.toml" LogicalName="defs/actions/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Defs\incidents\*.toml" LogicalName="defs/incidents/%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

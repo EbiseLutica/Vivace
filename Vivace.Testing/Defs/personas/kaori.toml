@@ -1,0 +1,91 @@
+# テスト用のペルソナ。固定予定の書き方の例を兼ねる。
+id = "kaori"
+name = "香織"
+world = "testville"
+home = "kaori_room"
+lore = """
+高校2年生。本が好きで、図書委員。
+"""
+examples = ["今日の図書室、ずっと静かだったな"]
+channels = []
+items = ["smartphone", "book"]
+tools = []
+
+[actions]
+use = ["core.*", "walk_park", "read_book", "cafe", "watch_tv", "attend_class", "eat_lunch"]
+prefs = { read_book = "like", "tag:outdoor" = "dislike", cafe = 1.5 }
+
+[vitals]
+energy = { initial = 80 }
+social = { rate_alone = 2.0, rate_together = -4.0, floor = -40, ceiling = 60 }
+health = { sleep_target = "7h" }
+
+[reflexes]
+health = { threshold = 15, action = "core.go_home_rest" }
+
+[disruption]
+late = 1.0
+absent = 0.2
+wait = 0.6
+
+[memory]
+half_life = 1.2
+
+[sns]
+follow_back = "always"
+
+[[schedule.period]]
+id = "summer"
+from = "07-21"
+to = "08-31"
+
+[[schedule.period]]
+id = "winter"
+from = "12-25"
+to = "01-07"
+
+[[schedule.block]]
+id = "sleep_weekday"
+from = "23:45"
+to = "06:30"
+action = "core.sleep"
+place = "kaori_room"
+
+[[schedule.block]]
+id = "school"
+in = ["default"]
+days = ["mon", "tue", "wed", "thu", "fri"]
+from = "08:30"
+to = "15:40"
+action = "attend_class"
+place = "school_2a"
+skip_holiday = true
+phone = "closed"
+
+[[schedule.block]]
+id = "short_break"
+within = "school"
+times = [["10:20", "10:30"], ["14:30", "14:40"]]
+phone = "open"
+
+[[schedule.block]]
+id = "lunch_break"
+within = "school"
+from = "12:20"
+to = "13:00"
+action = "eat_lunch"
+place = "school_2a"
+phone = "open"
+with = ["shiori"]
+on_partner_absent = "continue"
+
+[[schedule.exception]]
+date = "2026-12-24"
+skip = ["school"]
+
+[[schedule.exception.block]]
+id = "xmas_party"
+from = "18:00"
+to = "21:00"
+action = "watch_tv"
+place = "home_living"

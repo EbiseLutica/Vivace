@@ -315,7 +315,7 @@ record ApplyResult(
       <tr><th>guard</th><th>確かめること</th><th>主な使い手</th></tr>
       <tr><td><code>activityVersion</code></td><td>ペルソナの行動の版番号が、決めたときと同じ</td><td>Decider、効果のハンドラ、予定の乱れへの対応</td></tr>
       <tr><td><code>feasible</code></td><td>選んだ行動と場所が、いまの状態でも実行できる（requires、到達性、帰還できること、制限）</td><td>Decider</td></tr>
-      <tr><td><code>rngCursor</code></td><td>乱数の列の位置が、決めたときと同じ</td><td>乱数を引いたすべての出力</td></tr>
+      <tr><td><code>rngCursor</code></td><td>乱数の列の位置が、決めたときと同じ</td><td>位置を持つ用途（<code>decide</code>、<code>sns</code>）の出力</td></tr>
       <tr><td><code>planVersion</code></td><td>ペルソナのプランの版番号が、決めたときと同じ</td><td>Planner</td></tr>
       <tr><td><code>termUnset</code></td><td>変換の辞書に、その語がまだない（または同じ変換）</td><td>変換の記録</td></tr>
       <tr><td><code>placeUnset</code></td><td>同じ名前の場所が、まだない</td><td>場所の追加</td></tr>
@@ -445,7 +445,7 @@ record ApplyResult(
 <pre><code>public interface IClock
 {
     DateTimeOffset UtcNow { get; }
-    // t まで待つ。早送りの時計は、待たずに UtcNow を t まで進めて返す
+    // t まで待つ。早送りの時計は、待たずに UtcNow を t まで進めて完了する。t がいまより前なら進めず、いまの時刻のまま完了する（J-109）
     ValueTask WaitUntilAsync(DateTimeOffset t, CancellationToken ct);
 }</code></pre>
   <div class="table-wrap">

@@ -104,7 +104,8 @@
     <li>組み込みの行動（<code>core.*</code>）と、プラグインが同梱する行動（<code>misskey.*</code> など）は、アセンブリに埋め込んだ TOML から読む。形式はユーザーの TOML と同じ</li>
     <li>ID は、英小文字・数字・<code>_</code> と、名前空間の <code>.</code> だけ。ユーザーの定義は名前空間なしで書く。同じ ID が2つあれば、読み込みのエラー</li>
     <li>未知のキーは、エラーにせず警告にする（VISION 2章「スキーマは、未知のフィールドで壊れないように」）。タイプミスに気づけるよう、警告にはキーの場所を出す</li>
-    <li>時間の長さは、<code>"45m"</code>、<code>"1h30m"</code>、<code>"3d"</code> のように単位つきの文字列で書く。時刻は <code>"HH:mm"</code>（現地時刻）、年をまたぐ期間は <code>"MM-DD"</code></li>
+    <li>時間の長さは、<code>"45m"</code>、<code>"1h30m"</code>、<code>"3d"</code> のように単位つきの文字列で書く。時刻は <code>"HH:mm"</code>（現地時刻）、年をまたぐ期間は <code>"MM-DD"</code>。単位は d、h、m だけ（秒は書かない）。0 の長さは読み込みのエラー（J-101）</li>
+    <li>時間の長さは、各単位 9 桁まで、合計 1000 年まで。読みは例外を出さず、全角の数字や範囲外は読めない（J-113）。ID は英小文字、数字、_ だけで、空にはできない。場所、ブロック、期間も同じで、<code>.</code> や <code>@</code> は使えない（J-118）。数と日付の読み書きは、カルチャに依らない（J-125）</li>
   </ul>
   <div class="callout">
     <span class="label">決定 P-17　定義ファイルの配置と ID の名前空間</span>
@@ -146,7 +147,7 @@ group = "家"
 links = { street_home = 1 }</code></pre>
   <ul>
     <li>辺は、片方に書けば逆向きにも張る。両方に書いて時間が食い違えば、読み込みのエラー（VISION 8章）</li>
-    <li>場所のタグのうち、どの行動の requires にも出てこないものは、読み込み時に警告する（効果がないので）</li>
+    <li>場所のタグのうち、どの行動の requires にも出てこないものは、読み込み時に警告する（効果がないので）。出来事の <code>slow_place</code>、<code>close_place</code> の <code>place_tag</code> も要求とみなす（J-107）</li>
   </ul>
   <div class="callout">
     <span class="label">決定 P-18　祝日と年中行事は、ワールドの暦に持つ</span>
@@ -195,7 +196,7 @@ follow_back = "always"           # フォローバックの方針。フォロー
 reversi = true                   # 例：リバーシの対局を受けるか（プラグインが決める項目）</code></pre>
   <ul>
     <li><code>use</code> はワイルドカード（<code>misskey.*</code>）を許す。プラグインを足すと、その行動が自動で使えるようになる</li>
-    <li><code>prefs</code> の語彙（<code>like</code>、<code>dislike</code>、<code>forbid</code>、数値）と、<code>tag:</code> による行動タグの指定は D5</li>
+    <li><code>prefs</code> の語彙（<code>like</code>、<code>dislike</code>、<code>forbid</code>、数値）と、<code>tag:</code> による行動タグの指定は D5。キーは行動の ID か <code>tag:</code> の行動タグだけで、ほかは参照のエラー（J-108）</li>
     <li>固定予定は、次の節</li>
   </ul>
   <div class="callout">
@@ -266,13 +267,19 @@ place = "home_living"</code></pre>
       <tr><th>規則</th><th>内容</th></tr>
       <tr><td>その日の期間</td><td>日付が当たる期間のうち、いちばん短いもの。どれにも当たらなければ <code>default</code>（ebise と同じ）</td></tr>
       <tr><td>ブロックの所属</td><td><code>in</code> に、その日の期間があるブロックだけを使う。<code>in</code> を省略したブロックは、すべての期間で使う（睡眠など、期間で変わらないもの）</td></tr>
+      <tr><td>曜日</td><td><code>days</code> を省略したブロックは、毎日使う（J-102）</td></tr>
       <tr><td>入れ子</td><td>ほかのブロックの中に置けるのは、<code>within</code> で親を指したブロックだけ。その間は内側のブロックが優先し、終わったら外側のブロックに戻る。<code>within</code> のないブロックどうしが重なれば、読み込みのエラー（P-52）</td></tr>
       <tr><td><code>within</code></td><td>親のブロックを指す。書かなかった項目（曜日、期間、行動、場所、スマホ、祝日に休むか）を親から引き継ぐ。親が休みの日（祝日、例外日の <code>skip</code>）は、子も休む。親の時間からはみ出したら、読み込みのエラー（P-52）</td></tr>
       <tr><td><code>times</code></td><td><code>from</code> と <code>to</code> の代わりに、時間帯を並べて書ける。中身が同じで時間だけ違うブロック（休み時間）を、1つにまとめるため（P-52）</td></tr>
       <tr><td>日をまたぐブロック</td><td>開始した日のブロックとして扱う。月曜 23:45〜火曜 6:30 の睡眠は、月曜の <code>sleep_weekday</code></td></tr>
-      <tr><td>スマホ</td><td><code>phone</code> は、行動定義の既定値を上書きする。長いブロックの途中の機会は <code>phone_every</code>（D5）</td></tr>
+      <tr><td>スマホ</td><td><code>phone</code> は、行動定義の既定値を上書きする（行動の既定は closed。J-100）。長いブロックの途中の機会は <code>phone_every</code>（D5）</td></tr>
       <tr><td>例外日</td><td><code>skip</code> でその日のブロックを外し、<code>block</code> で足す。足したブロックも、重なりの検査を通す</td></tr>
-      <tr><td>ブロックの ID</td><td>プランの中では「定義の ID@開始日」（<code>sleep_weekday@2026-11-02</code>）で指す。プランの継ぎ目をまたいで続いているかの判定に使う（D5 5.5）。<code>times</code> の2つ目以降と、入れ子で分かれた外側の後半は、<code>.2</code> のように番号を付ける（<code>school.2@2026-11-02</code>）</td></tr>
+      <tr><td>例外日の制約</td><td>例外日のブロックには <code>within</code>、<code>in</code>、<code>days</code> を書けない。その日だけに足すため（J-103）</td></tr>
+      <tr><td>例外日の足すブロック</td><td>入れ子を持たない。<code>skip</code> は基本のブロックだけに当たり、同じ ID で足したブロックは消えず、基本のブロックの子も引き込まない（J-114）</td></tr>
+      <tr><td>例外日の日付</td><td>日付は <code>yyyy-MM-dd</code> で書く。読めない例外日（不正な日付、欠落）は例外を作らず、位置つきのエラーにする。例外日の前後の日は、日付の範囲の端（0001-01-01、9999-12-31）の手前で止める（J-130）</td></tr>
+      <tr><td>循環</td><td><code>within</code> をたどって自分に戻れば、エラー（J-115）</td></tr>
+      <tr><td>同じブロックの時間帯</td><td>同じブロックの <code>times</code> どうしが重なれば、エラー（J-116）</td></tr>
+      <tr><td>ブロックの ID</td><td>プランの中では「定義の ID@開始日」（<code>sleep_weekday@2026-11-02</code>）で指す。プランの継ぎ目をまたいで続いているかの判定に使う（D5 5.5）。<code>times</code> の2つ目以降と、入れ子で分かれた外側の後半は、<code>.2</code> のように番号を付ける（<code>school.2@2026-11-02</code>）。番号は、その日に開始する順に、2つ目から振る（J-105）</td></tr>
       <tr><td>ブロックの長さ</td><td>固定予定のブロックでは、行動はブロックの時間いっぱい続く。行動定義の <code>duration</code> は使わない</td></tr>
     </table>
   </div>
@@ -337,7 +344,7 @@ display = "風邪"
 rate.health = -0.5
 weight."tag:outdoor" = 0.3
 threshold.health = 25</code></pre>
-  <p><code>duration</code> は、その場所でする行動そのものの長さで、移動時間を含まない。移動時間は、場所のグラフから別に足す（D5 5.2 の帰還の式）。固定予定のブロックでは、<code>duration</code> は使わず、ブロックの長さで決まる（3.5）。<code>schedule_only = true</code> の行動は、固定予定のブロックと反射からだけ始まり、Decider と Planner の候補にならない（ペルソナの <code>use</code> のワイルドカードに当たっても外す。D5 5.2）。授業やバイトのように、自由時間に選ばれると困る行動に付ける。<code>duration</code> は省略してよい（固定予定ではブロックの長さを使うため）。効果、requires、制限の語彙は D2。組み込みの反射の行動（<code>core.faint</code> など）は、所要時間を固定で書く（反射は Apply が乱数を引かずに始めるため）。</p>
+  <p><code>duration</code> は、その場所でする行動そのものの長さで、移動時間を含まない。移動時間は、場所のグラフから別に足す（D5 5.2 の帰還の式）。固定予定のブロックでは、<code>duration</code> は使わず、ブロックの長さで決まる（3.5）。<code>schedule_only = true</code> の行動は、固定予定のブロックと反射からだけ始まり、Decider と Planner の候補にならない（ペルソナの <code>use</code> のワイルドカードに当たっても外す。D5 5.2）。授業やバイトのように、自由時間に選ばれると困る行動に付ける。<code>duration</code> は省略してよい（固定予定ではブロックの長さを使うため）。schedule_only でない行動では所要時間が必須で、組み込みの <code>core.go_to_next</code> だけ例外（J-128）。数は有限で範囲内に書く。確率は 0〜1、状態変数の初期値と反射や状態のしきい値は 0〜100、社交欲求の下限と上限は −100〜100、率と増減（行動、状態、出来事）は −1000〜1000、復元は気力、健康度、退屈度が 0〜100、社交欲求が −100〜100、重みと好みは 0 以上、<code>repeat_decay</code> は 0 より大きく 1 以下、<code>max_per_day</code> は int の範囲。社交欲求にはしきい値がない（D5 5.6）ので、反射と状態のしきい値に書けない（J-118）。所要時間 0 の <code>core.idle</code>（何もしない）は、この schedule_only の検査の例外で、乱数の位置だけを進める（J-129）。効果、requires、制限の語彙は D2。出来事の効果は、<code>effects.vital = { energy = -20 }</code>、<code>effects.close_place = { place = "..." }</code>、<code>effects.slow_place = { place_tag = "road", add = "15m" }</code>（<code>factor</code> も可）、<code>effects.condition = "cold"</code> と書く（J-106）。組み込みの反射の行動（<code>core.faint</code> など）は、所要時間を固定で書く（反射は Apply が乱数を引かずに始めるため）。</p>
 </section>
 
 <section id="domain">
@@ -373,6 +380,8 @@ sealed record PersonaState(
     <li>ID は <code>readonly record struct</code> で型を分ける（<code>PersonaId</code>、<code>WorldId</code>、<code>PlaceId</code>）。文字列の取り違えをコンパイラで防ぐ</li>
     <li>ワールドやペルソナの状態のような、項目の多いものは <code>sealed record</code>（参照型）にする。参照が同じかどうかだけで「変わったか」がわかり（変わった行だけを SQLite に書くため）、辞書から取り出したり写しを渡したりするたびの丸ごとのコピーも起きない。<code>default</code> で中身の空な状態が作られることもない。ID、イベントの並びの位置、状態変数1本ぶん（値、基準時刻、率）のような小さな値は、<code>readonly record struct</code> にする</li>
     <li>受信箱は、ペルソナインスタンスの状態に持つ（VISION 2章）。アイテムの形は下の「受信箱のアイテム」</li>
+    <li>プランのブロック（<code>PlanBlock</code>）は、開始、終了（UTC）、種類（固定、計画、自由）、行動、場所に加えて、電話の指定、間隔、同行、同行者が抜けたときの扱いを、プランを作ったときの固定予定から写して持つ。ID は固定と計画のブロックだけが持ち、自由時間は null（J-124。変更は次のプランから。D1 1.12）</li>
+    <li>発生中の出来事（<code>ActiveIncident</code>）は、解決済みの効果（対象の場所を含む。3.8 の <code>incidents</code>）を持つ。解消のときに定義を引き直さない。その場の定義の出来事は、<code>DefId</code> を null にする（J-119）</li>
     <li>受信箱と未送信の操作は、処理が済んだら状態から外し、SQLite の表にだけ残す。状態は、決める側に渡す写しでもあるので、小さく保つ</li>
     <li>居合わせ（誰と同じ場所にいるか）は、状態に持たない。<code>Personas</code> の <code>Location</code> から導く（VISION 2章）</li>
     <li>定義も同じく不変の <code>Definitions</code> にし、Apply と決める側に引数で渡す（VISION 4章）。最短経路のような導出データは、<code>Definitions</code> と <code>GraphVersion</code> をキーにしたキャッシュに持ち、保存しない</li>
@@ -404,7 +413,7 @@ sealed record PersonaState(
     string? Reaction,                       // リアクションの絵文字（Reaction）
     string? TargetExternalId,               // リアクションされた自分の発言の外部 ID（Reaction）
     DateTimeOffset? OriginalArrivedAt,      // 元の到着時刻（圏外明けに取り直したとき）
-    JsonObject Payload);                    // チャンネルだけが読む中身（返信先のノート ID など）
+    JsonElement Payload);                    // チャンネルだけが読む中身（返信先のノート ID など）
 
 sealed record Sender(string UserId, string DisplayName, string? Handle);
 sealed record ThreadMessage(Sender Sender, bool IsSelf, string? Text, DateTimeOffset PostedAt,
@@ -423,7 +432,7 @@ sealed record Attachment(string Kind, string Url, string? Description);   // Kin
     <li>それまでの会話（<code>Thread</code>）は、チャンネルが到着のときに取って入れる。ノートへの返信なら返信チェーン、DM なら直近のメッセージ（ebise と同じ）。到着のイベントに記録されるので、決める側は外を取り直さずに読める。長い会話でも、直近 20 件までにする</li>
     <li>自分の発言かどうか（<code>IsSelf</code>）は、チャンネルが付ける。LLM には、自分の発言と相手の発言を分けて見せる</li>
     <li><code>ConversationKey</code> が同じアイテムは、同じ会話として、まとめて捌く（D6 6.5）</li>
-    <li><code>notification.arrived</code> の適用で入り、<code>inbox.handled</code> の適用で外れる（D2 2.3）。外れたあとは、<code>inbox</code> の表に、結果と一緒に残る（3.8）</li>
+    <li><code>notification.arrived</code> の適用で入り、<code>inbox.handled</code> の適用で外れる（D2 2.3）。到着の連番は、チャンネルの受け付けでは 0 で積み、適用のときに入れる（J-111）。外れたあとは、<code>inbox</code> の表に、結果と一緒に残る（3.8）</li>
   </ul>
 </section>
 
@@ -514,7 +523,8 @@ CREATE TABLE world_terms (                 -- 変換の辞書の実行中の記�
 CREATE TABLE incidents (                   -- 発生中の出来事
   id INTEGER PRIMARY KEY,                  -- incident.occurred の seq
   world_id TEXT NOT NULL, persona_id TEXT, def_id TEXT,
-  effects TEXT NOT NULL, started_utc INTEGER NOT NULL, ends_utc INTEGER
+  effects TEXT NOT NULL,                   -- 解決済みの効果（移動時間、閉鎖、状態。対象の場所を含む。J-119）
+  started_utc INTEGER NOT NULL, ends_utc INTEGER
 );
 CREATE TABLE personas (
   id TEXT PRIMARY KEY, def_id TEXT NOT NULL, world_id TEXT NOT NULL, status TEXT NOT NULL,
@@ -582,9 +592,9 @@ CREATE TABLE memory_cursors (
   <h2><span class="num">3.9</span>JSON とバージョン</h2>
   <ul>
     <li>イベントのペイロードは、イベントタイプごとの record にし、<code>System.Text.Json</code> で読み書きする。イベントタイプは列（<code>event_type</code>）で持つので、JSON の中には型の印を入れない</li>
-    <li>ペイロードには <code>"v": 1</code> のように、イベントタイプごとの版を入れる。項目を足すときは、版を上げずに省略可能な項目として足す。意味を変えるときだけ版を上げ、読み込み時に古い版を新しい形に変換する</li>
+    <li>ペイロードには <code>"v": 1</code> のように、イベントタイプごとの版を入れる。項目の名前は PascalCase で持ち、JSON の名前の付け方は、シリアライザの段階で決める（J-110）。項目を足すときは、版を上げずに省略可能な項目として足す。意味を変えるときだけ版を上げ、読み込み時に古い版を新しい形に変換する</li>
     <li>知らないイベントタイプのイベント（新しい版で書かれたもの）を読んだら、起動を止める。黙って捨てると、状態がずれるから</li>
-    <li>チャンネルが解釈する中身（返信先のノート ID など）は、コアが中を見ない JSON として持つ（VISION 10章）</li>
+    <li>チャンネルが解釈する中身（返信先のノート ID など）は、コアが中を見ない JSON として持つ（VISION 10章）。不変の <code>JsonElement</code> として持ち、可変の JSON を状態に入れない（P-21。J-122）</li>
   </ul>
 </section>
 

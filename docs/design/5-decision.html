@@ -79,9 +79,9 @@
     <li><strong>場所</strong>：ワールドの場所（定義の場所 + 採用済みの生えた場所）から、閉鎖中のものを外す。場所を固定するブロックの中なら、その場所だけ</li>
     <li><strong>requires</strong>：場所のタグ、携行品、チャンネル（つながっていて、圏外でない）を満たす組だけ残す</li>
     <li><strong>制限</strong>：クールダウン、1日の回数、時刻の範囲（開始時刻で判定）。投稿は、チャンネルの頻度制限と空振りのクールダウンも重ねる</li>
-    <li><strong>所要時間</strong>：残った組ごとに、行動 ID と場所 ID の順に並べてから乱数で引く（並びを固定して、結果を再現できるようにする）</li>
+    <li><strong>所要時間</strong>：残った組ごとに、行動 ID と場所 ID の順に並べてから乱数で引く（<code>core.go_to_next</code> は所要時間を引かない。D2 2.5、J-112）（並びを固定して、結果を再現できるようにする）</li>
     <li><strong>帰還できるか</strong>：VISION 5章の式で、次のブロックの開始に間に合うものだけ残す。次のブロックは、プランの中で次に来る固定か計画のブロック。なければ、プランの終わり</li>
-    <li><strong>次の予定の場所へ向かう</strong>：<code>core.go_to_next</code> を必ず足す。これで候補は空にならない（VISION 5章）。だから <code>core.go_to_next</code> は <code>forbid</code> の対象にしない。ペルソナ定義で明示的に外そうとしたら、読み込みのエラー（D7 7.2）にする。付いている状態の <code>forbid</code> に当たったときは、無視して候補に残し、ログに警告を出す（本来は当たってほしくないので、気づけるようにする。状態の <code>forbid</code> は行動タグでも書けて、何に当たるかを前もって全部は確かめられないため、エラーにはしない）</li>
+    <li><strong>次の予定の場所へ向かう</strong>：<code>core.go_to_next</code> を必ず足す。これで候補は空にならない（VISION 5章）。所要時間は持たず、着いたあとの待ちは次の予定の開始まで。なければプランの終わり（J-112）。だから <code>core.go_to_next</code> は <code>forbid</code> の対象にしない。ペルソナ定義で明示的に外そうとしたら、読み込みのエラー（D7 7.2）にする。付いている状態の <code>forbid</code> に当たったときは、無視して候補に残し、ログに警告を出す（本来は当たってほしくないので、気づけるようにする。状態の <code>forbid</code> は行動タグでも書けて、何に当たるかを前もって全部は確かめられないため、エラーにはしない）</li>
   </ol>
   <div class="callout">
     <span class="label">決定 P-29　所要時間の引き方</span>
@@ -161,7 +161,7 @@ travel(p)  = exp( −移動時間（分） / 30 )</code></pre>
 
   <h3>スマホを開く機会</h3>
   <ul>
-    <li>候補は「スマホを開く」「投稿する」「何もしない」の3つ（VISION 10章）。開く重みは、スマホを開く行動の <code>base × pref</code> に、<code>1 + 0.5 × min(未読の数, 4)</code> を掛ける（通知のバッジに気づく）。投稿する重みは、投稿する行動の <code>base × pref × need</code>（5.3。人と話したい、退屈しているほど上がる）。何もしないは 1.0</li>
+    <li>候補は「スマホを開く」「投稿する」「何もしない」の3つ（VISION 10章）。「何もしない」を選んだときも、副行動 core.idle を所要時間 0 で <code>activity.chosen</code> に記録し、乱数の範囲を残す（J-129）。開く重みは、スマホを開く行動の <code>base × pref</code> に、<code>1 + 0.5 × min(未読の数, 4)</code> を掛ける（通知のバッジに気づく）。投稿する重みは、投稿する行動の <code>base × pref × need</code>（5.3。人と話したい、退屈しているほど上がる）。何もしないは 1.0</li>
     <li>「投稿する」は、自由時間と同じく requires と制限で絞る。チャンネルが <code>post</code> の能力を持ち、クールダウン中でないときだけ候補になる（D2 2.6）</li>
     <li>開くか投稿するなら、ブロックの行動はそのままにして、副行動（<code>Overlay</code>、D3 3.7）として短く実行する。所要時間は、行動定義の範囲から引く</li>
   </ul>
@@ -319,7 +319,7 @@ h = 0 なら  健康度 += 5</code></pre>
   <h2><span class="num">5.8</span>出来事の抽選</h2>
   <ol>
     <li>日の始まりに、ワールドレーンで動く。ワールド向けの出来事はワールドの乱数の列、ペルソナ向けの出来事はペルソナごとの列で引く</li>
-    <li>出来事の定義ごとに、再発までの間隔（前回の発生から）と、曜日などの条件を確かめ、<code>chance</code> で発生を引く</li>
+    <li>出来事の定義ごとに、再発までの間隔（前回の発生から）と、曜日などの条件を確かめ、<code>chance</code> で発生を引く。出来事の定義は ID の序数順に引く（定義を書いた順に依らないように）</li>
     <li>発生するものは、時刻（<code>hours</code> の範囲から1分刻みで一様に）、対象（<code>place_tag</code> なら候補から一様に）、持続時間を引く</li>
     <li>結果を <code>incident.occurred</code> のまとまりとして、時刻つきで返す。ホライズンは 0:00 なので、抽選が返るまで、その日の適用は始まらない（LLM を使わないので一瞬）</li>
   </ol>
@@ -331,23 +331,24 @@ h = 0 なら  健康度 += 5</code></pre>
 
 <section id="rng">
   <h2><span class="num">5.9</span>乱数</h2>
-<pre><code>シード  s = SHA-256( UTF-8("{ワールドの種}:{持ち主}:{用途}") ) の先頭 8 バイト
+<pre><code>シード  s = SHA-256( UTF-8("{ワールドの種}:{持ち主}:{用途}") ) の先頭 8 バイトを、リトルエンディアンで読んだ値（J-97）
 i 番目の値 = SplitMix64 の混ぜ関数( s + (i + 1) × 0x9E3779B97F4A7C15 )
 
 NextDouble = (値 >> 11) × 2^−53
-NextInt    = 乗算と棄却による偏りのない方法（Lemire）</code></pre>
+NextInt    = 乗算と棄却による偏りのない方法（Lemire）。64 ビットの値で引き、棄却の判定も 64 ビットで行う（J-98）</code></pre>
   <div class="table-wrap">
     <table>
       <tr><th>持ち主</th><th>用途</th><th>使うところ</th></tr>
       <tr><td>ペルソナ ID</td><td><code>decide</code></td><td>Decider、予定の乱れ、スマホを開く機会</td></tr>
-      <tr><td>ペルソナ ID</td><td><code>incident</code></td><td>ペルソナ向けの出来事の抽選</td></tr>
+      <tr><td>ペルソナ ID</td><td><code>incident/{現地の日付 yyyy-MM-dd}</code></td><td>ペルソナ向けの出来事の抽選</td></tr>
       <tr><td>ペルソナ ID</td><td><code>sns</code></td><td>話題の候補の選び方、受信箱の順番など、効果のハンドラの中の抽選</td></tr>
-      <tr><td><code>world</code></td><td><code>incident</code></td><td>ワールド向けの出来事の抽選</td></tr>
+      <tr><td><code>world</code></td><td><code>incident/{現地の日付 yyyy-MM-dd}</code></td><td>ワールド向けの出来事の抽選</td></tr>
     </table>
   </div>
   <ul>
-    <li>SplitMix64 は、i 番目の値を i から直接計算できる（カウンタ方式）。だから、保存するのは「引いた回数」だけでよい（VISION 4章「引いた回数のカウンタを、状態として保存する」とそのまま合う）。状態の中では、用途ごとの位置を <code>Rng</code> に持つ（D3 3.7）</li>
-    <li>決める側は、写しの位置から引き始め、出力に「どの列の、どこからどこまで引いたか」を記録する。Apply は、位置が同じことを guard で確かめてから進める（D1 1.7）</li>
+    <li>出来事の抽選（D5 5.8）は1日1回なので、位置を持たない。用途を <code>incident/{現地の日付}</code> にして、毎日 0 番から引く。ワールド向けもペルソナ向けも同じ。何も起きなかった日は出力が 0 件でも、翌日は別の列になる（J-123）。位置を保存するのは <code>decide</code> と <code>sns</code> の用途だけ</li>
+    <li>SplitMix64 は、i 番目の値を i から直接計算できる（カウンタ方式）。だから、保存するのは「引いた回数」だけでよい（VISION 4章「引いた回数のカウンタを、状態として保存する」とそのまま合う。出来事の抽選を除く。J-123）。状態の中では、用途ごとの位置を <code>Rng</code> に持つ（D3 3.7）</li>
+    <li>決める側は、写しの位置から引き始め、出力に「どの列の、どこからどこまで引いたか」を記録する。その範囲は <code>RngDraws</code>（持ち主、用途、引き始めと引き終わりの位置）で持つ。対象は、行動の決定（<code>activity.chosen</code>）、予定の乱れへの対応（<code>block.responded</code>）、外向きの発話（<code>outbound.speech</code>）、受信箱の捌き（<code>inbox.handled</code>）、場所の追加（<code>place.added</code>）、投稿の空振り（<code>post.skipped</code>）（J-120）。Apply は、位置が同じことを guard で確かめてから進める（D1 1.7）</li>
     <li><code>string.GetHashCode()</code> と <code>System.Random</code> は使わない（VISION 4章）。SHA-256 と SplitMix64 は、どの環境でも同じ値になる</li>
   </ul>
   <div class="callout">
@@ -362,7 +363,7 @@ NextInt    = 乗算と棄却による偏りのない方法（Lemire）</code></p
   <ul>
     <li>場所の数は数十〜百程度なので、全点対の最短経路を Floyd–Warshall で求め、経路の復元用の表と一緒に持つ。作り直すのは、グラフの版（<code>GraphVersion</code>）か定義が変わったとき</li>
     <li>閉鎖中の場所は、行き先にも経路の途中にもしない。<code>slow_place</code> は、その場所につながる辺の時間を変えた表で計算する</li>
-    <li>移動の経路は、出発時に辺の列として確定させ、<code>travel.started</code> に記録する。途中で辺が伸びたら、いまどの辺の上にいるかを出発時刻と各辺の時間から計算し、残りの時間を新しい値で積み直す</li>
+    <li>移動の経路は、出発時に辺の列として確定させ、<code>travel.started</code> に記録する。辺は（出発、到着、移動時間）で持つ。同じ長さの経路が複数あれば、場所の ID の順で最初に見つかったものを選び、場所の渡す順には依らない（J-121、J-126）。途中で辺が伸びたら、いまどの辺の上にいるかを出発時刻と各辺の時間から計算し、残りの時間を新しい値で積み直す</li>
   </ul>
   <div class="callout">
     <span class="label">決定 P-39　移動中の居場所</span>
@@ -373,7 +374,7 @@ NextInt    = 乗算と棄却による偏りのない方法（Lemire）</code></p
 <section id="together">
   <h2><span class="num">5.11</span>同行</h2>
   <ul>
-    <li>同行は、両方の固定予定に、同じ時刻・場所・行動で <code>with</code> を書いたときだけ成立する（VISION 14章）。片方にしか書いていなければ、読み込み時に警告し、同行として扱わない</li>
+    <li>同行は、両方の固定予定に、同じ時刻・場所・行動で <code>with</code> を書いたときだけ成立する。時刻、場所、行動が一致しなければ警告し、片側判定は例外日のブロックも見る（J-117）（VISION 14章）。片方にしか書いていなければ、読み込み時に警告し、同行として扱わない</li>
     <li>実行時は、それぞれが自分のブロックとして、自分のレーンで動く。2人分をまとめて決める処理は作らない</li>
     <li>片方が欠席・早退・反射で抜けたとき、もう片方の扱いは、ブロックの <code>on_partner_absent</code> で決める。<code>continue</code>（既定）はそのまま続ける。<code>cancel</code> は、相手が抜けたイベントの Apply が、こちらのブロックを終わらせて、自由時間の決めどきを積む</li>
   </ul>

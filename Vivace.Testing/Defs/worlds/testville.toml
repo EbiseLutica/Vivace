@@ -1,0 +1,54 @@
+# テスト用の小さな世界。1ワールド、数か所の場所。
+id = "testville"
+name = "テストの町"
+lore = """
+テスト用の小さな町。学校と家と公園と喫茶店がある。
+"""
+utc_offset = "+09:00"
+generated_places = "auto"
+
+[calendar]
+holidays = "jp"
+events = { "12-24" = "クリスマスイブ" }
+
+[[term]]
+from = "テスト語"
+verdict = "pass"
+
+[[place]]
+id = "kaori_room"
+name = "香織の部屋"
+tags = ["desk"]
+group = "家"
+links = { home_living = 1 }
+
+[[place]]
+id = "home_living"
+name = "居間"
+tags = ["sofa"]
+group = "家"
+links = { street = 3 }
+
+[[place]]
+id = "street"
+name = "通り"
+tags = ["road"]
+links = { park = 10, school_2a = 15, cafe = 5 }
+
+[[place]]
+id = "park"
+name = "公園"
+tags = ["park"]
+links = { }
+
+[[place]]
+id = "cafe"
+name = "喫茶店"
+tags = ["cafe"]
+links = { }
+
+[[place]]
+id = "school_2a"
+name = "2年A組の教室"
+tags = ["classroom"]
+links = { street = 15 }

@@ -18,7 +18,7 @@
     <span class="chip">2026-11-06 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
     <span class="chip fixed">案はすべて合意（57 件）</span>
-    <span class="chip fixed">枠の外の判断もすべて合意（96 件）</span>
+    <span class="chip fixed">枠の外の判断もすべて合意（130 件）</span>
   </div>
 </header>
 
@@ -173,7 +173,7 @@
 
 <section id="judgments">
   <h2><span class="num">0.5</span>枠の外の判断</h2>
-  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-96）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
+  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-130）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
   <h3>VISION の解釈で決めたもの</h3>
   <p>VISION から導いたつもりで、実際には読み方を1つに決めたもの。いちばん見落としやすいので、先に見てほしい。</p>
   <div class="table-wrap">
@@ -206,6 +206,7 @@
       <tr><td>J-25</td><td>記憶の整理で、事実のイベントは public の層に入れる。前提として、dm の会話からは事実のイベントを生まない（VISION 13章に明記した） <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
       <tr><td>J-26</td><td>記憶の整理はペルソナごとに1つ。前の整理が終わらないうちに次の睡眠が来たら、前のが終わってから新しい上限で続ける <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
       <tr><td>J-27</td><td>Misskey の audience の決め方は、ebise の <code>audienceOf</code> の規則をそのまま移す <span class="chip fixed">合意</span></td><td><a href="4-components.html#channel">D4 4.3</a></td></tr>
+      <tr><td>J-123</td><td>出来事の抽選は、用途に日付を入れ（<code>incident/{現地の日付}</code>）、毎日 0 番から引く。VISION 4章の「引いた回数のカウンタを状態として保存し、範囲を記録し、Apply が確かめる」の例外。再現性の考え方は変えていない（同じシードと同じ日付なら同じ結果）。持ち主に <code>world</code> を足した。位置は持たない。結果が定義の列挙順に依らないよう、定義の ID の序数順に引く。窓口からの投入は抽選せず、窓口で場所と効果を確定して渡す <span class="chip fixed">合意</span></td><td><a href="5-decision.html#rng">D5 5.8、5.9</a>、<a href="2-events.html#injection">D2 2.8</a></td></tr>
     </table>
   </div>
   <h3>VISION にない仕組みと項目</h3>
@@ -253,6 +254,39 @@
       <tr><td>J-94</td><td>アセンブリは図の7つに合わせた（P-25 の「6つ」を直した） <span class="chip fixed">合意</span></td><td><a href="4-components.html#assemblies">D4 4.1</a></td></tr>
       <tr><td>J-95</td><td>テストは別の <code>Vivace.Tests</code> に置き、P-25 の数には入れない。パッケージのバージョンは <code>Directory.Packages.props</code> で一括して固定する <span class="chip fixed">合意</span></td><td><a href="8-stack.html#libraries">D8 8.2</a>、<a href="4-components.html#assemblies">D4 4.1</a></td></tr>
       <tr><td>J-96</td><td>テストの道具の版：Verify は 32.x に留める（33.0.0 から NuGet のパッケージのライセンスが MIT から OSMF EULA に変わり、SponsorCheck がビルドを止める。ソースは MIT のまま）。xUnit v3 は 4.x（<code>mtp-v2</code>）。xunit か Verify を上げるときは、Verify を使うテストを回す。テストは Verify を直接呼ばず、<code>Vivace.Testing</code> のヘルパーを通す <span class="chip fixed">合意</span></td><td><a href="8-stack.html#libraries">D8 8.2</a></td></tr>
+      <tr><td>J-97</td><td>乱数のシードは、SHA-256 の先頭 8 バイトをリトルエンディアンで読む。どの環境でも同じ値になるようにするため <span class="chip fixed">合意</span></td><td><a href="5-decision.html#rng">D5 5.9</a></td></tr>
+      <tr><td>J-98</td><td><code>NextInt</code> は 64 ビットの値で Lemire の方法を取り、棄却の判定も 64 ビットで行う <span class="chip fixed">合意</span></td><td><a href="5-decision.html#rng">D5 5.9</a></td></tr>
+      <tr><td>J-99</td><td>定義の読み込みは、構文のエラーがあればそのファイルを止め、ほかのエラーは全件集める。エラーがあれば <code>Definitions</code> は作らない。位置は、キーで指せるものはキー、指せないものは表の見出し。行と列は Tomlyn の値を使わず、文字の位置から 1 から数える <span class="chip fixed">合意</span></td><td><a href="7-operations.html#validation">D7 7.2</a></td></tr>
+      <tr><td>J-100</td><td>行動の <code>phone</code> の既定は closed。組み込みの <code>core.idle</code> だけ open（D2 2.5 の表に既定がなかったため） <span class="chip fixed">合意</span></td><td><a href="3-data.html#action-def">D3 3.6</a></td></tr>
+      <tr><td>J-101</td><td>時間の長さの単位は d、h、m だけ（秒は書かない）。0 の長さは読み込みのエラー <span class="chip fixed">合意</span></td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
+      <tr><td>J-102</td><td>曜日（<code>days</code>）を省略したブロックは、毎日使う <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
+      <tr><td>J-103</td><td>例外日のブロックには <code>within</code>、<code>in</code>、<code>days</code> を書けない（エラー）。その日だけに足すため <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
+      <tr><td>J-104</td><td>固定予定の重なりは、2028 年から 28 年の全日（うるう年と曜日を一巡する）と、例外日の前後の日について、祝日を考えずに検査する。前日から続くブロックとの重なりも見る <span class="chip fixed">合意</span></td><td><a href="7-operations.html#validation">D7 7.2</a></td></tr>
+      <tr><td>J-105</td><td>分割したブロックの番号は、その日に開始する順に、2 つ目から <code>.2</code>、<code>.3</code> とする <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
+      <tr><td>J-106</td><td>出来事の効果の TOML の書き方（<code>vital</code>、<code>close_place</code>、<code>slow_place</code>、<code>condition</code>） <span class="chip fixed">合意</span></td><td><a href="3-data.html#action-def">D3 3.6</a></td></tr>
+      <tr><td>J-107</td><td>場所のタグが使われているかは、行動の <code>requires.place_tags</code> と、出来事の <code>slow_place</code>、<code>close_place</code> の <code>place_tag</code> で判定する。どれにも出てこないタグは警告 <span class="chip fixed">合意</span></td><td><a href="7-operations.html#validation">D7 7.2</a></td></tr>
+      <tr><td>J-108</td><td>好み（<code>prefs</code>）のキーは、行動の ID か <code>tag:</code> の行動タグだけ。ほかは参照のエラー <span class="chip fixed">合意</span></td><td><a href="3-data.html#persona-def">D3 3.4</a></td></tr>
+      <tr><td>J-109</td><td>早送りの時計は、過去の時刻を指されても戻らず、いまの時刻のまま完了する <span class="chip fixed">合意</span></td><td><a href="1-execution.html#clock">D1 1.10</a></td></tr>
+      <tr><td>J-110</td><td>ペイロードの版は基底の <code>V</code>（JSON の <code>"v"</code>）。項目の名前は PascalCase で持ち、JSON の名前の付け方はシリアライザの段階で決める <span class="chip fixed">合意</span></td><td><a href="3-data.html#json">D3 3.9</a></td></tr>
+      <tr><td>J-111</td><td>通知の到着（<code>notification.arrived</code>）の <code>Item.Seq</code> は、チャンネルの受け付けでは 0 で積み、適用のときに入れる <span class="chip fixed">合意</span></td><td><a href="3-data.html#inbox-item">D3 3.7.1</a></td></tr>
+      <tr><td>J-112</td><td><code>core.go_to_next</code> は所要時間を持たない。着いたあとの待ちは次の予定の開始まで。なければプランの終わり（D5 5.2 の帰還に合わせる）。schedule_only でない行動の所要時間の必須検査の例外は、組み込みの <code>core.go_to_next</code> だけ（J-128） <span class="chip fixed">合意</span></td><td><a href="2-events.html#effects">D2 2.5</a>、<a href="5-decision.html#candidates">D5 5.2</a></td></tr>
+      <tr><td>J-113</td><td>時間の長さは各単位 9 桁まで、合計 1000 年まで。読みは例外を出さず、数字は ASCII だけ（全角は読めない） <span class="chip fixed">合意</span></td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
+      <tr><td>J-114</td><td>例外日に足したブロックは入れ子を持たず、<code>skip</code> は基本のブロックだけに当たる。同じ ID で足したブロックは消えず、基本のブロックの子も引き込まない <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
+      <tr><td>J-115</td><td><code>within</code> をたどって自分に戻る（自己参照を含む）ものは、エラー。親の連鎖は訪問の集合で辿り、打ち切りの深さは使わない <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
+      <tr><td>J-116</td><td>同じブロックの <code>times</code> どうしが重なれば、エラー <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
+      <tr><td>J-117</td><td>同行の時刻、場所、行動は、同じ日の両者の解決結果で比べ、一致しなければ警告する。片側判定は例外日のブロックも見る <span class="chip fixed">合意</span></td><td><a href="5-decision.html#together">D5 5.11</a></td></tr>
+      <tr><td>J-118</td><td>数は有限で範囲内に書く。確率は 0〜1、状態変数の初期値と反射や状態のしきい値は 0〜100、社交欲求の下限と上限は −100〜100、率と増減（行動、状態、出来事）は −1000〜1000、復元は気力、健康度、退屈度が 0〜100、社交欲求が −100〜100、重みと好みは 0 以上、<code>repeat_decay</code> は 0 より大きく 1 以下、<code>max_per_day</code> は int の範囲。社交欲求にはしきい値がない（D5 5.6）ので、反射と状態のしきい値に書けない。出来事の対象と効果の組み合わせは D2 2.7 の表のとおり。slow_place は場所（place か place_tag）のどちらか一方と、add か factor の少なくとも一方 <span class="chip fixed">合意</span></td><td><a href="2-events.html#incident-effects">D2 2.7</a>、<a href="3-data.html#action-def">D3 3.6</a></td></tr>
+      <tr><td>J-119</td><td>出来事の発生は、解決済みの効果（対象の場所を含む）をペイロードと発生中の出来事に持つ。その場の定義は <code>DefId</code> を null にする。移動時間と閉鎖の両方を残せる <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a>、<a href="3-data.html#sqlite">3.8</a>、<a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>J-120</td><td>乱数を引いた出力は、引いた範囲（<code>RngDraws</code>）を持つ。対象は、行動の決定、予定の乱れへの対応、外向きの発話、受信箱の捌き、場所の追加、投稿の空振り。「何もしない」を選んだときは副行動 <code>core.idle</code> を所要時間 0 で記録する（J-129） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#rng">D5 5.9</a>、<a href="5-decision.html#special">D5 5.4</a></td></tr>
+      <tr><td>J-121</td><td>移動の経路は、移動時間つきの辺の列（From、To、Minutes）で持つ。経路の同点は場所の ID の順で選ぶ <span class="chip fixed">合意</span></td><td><a href="5-decision.html#routes">D5 5.10</a></td></tr>
+      <tr><td>J-122</td><td>チャンネルの設定とペイロードの中身は、不変の <code>JsonElement</code> で持つ（可変の JSON を状態に入れない。P-21） <span class="chip fixed">合意</span></td><td><a href="3-data.html#json">D3 3.9</a></td></tr>
+      <tr><td>J-124</td><td>プランのブロックは、電話の指定、間隔、同行、同行者が抜けたときの扱いを、プランを作ったときの固定予定から写して持つ。<code>BlockId</code> は自由時間だけ null（固定と計画のブロックは非 null） <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>J-125</td><td>数と日付の読み書きは、カルチャに依らない（InvariantCulture）。ブロックの ID の日付は西暦の <code>yyyy-MM-dd</code> に固定する <span class="chip fixed">合意</span></td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
+      <tr><td>J-126</td><td>出力の並びは序数で固定する。ファイルは相対パスの順、問題は位置、コード、文面の順、場所のつながりは ID の順、経路の同点は場所の ID の順 <span class="chip fixed">合意</span></td><td><a href="7-operations.html#validation">D7 7.2</a></td></tr>
+      <tr><td>J-127</td><td>警告を足した。使う行動のワイルドカードに当たる行動がない（プラグインなしでも読める）、requires の携行品を持たず一度も実行できない行動、同行の不一致 <span class="chip fixed">合意</span></td><td><a href="7-operations.html#validation">D7 7.2</a></td></tr>
+      <tr><td>J-128</td><td><code>schedule_only</code> でない行動の所要時間は必須（組み込みの <code>core.go_to_next</code> だけ例外。J-112） <span class="chip fixed">合意</span></td><td><a href="3-data.html#action-def">D3 3.6</a></td></tr>
+      <tr><td>J-129</td><td>「何もしない」（スマホを開く機会）を選んだときは、副行動 <code>core.idle</code> を所要時間 0 で <code>activity.chosen</code> に記録する。抽選の範囲を残し、オーバーレイは始まらない <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
+      <tr><td>J-130</td><td>例外日の日付は <code>yyyy-MM-dd</code> で書く。読めない例外日（不正な日付、欠落）は例外を作らず、位置つきのエラーにする。例外日の前後の日は、日付の範囲の端（0001-01-01、9999-12-31）の手前で止める <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>
