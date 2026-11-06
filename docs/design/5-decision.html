@@ -319,7 +319,7 @@ h = 0 なら  健康度 += 5</code></pre>
   <h2><span class="num">5.8</span>出来事の抽選</h2>
   <ol>
     <li>日の始まりに、ワールドレーンで動く。ワールド向けの出来事はワールドの乱数の列、ペルソナ向けの出来事はペルソナごとの列で引く</li>
-    <li>出来事の定義ごとに、再発までの間隔（前回の発生から）と、曜日などの条件を確かめ、<code>chance</code> で発生を引く</li>
+    <li>出来事の定義ごとに、再発までの間隔（前回の発生から）と、曜日などの条件を確かめ、<code>chance</code> で発生を引く。出来事の定義は ID の序数順に引く（定義を書いた順に依らないように）</li>
     <li>発生するものは、時刻（<code>hours</code> の範囲から1分刻みで一様に）、対象（<code>place_tag</code> なら候補から一様に）、持続時間を引く</li>
     <li>結果を <code>incident.occurred</code> のまとまりとして、時刻つきで返す。ホライズンは 0:00 なので、抽選が返るまで、その日の適用は始まらない（LLM を使わないので一瞬）</li>
   </ol>
@@ -340,14 +340,15 @@ NextInt    = 乗算と棄却による偏りのない方法（Lemire）。64 ビ�
     <table>
       <tr><th>持ち主</th><th>用途</th><th>使うところ</th></tr>
       <tr><td>ペルソナ ID</td><td><code>decide</code></td><td>Decider、予定の乱れ、スマホを開く機会</td></tr>
-      <tr><td>ペルソナ ID</td><td><code>incident</code></td><td>ペルソナ向けの出来事の抽選</td></tr>
+      <tr><td>ペルソナ ID</td><td><code>incident/{現地の日付 yyyy-MM-dd}</code></td><td>ペルソナ向けの出来事の抽選</td></tr>
       <tr><td>ペルソナ ID</td><td><code>sns</code></td><td>話題の候補の選び方、受信箱の順番など、効果のハンドラの中の抽選</td></tr>
-      <tr><td><code>world</code></td><td><code>incident</code></td><td>ワールド向けの出来事の抽選</td></tr>
+      <tr><td><code>world</code></td><td><code>incident/{現地の日付 yyyy-MM-dd}</code></td><td>ワールド向けの出来事の抽選</td></tr>
     </table>
   </div>
   <ul>
-    <li>SplitMix64 は、i 番目の値を i から直接計算できる（カウンタ方式）。だから、保存するのは「引いた回数」だけでよい（VISION 4章「引いた回数のカウンタを、状態として保存する」とそのまま合う）。状態の中では、用途ごとの位置を <code>Rng</code> に持つ（D3 3.7）</li>
-    <li>決める側は、写しの位置から引き始め、出力に「どの列の、どこからどこまで引いたか」を記録する。Apply は、位置が同じことを guard で確かめてから進める（D1 1.7）</li>
+    <li>出来事の抽選（D5 5.8）は1日1回なので、位置を持たない。用途を <code>incident/{現地の日付}</code> にして、毎日 0 番から引く。ワールド向けもペルソナ向けも同じ。何も起きなかった日は出力が 0 件でも、翌日は別の列になる（J-123）。位置を保存するのは <code>decide</code> と <code>sns</code> の用途だけ</li>
+    <li>SplitMix64 は、i 番目の値を i から直接計算できる（カウンタ方式）。だから、保存するのは「引いた回数」だけでよい（VISION 4章「引いた回数のカウンタを、状態として保存する」とそのまま合う。出来事の抽選を除く。J-123）。状態の中では、用途ごとの位置を <code>Rng</code> に持つ（D3 3.7）</li>
+    <li>決める側は、写しの位置から引き始め、出力に「どの列の、どこからどこまで引いたか」を記録する。その範囲は <code>RngDraws</code>（持ち主、用途、引き始めと引き終わりの位置）で持つ。対象は、行動の決定（<code>activity.chosen</code>）、予定の乱れへの対応（<code>block.responded</code>）、外向きの発話（<code>outbound.speech</code>）、受信箱の捌き（<code>inbox.handled</code>）、場所の追加（<code>place.added</code>）、投稿の空振り（<code>post.skipped</code>）（J-120）。Apply は、位置が同じことを guard で確かめてから進める（D1 1.7）</li>
     <li><code>string.GetHashCode()</code> と <code>System.Random</code> は使わない（VISION 4章）。SHA-256 と SplitMix64 は、どの環境でも同じ値になる</li>
   </ul>
   <div class="callout">

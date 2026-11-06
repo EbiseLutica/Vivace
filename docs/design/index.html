@@ -206,6 +206,7 @@
       <tr><td>J-25</td><td>記憶の整理で、事実のイベントは public の層に入れる。前提として、dm の会話からは事実のイベントを生まない（VISION 13章に明記した） <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
       <tr><td>J-26</td><td>記憶の整理はペルソナごとに1つ。前の整理が終わらないうちに次の睡眠が来たら、前のが終わってから新しい上限で続ける <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
       <tr><td>J-27</td><td>Misskey の audience の決め方は、ebise の <code>audienceOf</code> の規則をそのまま移す <span class="chip fixed">合意</span></td><td><a href="4-components.html#channel">D4 4.3</a></td></tr>
+      <tr><td>J-123</td><td>出来事の抽選は、用途に日付を入れ（<code>incident/{現地の日付}</code>）、毎日 0 番から引く。VISION 4章の「引いた回数のカウンタを状態として保存し、範囲を記録し、Apply が確かめる」の例外。再現性の考え方は変えていない（同じシードと同じ日付なら同じ結果）。持ち主に <code>world</code> を足した。位置は持たない。結果が定義の列挙順に依らないよう、定義の ID の序数順に引く。窓口からの投入は抽選せず、窓口で場所と効果を確定して渡す <span class="chip fixed">合意</span></td><td><a href="5-decision.html#rng">D5 5.8、5.9</a>、<a href="2-events.html#injection">D2 2.8</a></td></tr>
     </table>
   </div>
   <h3>VISION にない仕組みと項目</h3>
