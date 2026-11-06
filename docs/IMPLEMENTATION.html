@@ -164,10 +164,10 @@
   <h3>段階0 足場</h3>
   <p><strong>参照</strong>：<a href="design/4-components.html#assemblies">D4 4.1</a>、<a href="design/8-stack.html#fixed">D8 8.1</a>、<a href="design/8-stack.html#libraries">8.2</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" disabled><code>Vivace.Cli</code> と <code>Vivace.Testing</code>、テストのプロジェクトを作り、<code>Vivace.slnx</code> に入れる（いまは <code>Vivace.Core</code> だけが入っていて、<code>Vivace.Cli</code> は空のフォルダ）</li>
-    <li><input type="checkbox" disabled><code>global.json</code> で SDK を固定し、プロジェクト共通の設定を <code>Directory.Build.props</code> にまとめる</li>
-    <li><input type="checkbox" disabled>D8 8.2 のライブラリを NuGet で確かめて、バージョンを固定する</li>
-    <li><input type="checkbox" disabled>xUnit v3 と Verify のテストを1本通す</li>
+    <li><input type="checkbox" checked disabled><code>Vivace.Cli</code> と <code>Vivace.Testing</code>、テストのプロジェクトを作り、<code>Vivace.slnx</code> に入れる（いまは <code>Vivace.Core</code> だけが入っていて、<code>Vivace.Cli</code> は空のフォルダ）</li>
+    <li><input type="checkbox" checked disabled><code>global.json</code> で SDK を固定し、プロジェクト共通の設定を <code>Directory.Build.props</code> にまとめる</li>
+    <li><input type="checkbox" checked disabled>D8 8.2 のライブラリを NuGet で確かめて、バージョンを固定する</li>
+    <li><input type="checkbox" checked disabled>xUnit v3 と Verify のテストを1本通す</li>
   </ul>
   <p><strong>完了条件</strong>：<code>dotnet test</code> が通る。</p>
 </section>
@@ -296,13 +296,12 @@
 
 <section id="gaps">
   <h2>いま見えている設計の穴</h2>
-  <p>手順を組む途中で、設計書のどうしが噛み合わない所を3つ見つけた。どれも、表の段階に入るときに決めて、設計書を直す。</p>
+  <p>手順を組む途中で、設計書のどうしが噛み合わない所を2つ見つけた。どれも、表の段階に入るときに決めて、設計書を直す。</p>
   <div class="table-wrap">
     <table>
       <tr><th>穴</th><th>場所</th><th>起きること</th><th>決める時期</th></tr>
       <tr><td>効果のハンドラの出力が、必ず却下される</td><td>D1 1.7、1.8、D2 2.2、D6 6.5</td><td>出力は行動の終了の時刻で段7。同じ時刻の <code>action.ended</code>（段2）が先に適用される。D1 1.8 の「どの遷移でも版が上がる」のとおりなら、<code>activityVersion</code> の guard が通らない</td><td>段階2。<code>action.ended</code> は版を上げず、打ち切りだけが上げる形が有力</td></tr>
       <tr><td>再起動で起動し直せないハンドラがある</td><td>D1 1.3、1.11、D2 2.3</td><td>復元の対象は処理中の決めどきだけ。Planner、出来事の抽選、効果のハンドラは <code>day.started</code>、<code>action.started</code>、<code>plan.due</code> から起動するので、途中で落ちると、出力が届かないまま進む</td><td>段階4</td></tr>
-      <tr><td>アセンブリの数が合わない</td><td>D4 4.1、index 0.4</td><td>図は7つ、P-25 は「6つ」</td><td>段階0</td></tr>
     </table>
   </div>
 </section>

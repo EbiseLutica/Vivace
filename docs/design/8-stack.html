@@ -53,7 +53,7 @@
   <div class="table-wrap">
     <table>
       <tr><th>項目</th><th>内容</th></tr>
-      <tr><td>言語とランタイム</td><td>C# 14 / .NET 10（<code>Vivace.Core.csproj</code> は <code>net10.0</code>、<code>Nullable</code> 有効）</td></tr>
+      <tr><td>言語とランタイム</td><td>C# 14 / .NET 10（<code>net10.0</code>、<code>Nullable</code> 有効などの共通の設定は <code>Directory.Build.props</code> にまとめ、各プロジェクトが継承する）</td></tr>
       <tr><td>実行時の状態の保存先</td><td>SQLite（VISION 1章）</td></tr>
     </table>
   </div>

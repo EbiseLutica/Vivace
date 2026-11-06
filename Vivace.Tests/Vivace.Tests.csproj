@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Vivace.Core\Vivace.Core.csproj" />
+    <ProjectReference Include="..\Vivace.Testing\Vivace.Testing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.mtp-v2" />
+    <PackageReference Include="Verify.XunitV3" />
+  </ItemGroup>
+
+</Project>
