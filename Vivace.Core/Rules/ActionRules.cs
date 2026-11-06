@@ -1,0 +1,259 @@
+using System.Collections.Immutable;
+using Vivace.Core.Definitions;
+using Vivace.Core.Domain;
+using Vivace.Core.Time;
+
+namespace Vivace.Core.Rules;
+
+/// <summary>
+/// 行動の候補の判定（D5 5.2）と、制限の判定（D2 2.6）。Decider と Apply の両方が使う。
+/// </summary>
+public static class ActionRules
+{
+    /// <summary>次の予定の場所へ向かう行動の ID（J-112）。使える行動と、スケジュールだけの印は見ない（J-138）。</summary>
+    public const string GoToNextId = "core.go_to_next";
+
+    /// <summary>好き（like）の倍率（D5 5.3）。</summary>
+    public const double LikeFactor = 2.0;
+
+    /// <summary>嫌い（dislike）の倍率（D5 5.3）。</summary>
+    public const double DislikeFactor = 0.4;
+
+    /// <summary>
+    /// ペルソナが使える行動か。使う行動の一覧（<c>use</c>）の、完全一致かワイルドカード（"core.*"）に当たるかで見る。
+    /// </summary>
+    /// <param name="persona">ペルソナの定義。</param>
+    /// <param name="actionId">行動の定義 ID。</param>
+    public static bool IsUsable(PersonaDef persona, string actionId)
+    {
+        foreach (var pattern in persona.Use)
+        {
+            if (pattern == actionId)
+            {
+                return true;
+            }
+
+            if (pattern.EndsWith(".*", StringComparison.Ordinal)
+                && actionId.StartsWith(pattern[..^1], StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// 行動の好みの倍率。行動 ID と行動タグの両方に当たれば積をとる。禁止（forbid、数値の 0）に当たれば null。
+    /// </summary>
+    /// <param name="persona">ペルソナの定義。</param>
+    /// <param name="action">行動の定義。</param>
+    public static double? PreferenceFactor(PersonaDef persona, ActionDef action)
+    {
+        var factor = 1.0;
+        var keys = new List<string> { action.Id };
+        keys.AddRange(action.Tags.Select(tag => "tag:" + tag));
+        foreach (var key in keys)
+        {
+            if (!persona.Prefs.TryGetValue(key, out var preference))
+            {
+                continue;
+            }
+
+            switch (preference.Kind)
+            {
+                case PreferenceKind.Forbid:
+                    return null;
+                case PreferenceKind.Like:
+                    factor *= LikeFactor;
+                    break;
+                case PreferenceKind.Dislike:
+                    factor *= DislikeFactor;
+                    break;
+                default:
+                    if (preference.Factor == 0)
+                    {
+                        return null;
+                    }
+
+                    factor *= preference.Factor;
+                    break;
+            }
+        }
+
+        return factor;
+    }
+
+    /// <summary>場所のタグと、携行品が、行動の requires を満たすか。チャンネルの条件は、段階2 では満たさない。</summary>
+    /// <param name="action">行動の定義。</param>
+    /// <param name="persona">ペルソナの定義。</param>
+    /// <param name="place">場所の定義。</param>
+    public static bool PlaceAllows(ActionDef action, PersonaDef persona, PlaceDef place) =>
+        action.Requires.ChannelCapability is null
+        && action.Requires.PlaceTags.All(tag => place.Tags.Contains(tag, StringComparer.Ordinal))
+        && action.Requires.Items.All(item => persona.Items.Contains(item, StringComparer.Ordinal));
+
+    /// <summary>
+    /// 制限（クールダウン、1日の回数、時刻の範囲）を満たすか（D2 2.6）。時刻は現地の時刻で見る。
+    /// </summary>
+    /// <param name="action">行動の定義。</param>
+    /// <param name="usage">行動の利用の記録（なければ null）。</param>
+    /// <param name="now">いまの時刻。</param>
+    /// <param name="utcOffset">ワールドの時差。</param>
+    public static bool WithinLimits(ActionDef action, ActionUsage? usage, DateTimeOffset now, TimeSpan utcOffset)
+    {
+        var limits = action.Limits;
+        var local = LocalClock.ToLocal(now, utcOffset);
+        if (limits.Cooldown is { } cooldown && usage?.LastStartedAt is { } last && now - last < cooldown)
+        {
+            return false;
+        }
+
+        if (limits.MaxPerDay is { } max)
+        {
+            var today = usage is { } u && u.CountDate == local.Date ? u.CountToday : 0;
+            if (today >= max)
+            {
+                return false;
+            }
+        }
+
+        if (limits.Hours is { } hours)
+        {
+            var inside = hours.Start <= hours.End
+                ? local.Time >= hours.Start && local.Time < hours.End
+                : local.Time >= hours.Start || local.Time < hours.End;
+            if (!inside)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// 行動を決めたときの実行の判定（D1 1.7 の feasible）。ペルソナが場所にいて、行動が使えて、場所とつながり、制限を満たす。
+    /// 帰還できるかは、プランの締め切りを知る Decider が見る。
+    /// </summary>
+    /// <param name="ctx">規則の文脈。</param>
+    /// <param name="state">全体の状態。</param>
+    /// <param name="persona">ペルソナの状態。</param>
+    /// <param name="actionId">行動の定義 ID。</param>
+    /// <param name="place">場所の ID。</param>
+    /// <param name="now">いまの時刻（制限の判定に使う）。</param>
+    public static bool CanChoose(RuleContext ctx, SimState state, PersonaState persona, string actionId, PlaceId place, DateTimeOffset now)
+    {
+        if (persona.Location is not AtPlace at
+            || !ctx.Defs.Actions.TryGetValue(actionId, out var action))
+        {
+            return false;
+        }
+
+        var world = ctx.Defs.Worlds[persona.World.Value];
+        var minutes = ctx.Routes.For(persona.World).Minutes(at.Place, place);
+        if (minutes is null)
+        {
+            return false;
+        }
+
+        if (actionId == GoToNextId)
+        {
+            return world.Places.Any(p => p.Id == place.Value);
+        }
+
+        var personaDef = ctx.Defs.Personas[persona.DefId];
+        if (action.ScheduleOnly
+            || !IsUsable(personaDef, actionId)
+            || PreferenceFactor(personaDef, action) is null
+            || world.Places.FirstOrDefault(p => p.Id == place.Value) is not { } placeDef
+            || !PlaceAllows(action, personaDef, placeDef)
+            || !WithinLimits(action, persona.Usage.GetValueOrDefault(actionId), now.AddMinutes(minutes.Value), world.UtcOffset))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// 繰り返しの減衰の係数（D2 2.5）。直前に同じ行動を k 回続けていたら、decay を k 回掛ける（掛け算の繰り返し。Apply で Math.Pow を使わない、D5 5.6）。
+    /// </summary>
+    /// <param name="decay">行動の repeat_decay。</param>
+    /// <param name="k">直前に続けた回数。</param>
+    public static double RepeatDecayFactor(double decay, int k)
+    {
+        var factor = 1.0;
+        for (var i = 0; i < k; i++)
+        {
+            factor *= decay;
+        }
+
+        return factor;
+    }
+
+    /// <summary>
+    /// 行動を始めたときの利用の記録を更新する。同じ行動が続いた回数（Consecutive）を数え、ほかの行動の連続は切る（D5 5.3）。
+    /// </summary>
+    /// <param name="usage">いまの利用の記録。</param>
+    /// <param name="actionId">始めた行動の定義 ID。</param>
+    /// <param name="now">開始の時刻。</param>
+    /// <param name="localDate">現地の日付。</param>
+    public static ImmutableDictionary<string, ActionUsage> RecordStart(ImmutableDictionary<string, ActionUsage> usage, string actionId, DateTimeOffset now, DateOnly localDate)
+    {
+        var current = usage.TryGetValue(actionId, out var found) ? found : new ActionUsage(null, localDate, 0, 0);
+        var countToday = current.CountDate == localDate ? current.CountToday + 1 : 1;
+        var builder = usage.ToBuilder();
+        foreach (var key in usage.Keys)
+        {
+            if (key != actionId && usage[key].Consecutive != 0)
+            {
+                builder[key] = usage[key] with { Consecutive = 0 };
+            }
+        }
+
+        builder[actionId] = new ActionUsage(now, localDate, countToday, current.Consecutive + 1);
+        return builder.ToImmutable();
+    }
+}
+
+/// <summary>
+/// 固定予定と計画のプランの読み取り。
+/// </summary>
+public static class PlanRules
+{
+    /// <summary>時刻 t が自由時間の中か（自由時間のブロックの開始以上、終了未満）。</summary>
+    /// <param name="plan">プラン。</param>
+    /// <param name="t">時刻。</param>
+    public static PlanBlock? FreeAt(DayPlan? plan, DateTimeOffset t) =>
+        plan?.Blocks.FirstOrDefault(block => block.Kind == BlockKind.Free && block.Start <= t && t < block.End);
+
+    /// <summary>時刻 t に、固定・計画のブロックが始まるものがあるか。</summary>
+    /// <param name="plan">プラン。</param>
+    /// <param name="t">時刻。</param>
+    public static bool BlockStartsAt(DayPlan? plan, DateTimeOffset t) =>
+        plan?.Blocks.Any(block => block.Kind != BlockKind.Free && block.Start == t) ?? false;
+
+    /// <summary>時刻 t より後で最初に始まる固定・計画のブロック。なければ null。</summary>
+    /// <param name="plan">プラン。</param>
+    /// <param name="t">時刻。</param>
+    public static PlanBlock? NextFixedAfter(DayPlan? plan, DateTimeOffset t) =>
+        plan?.Blocks
+            .Where(block => block.Kind != BlockKind.Free && block.Start > t)
+            .OrderBy(block => block.Start)
+            .ThenBy(block => block.BlockId, StringComparer.Ordinal)
+            .FirstOrDefault();
+
+    /// <summary>時刻 t を含む、固定・計画のブロック。なければ null。</summary>
+    /// <param name="plan">プラン。</param>
+    /// <param name="t">時刻。</param>
+    public static PlanBlock? BlockCoveringAt(DayPlan? plan, DateTimeOffset t) =>
+        plan?.Blocks.FirstOrDefault(block => block.Kind != BlockKind.Free && block.Start <= t && t < block.End);
+
+    /// <summary>時刻 t に、いま有効なブロック（ID と時刻の範囲が合うもの）。なければ null。</summary>
+    /// <param name="plan">プラン。</param>
+    /// <param name="blockId">ブロックの ID。</param>
+    /// <param name="t">時刻。</param>
+    public static PlanBlock? CurrentBlock(DayPlan? plan, string blockId, DateTimeOffset t) =>
+        plan?.Blocks.FirstOrDefault(block => block.BlockId == blockId && block.Start <= t && t < block.End);
+}
