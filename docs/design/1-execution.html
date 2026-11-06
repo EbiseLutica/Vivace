@@ -411,7 +411,7 @@ record ApplyResult(
       <path class="arrow dash" d="M298 205 C 200 235, 110 225, 105 150"/>
       <text class="sub" x="40" y="200">終了・中断</text>
     </svg>
-    <figcaption>ペルソナの行動の状態。どの遷移でも、行動の版番号が上がる</figcaption>
+    <figcaption>ペルソナの行動の状態。行動の版番号が上がるのは、決めたとき（<code>activity.chosen</code>）と、割り込みで打ち切られたとき。行動の終わり（<code>action.ended</code>）では上げない（J-131）</figcaption>
   </figure>
   <ul>
     <li>行動中のまま、固定ブロックの開始で次の行動に移ることもある（ブロックの開始が、前の行動を終わらせる）。着いて待っているとき、出来事で予定が押したとき、ブロックの中でスマホを使っているときに起きる。ただし、反射の行動（気絶、早退して休む）は打ち切らない（D5 5.7）</li>

@@ -13,4 +13,8 @@
     <EmbeddedResource Include="Definitions\Builtin\actions\core.toml" LogicalName="builtin/actions/core.toml" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Vivace.Tests" />
+  </ItemGroup>
+
 </Project>
