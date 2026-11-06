@@ -1,0 +1,62 @@
+# テスト用の行動。
+[[action]]
+id = "walk_park"
+display = "公園を散歩する"
+description = "近所の公園をゆっくり歩く。"
+tags = ["outdoor", "exercise"]
+duration = ["20m", "60m"]
+weight = 1.0
+phone = "open"
+requires.place_tags = ["park"]
+limits.hours = ["06:00", "21:00"]
+effects.rate.energy = -6
+effects.on_end.boredom = -25
+effects.repeat_decay = 0.6
+
+[[action]]
+id = "read_book"
+display = "本を読む"
+description = "本を読む。"
+duration = ["30m", "90m"]
+phone = "closed"
+requires.place_tags = ["desk"]
+requires.items = ["book"]
+effects.rate.energy = -2
+effects.on_end.boredom = -20
+
+[[action]]
+id = "cafe"
+display = "喫茶店でひと休み"
+description = "喫茶店で飲み物を頼んでのんびりする。"
+duration = ["40m", "80m"]
+phone = "open"
+requires.place_tags = ["cafe"]
+limits.max_per_day = 2
+effects.on_end.boredom = -15
+
+[[action]]
+id = "watch_tv"
+display = "テレビを見る"
+description = "居間でテレビを見る。"
+duration = ["30m", "120m"]
+phone = "open"
+requires.place_tags = ["sofa"]
+effects.rate.boredom = -5
+
+[[action]]
+id = "attend_class"
+display = "授業を受ける"
+description = "授業を受ける。固定予定と反射からだけ始まる。"
+phone = "closed"
+schedule_only = true
+requires.place_tags = ["classroom"]
+effects.rate.energy = -6
+effects.rate.boredom = 4
+
+[[action]]
+id = "eat_lunch"
+display = "昼食をとる"
+description = "昼休みに昼食をとる。固定予定からだけ始まる。"
+phone = "open"
+schedule_only = true
+effects.on_end.energy = 10

@@ -1,0 +1,26 @@
+# テスト用の出来事と状態。
+[[incident]]
+id = "road_work"
+display = "道路工事"
+target = "world"
+chance = 0.03
+hours = ["08:00", "18:00"]
+duration = ["2h", "8h"]
+cooldown = "7d"
+effects.slow_place = { place_tag = "road", add = "15m" }
+
+[[incident]]
+id = "catch_cold"
+display = "風邪をひく"
+target = "persona"
+chance = 0.01
+duration = ["1d", "3d"]
+cooldown = "30d"
+effects.condition = "cold"
+
+[[condition]]
+id = "cold"
+display = "風邪"
+rate.health = -0.5
+weight."tag:outdoor" = 0.3
+threshold.health = 25

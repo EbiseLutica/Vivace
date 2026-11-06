@@ -1,0 +1,53 @@
+# テスト用の2人目のペルソナ。香織と昼休みに同行する。
+id = "shiori"
+name = "栞"
+world = "testville"
+home = "home_living"
+lore = """
+高校2年生。香織の友人で、昼休みはよく一緒にいる。
+"""
+items = ["smartphone"]
+
+[actions]
+use = ["core.*", "eat_lunch", "attend_class"]
+
+[[schedule.period]]
+id = "summer"
+from = "07-21"
+to = "08-31"
+
+[[schedule.period]]
+id = "winter"
+from = "12-25"
+to = "01-07"
+
+[[schedule.block]]
+id = "sleep_weekday"
+from = "23:30"
+to = "06:30"
+action = "core.sleep"
+place = "home_living"
+
+[[schedule.block]]
+id = "school"
+in = ["default"]
+days = ["mon", "tue", "wed", "thu", "fri"]
+from = "08:30"
+to = "15:40"
+action = "attend_class"
+place = "school_2a"
+skip_holiday = true
+
+[[schedule.block]]
+id = "lunch_break"
+within = "school"
+from = "12:20"
+to = "13:00"
+action = "eat_lunch"
+place = "school_2a"
+phone = "open"
+with = ["kaori"]
+
+[[schedule.exception]]
+date = "2026-12-24"
+skip = ["school"]
