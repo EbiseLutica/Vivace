@@ -252,7 +252,7 @@
       <tr><td>J-64</td><td>LLM の PoC の判定の基準（B でプロンプトキャッシュが効かなければ A） <span class="chip fixed">合意</span></td><td><a href="8-stack.html#poc">D8 8.4</a></td></tr>
       <tr><td>J-94</td><td>アセンブリは図の7つに合わせた（P-25 の「6つ」を直した） <span class="chip fixed">合意</span></td><td><a href="4-components.html#assemblies">D4 4.1</a></td></tr>
       <tr><td>J-95</td><td>テストは別の <code>Vivace.Tests</code> に置き、P-25 の数には入れない。パッケージのバージョンは <code>Directory.Packages.props</code> で一括して固定する <span class="chip fixed">合意</span></td><td><a href="8-stack.html#libraries">D8 8.2</a>、<a href="4-components.html#assemblies">D4 4.1</a></td></tr>
-      <tr><td>J-96</td><td>テストの道具の版：Verify は 32.x に留める（33.0.0 から NuGet のパッケージのライセンスが MIT から OSMF EULA に変わり、SponsorCheck がビルドを止める。ソースは MIT のまま）。xUnit v3 は 4.x（<code>mtp-v2</code>）。xunit か Verify を上げるときは、Verify を使うテストを回す <span class="chip fixed">合意</span></td><td><a href="8-stack.html#libraries">D8 8.2</a></td></tr>
+      <tr><td>J-96</td><td>テストの道具の版：Verify は 32.x に留める（33.0.0 から NuGet のパッケージのライセンスが MIT から OSMF EULA に変わり、SponsorCheck がビルドを止める。ソースは MIT のまま）。xUnit v3 は 4.x（<code>mtp-v2</code>）。xunit か Verify を上げるときは、Verify を使うテストを回す。テストは Verify を直接呼ばず、<code>Vivace.Testing</code> のヘルパーを通す <span class="chip fixed">合意</span></td><td><a href="8-stack.html#libraries">D8 8.2</a></td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>
