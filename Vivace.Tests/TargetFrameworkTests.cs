@@ -1,7 +1,5 @@
 using System.Reflection;
 using System.Runtime.Versioning;
-using VerifyXunit;
-using Xunit;
 
 namespace Vivace.Tests;
 
