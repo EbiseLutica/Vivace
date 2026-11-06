@@ -338,7 +338,7 @@ display = "風邪"
 rate.health = -0.5
 weight."tag:outdoor" = 0.3
 threshold.health = 25</code></pre>
-  <p><code>duration</code> は、その場所でする行動そのものの長さで、移動時間を含まない。移動時間は、場所のグラフから別に足す（D5 5.2 の帰還の式）。固定予定のブロックでは、<code>duration</code> は使わず、ブロックの長さで決まる（3.5）。<code>schedule_only = true</code> の行動は、固定予定のブロックと反射からだけ始まり、Decider と Planner の候補にならない（ペルソナの <code>use</code> のワイルドカードに当たっても外す。D5 5.2）。授業やバイトのように、自由時間に選ばれると困る行動に付ける。<code>duration</code> は省略してよい（固定予定ではブロックの長さを使うため）。効果、requires、制限の語彙は D2。組み込みの反射の行動（<code>core.faint</code> など）は、所要時間を固定で書く（反射は Apply が乱数を引かずに始めるため）。</p>
+  <p><code>duration</code> は、その場所でする行動そのものの長さで、移動時間を含まない。移動時間は、場所のグラフから別に足す（D5 5.2 の帰還の式）。固定予定のブロックでは、<code>duration</code> は使わず、ブロックの長さで決まる（3.5）。<code>schedule_only = true</code> の行動は、固定予定のブロックと反射からだけ始まり、Decider と Planner の候補にならない（ペルソナの <code>use</code> のワイルドカードに当たっても外す。D5 5.2）。授業やバイトのように、自由時間に選ばれると困る行動に付ける。<code>duration</code> は省略してよい（固定予定ではブロックの長さを使うため）。schedule_only でない行動では所要時間が必須で、組み込みの <code>core.go_to_next</code> だけ例外（J-128）。数は有限で範囲内に書く。確率は 0〜1、状態変数の初期値と反射や状態のしきい値は 0〜100、社交欲求の下限と上限は −100〜100、率と増減（行動、状態、出来事）は −1000〜1000、復元は気力、健康度、退屈度が 0〜100、社交欲求が −100〜100、重みと好みは 0 以上、<code>repeat_decay</code> は 0 より大きく 1 以下、<code>max_per_day</code> は int の範囲。社交欲求にはしきい値がない（D5 5.6）ので、反射と状態のしきい値に書けない（J-118）。所要時間 0 の <code>core.idle</code>（何もしない）は、この schedule_only の検査の例外で、乱数の位置だけを進める（J-129）。効果、requires、制限の語彙は D2。出来事の効果は、<code>effects.vital = { energy = -20 }</code>、<code>effects.close_place = { place = "..." }</code>、<code>effects.slow_place = { place_tag = "road", add = "15m" }</code>（<code>factor</code> も可）、<code>effects.condition = "cold"</code> と書く（J-106）。組み込みの反射の行動（<code>core.faint</code> など）は、所要時間を固定で書く（反射は Apply が乱数を引かずに始めるため）。</p>
 </section>
 
 <section id="domain">
