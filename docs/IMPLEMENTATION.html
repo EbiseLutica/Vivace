@@ -194,7 +194,7 @@
   <ul class="tasks">
     <li><input type="checkbox" checked disabled><code>Rules</code>：上のイベントタイプの Apply、guard、行動の決定的な効果、状態変数の読み取りと率の切り替え</li>
     <li><input type="checkbox" disabled><code>Engine</code>：コマンドのキュー、優先度つきキュー、ホライズンの壁、適用、<code>StartHandler</code> の実行</li>
-    <li><input type="checkbox" disabled><code>Lanes</code>：ペルソナごとの決定と計画、ワールドごとのレーン</li>
+    <li><input type="checkbox" checked disabled><code>Lanes</code>：ペルソナごとの決定と計画のレーン（ワールドのレーンは、出来事を作る段階3 で足す）</li>
     <li><input type="checkbox" checked disabled><code>UtilityDecider</code>：候補、所要時間、スコア、抽選</li>
     <li><input type="checkbox" checked disabled>Planner の代わりの出力：固定予定だけのプランを出す。起動は、記憶の整理を起こす行動の開始と <code>plan.due</code>。整理の待ちは、段階7 まで入れない</li>
     <li><input type="checkbox" disabled><code>InMemoryStorage</code>（<code>Vivace.Testing</code>）：<code>IStorage</code> の最小の実装。段階4 で捨てる前提で作る</li>
@@ -213,6 +213,7 @@
     <li><input type="checkbox" disabled>予定の乱れ（<code>block.responded</code>）。移動より短いブロックの欠席も、事実として残す（J-143、段階2 では何も残らない）</li>
     <li><input type="checkbox" disabled>スマホを開く機会と副行動（候補はスマホを開く、投稿する、何もしない）。効果のハンドラは、何もしないものを入れておく</li>
     <li><input type="checkbox" disabled>出来事：<code>IncidentLottery</code>、効果、状態、到着の積み直し</li>
+    <li><input type="checkbox" disabled>ワールドごとのレーン（日の始まりに、出来事の抽選を動かす）</li>
     <li><input type="checkbox" disabled>同行（<code>with</code>、<code>on_partner_absent</code>）</li>
     <li><input type="checkbox" disabled>ペルソナとワールドの破棄</li>
     <li><input type="checkbox" disabled>残りのイベントタイプの Apply と guard</li>
