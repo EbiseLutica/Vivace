@@ -288,12 +288,14 @@ public sealed record BlockRespondedPayload(string BlockId, DisruptionChoice Choi
 /// <param name="Route">辺の列。移動がなければ空。</param>
 /// <param name="ArrivesAt">到着の時刻。</param>
 /// <param name="ActivityVersion">行動の版。</param>
+/// <param name="Next">到着のあとに始める行動（J-134）。</param>
 public sealed record TravelStartedPayload(
     PlaceId From,
     PlaceId To,
     ImmutableArray<RouteStep> Route,
     DateTimeOffset ArrivesAt,
-    long ActivityVersion) : EventPayload(1);
+    long ActivityVersion,
+    PendingAction? Next = null) : EventPayload(1);
 
 /// <summary>行動の開始（段 7）。</summary>
 /// <param name="ActionId">行動の定義 ID。</param>

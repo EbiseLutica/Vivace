@@ -288,6 +288,7 @@
       <tr><td>J-129</td><td>「何もしない」（スマホを開く機会）を選んだときは、副行動 <code>core.idle</code> を所要時間 0 で <code>activity.chosen</code> に記録する。抽選の範囲を残し、オーバーレイは始まらない <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
       <tr><td>J-130</td><td>例外日の日付は <code>yyyy-MM-dd</code> で書く。読めない例外日（不正な日付、欠落）は例外を作らず、位置つきのエラーにする。例外日の前後の日は、日付の範囲の端（0001-01-01、9999-12-31）の手前で止める <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
       <tr><td>J-136</td><td><code>Verify</code> の呼び出しは <code>Vivace.Tests</code> のヘルパー1か所に閉じ込める。<code>Vivace.Testing</code> は段階3 の <code>dry-run</code> で CLI からも使うので、テストフレームワークを参照させない。既存の <code>TargetFrameworkTests</code> も同じヘルパーを通す <span class="chip fixed">合意</span></td><td><a href="8-stack.html#libraries">D8 8.2</a></td></tr>
+      <tr><td>J-139</td><td>ペルソナの状態に、決め中の印、最後に始めたブロックの ID、記憶の整理の期間の起点を足す。移動中の状態に、移動のあとに始める行動（次の行動）を足す（J-133〜J-135）。<span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>J-147</td><td>固定予定の隙間の警告は、定義の検証（<code>DefinitionValidator</code>）で位置つきで出す（コードは <code>ScheduleGap</code>、警告）。全日の走査は重なりの検査と同じ（28 年と例外日、(期間, 曜日) の使い回し）で、前日からの隙間も見る。<code>RouteCache</code> は経路の表を組むだけにした <span class="chip fixed">合意</span></td><td><a href="7-operations.html#validation">D7 7.2</a>、J-104</td></tr>
     </table>
   </div>

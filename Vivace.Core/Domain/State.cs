@@ -183,12 +183,22 @@ public sealed record AtPlace(PlaceId Place) : Location;
 /// <param name="Route">経路（辺の列）。出発時に確定し、途中で辺が伸びたら残りを積み直す（D5 5.10）。</param>
 /// <param name="DepartedAt">出発の時刻。</param>
 /// <param name="ArrivesAt">到着の時刻。</param>
+/// <param name="Next">到着のあとに始める行動（J-134）。なければ null。</param>
 public sealed record Traveling(
     PlaceId From,
     PlaceId To,
     ImmutableArray<RouteStep> Route,
     DateTimeOffset DepartedAt,
-    DateTimeOffset ArrivesAt) : Location;
+    DateTimeOffset ArrivesAt,
+    PendingAction? Next = null) : Location;
+
+/// <summary>移動のあとに始める行動（J-134）。到着の Apply が action.started を積むときの中身。</summary>
+/// <param name="ActionId">行動の定義 ID。</param>
+/// <param name="Place">行動する場所。</param>
+/// <param name="Duration">所要時間。</param>
+/// <param name="Reason">始まった理由。</param>
+/// <param name="BlockId">ブロックの行動のときのブロック ID。</param>
+public sealed record PendingAction(string ActionId, PlaceId Place, TimeSpan Duration, ActivityReason Reason, string? BlockId);
 
 /// <summary>実行中の行動。</summary>
 /// <param name="ActionId">行動の定義 ID。</param>
@@ -318,6 +328,9 @@ public sealed record OutboundOp(
 /// <param name="Inbox">未処理の通知。</param>
 /// <param name="Outbound">未送信の操作。</param>
 /// <param name="LastWake">日誌の範囲の起点（最後に起きた時刻）。</param>
+/// <param name="Deciding">決めどきの処理中かどうか（J-133）。決めどきの二重の積みを防ぐ。</param>
+/// <param name="LastBlockId">最後に始めたブロックの ID（J-135）。同じブロックは一度だけ始める。</param>
+/// <param name="PlannedFor">Planner を起こした期間の鍵（記憶の整理の行動のブロック ID、または時刻）。同じ期間では一度だけ動く（D5 5.5、J-141）。</param>
 public sealed record PersonaState(
     PersonaId Id,
     string DefId,
@@ -336,7 +349,10 @@ public sealed record PersonaState(
     PostingState Posting,
     ImmutableList<InboxItem> Inbox,
     ImmutableList<OutboundOp> Outbound,
-    DateTimeOffset? LastWake);
+    DateTimeOffset? LastWake,
+    bool Deciding = false,
+    string? LastBlockId = null,
+    string? PlannedFor = null);
 
 /// <summary>適用の位置。最後に適用したイベントの時刻、段、連番と、適用番号。</summary>
 /// <param name="Time">時刻。</param>
