@@ -1,0 +1,319 @@
+:root {
+  --bg: #f7f6f2;
+  --surface: #ffffff;
+  --surface-2: #f0eee8;
+  --text: #23221f;
+  --muted: #6b6a64;
+  --line: #dedbd2;
+  --accent: #2f6f6a;
+  --accent-soft: #e1efed;
+  --warn: #9a5b12;
+  --warn-soft: #fbefd9;
+  --bad: #a63d3d;
+  --bad-soft: #f8e4e2;
+  --good: #2d6a3e;
+  --good-soft: #e0f0e4;
+  --code-bg: #efede6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161715;
+    --surface: #1f201d;
+    --surface-2: #272823;
+    --text: #e8e6df;
+    --muted: #9b9a92;
+    --line: #36372f;
+    --accent: #6fbfb7;
+    --accent-soft: #1f3331;
+    --warn: #e0a860;
+    --warn-soft: #3a2e1a;
+    --bad: #e08a86;
+    --bad-soft: #3b2423;
+    --good: #84c996;
+    --good-soft: #1f3226;
+    --code-bg: #2a2b26;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #161715; --surface: #1f201d; --surface-2: #272823; --text: #e8e6df;
+  --muted: #9b9a92; --line: #36372f; --accent: #6fbfb7; --accent-soft: #1f3331;
+  --warn: #e0a860; --warn-soft: #3a2e1a; --bad: #e08a86; --bad-soft: #3b2423;
+  --good: #84c996; --good-soft: #1f3226; --code-bg: #2a2b26;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Koruri", sans-serif;
+  font-size: 16px;
+  line-height: 1.85;
+  -webkit-text-size-adjust: 100%;
+}
+.layout {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 16px 80px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+@media (min-width: 960px) {
+  .layout { grid-template-columns: 220px minmax(0, 1fr); gap: 48px; padding: 0 24px 96px; }
+}
+
+/* 目次 */
+nav.toc {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+}
+nav.toc summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+nav.toc ol { list-style: none; margin: 8px 0 0; padding: 0; }
+nav.toc li { margin: 0; }
+nav.toc li.part {
+  padding: 12px 8px 2px;
+  font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--accent);
+}
+nav.toc li.part:first-child { padding-top: 2px; }
+nav.toc a {
+  display: block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--muted);
+  text-decoration: none;
+  line-height: 1.5;
+}
+nav.toc a:hover { background: var(--surface-2); color: var(--text); }
+nav.toc a.active { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+@media (min-width: 960px) {
+  nav.toc {
+    position: sticky; top: 24px; align-self: start;
+    max-height: calc(100vh - 48px); overflow: auto;
+    margin-top: 72px;
+  }
+  nav.toc summary { pointer-events: none; }
+  nav.toc summary::marker, nav.toc summary::-webkit-details-marker { display: none; }
+}
+
+/* ヘッダー */
+header.hero { padding: 40px 0 8px; grid-column: 1 / -1; }
+header.hero .kicker { color: var(--accent); font-weight: 700; letter-spacing: .08em; font-size: 13px; }
+header.hero h1 { margin: 6px 0 12px; font-size: clamp(28px, 5vw, 40px); line-height: 1.3; }
+header.hero p { margin: 0; color: var(--muted); max-width: 46em; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1.7;
+  background: var(--surface-2);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.chip.core { background: var(--accent-soft); color: var(--accent); border-color: transparent; font-weight: 700; }
+.chip.seam { background: var(--warn-soft); color: var(--warn); border-color: transparent; font-weight: 700; }
+.chip.later { background: var(--surface-2); color: var(--muted); font-weight: 700; }
+
+/* 本文 */
+main { min-width: 0; }
+section { margin-top: 56px; }
+section:first-of-type { margin-top: 24px; }
+.part-head {
+  margin: 72px 0 -32px;
+  color: var(--accent); font-weight: 700; font-size: 13px; letter-spacing: .08em;
+}
+h2 {
+  font-size: clamp(22px, 3.2vw, 28px);
+  margin: 0 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--line);
+  line-height: 1.4;
+}
+h2 .num { color: var(--accent); margin-right: 8px; font-variant-numeric: tabular-nums; }
+h3 { font-size: 18px; margin: 32px 0 8px; line-height: 1.5; }
+p { margin: 12px 0; }
+ul, ol { padding-left: 1.4em; margin: 12px 0; }
+li { margin: 4px 0; }
+li > ul, li > ol { margin: 4px 0; }
+code {
+  background: var(--code-bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: .9em;
+}
+strong { font-weight: 700; }
+a { color: var(--accent); }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 16px 0;
+}
+.card > :first-child { margin-top: 0; }
+.card > :last-child { margin-bottom: 0; }
+
+.callout {
+  border-left: 4px solid var(--accent);
+  background: var(--accent-soft);
+  border-radius: 0 10px 10px 0;
+  padding: 12px 16px;
+  margin: 16px 0;
+}
+.callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+.callout > :first-child { margin-top: 0; }
+.callout > :last-child { margin-bottom: 0; }
+.callout .label { font-weight: 700; display: block; margin-bottom: 2px; }
+
+.grid { display: grid; gap: 12px; grid-template-columns: 1fr; margin: 16px 0; }
+@media (min-width: 640px) { .grid.two { grid-template-columns: 1fr 1fr; } .grid.three { grid-template-columns: repeat(3, 1fr); } }
+.grid .card { margin: 0; }
+.grid .card h4 { margin: 0 0 6px; font-size: 16px; }
+.grid .card p { margin: 4px 0; font-size: 15px; }
+
+.table-wrap { overflow-x: auto; margin: 16px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 480px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.6; }
+th { background: var(--surface-2); font-weight: 700; white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+
+/* 核心の約束 */
+ol.pledge { list-style: none; padding: 0; counter-reset: p; display: grid; gap: 10px; }
+ol.pledge li {
+  counter-increment: p;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 16px 12px 56px;
+  position: relative;
+  margin: 0;
+}
+ol.pledge li::before {
+  content: counter(p);
+  position: absolute; left: 16px; top: 12px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  display: grid; place-items: center; font-weight: 700; font-size: 14px;
+}
+
+/* 図 */
+figure { margin: 24px 0; }
+figure svg { width: 100%; height: auto; display: block; }
+figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; text-align: center; }
+.diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; overflow-x: auto; }
+.diagram svg { min-width: 640px; }
+svg .box { fill: var(--surface-2); stroke: var(--line); stroke-width: 1.5; }
+svg .box.accent { fill: var(--accent-soft); stroke: var(--accent); }
+svg .box.warn { fill: var(--warn-soft); stroke: var(--warn); }
+svg .box.good { fill: var(--good-soft); stroke: var(--good); }
+svg .arrow.dash { stroke-dasharray: 5 4; }
+svg .dot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+svg .dot.ext { fill: var(--warn); }
+svg .bar { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; }
+svg .bar.free { fill: var(--surface-2); stroke: var(--muted); stroke-dasharray: 4 3; }
+svg .tick { stroke: var(--line); stroke-width: 1; }
+svg .mark { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 4; }
+svg .group { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 6 5; }
+svg text { fill: var(--text); font-size: 14px; font-family: inherit; }
+svg text.sub { fill: var(--muted); font-size: 12px; }
+svg text.title { font-weight: 700; }
+svg .arrow { stroke: var(--muted); stroke-width: 1.8; fill: none; marker-end: url(#ah); }
+svg #ah path { fill: var(--muted); }
+
+/* ステップ */
+.flow { display: grid; gap: 8px; grid-template-columns: 1fr; margin: 16px 0; }
+@media (min-width: 720px) { .flow { grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; } }
+.flow .step {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px;
+}
+.flow .step b { display: block; color: var(--accent); margin-bottom: 4px; }
+.flow .step p { margin: 0; font-size: 14.5px; line-height: 1.7; }
+.flow .arr { text-align: center; color: var(--muted); align-self: center; font-size: 20px; }
+@media (max-width: 719px) { .flow .arr { transform: rotate(90deg); } }
+
+.compare { display: grid; gap: 12px; grid-template-columns: 1fr; margin: 16px 0; }
+@media (min-width: 720px) { .compare { grid-template-columns: 1fr 1fr; } }
+.compare .card { margin: 0; }
+.compare .ng { border-top: 4px solid var(--bad); }
+.compare .ok { border-top: 4px solid var(--good); }
+.compare h4 { margin: 0 0 8px; }
+
+/* ユースケース */
+.uc { padding: 14px 18px; }
+.uc h4 { margin: 0 0 8px; font-size: 16px; line-height: 1.5; }
+.uc h4 .id { color: var(--accent); margin-right: 8px; font-variant-numeric: tabular-nums; }
+.uc dl { margin: 0; display: grid; grid-template-columns: 3.5em minmax(0, 1fr); gap: 6px 12px; font-size: 15px; line-height: 1.7; }
+.uc dt { color: var(--muted); font-weight: 700; }
+.uc dd { margin: 0; }
+.uc dd ol { margin: 0; padding-left: 1.3em; }
+.uc dd li { margin: 2px 0; }
+
+/* ロードマップ */
+ol.road { list-style: none; padding: 0; margin: 16px 0; border-left: 3px solid var(--line); margin-left: 12px; }
+ol.road li { position: relative; padding: 4px 0 20px 28px; margin: 0; }
+ol.road li::before {
+  content: ""; position: absolute; left: -9px; top: 10px;
+  width: 15px; height: 15px; border-radius: 50%; background: var(--surface); border: 3px solid var(--accent);
+}
+ol.road li.goal::before { background: var(--accent); }
+ol.road li b { display: block; }
+ol.road li span { color: var(--muted); font-size: 15px; }
+
+ul.open { list-style: none; padding: 0; display: grid; gap: 8px; }
+ul.open li {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 14px 10px 40px; position: relative; margin: 0;
+}
+ul.open li::before {
+  content: "?"; position: absolute; left: 12px; top: 10px;
+  width: 20px; height: 20px; border-radius: 50%; background: var(--warn-soft); color: var(--warn);
+  display: grid; place-items: center; font-weight: 700; font-size: 13px;
+}
+
+footer { grid-column: 1 / -1; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); padding-top: 16px; }
+.theme-btn {
+  position: fixed; right: 16px; bottom: 16px; z-index: 5;
+  background: var(--surface); color: var(--text); border: 1px solid var(--line);
+  border-radius: 999px; padding: 8px 14px; font-size: 14px; cursor: pointer;
+}
+
+/* ---- 詳細設計で足したもの ---- */
+.chip.draft { background: var(--warn-soft); color: var(--warn); border-color: transparent; font-weight: 700; }
+.chip.fixed { background: var(--good-soft); color: var(--good); border-color: transparent; font-weight: 700; }
+.draft {
+  border: 1px solid var(--warn);
+  border-left-width: 4px;
+  background: var(--surface);
+  border-radius: 0 10px 10px 0;
+  padding: 12px 16px;
+  margin: 16px 0;
+}
+.draft > :first-child { margin-top: 0; }
+.draft > :last-child { margin-bottom: 0; }
+.draft .label { font-weight: 700; display: block; margin-bottom: 2px; color: var(--warn); }
+.draft .alt { color: var(--muted); font-size: 15px; }
+pre {
+  background: var(--code-bg);
+  border-radius: 10px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin: 16px 0;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+td code, th code { white-space: nowrap; }
+.stage { display: inline-block; min-width: 1.6em; text-align: center; border-radius: 6px; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 13px; }
+svg .box.bad { fill: var(--bad-soft); stroke: var(--bad); }
+svg text.mono { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12.5px; }
+.callout .alt { color: var(--muted); font-size: 15px; }

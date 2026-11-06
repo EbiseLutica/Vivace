@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://koruri.shrimpia.network/koruri.css" />
+<link rel="stylesheet" href="style.css" />
+<title>Vivace 詳細設計</title>
+</head>
+<body>
+<div class="layout">
+
+<header class="hero">
+  <div class="kicker">VIVACE / DESIGN</div>
+  <h1>Vivace コアの詳細設計</h1>
+  <p>VISION.html の構想を、実装できる粒度に落とした設計書。構想の正は VISION.html で、ここでは VISION が「詳細設計で決める」とした項目を埋め、コアの実行モデル、データ、部品、数値を決める。</p>
+  <div class="meta">
+    <span class="chip">2026-11-05 時点</span>
+    <span class="chip fixed">C# / SQLite は確定</span>
+    <span class="chip fixed">案はすべて合意（57 件）</span>
+    <span class="chip fixed">枠の外の判断もすべて合意（93 件）</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目次">
+  <details open>
+    <summary>目次</summary>
+    <ol>
+      <li class="part">このページ</li>
+      <li><a href="#about">0.1 この設計書について</a></li>
+      <li><a href="#files">0.2 ファイル</a></li>
+      <li><a href="#appendix">0.3 VISION の付録との対応</a></li>
+      <li><a href="#drafts">0.4 案の一覧</a></li>
+      <li><a href="#judgments">0.5 枠の外の判断</a></li>
+      <li><a href="#vision">0.6 VISION への指摘と反映</a></li>
+      <li><a href="#next">0.7 次にやること</a></li>
+      <li class="part">詳細設計</li>
+      <li><a href="1-execution.html">D1 実行モデル</a></li>
+      <li><a href="2-events.html">D2 イベントと語彙</a></li>
+      <li><a href="3-data.html">D3 データ</a></li>
+      <li><a href="4-components.html">D4 コンポーネント</a></li>
+      <li><a href="5-decision.html">D5 決定と状態変数</a></li>
+      <li><a href="6-llm.html">D6 LLM と記憶</a></li>
+      <li><a href="7-operations.html">D7 運用とテスト</a></li>
+      <li><a href="8-stack.html">D8 技術スタック</a></li>
+      <li class="part">構想</li>
+      <li><a href="../VISION.html">VISION.html</a></li>
+      <li><a href="../FUTURE.html">FUTURE.html</a></li>
+    </ol>
+  </details>
+</nav>
+
+<main>
+
+<section id="about">
+  <h2><span class="num">0.1</span>この設計書について</h2>
+  <ul>
+    <li><strong>前提の規模</strong>：1ホストに 1〜2 ワールド、1ワールドあたり最大 5 人。1プロセス、SQLite のファイルは1つ</li>
+    <li><strong>VISION との関係</strong>：VISION の章は「VISION 4章」、この設計書の章は「D1」「D5 5.3」のように書く。仕組みの考え方は VISION を正とし、ここでは繰り返さずに参照する</li>
+    <li><strong>案</strong>：<span class="chip draft">案</span> の枠は、ユーザーの合意を待っている提案。番号（P-01〜P-57）で返事ができる。合意したものは枠を外し、VISION に反映が要るものは VISION も直す（0.5）</li>
+    <li><strong>範囲</strong>：コア（Vivace.Core）と、コアが外に求める口。Misskey のプラグインと CLI は、コアとの境目だけを書いた</li>
+  </ul>
+</section>
+
+<section id="files">
+  <h2><span class="num">0.2</span>ファイル</h2>
+  <div class="grid two">
+    <div class="card"><h4><a href="1-execution.html">D1 実行モデル</a></h4><p>エンジン（唯一の書き手）、Apply の形、レーン、ホライズンと締め切り、適用前の検査、状態遷移、トランザクション、時計、起動と追いつき。</p></div>
+    <div class="card"><h4><a href="2-events.html">D2 イベントと語彙</a></h4><p>イベントタイプと段、イベントタイプごとの Apply、行動の効果、requires と制限、出来事の効果、投入できるイベント、origin。</p></div>
+    <div class="card"><h4><a href="3-data.html">D3 データ</a></h4><p>定義の TOML（ワールド、ペルソナ、固定予定、行動、出来事）、ドメイン型、SQLite のスキーマ、JSON の版。</p></div>
+    <div class="card"><h4><a href="4-components.html">D4 コンポーネント</a></h4><p>アセンブリ、ポート（IClock、IStorage、IChannel、ILlmClient など）、コアの中の部品、公開 API、プラグイン。</p></div>
+    <div class="card"><h4><a href="5-decision.html">D5 決定と状態変数</a></h4><p>Decider のスコアの式、Planner の検査と補正、状態変数の既定値、反射、出来事の抽選、乱数、最短経路、同行。</p></div>
+    <div class="card"><h4><a href="6-llm.html">D6 LLM と記憶</a></h4><p>呼び出しの一覧、文脈の組み立て、記憶の選び方、受信箱と投稿の手順、記憶の整理、汚染の防止、量の目安。</p></div>
+    <div class="card"><h4><a href="7-operations.html">D7 運用とテスト</a></h4><p>失敗したときの振る舞い、定義の検証、観測、テストの層、最小の CLI。</p></div>
+    <div class="card"><h4><a href="8-stack.html">D8 技術スタック</a></h4><p>確定（C#、SQLite）と、ライブラリの候補、使わないもの、LLM の PoC で確かめること。</p></div>
+  </div>
+</section>
+
+<section id="appendix">
+  <h2><span class="num">0.3</span>VISION の付録との対応</h2>
+  <p>VISION の付録「詳細設計で決めること」の 18 件は、すべて案を出した。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>VISION 付録の項目</th><th>案</th><th>場所</th></tr>
+      <tr><td>LLM クライアントの抽象（1章）</td><td>P-26 <span class="chip fixed">合意</span>（実装は PoC で選ぶ）</td><td><a href="4-components.html#llm-port">D4 4.4</a>、<a href="8-stack.html#poc">D8 8.4</a></td></tr>
+      <tr><td>固定予定と生活リズムの書き方（2章）</td><td>P-20、P-52 <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
+      <tr><td>イベント ID の形式（2章）</td><td>P-10 <span class="chip fixed">合意</span></td><td><a href="2-events.html#envelope">D2 2.1</a></td></tr>
+      <tr><td>決める側に渡す状態の写しの作り方（4章）</td><td>P-21 <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>同行・共同行動で、2人のレーンをまたぐ決定の扱い（4章、14章）</td><td>P-41 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#together">D5 5.11</a></td></tr>
+      <tr><td>前日のプランがないときの、0:00〜3:00 の過ごし方と Planner のホライズン（4章）</td><td>P-34 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
+      <tr><td>追いつきの上限日数（4章）</td><td>P-08 <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
+      <tr><td>Utility AI のスコアの式と、補正の語彙（5章）</td><td>P-30 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#score">D5 5.3</a></td></tr>
+      <tr><td>状態変数の式の形、範囲、数値（6章）</td><td>P-35 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
+      <tr><td>寝不足での健康度の下がり方（6章）</td><td>P-36 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
+      <tr><td>出来事の効果の語彙と、頻度の既定値（9章）</td><td>P-16、P-37 <span class="chip fixed">合意</span></td><td><a href="2-events.html#incident-effects">D2 2.7</a>、<a href="5-decision.html#incidents">D5 5.8</a></td></tr>
+      <tr><td>予定ブロックの interruptible が要るか（10章）</td><td>P-33 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
+      <tr><td>長い固定ブロックの途中の「スマホを開く機会」（10章）</td><td>P-32 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
+      <tr><td>フォローバックの方針の持ち方（10章）</td><td>P-44 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
+      <tr><td>空振りのクールダウンの細部（11章）</td><td>P-45 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
+      <tr><td>新しい場所のつなぎ方の細部（11章）</td><td>P-46 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
+      <tr><td>記憶力の調整方式（13章）</td><td>P-47 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
+      <tr><td>同行で片方が欠席したときの扱い（14章）</td><td>P-40 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#together">D5 5.11</a></td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="drafts">
+  <h2><span class="num">0.4</span>案の一覧</h2>
+  <p><strong>太字</strong>は、ほかの設計を大きく左右するもの。先にこれらを見てもらえると、残りの手戻りが少ない。<span class="chip">確認だけ</span> は、VISION の本文や一般的なやり方からほぼ導けるもの（VISION の付録にあったので枠に入れた）。<span class="chip fixed">合意</span> は、レビューで合意したもの。本文では「決定」の枠にし、VISION に反映した。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>ID</th><th>案</th><th>場所</th></tr>
+      <tr><td>P-01</td><td><strong>エンジンを唯一の書き手にする（アクター）</strong> <span class="chip fixed">合意</span></td><td><a href="1-execution.html#structure">D1 1.2</a></td></tr>
+      <tr><td>P-02</td><td><strong>Apply は後続のイベントとシグナルを返す</strong> <span class="chip fixed">合意</span></td><td><a href="1-execution.html#apply">D1 1.3</a></td></tr>
+      <tr><td>P-03</td><td>割り込まれた行動のハンドラは取り消す <span class="chip fixed">合意</span></td><td><a href="1-execution.html#apply">D1 1.3</a></td></tr>
+      <tr><td>P-04</td><td>レーンは「ペルソナごとに決定と計画」「ワールドごと」。LLM の同時実行は 3 <span class="chip fixed">合意</span></td><td><a href="1-execution.html#lanes">D1 1.5</a></td></tr>
+      <tr><td>P-05</td><td>締め切りの猶予は 2 分。早送りでは締め切りを使わない <span class="chip fixed">合意</span></td><td><a href="1-execution.html#horizon">D1 1.6</a></td></tr>
+      <tr><td>P-06</td><td><strong>適用前の検査は、イベントに付けた guard として Apply が評価する</strong> <span class="chip fixed">合意</span></td><td><a href="1-execution.html#guard">D1 1.7</a></td></tr>
+      <tr><td>P-07</td><td>決めどきの適用番号は、処理中に入るときに振る。処理済みは applied にまとめる <span class="chip fixed">合意</span></td><td><a href="1-execution.html#states">D1 1.8</a></td></tr>
+      <tr><td>P-08</td><td>追いつきの上限は 14 日。超えた分は空白として飛ばす <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
+      <tr><td>P-09</td><td>読み直しはホストが API で呼ぶ（CLI はフォルダを監視）。消えた行動は終了まで続ける <span class="chip fixed">合意</span></td><td><a href="1-execution.html#reload">D1 1.12</a></td></tr>
+      <tr><td>P-10</td><td>イベントの ID は連番と兼ねる <span class="chip fixed">合意</span></td><td><a href="2-events.html#envelope">D2 2.1</a></td></tr>
+      <tr><td>P-11</td><td><strong>イベントタイプの一覧と、段への割り当て</strong> <span class="chip fixed">合意</span></td><td><a href="2-events.html#stages">D2 2.2</a></td></tr>
+      <tr><td>P-12</td><td><strong>Decider の出力は <code>activity.chosen</code> 1件。開始・終了は Apply がチェーンで積む</strong> <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>P-13</td><td>発話（<code>outbound.speech</code>）と操作（<code>outbound.operation</code>）を別のイベントタイプにする <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>P-14</td><td><strong>行動の効果の語彙。率は「置き換え」</strong> <span class="chip fixed">合意</span></td><td><a href="2-events.html#effects">D2 2.5</a></td></tr>
+      <tr><td>P-15</td><td>制限に <code>max_per_day</code> と <code>hours</code> を足す <span class="chip fixed">合意</span></td><td><a href="2-events.html#requires">D2 2.6</a></td></tr>
+      <tr><td>P-16</td><td>出来事の効果の語彙と、状態（コンディション）の定義 <span class="chip fixed">合意</span></td><td><a href="2-events.html#incident-effects">D2 2.7</a></td></tr>
+      <tr><td>P-17</td><td>定義ファイルの配置と ID の名前空間 <span class="chip fixed">合意</span></td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
+      <tr><td>P-18</td><td>祝日と年中行事は、ワールドの暦に持つ <span class="chip fixed">合意</span></td><td><a href="3-data.html#world-def">D3 3.3</a></td></tr>
+      <tr><td>P-19</td><td>ペルソナ定義に <code>home</code> を足す <span class="chip fixed">合意</span></td><td><a href="3-data.html#persona-def">D3 3.4</a></td></tr>
+      <tr><td>P-20</td><td>固定予定の書き方（期間、ブロックの <code>in</code>、例外日） <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
+      <tr><td>P-21</td><td><strong>状態は不変オブジェクトで持ち、写しは参照を渡す</strong> <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>P-22</td><td>インスタンス ID は「定義 ID@ワールド ID」 <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>P-23</td><td>SQLite の表は「よく使う列 + JSON」 <span class="chip fixed">合意</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
+      <tr><td>P-24</td><td>時刻は UTC の Unix ミリ秒で保存する <span class="chip fixed">合意</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
+      <tr><td>P-25</td><td>アセンブリの分け方（6つ） <span class="chip fixed">合意</span></td><td><a href="4-components.html#assemblies">D4 4.1</a></td></tr>
+      <tr><td>P-26</td><td>LLM クライアントは、コア独自の薄い口にする <span class="chip fixed">合意</span></td><td><a href="4-components.html#llm-port">D4 4.4</a></td></tr>
+      <tr><td>P-27</td><td>公開 API はビルダーとエンジンの1クラス <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a></td></tr>
+      <tr><td>P-28</td><td>プラグインは、ホストがコードで登録する（動的ロードなし） <span class="chip fixed">合意</span></td><td><a href="4-components.html#plugins">D4 4.7</a></td></tr>
+      <tr><td>P-29</td><td>所要時間は 5 分刻みの一様分布 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#candidates">D5 5.2</a></td></tr>
+      <tr><td>P-30</td><td><strong>Decider のスコアの式と、補正の語彙</strong> <span class="chip fixed">合意</span></td><td><a href="5-decision.html#score">D5 5.3</a></td></tr>
+      <tr><td>P-31</td><td>遅刻・欠席・待つの重み <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
+      <tr><td>P-32</td><td>長いブロックの途中の機会は <code>phone_every</code> を書いたときだけ <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
+      <tr><td>P-33</td><td>ブロックの <code>interruptible</code> は持たない <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
+      <tr><td>P-34</td><td>生成した直後は、最初の Planner のホライズンまで、固定予定と Decider だけで過ごす（P-55 に合わせて書き直した） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
+      <tr><td>P-35</td><td><strong>状態変数の範囲と既定値</strong> <span class="chip fixed">合意</span></td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
+      <tr><td>P-36</td><td>寝不足での健康度の下がり方 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
+      <tr><td>P-37</td><td>出来事の頻度（定義ごとに必須、1日2件まで） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#incidents">D5 5.8</a></td></tr>
+      <tr><td>P-38</td><td>乱数は SplitMix64 のカウンタ方式 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#rng">D5 5.9</a></td></tr>
+      <tr><td>P-39</td><td>移動中は、どの場所にもいないものとして扱う <span class="chip fixed">合意</span></td><td><a href="5-decision.html#routes">D5 5.10</a></td></tr>
+      <tr><td>P-40</td><td>同行で片方が抜けたら、<code>continue</code> / <code>cancel</code> を予定ごとに選ぶ <span class="chip fixed">合意</span></td><td><a href="5-decision.html#together">D5 5.11</a></td></tr>
+      <tr><td>P-41</td><td>2人のレーンをまたぐ決定は作らない <span class="chip fixed">合意</span></td><td><a href="5-decision.html#together">D5 5.11</a></td></tr>
+      <tr><td>P-42</td><td>モデルは Main と Light の2段 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#tiers">D6 6.1</a></td></tr>
+      <tr><td>P-43</td><td>記憶の検索に埋め込みを使わない <span class="chip fixed">合意</span></td><td><a href="6-llm.html#retrieval">D6 6.4</a></td></tr>
+      <tr><td>P-44</td><td>フォローバックの方針は、コアが読む（ペルソナ定義の <code>[sns]</code>） <span class="chip fixed">合意</span></td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
+      <tr><td>P-45</td><td>空振りのクールダウンは 30 分 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
+      <tr><td>P-46</td><td>新しい場所のつなぎ方の細部 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
+      <tr><td>P-47</td><td>記憶力は、半減期の倍率で調整する <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
+      <tr><td>P-48</td><td>記憶の整理の層とカーソル <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
+      <tr><td>P-49</td><td>Apply の例外では、エンジンを止める（デーモンは生かし、却下して再開できる） <span class="chip fixed">合意</span></td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
+      <tr><td>P-50</td><td>テストの層 <span class="chip fixed">合意</span></td><td><a href="7-operations.html#testing">D7 7.4</a></td></tr>
+      <tr><td>P-51</td><td>ライブラリの選定 <span class="chip fixed">合意</span></td><td><a href="8-stack.html#libraries">D8 8.2</a></td></tr>
+      <tr><td>P-52</td><td>固定予定のブロックの入れ子（<code>within</code> が必須）と、時間帯の並べ書き（<code>times</code>）。レビューで足した <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
+      <tr><td>P-53</td><td>LLM の呼び出しの目的は登録制にし、段の上書きと再試行の方針はコアの表（<code>LlmPolicy</code>）に集める。レビューで足した <span class="chip fixed">合意</span></td><td><a href="4-components.html#llm-port">D4 4.4</a></td></tr>
+      <tr><td>P-54</td><td>CLI は、エンジンを動かすデーモンと、ローカルの管理用 API（Minimal API）で話す。レビューで足した <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
+      <tr><td>P-55</td><td>Planner は、日の始まりではなく、記憶の整理を起こす行動（睡眠、気絶）のときに、整理を待ってから動く。ホライズンは契機の3時間後。寝なかったら、作り直す時刻に起きたまま動く。レビューで足した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
+      <tr><td>P-56</td><td>ペルソナとワールドの「生成」と「破棄」の手順。破棄は取り消せず、データは記録として残す。時間の一時停止は作らない。レビューで足した <span class="chip fixed">合意</span></td><td><a href="1-execution.html#lifecycle">D1 1.13</a></td></tr>
+      <tr><td>P-57</td><td>投稿と返信の文面は、別の呼び出し（Light）で校閲してから送る。下書きは最大 3 回。ebise の校閲を引き継ぎ、世界観の観点を足した。レビューで足した <span class="chip fixed">合意</span></td><td><a href="6-llm.html#review">D6 6.10</a></td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="judgments">
+  <h2><span class="num">0.5</span>枠の外の判断</h2>
+  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-93）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
+  <h3>VISION の解釈で決めたもの</h3>
+  <p>VISION から導いたつもりで、実際には読み方を1つに決めたもの。いちばん見落としやすいので、先に見てほしい。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>ID</th><th>判断</th><th>場所</th></tr>
+      <tr><td>J-01</td><td>ホライズンの壁と同じ時刻のイベントも待つ。VISION の「ホライズンより後」を「以上」と読んだ <span class="chip fixed">合意</span></td><td><a href="1-execution.html#horizon">D1 1.6</a></td></tr>
+      <tr><td>J-02</td><td>時計を読むのは、エンジン、配信役、到着の受付だけ。到着のイベントの時刻は、受付が「いま」を読んで付ける <span class="chip fixed">合意</span></td><td><a href="1-execution.html#clock">D1 1.10</a></td></tr>
+      <tr><td>J-03</td><td>追いつきの最中に届いた到着は保留し、追いつきが終わってから、時計の「いま」（実時刻と同じ）で積む <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
+      <tr><td>J-04</td><td>停止するとき、送信中の操作は結果を待たずに閉じる（次の起動で「送信不明」になる） <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
+      <tr><td>J-05</td><td>固定ブロックの開始は、実行中の行動を終わらせる。ただし、反射の行動は打ち切らない。レビューで直した <span class="chip fixed">合意</span></td><td><a href="1-execution.html#states">D1 1.8</a></td></tr>
+      <tr><td>J-06</td><td>Planner の出力は、ホライズンの時刻のイベント（<code>plan.committed</code>）にする。継ぎ目では、ブロック ID（定義@開始日）が同じなら続いているとみなす。作り直す時刻は <code>plan.due</code> で積む（P-55 で書き直した） <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a>、<a href="5-decision.html#planner">D5 5.5</a></td></tr>
+      <tr><td>J-07</td><td>欠席したブロックの残りは自由時間にする。「待つ」は、原因の解消かブロックの終わりの早いほうまで待って、開始時の確認をやり直す <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>J-08</td><td>反射の行動が終わった時点で、固定・計画のブロックの途中なら、遅刻するか欠席するかを決める（ブロックの途中で反射が起きた場合も、前から続いていた場合も同じ）。レビューで直した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#reflex">D5 5.7</a></td></tr>
+      <tr><td>J-09</td><td>行動が終わったときに決めどきを積むのは、自由時間の中で、同じ時刻にブロックが始まらないときだけ <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>J-10</td><td>廃止した場所にいる人の行動は、中断せずにそのまま終わらせる <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>J-11</td><td>破棄したペルソナとワールドのイベントは、破棄のときに全部捨てる（P-56 で書き直した） <span class="chip fixed">合意</span></td><td><a href="1-execution.html#lifecycle">D1 1.13</a></td></tr>
+      <tr><td>J-12</td><td>受信箱を捌く対象は、「スマホを開く」を始めた時点の通知だけ。途中で届いたものは受信箱に残る <span class="chip fixed">合意</span></td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
+      <tr><td>J-13</td><td>投稿のクールダウンの基準（最後の投稿の時刻など）を、ログから毎回計算せず、状態に持って Apply で更新する。ログから計算しても値は同じになる（VISION 10章に反映した） <span class="chip fixed">合意</span></td><td><a href="2-events.html#requires">D2 2.6</a></td></tr>
+      <tr><td>J-14</td><td>後続のイベントは、契機のイベントの origin を引き継ぐ <span class="chip fixed">合意</span></td><td><a href="2-events.html#origin">D2 2.9</a></td></tr>
+      <tr><td>J-15</td><td>処理済みの通知と、送信済みの操作は、状態から外して表にだけ残す <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>J-16</td><td>帰還できるかの判定で、次のブロックがなければ、プランの終わりを期限にする <span class="chip fixed">合意</span></td><td><a href="5-decision.html#candidates">D5 5.2</a></td></tr>
+      <tr><td>J-17</td><td>行動の時刻の範囲（<code>limits.hours</code>）は、開始時刻だけで判定する <span class="chip fixed">合意</span></td><td><a href="5-decision.html#candidates">D5 5.2</a></td></tr>
+      <tr><td>J-18</td><td>Planner の「汎用の行動への置換」を、自由時間への置き換えで表す <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
+      <tr><td>J-19</td><td>（取り下げ）Planner の「睡眠の細部を埋める」は、廃止した仕様の残骸だった。Planner は睡眠のブロックを作らず、VISION からもこの言葉を消した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
+      <tr><td>J-20</td><td>しきい値の反射は、越えた瞬間だけ起こす。すでに向こう側にいれば、到達を予測しない <span class="chip fixed">合意</span></td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
+      <tr><td>J-21</td><td>状態変数が範囲の端に着いたら、基準を端の値と到達の時刻に置き直す <span class="chip fixed">合意</span></td><td><a href="5-decision.html#vitals">D5 5.6</a></td></tr>
+      <tr><td>J-22</td><td>片側にしか <code>with</code> を書いていない同行は、警告して同行として扱わない（同じ場所にいれば、居合わせにはなる） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#together">D5 5.11</a></td></tr>
+      <tr><td>J-23</td><td>返信で「知らない」と答えるかの判定に、投稿と同じ辞書と <code>post.judge</code> を使う。<strong>返信のときの判定の結果を辞書に記録するかは、決めていない</strong> <span class="chip fixed">合意</span></td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
+      <tr><td>J-24</td><td><code>shareable</code> でない記憶は、会話の相手以外との会話では使わない。<code>shareable</code> は抽出で LLM が付け、ハーネスは狭めるだけ（D6 6.7） <span class="chip fixed">合意</span></td><td><a href="6-llm.html#retrieval">D6 6.4</a></td></tr>
+      <tr><td>J-25</td><td>記憶の整理で、事実のイベントは public の層に入れる。前提として、dm の会話からは事実のイベントを生まない（VISION 13章に明記した） <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
+      <tr><td>J-26</td><td>記憶の整理はペルソナごとに1つ。前の整理が終わらないうちに次の睡眠が来たら、前のが終わってから新しい上限で続ける <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
+      <tr><td>J-27</td><td>Misskey の audience の決め方は、ebise の <code>audienceOf</code> の規則をそのまま移す <span class="chip fixed">合意</span></td><td><a href="4-components.html#channel">D4 4.3</a></td></tr>
+    </table>
+  </div>
+  <h3>VISION にない仕組みと項目</h3>
+  <p>VISION にない部品、項目、名前、形を、案にせずに決めたもの。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>ID</th><th>判断</th><th>場所</th></tr>
+      <tr><td>J-28</td><td>シグナルの5種類（<code>StartHandler</code>、<code>CancelHandler</code>、<code>Deliver</code>、<code>Consolidate</code>、<code>ChannelOnline</code>）と、再起動での復元の仕方 <span class="chip fixed">合意</span></td><td><a href="1-execution.html#apply">D1 1.3</a></td></tr>
+      <tr><td>J-29</td><td>キューは、未適用のイベントをメモリの優先度つきキューに写したもの。読むのはメモリだけ <span class="chip fixed">合意</span></td><td><a href="1-execution.html#step">D1 1.4</a></td></tr>
+      <tr><td>J-30</td><td>guard の6種類と、却下されたときの動き（<code>redecide</code> / <code>recompose</code> / <code>drop</code>） <span class="chip fixed">合意</span></td><td><a href="1-execution.html#guard">D1 1.7</a></td></tr>
+      <tr><td>J-31</td><td>イベントの状態に skipped と rejected を足し、理由を残す <span class="chip fixed">合意</span></td><td><a href="1-execution.html#states">D1 1.8</a></td></tr>
+      <tr><td>J-32</td><td>SQLite の書き込みの接続を2本（エンジン用、記憶の整理用）にし、書く表を分ける <span class="chip fixed">合意</span></td><td><a href="1-execution.html#tx">D1 1.9</a></td></tr>
+      <tr><td>J-33</td><td>運転モードは、実時間・倍速・早送り・追いつきの4つ。倍速でも配信役は動かさない <span class="chip fixed">合意</span></td><td><a href="1-execution.html#clock">D1 1.10</a></td></tr>
+      <tr><td>J-34</td><td>定義の読み直しを、<code>definitions.reloaded</code> のイベント（定義のハッシュつき）で記録する <span class="chip fixed">合意</span></td><td><a href="1-execution.html#reload">D1 1.12</a></td></tr>
+      <tr><td>J-35</td><td>イベントに Batch と Cause を持たせる。版番号は独立した項目にせず、ペイロードの中に持つ <span class="chip fixed">合意</span></td><td><a href="2-events.html#envelope">D2 2.1</a></td></tr>
+      <tr><td>J-36</td><td>イベントタイプの名前（<code>activity.chosen</code> など）と、決めどきの理由の6種類 <span class="chip fixed">合意</span></td><td><a href="2-events.html#types">D2 2.3</a></td></tr>
+      <tr><td>J-37</td><td>組み込みの行動5つ（<code>core.go_to_next</code>、<code>idle</code>、<code>sleep</code>、<code>faint</code>、<code>go_home_rest</code>） <span class="chip fixed">合意</span></td><td><a href="2-events.html#effects">D2 2.5</a></td></tr>
+      <tr><td>J-38</td><td>状態（風邪など）の率は、既定の率に「足す」（行動の率は「置き換える」） <span class="chip fixed">合意</span></td><td><a href="2-events.html#incident-effects">D2 2.7</a></td></tr>
+      <tr><td>J-39</td><td>出来事の対象の場所は、<code>place</code> で決め打ちするか、<code>place_tag</code> で抽選する <span class="chip fixed">合意</span></td><td><a href="2-events.html#incident-effects">D2 2.7</a></td></tr>
+      <tr><td>J-40</td><td>origin の語彙の6種類 <span class="chip fixed">合意</span></td><td><a href="2-events.html#origin">D2 2.9</a></td></tr>
+      <tr><td>J-41</td><td>時間の長さは、単位つきの文字列（<code>"45m"</code>）で書く <span class="chip fixed">合意</span></td><td><a href="3-data.html#files">D3 3.2</a></td></tr>
+      <tr><td>J-42</td><td>定義のキーの名前と書き方（<code>utc_offset</code>、<code>not_exist</code>、<code>[[term]]</code>、<code>examples</code>、<code>tools</code>、<code>use</code> のワイルドカード、<code>[vitals]</code>、<code>[reflexes]</code>、行動と出来事のキー） <span class="chip fixed">合意</span></td><td><a href="3-data.html#world-def">D3 3.3</a>〜<a href="3-data.html#action-def">3.6</a></td></tr>
+      <tr><td>J-43</td><td>固定予定の日をまたぐブロックは、開始した日のもの。（重なりをエラーにする規則は、レビューでやめて P-52 に移した） <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
+      <tr><td>J-44</td><td>反射の行動は、所要時間を固定で書く（範囲ならエラー） <span class="chip fixed">合意</span></td><td><a href="3-data.html#action-def">D3 3.6</a></td></tr>
+      <tr><td>J-45</td><td>ペルソナの状態に、副行動（Overlay）、行動ごとの利用（前回の開始、今日の回数、連続回数）、投稿の状態、用途ごとの乱数の位置、最後の起床を持つ <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>J-46</td><td>ID を <code>readonly record struct</code> で型ごとに分ける <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>J-47</td><td>SQLite の表と列、インデックス、接続の設定（WAL、<code>synchronous=NORMAL</code>）、<code>user_version</code> によるマイグレーション <span class="chip fixed">合意</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
+      <tr><td>J-48</td><td>ペイロードにイベントタイプごとの版（<code>"v"</code>）を入れる。知らないイベントタイプのイベントを読んだら、起動を止める <span class="chip fixed">合意</span></td><td><a href="3-data.html#json">D3 3.9</a></td></tr>
+      <tr><td>J-49</td><td>ポートの一覧とシグネチャ（<code>IRandomSource</code>、<code>IStorage.CommitAsync</code>、<code>IAdminNotifier</code> など）。連番はエンジンが振る <span class="chip fixed">合意</span></td><td><a href="4-components.html#ports">D4 4.2</a></td></tr>
+      <tr><td>J-50</td><td><code>IChannel</code> のメソッドと、能力の語彙 <span class="chip fixed">合意</span></td><td><a href="4-components.html#channel">D4 4.3</a></td></tr>
+      <tr><td>J-51</td><td><code>ILlmClient</code> のシグネチャ。モデル名はコアに書かず、段から対応させる <span class="chip fixed">合意</span></td><td><a href="4-components.html#llm-port">D4 4.4</a></td></tr>
+      <tr><td>J-52</td><td>コアの中の部品の分け方 <span class="chip fixed">合意</span></td><td><a href="4-components.html#inside">D4 4.5</a></td></tr>
+      <tr><td>J-53</td><td>遅い購読者は切断する。<code>DryRun()</code> はチャンネルを <code>NullChannel</code> に替える <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a></td></tr>
+      <tr><td>J-54</td><td>プラグインが登録できるものの6種類。同梱する行動の ID は、プラグインの名前で始める <span class="chip fixed">合意</span></td><td><a href="4-components.html#plugins">D4 4.7</a></td></tr>
+      <tr><td>J-55</td><td>固定ブロック中にスマホを開いたら、ブロックの行動を続けたまま、副行動として実行する <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
+      <tr><td>J-56</td><td>最短経路は Floyd–Warshall。移動の経路は、出発時に辺の列として確定させる <span class="chip fixed">合意</span></td><td><a href="5-decision.html#routes">D5 5.10</a></td></tr>
+      <tr><td>J-57</td><td>LLM に渡す文脈の部品の一覧と、日誌の整形の仕方 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#context">D6 6.3</a></td></tr>
+      <tr><td>J-58</td><td>記憶の汚染を防ぐフィルタ（ebise から引き継ぐ） <span class="chip fixed">合意</span></td><td><a href="6-llm.html#safety">D6 6.8</a></td></tr>
+      <tr><td>J-59</td><td>失敗したときの振る舞いの表（P-49 以外の行） <span class="chip fixed">合意</span></td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
+      <tr><td>J-60</td><td>定義の検証の、エラーと警告の分け方（効果の語彙にないキーも警告） <span class="chip fixed">合意</span></td><td><a href="7-operations.html#validation">D7 7.2</a></td></tr>
+      <tr><td>J-61</td><td>観測の項目と、ログのレベル <span class="chip fixed">合意</span></td><td><a href="7-operations.html#observability">D7 7.3</a></td></tr>
+      <tr><td>J-62</td><td>CLI のコマンド（P-54 で書き直した） <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
+      <tr><td>J-63</td><td>使わないもの（EF Core、NodaTime、ベクトル検索など） <span class="chip fixed">合意</span></td><td><a href="8-stack.html#not-used">D8 8.3</a></td></tr>
+      <tr><td>J-64</td><td>LLM の PoC の判定の基準（B でプロンプトキャッシュが効かなければ A） <span class="chip fixed">合意</span></td><td><a href="8-stack.html#poc">D8 8.4</a></td></tr>
+    </table>
+  </div>
+  <h3>調整前提の数値</h3>
+  <p>動かしながら調整する前提の初期値。案に含めた数値（状態変数の既定値など）は、ここには載せていない。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>ID</th><th>判断</th><th>場所</th></tr>
+      <tr><td>J-65</td><td>追いつきに入るずれ：1 分 <span class="chip fixed">合意</span></td><td><a href="1-execution.html#startup">D1 1.11</a></td></tr>
+      <tr><td>J-66</td><td>早送りでまとめてコミットする件数：数百件ごと <span class="chip fixed">合意</span></td><td><a href="1-execution.html#tx">D1 1.9</a></td></tr>
+      <tr><td>J-67</td><td>SQLite の <code>busy_timeout</code>：5000 ミリ秒 <span class="chip fixed">合意</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
+      <tr><td>J-68</td><td>送信の再試行：3 回（確実に送れていないときだけ） <span class="chip fixed">合意</span></td><td><a href="4-components.html#channel">D4 4.3</a></td></tr>
+      <tr><td>J-69</td><td>Decider の痕跡に残す候補：上位 10 件 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#decider">D5 5.1</a></td></tr>
+      <tr><td>J-70</td><td>スコアの係数：β = 3.0、like = 2.0、dislike = 0.4、繰り返し 0.7、移動 30 分（P-30 の式の中の値） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#score">D5 5.3</a></td></tr>
+      <tr><td>J-71</td><td>スマホを開く重み：1 + 0.5 × min(未読の数, 4) <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
+      <tr><td>J-72</td><td>Planner の再生成：2 回まで。置き換えたブロックが半分を超えたら再生成 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a></td></tr>
+      <tr><td>J-73</td><td>反射の行動の長さ：気絶 2 時間、早退したあとの休息 3 時間 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#reflex">D5 5.7</a></td></tr>
+      <tr><td>J-74</td><td>状態変数を言葉にする区切り（気力 80 / 50 / 20 など） <span class="chip fixed">合意</span></td><td><a href="6-llm.html#context">D6 6.3</a></td></tr>
+      <tr><td>J-75</td><td>文脈に入れる記憶：上位 12 件 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#retrieval">D6 6.4</a></td></tr>
+      <tr><td>J-76</td><td>受信箱を一度に捌く件数：最大 20 件 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
+      <tr><td>J-77</td><td>話題の候補：最大 5 件 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
+      <tr><td>J-78</td><td>記憶の整理の区切り：3 万トークン <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
+      <tr><td>J-79</td><td>記憶の整理の失敗を通知する回数：同じ層で 3 回続けて <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
+      <tr><td>J-80</td><td>記憶の汚染のフィルタの長さ：400 字 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#safety">D6 6.8</a></td></tr>
+      <tr><td>J-81</td><td>LLM の再試行：3 回。ループの中は 2 秒から、記憶の整理は 10 秒から倍にする <span class="chip fixed">合意</span></td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
+      <tr><td>J-82</td><td>構造化出力の作り直し：1 回 <span class="chip fixed">合意</span></td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
+      <tr><td>J-83</td><td>管理者への通知：LLM と送信は 1 時間に 5 回、チャンネルの切断は 30 分 <span class="chip fixed">合意</span></td><td><a href="7-operations.html#errors">D7 7.1</a></td></tr>
+      <tr><td>J-84</td><td>状態は <code>sealed record</code>（参照型）、小さな値は <code>readonly record struct</code>。レビューで足した <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>J-85</td><td>受信箱のアイテムの形（大分類、会話の鍵、それまでの会話は直近 20 件まで、添付）。チャンネルがコアの読める形に訳し、リアクションとフォローもコアが捌く。同じ会話はまとめて1回返信する。レビューで決めた <span class="chip fixed">合意</span></td><td><a href="3-data.html#inbox-item">D3 3.7.1</a>、<a href="6-llm.html#inbox">D6 6.5</a></td></tr>
+      <tr><td>J-89</td><td>リアクションの通知は LLM を使わず、見たものとして処理済みにする（記憶の材料にはなる）。レビューで足した <span class="chip fixed">合意</span></td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
+      <tr><td>J-90</td><td>通知の規則は、チャンネルと種類で登録し、コアが振り分ける（重複は起動時のエラー）。規則は発話を出せない。レビューで決めた <span class="chip fixed">合意</span></td><td><a href="4-components.html#plugins">D4 4.7</a></td></tr>
+      <tr><td>J-91</td><td>固定ブロックの「スマホを開く機会」の候補に「投稿する」を足して3択にする（VISION 10章に反映）。レビューで決めた <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
+      <tr><td>J-92</td><td>行動の定義に <code>schedule_only</code> を足す。付いた行動は固定予定と反射からだけ始まり、Decider と Planner の候補にならない。ユーザーの行動にも使える。組み込みの睡眠、気絶、早退、何もしないに付ける。レビューで決めた <span class="chip fixed">合意</span></td><td><a href="3-data.html#action-def">D3 3.6</a>、<a href="2-events.html#effects">D2 2.5</a></td></tr>
+      <tr><td>J-93</td><td>日誌に居合わせの変化（着いたときにいた人、来た人、去った人）を入れる。同行と居合わせは文言で書き分ける。レビューで決めた <span class="chip fixed">合意</span></td><td><a href="6-llm.html#context">D6 6.3</a></td></tr>
+      <tr><td>J-86</td><td>プラグインにエンジンそのものを渡す。起動・停止などに触らないのは、プラグインの責務として守る。決める側のハンドラは、判断には写しを使う。レビューで足した <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a>、<a href="4-components.html#plugins">4.7</a></td></tr>
+      <tr><td>J-87</td><td><code>prefs</code> の数値の 0 は <code>forbid</code> の別名にする。レビューで足した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#score">D5 5.3</a></td></tr>
+      <tr><td>J-88</td><td><code>core.go_to_next</code> は <code>forbid</code> の対象にしない（ペルソナ定義で明示したらエラー、状態で当たったら無視してログに警告）。レビューで足した <span class="chip fixed">合意</span></td><td><a href="5-decision.html#candidates">D5 5.2</a></td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="vision">
+  <h2><span class="num">0.6</span>VISION への指摘と反映</h2>
+  <h3>反映したもの</h3>
+  <ul>
+    <li>1章の用語の表で、「投入の窓口」の章が 16 になっていた誤りを、15 に直した</li>
+    <li>合意した P-02、P-04、P-05、P-06、P-07、P-08、P-09、P-10、P-12、P-15、P-16、P-18、P-19、P-20、P-21、P-26、P-29〜P-41、P-44〜P-47、P-52 を、VISION の1章、2章、4章、5章、6章、9章、10章、11章、13章、14章、付録に反映した</li>
+    <li>レビューで決めた用語（「種別」を「イベントタイプ」にする、段を項目として持たない）を、VISION の2章と4章に反映した</li>
+    <li>合意した J-13、J-15 を、VISION の2章（状態の表）と10章（頻度制限）に反映した。J-25 の前提（事実は public で、dm の会話からは事実を生まない）を、13章に明記した</li>
+    <li>合意した J-35、J-45 を、VISION の2章（イベントの項目と、ペルソナインスタンスの状態の表）に反映した</li>
+  </ul>
+  <h3>合意したら、VISION にも反映が要るもの</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>VISION の章</th><th>反映すること</th><th>案・判断</th></tr>
+      <tr><td>付録</td><td>合意した項目を、付録から消す</td><td>0.3 の表</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="next">
+  <h2><span class="num">0.7</span>次にやること</h2>
+  <ol class="road">
+    <li><b>案と判断のレビュー（済）</b><span>案（0.4）と枠の外の判断（0.5）は、すべて合意した。食い違いが見つかったら、実装のときに直す</span></li>
+    <li><b>LLM の PoC</b><span>D8 8.4 の5項目を確かめ、ILlmClient の実装を選ぶ</span></li>
+    <li><b>ドメインと Apply</b><span>ドメイン型、定義の読み込みと検証、Apply と guard。Apply の単体テスト</span></li>
+    <li><b>エンジンとシナリオ</b><span>仮想時計、レーン、ホライズン、Decider。シナリオと不変条件のテスト</span></li>
+    <li><b>永続化</b><span>SQLite のストレージ、起動、追いつき。再起動のテスト</span></li>
+    <li><b>LLM の部分</b><span>Planner、受信箱、投稿、記憶の整理。台本の LLM で通し、評価ケースを手で回す</span></li>
+    <li class="goal"><b>Misskey と CLI</b><span>最初の到達点（ebise 相当の再現。VISION 1章）</span></li>
+  </ol>
+</section>
+
+</main>
+
+<footer>Vivace 詳細設計の目次。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。「決定」は合意したもの。</footer>
+</div>
+
+<button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>
+<script src="page.js"></script>
+</body>
+</html>

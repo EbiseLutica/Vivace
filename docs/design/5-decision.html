@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://koruri.shrimpia.network/koruri.css" />
+<link rel="stylesheet" href="style.css" />
+<title>D5 決定と状態変数</title>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker>
+  </defs>
+</svg>
+<div class="layout">
+
+<header class="hero">
+  <div class="kicker">VIVACE / DESIGN / D5</div>
+  <h1>決定と状態変数</h1>
+  <p>Decider のスコアの式、Planner の検査と補正、状態変数の式と既定値、反射、出来事の抽選、乱数、最短経路、同行。VISION 5章、6章、9章、14章の「詳細設計で決める」をここで埋める。数値はすべて、動かしながら調整する前提の初期値。</p>
+  <div class="meta">
+    <span class="chip">2026-11-03 時点</span>
+    <span class="chip draft">案を含む</span>
+    <span class="chip">VISION 5章、6章、9章、14章</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目次">
+  <details open>
+    <summary>目次</summary>
+    <ol>
+      <li class="part">D5 決定と状態変数</li>
+      <li><a href="#decider">5.1 Decider の流れ</a></li>
+      <li><a href="#candidates">5.2 候補の作り方</a></li>
+      <li><a href="#score">5.3 スコアの式</a></li>
+      <li><a href="#special">5.4 特別な決めどき</a></li>
+      <li><a href="#planner">5.5 Planner</a></li>
+      <li><a href="#vitals">5.6 状態変数</a></li>
+      <li><a href="#reflex">5.7 反射</a></li>
+      <li><a href="#incidents">5.8 出来事の抽選</a></li>
+      <li><a href="#rng">5.9 乱数</a></li>
+      <li><a href="#routes">5.10 最短経路と移動</a></li>
+      <li><a href="#together">5.11 同行</a></li>
+      <li class="part">詳細設計</li>
+      <li><a href="index.html">目次と決めること</a></li>
+      <li><a href="1-execution.html">D1 実行モデル</a></li>
+      <li><a href="2-events.html">D2 イベントと語彙</a></li>
+      <li><a href="3-data.html">D3 データ</a></li>
+      <li><a href="4-components.html">D4 コンポーネント</a></li>
+      <li><a href="5-decision.html">D5 決定と状態変数</a></li>
+      <li><a href="6-llm.html">D6 LLM と記憶</a></li>
+      <li><a href="7-operations.html">D7 運用とテスト</a></li>
+      <li><a href="8-stack.html">D8 技術スタック</a></li>
+      <li class="part">構想</li>
+      <li><a href="../VISION.html">VISION.html</a></li>
+    </ol>
+  </details>
+</nav>
+
+<main>
+
+<section id="decider">
+  <h2><span class="num">5.1</span>Decider の流れ</h2>
+  <div class="flow">
+    <div class="step"><b>1. 候補を並べる</b><p>使える行動 × 行ける場所。requires と制限で外す</p></div>
+    <div class="arr">→</div>
+    <div class="step"><b>2. 所要時間を引く</b><p>候補ごとに乱数で決める。決まった値で、帰還できるかを判定する</p></div>
+    <div class="arr">→</div>
+    <div class="step"><b>3. 重みで抽選する</b><p>状態変数、好み、繰り返し、移動の手間で重みをつけ、1つ引く</p></div>
+  </div>
+  <p>Decider は同期の純粋な関数として書く。入力は写しと now と乱数の列、出力は <code>activity.chosen</code> 1件（D2 2.3）。候補とスコアの上位 10 件は、痕跡に残す。</p>
+</section>
+
+<section id="candidates">
+  <h2><span class="num">5.2</span>候補の作り方</h2>
+  <ol>
+    <li><strong>行動</strong>：ペルソナの <code>use</code> に当たる行動から、<code>schedule_only</code> の行動（D3 3.6）と、<code>forbid</code> に当たる行動を外す。<code>forbid</code> は2か所にある。ペルソナ定義の <code>prefs</code>（その人がしないこと）と、いま付いている状態（風邪のときは外に出ない、など。D2 2.7）</li>
+    <li><strong>場所</strong>：ワールドの場所（定義の場所 + 採用済みの生えた場所）から、閉鎖中のものを外す。場所を固定するブロックの中なら、その場所だけ</li>
+    <li><strong>requires</strong>：場所のタグ、携行品、チャンネル（つながっていて、圏外でない）を満たす組だけ残す</li>
+    <li><strong>制限</strong>：クールダウン、1日の回数、時刻の範囲（開始時刻で判定）。投稿は、チャンネルの頻度制限と空振りのクールダウンも重ねる</li>
+    <li><strong>所要時間</strong>：残った組ごとに、行動 ID と場所 ID の順に並べてから乱数で引く（並びを固定して、結果を再現できるようにする）</li>
+    <li><strong>帰還できるか</strong>：VISION 5章の式で、次のブロックの開始に間に合うものだけ残す。次のブロックは、プランの中で次に来る固定か計画のブロック。なければ、プランの終わり</li>
+    <li><strong>次の予定の場所へ向かう</strong>：<code>core.go_to_next</code> を必ず足す。これで候補は空にならない（VISION 5章）。だから <code>core.go_to_next</code> は <code>forbid</code> の対象にしない。ペルソナ定義で明示的に外そうとしたら、読み込みのエラー（D7 7.2）にする。付いている状態の <code>forbid</code> に当たったときは、無視して候補に残し、ログに警告を出す（本来は当たってほしくないので、気づけるようにする。状態の <code>forbid</code> は行動タグでも書けて、何に当たるかを前もって全部は確かめられないため、エラーにはしない）</li>
+  </ol>
+  <div class="callout">
+    <span class="label">決定 P-29　所要時間の引き方</span>
+    範囲 <code>[min, max]</code> から、5 分刻みの一様分布で引く。固定の長さなら引かない（乱数を消費しない）。帰還の判定で落ちた候補は、短い値で引き直さない（候補が減るだけで、<code>go_to_next</code> が残るから）。
+  </div>
+</section>
+
+<section id="score">
+  <h2><span class="num">5.3</span>スコアの式</h2>
+  <p>重みは、要素の積にする。どれか1つが 0 なら選ばれない。</p>
+<pre><code>w(a, p) = base(a) × pref(a) × cond(a) × need(a, p) × repeat(a) × travel(p)
+
+need(a, p) = exp( β × Σ_v  u_v × g_v(a, p) )
+  u_v   = 切実さ = ( |x_v − 目標_v| / 幅_v )²         いまの値が目標から遠いほど大きい
+  g_v   = 良くなる量 = ( |x_v − 目標_v| − |x'_v − 目標_v| ) / 幅_v
+  x'_v  = その行動を終えたときの予測値（移動 + 行動の率と、終了時の増減で計算する）
+
+repeat(a)  = 0.7 ^ (直前に同じ行動を続けた回数)
+travel(p)  = exp( −移動時間（分） / 30 )</code></pre>
+  <div class="table-wrap">
+    <table>
+      <tr><th>変数</th><th>目標</th><th>幅</th><th>意味</th></tr>
+      <tr><td>気力</td><td>100</td><td>100</td><td>減っているほど、回復する行動が選ばれやすい</td></tr>
+      <tr><td>健康度</td><td>100</td><td>100</td><td>下がっているほど、休む行動が選ばれやすい</td></tr>
+      <tr><td>退屈度</td><td>0</td><td>100</td><td>高いほど、退屈を下げる行動が選ばれやすい</td></tr>
+      <tr><td>社交欲求</td><td>0</td><td>100</td><td>正なら人と会う行動、負なら一人の行動が選ばれやすい（VISION 6章）。予測値は、行き先にいまいる人の数で、一人の率か同席の率かを選んで計算する</td></tr>
+    </table>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <tr><th>要素</th><th>決め方</th></tr>
+      <tr><td><code>base</code></td><td>行動定義の <code>weight</code>（既定 1.0）</td></tr>
+      <tr><td><code>pref</code></td><td>ペルソナの <code>prefs</code>。<code>like</code> = 2.0、<code>dislike</code> = 0.4、<code>forbid</code> = 候補から外す、数値ならその値。数値の 0 は <code>forbid</code> の別名で、同じく候補から外す（重み 0 で残すと、選ばれないのに所要時間の乱数を引いてしまうため）。行動 ID と <code>tag:</code>（行動タグ）の両方に当たれば、積をとる</td></tr>
+      <tr><td><code>cond</code></td><td>付いている状態の <code>weight</code> の積（D2 2.7）</td></tr>
+      <tr><td><code>β</code></td><td>状態変数の効き目。既定 3.0。大きいほど、欲求に素直になる</td></tr>
+    </table>
+  </div>
+  <p>抽選は、重みの合計 W に対して <code>r = NextDouble() × W</code> を引き、候補を ID の順に並べた累積で選ぶ。</p>
+  <h3>need の読み方</h3>
+  <ul>
+    <li><strong>切実さ u</strong>：いまの値が、目標からどれだけ遠いか。2乗するので、少し離れているだけならほぼ 0 で、大きく離れると急に効く。気力 90 なら 0.01、気力 30 なら 0.49</li>
+    <li><strong>良くなる量 g</strong>：その行動を終えたとき、目標にどれだけ近づくか。遠ざかるなら負になる。移動の分も含めて、状態変数の率と効果から計算する（行動定義に「この行動は疲れが取れる」のような印は書かない）</li>
+    <li><strong>u × g の合計</strong>：切実な変数を良くする行動ほど大きく、切実な変数を悪くする行動ほど小さい。切実でない変数は、どう動いても効かない</li>
+    <li><strong>exp(β × …)</strong>：合計を、掛け算できる正の倍率に直す。合計が 0 なら 1 倍（欲求は関係なし）、正なら 1 倍より大きく、負なら小さい。β はその効き目の強さ</li>
+  </ul>
+  <h3>計算の例</h3>
+  <p>14:00 の自由時間。気力 30、退屈度 70（社交欲求 0、健康度 100 は切実さ 0 なので効かない）。気力と退屈度の切実さは、どちらも (70 / 100)² = 0.49。候補が3つあるとする。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>候補</th><th>終えたときの予測</th><th>g（気力、退屈度）</th><th>need</th><th>ほかの要素</th><th>重み</th><th>選ばれる確率</th></tr>
+      <tr><td>家で昼寝（60 分。気力 +20/時）</td><td>気力 50、退屈度 73</td><td>+0.20、−0.03</td><td>exp(3 × 0.083) = 1.28</td><td>なし</td><td>1.28</td><td>26%</td></tr>
+      <tr><td>公園を散歩（移動 15 分 + 45 分。終了時に退屈度 −25）</td><td>気力 24.5、退屈度 48</td><td>−0.055、+0.22</td><td>exp(3 × 0.081) = 1.27</td><td>移動 exp(−15/30) = 0.61</td><td>0.77</td><td>16%</td></tr>
+      <tr><td>家でゲーム（60 分。終了時に退屈度 −30）</td><td>気力 26、退屈度 43</td><td>−0.04、+0.27</td><td>exp(3 × 0.113) = 1.40</td><td>好き（like）× 2.0</td><td>2.80</td><td>58%</td></tr>
+    </table>
+  </div>
+  <p>気力が 10 まで下がると、気力の切実さが 0.81 になり、昼寝の need は 1.56 に上がる（確率は 31%）。β = 3 では、欲求は「好き」の 2 倍ほどは効かない柔らかい傾向にとどまる。疲れ切ったら休むのを確実にするのは反射の役目（5.7）で、Decider はそこまでの傾きをつけるだけ（VISION 5章）。傾きが弱すぎると感じたら、β を上げる。</p>
+  <div class="callout">
+    <span class="label">決定 P-30　Utility AI のスコアの式と、補正の語彙</span>
+    VISION 付録「Utility AI のスコアの式と、補正の語彙」への案。状態変数ごとの「良くなる量」を行動の効果から自動で予測するので、行動定義に「この行動は退屈に効く」のような印を別に書かなくてよい。補正の語彙は、<code>like</code> / <code>dislike</code> / <code>forbid</code> / 数値の4つと、行動タグ（<code>tag:</code>）による一括指定。
+    <p class="alt">行動定義に <code>tags</code> を足す（D3 3.6）。好み（「運動が嫌い」）と状態（「風邪のときは外に出ない」）を、行動を1つずつ挙げずに書くため。</p>
+  </div>
+</section>
+
+<section id="special">
+  <h2><span class="num">5.4</span>特別な決めどき</h2>
+  <h3>予定の乱れへの対応（遅刻・欠席・待つ）</h3>
+  <ul>
+    <li><strong>遅刻</strong>：迂回してでもブロックの場所に着けて、着いた時刻がブロックの終わりより前なら候補になる</li>
+    <li><strong>待つ</strong>：満たせない原因（閉鎖など）の解消の時刻がわかっていて、それがブロックの終わりより前なら候補になる</li>
+    <li><strong>欠席</strong>：いつでも候補になる。欠席したブロックの残りは、自由時間として Decider が決める</li>
+    <li>重みは、ペルソナの <code>disruption</code>（D3 3.4）。既定は 遅刻 1.0、欠席 0.3、待つ 0.5。遅刻の重みには、遅れる時間に応じて <code>exp(−遅れ（分）/ 60)</code> を掛ける（大遅刻なら休みやすい）</li>
+  </ul>
+  <div class="callout">
+    <span class="label">決定 P-31　遅刻・欠席・待つの重み</span>
+    上のとおり。VISION の「ペルソナの性質に応じた重み」を、ペルソナ定義の3つの数値で表す。
+  </div>
+
+  <h3>スマホを開く機会</h3>
+  <ul>
+    <li>候補は「スマホを開く」「投稿する」「何もしない」の3つ（VISION 10章）。開く重みは、スマホを開く行動の <code>base × pref</code> に、<code>1 + 0.5 × min(未読の数, 4)</code> を掛ける（通知のバッジに気づく）。投稿する重みは、投稿する行動の <code>base × pref × need</code>（5.3。人と話したい、退屈しているほど上がる）。何もしないは 1.0</li>
+    <li>「投稿する」は、自由時間と同じく requires と制限で絞る。チャンネルが <code>post</code> の能力を持ち、クールダウン中でないときだけ候補になる（D2 2.6）</li>
+    <li>開くか投稿するなら、ブロックの行動はそのままにして、副行動（<code>Overlay</code>、D3 3.7）として短く実行する。所要時間は、行動定義の範囲から引く</li>
+  </ul>
+  <div class="callout">
+    <span class="label">決定 P-32　長いブロックの途中の「スマホを開く機会」</span>
+    VISION 付録への案。既定では、ブロックの開始時に1回だけ。固定予定のブロックに <code>phone_every = "90m"</code> を書いたときだけ、その間隔で機会を出す（3時間のバイトの休憩など）。間隔は、ペルソナの書き手が決めるもので、コアの既定値は持たない。
+  </div>
+  <div class="callout">
+    <span class="label">決定 P-33　ブロックの <code>interruptible</code> は持たない</span>
+    VISION 付録「予定ブロックの interruptible が要るか」への案。行動の中断は、反射と出来事が担う。スマホを開けるかは <code>phone</code>（availability）で足りるので、<code>interruptible</code> は作らない。
+  </div>
+</section>
+
+<section id="planner">
+  <h2><span class="num">5.5</span>Planner</h2>
+  <h3>起動と範囲</h3>
+  <figure class="diagram">
+    <svg viewBox="0 0 760 210" role="img" aria-label="Planner の起動と範囲">
+      <path class="tick" fill="none" d="M30 150 H740"/>
+      <rect class="bar" x="40" y="60" width="200" height="28" rx="6"/>
+      <text x="140" y="79" text-anchor="middle">前のプラン</text>
+      <rect class="bar free" x="240" y="60" width="440" height="28" rx="6"/>
+      <text x="460" y="79" text-anchor="middle">新しいプラン</text>
+      <rect class="box warn" x="100" y="104" width="140" height="28" rx="6"/>
+      <text class="sub" x="170" y="123" text-anchor="middle">整理 → Planner</text>
+      <line class="mark" x1="100" y1="40" x2="100" y2="160"/>
+      <line class="mark" x1="240" y1="40" x2="240" y2="160"/>
+      <line class="mark" x1="560" y1="40" x2="560" y2="160"/>
+      <line class="mark" x1="680" y1="40" x2="680" y2="160"/>
+      <text class="sub" x="100" y="32" text-anchor="middle">S：寝る（契機）</text>
+      <text class="sub" x="240" y="32" text-anchor="middle">S + 3時間（ホライズン）</text>
+      <text class="sub" x="560" y="32" text-anchor="middle">R：次に作り直す時刻</text>
+      <text class="sub" x="680" y="32" text-anchor="middle">R + 3時間</text>
+      <text class="sub" x="100" y="180" text-anchor="middle">23:30</text>
+      <text class="sub" x="240" y="180" text-anchor="middle">2:30</text>
+      <text class="sub" x="560" y="180" text-anchor="middle">23:30（次の睡眠の予定）</text>
+      <text class="sub" x="680" y="180" text-anchor="middle">2:30</text>
+      <text class="sub" x="400" y="204" text-anchor="middle">R に寝ていればそこで次の Planner が動き、寝ていなければ、起きたまま動く</text>
+    </svg>
+    <figcaption>プランは、ホライズンから「次に作り直す時刻 + 3時間」まで。最初と最後の3時間が、前後のプランと重なる余裕になる</figcaption>
+  </figure>
+  <ul>
+    <li><strong>契機</strong>：記憶の整理を起こす行動（効果に <code>sleep.consolidate</code> を持つ睡眠と気絶）が始まったとき。または、いまのプランの「次に作り直す時刻」になって、まだ寝ていないとき（<code>plan.due</code>、D2 2.3）。Planner は、プランの期間ごとに1回だけ動く。先に来た契機で動き、もう一方は何もしない</li>
+    <li><strong>順番</strong>：寝て起動したときは、まず、その睡眠が起こした記憶の整理が終わるのを待ち、それから LLM を呼ぶ（VISION 13章）。整理が長引いたら、ホライズンの 30 分前で待つのをやめて、いまある記憶で計画する。起きたまま起動したときは、待たずにすぐ呼ぶ</li>
+    <li><strong>ホライズン</strong>：契機の時刻から3時間後。プランの範囲は、ホライズンから「次に作り直す時刻 + 3時間」まで</li>
+    <li><strong>次に作り直す時刻</strong>：新しいプランの中で、次に記憶の整理を起こす行動が始まる予定の時刻（ふつうは次の睡眠の開始）。そういう行動がプランにない場合は、プランの開始から 21 時間後。Planner の出力を適用するときに決めて、プランと一緒に持つ</li>
+    <li><strong>日中の気絶</strong>：気絶も契機になるので、日中に気絶すると、その3時間後から先のプランが作り直される。それまでは前のプランが続く</li>
+    <li><strong>出来事の抽選</strong>は、これまでどおり日の始まり（現地の 0:00）に行う（5.8）。Planner とは独立している</li>
+  </ul>
+  <h3>入力と出力</h3>
+  <ul>
+    <li>入力（LLM に渡すもの）は D6。プランの期間に含まれる日付、曜日、祝日と年中行事、期間の中の固定ブロック、使える行動と場所の ID つきの一覧、発生済みの出来事、日誌と記憶の要約（public のものだけ。VISION 13章）。記憶は、日誌の範囲より前のことだけを入れる（日誌と重ならないように）</li>
+    <li>出力は、固定ブロックの隙間を埋める計画ブロックの列。各ブロックは「開始、終了、行動 ID、場所 ID」か「開始、終了、自由時間」。ほかに、期間の一言の要約（文脈に使う）</li>
+    <li>Planner は睡眠のブロックを作らない。睡眠は、固定予定に書いたものだけ。固定予定に睡眠を書かないペルソナ（眠らない設定など）は、気力が尽きて気絶したときに、記憶の整理と Planner が動く（VISION 6章「気絶」）</li>
+  </ul>
+  <h3>検査と補正</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>検査</th><th>違反したとき</th></tr>
+      <tr><td>時刻の形式、範囲の内か</td><td>範囲の外を切り落とす</td></tr>
+      <tr><td>固定ブロックと重ならないか</td><td>重なった分を切り落とす（固定予定を優先）</td></tr>
+      <tr><td>行動と場所の ID があり、そのペルソナが使えるか（<code>schedule_only</code> の行動ではないか）</td><td>そのブロックを自由時間に置き換える</td></tr>
+      <tr><td>requires（場所のタグ、携行品）を満たすか</td><td>自由時間に置き換える</td></tr>
+      <tr><td>前のブロックの場所から、移動時間を空けて着けるか</td><td>ブロックの開始を移動時間の分だけ遅らせ、間を移動にあてる（移動ブロックの自動挿入）</td></tr>
+      <tr><td>切り詰めたあとの長さが、行動の最短の所要時間以上か</td><td>自由時間に置き換える</td></tr>
+      <tr><td>全体：置き換えたブロックが半分を超えた、または出力が読めない</td><td>理由を添えて再生成する（2回まで）。それでも駄目なら、固定予定だけのプラン</td></tr>
+    </table>
+  </div>
+  <p>汎用の行動への置換（VISION 5章）は、「自由時間にして Decider に任せる」で表す。自由時間なら、Decider が必ず実行できる行動を選ぶから。</p>
+  <h3>プランの継ぎ目</h3>
+  <p>新しいプランを適用したとき、継ぎ目（ホライズン）をまたいで続いているブロック（睡眠など）は、同じブロック ID（<code>sleep_weekday@2026-11-02</code>）なので、積み直さずにそのまま続ける。</p>
+  <h3>追いつきと、締め切り</h3>
+  <ul>
+    <li>追いつきの最中は、ホライズンが追いつきの終わりより前なら、LLM を呼ばず、固定予定だけのプランにする（そのプランは追いつきの中で使い終わるから）。後なら、通常どおり LLM を呼ぶ</li>
+    <li>ホライズンまでに出力がそろわなければ、固定予定だけのプランにする（D1 1.6）</li>
+  </ul>
+  <div class="callout">
+    <span class="label">決定 P-34　前のプランがないとき</span>
+    VISION 付録「前日のプランがないときの、0:00〜3:00 の過ごし方と Planner のホライズン」への案。生成した直後は、最初の Planner のホライズン（最初に寝てから3時間後）まで、固定予定と Decider だけで過ごす（追いつきと同じ扱い）。生成の直後に Planner を急いで回すより、仕組みが1つで済む。
+    <p class="alt">レビューで、Planner を日の始まりから睡眠に移したのに合わせて書き直した。</p>
+  </div>
+  <div class="callout">
+    <span class="label">決定 P-55　Planner は、記憶の整理のあとに、寝るときに動く</span>
+    上の「起動と範囲」のとおり。レビューで決めた。日の始まり（0:00）に Planner を動かすと、睡眠中の記憶の整理と、記憶を読むタイミングが競合する（整理が終わっていれば今日の分が入り、終わっていなければ入らない）。寝るときに、整理を待ってから動かせば、順番が固定され、結果が毎回そろう。ebise も、夜間の記憶の整理のあとに日次プランを作っていた。
+  </div>
+</section>
+
+<section id="vitals">
+  <h2><span class="num">5.6</span>状態変数</h2>
+  <p>VISION 6章のとおり、各変数は「基準時刻での値」と「いまの率」を持ち、値 + 率 × 経過時間で読む。率が変わるのは、行動の開始と終了、居合わせの変化、状態の付け外しのときだけ。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>変数</th><th>範囲</th><th>初期値</th><th>既定の率（1時間あたり）</th><th>しきい値と反射</th></tr>
+      <tr><td>気力</td><td>0〜100</td><td>80</td><td>起きている間 −4。睡眠中 0。行動が率を書けばそれを使う</td><td>0 で気絶（<code>core.faint</code>）</td></tr>
+      <tr><td>健康度</td><td>0〜100</td><td>100</td><td>+0.2（ゆっくり戻る）。状態（風邪など）の率を足す</td><td>20 で早退して休む（<code>core.go_home_rest</code>）</td></tr>
+      <tr><td>退屈度</td><td>0〜100</td><td>30</td><td>+3。行動が率を書けばそれを使う</td><td>なし</td></tr>
+      <tr><td>社交欲求</td><td>下限〜上限（既定 −50〜100。どちらもペルソナ定義で変えられる）</td><td>0</td><td>一人のとき +2、同席のとき −3</td><td>なし</td></tr>
+    </table>
+  </div>
+  <figure class="diagram">
+    <svg viewBox="0 0 760 230" role="img" aria-label="気力の折れ線と到達の予測">
+      <path class="tick" fill="none" d="M60 30 V190 H740"/>
+      <text class="sub" x="52" y="36" text-anchor="end">100</text>
+      <text class="sub" x="52" y="194" text-anchor="end">0</text>
+      <path class="mark" d="M60 170 H740"/>
+      <text class="sub" x="736" y="164" text-anchor="end">しきい値</text>
+      <polyline points="60,60 220,90 360,150 360,110 500,140" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+      <polyline points="500,140 600,190" fill="none" stroke="var(--warn)" stroke-width="2" stroke-dasharray="5 4"/>
+      <circle class="dot" cx="220" cy="90" r="6"/>
+      <circle class="dot" cx="360" cy="150" r="6"/>
+      <circle class="dot" cx="360" cy="110" r="6"/>
+      <circle class="dot" cx="500" cy="140" r="6"/>
+      <circle class="dot ext" cx="560" cy="170" r="6"/>
+      <text class="sub" x="220" y="80" text-anchor="middle">行動の開始（率が変わる）</text>
+      <text class="sub" x="360" y="186" text-anchor="middle">急変動（差分を足す）</text>
+      <text class="sub" x="500" y="128" text-anchor="middle">率が変わる</text>
+      <text class="sub" x="578" y="210" text-anchor="middle">到達の予測（版つき）</text>
+      <text class="sub" x="140" y="212" text-anchor="middle">区間ごとに一次式</text>
+    </svg>
+    <figcaption>値は折れ線。率が変わるたびに、しきい値に達する時刻を計算し直し、版を上げて積む</figcaption>
+  </figure>
+  <ul>
+    <li><strong>クランプ</strong>：読んだ値は範囲で切る。範囲の端に着いたら、基準を端の値と到達の時刻に置き直す（その先の率は効かない）</li>
+    <li><strong>到達の予測</strong>：率がしきい値に向かうときだけ、<code>t = 基準時刻 + (しきい値 − 値) / 率</code> を計算し、ミリ秒に切り上げて <code>vital.threshold</code> を積む。すでにしきい値の向こうにいるときは積まない（越えた瞬間にだけ反射する）</li>
+    <li><strong>決定性</strong>：Apply の計算は、四則演算と比較だけで書く。<code>Math.Pow</code> や <code>Math.Exp</code> は、CPU によって結果の末尾がずれうるので、Apply では使わない（<code>repeat_decay</code> の累乗は、掛け算の繰り返しで書く）。Decider の <code>exp</code> は決める側なので使ってよい（結果はイベントに記録される）</li>
+    <li><strong>居合わせ</strong>：<code>travel.started</code> と <code>travel.arrived</code> の Apply で、出た場所と着いた場所にいる全員の社交欲求の率を計算し直す。率が変わった人は、状態変数の版が上がる</li>
+  </ul>
+  <h3>寝不足</h3>
+  <p>効果に <code>sleep.debt</code> を持つ行動（睡眠）が終わったとき、実際に眠った長さを、ペルソナの <code>sleep_target</code>（既定 7 時間）と比べる。</p>
+<pre><code>足りない時間 h = max(0, sleep_target − 眠った長さ)
+h > 0 なら  健康度 −= min(4 × h, 20)
+h = 0 なら  健康度 += 5</code></pre>
+  <div class="callout">
+    <span class="label">決定 P-35　状態変数の式の形、範囲、数値</span>
+    上の表と規則（VISION 付録「状態変数の式の形、範囲、数値」）。気力は、16 時間起きていると 64 減る。行動の消費を足すと、夜には 10〜30 まで下がり、睡眠で満タンに戻る、という1日の形を狙った値。
+  </div>
+  <div class="callout">
+    <span class="label">決定 P-36　寝不足での健康度の下がり方</span>
+    上の式（VISION 付録「寝不足での健康度の下がり方」）。睡眠の行動の効果（<code>sleep.debt</code>）に持たせる案を採る。気絶は寝不足の判定をしない（<code>debt = false</code>）。
+  </div>
+</section>
+
+<section id="reflex">
+  <h2><span class="num">5.7</span>反射</h2>
+  <ul>
+    <li><code>vital.threshold</code> の Apply が、実行中の行動（と副行動）を打ち切り、行動の版を上げ、反射の行動を <code>action.started</code>（理由 <code>reflex</code>）で同じ時刻に積む。Decider は通らない</li>
+    <li>反射の行動は、所要時間が固定のもの。<code>core.faint</code> は 2 時間、<code>core.go_home_rest</code> は家までの移動と、3 時間の休息</li>
+    <li>反射の行動は、固定・計画のブロックの開始で打ち切らない。気絶している最中に授業の時刻が来ても、授業には出ない（ほかの行動は、ブロックの開始で終わる。D1 1.8）</li>
+    <li>反射の行動が終わった時点で、固定・計画のブロックの途中なら、予定の乱れへの対応（5.4）と同じく、遅刻するか欠席するかを決める。ブロックの途中で反射が起きた場合（授業中に早退した）も、ブロックの前から反射が続いていた場合（気絶したまま授業の時刻になった）も、同じ扱いにする。欠席なら、ブロックの残りは自由時間として Decider が決める</li>
+    <li>しきい値は、ペルソナの <code>reflexes</code> と、付いている状態の <code>threshold</code> で上書きできる（D2 2.7）</li>
+  </ul>
+</section>
+
+<section id="incidents">
+  <h2><span class="num">5.8</span>出来事の抽選</h2>
+  <ol>
+    <li>日の始まりに、ワールドレーンで動く。ワールド向けの出来事はワールドの乱数の列、ペルソナ向けの出来事はペルソナごとの列で引く</li>
+    <li>出来事の定義ごとに、再発までの間隔（前回の発生から）と、曜日などの条件を確かめ、<code>chance</code> で発生を引く</li>
+    <li>発生するものは、時刻（<code>hours</code> の範囲から1分刻みで一様に）、対象（<code>place_tag</code> なら候補から一様に）、持続時間を引く</li>
+    <li>結果を <code>incident.occurred</code> のまとまりとして、時刻つきで返す。ホライズンは 0:00 なので、抽選が返るまで、その日の適用は始まらない（LLM を使わないので一瞬）</li>
+  </ol>
+  <div class="callout">
+    <span class="label">決定 P-37　出来事の頻度の既定値</span>
+    VISION 付録「出来事の効果の語彙と、頻度の既定値」の頻度の側。<code>chance</code> は定義ごとに必ず書かせ、既定値は持たない。そのうえで、1つのワールドで1日に起きる出来事は、ワールド向けとペルソナ向けを合わせて 2 件まで（超えた分は、抽選の順で後のものを捨てる）。組み込みの出来事は、道路工事（0.03）、店の臨時休業（0.02）、風邪（0.01）の3つから始める。
+  </div>
+</section>
+
+<section id="rng">
+  <h2><span class="num">5.9</span>乱数</h2>
+<pre><code>シード  s = SHA-256( UTF-8("{ワールドの種}:{持ち主}:{用途}") ) の先頭 8 バイト
+i 番目の値 = SplitMix64 の混ぜ関数( s + (i + 1) × 0x9E3779B97F4A7C15 )
+
+NextDouble = (値 >> 11) × 2^−53
+NextInt    = 乗算と棄却による偏りのない方法（Lemire）</code></pre>
+  <div class="table-wrap">
+    <table>
+      <tr><th>持ち主</th><th>用途</th><th>使うところ</th></tr>
+      <tr><td>ペルソナ ID</td><td><code>decide</code></td><td>Decider、予定の乱れ、スマホを開く機会</td></tr>
+      <tr><td>ペルソナ ID</td><td><code>incident</code></td><td>ペルソナ向けの出来事の抽選</td></tr>
+      <tr><td>ペルソナ ID</td><td><code>sns</code></td><td>話題の候補の選び方、受信箱の順番など、効果のハンドラの中の抽選</td></tr>
+      <tr><td><code>world</code></td><td><code>incident</code></td><td>ワールド向けの出来事の抽選</td></tr>
+    </table>
+  </div>
+  <ul>
+    <li>SplitMix64 は、i 番目の値を i から直接計算できる（カウンタ方式）。だから、保存するのは「引いた回数」だけでよい（VISION 4章「引いた回数のカウンタを、状態として保存する」とそのまま合う）。状態の中では、用途ごとの位置を <code>Rng</code> に持つ（D3 3.7）</li>
+    <li>決める側は、写しの位置から引き始め、出力に「どの列の、どこからどこまで引いたか」を記録する。Apply は、位置が同じことを guard で確かめてから進める（D1 1.7）</li>
+    <li><code>string.GetHashCode()</code> と <code>System.Random</code> は使わない（VISION 4章）。SHA-256 と SplitMix64 は、どの環境でも同じ値になる</li>
+  </ul>
+  <div class="callout">
+    <span class="label">決定 P-38　乱数は SplitMix64 のカウンタ方式</span>
+    上のとおり。品質はシミュレーションの抽選には十分で、実装は 20 行ほどで済む。xoshiro のような状態を持つ方式だと、位置を復元するのに状態ごと保存するか、回数ぶん空回しする必要がある。
+    <p class="alt">ほかの候補：PCG（状態を持つが、任意の位置へ対数時間で飛べるので、カウンタから復元できる。品質の評判もよい）、Philox（カウンタ方式で、並列向けに作られた。実装が重い）、xoshiro256**（速いが、状態を持つ。変種によっては統計的な検定に落ちるという報告がある）、SHA-256 にシードと回数を通す（いちばん素朴。遅いが、この規模なら足りる）。カウンタをそのまま位置として保存できて、いちばん短く書けるので、SplitMix64 にした。品質が問題になったら、同じ「シードと位置」の形のまま Philox に替えられる（<code>IRandomSource</code> の差し替え）。</p>
+  </div>
+</section>
+
+<section id="routes">
+  <h2><span class="num">5.10</span>最短経路と移動</h2>
+  <ul>
+    <li>場所の数は数十〜百程度なので、全点対の最短経路を Floyd–Warshall で求め、経路の復元用の表と一緒に持つ。作り直すのは、グラフの版（<code>GraphVersion</code>）か定義が変わったとき</li>
+    <li>閉鎖中の場所は、行き先にも経路の途中にもしない。<code>slow_place</code> は、その場所につながる辺の時間を変えた表で計算する</li>
+    <li>移動の経路は、出発時に辺の列として確定させ、<code>travel.started</code> に記録する。途中で辺が伸びたら、いまどの辺の上にいるかを出発時刻と各辺の時間から計算し、残りの時間を新しい値で積み直す</li>
+  </ul>
+  <div class="callout">
+    <span class="label">決定 P-39　移動中の居場所</span>
+    移動中のペルソナは、どの場所にもいないものとして扱う（出発した時点で元の場所から消え、到着した時点で着いた場所に現れる）。途中で通る場所（道など）での居合わせは数えない。居合わせの判定が、出発と到着の2回だけで済む。
+  </div>
+</section>
+
+<section id="together">
+  <h2><span class="num">5.11</span>同行</h2>
+  <ul>
+    <li>同行は、両方の固定予定に、同じ時刻・場所・行動で <code>with</code> を書いたときだけ成立する（VISION 14章）。片方にしか書いていなければ、読み込み時に警告し、同行として扱わない</li>
+    <li>実行時は、それぞれが自分のブロックとして、自分のレーンで動く。2人分をまとめて決める処理は作らない</li>
+    <li>片方が欠席・早退・反射で抜けたとき、もう片方の扱いは、ブロックの <code>on_partner_absent</code> で決める。<code>continue</code>（既定）はそのまま続ける。<code>cancel</code> は、相手が抜けたイベントの Apply が、こちらのブロックを終わらせて、自由時間の決めどきを積む</li>
+  </ul>
+  <div class="callout">
+    <span class="label">決定 P-40　同行で片方が欠席したときの扱い</span>
+    上のとおり（VISION 付録「同行で片方が欠席したときの扱い」）。予定ごとに <code>continue</code> / <code>cancel</code> を選べる。
+  </div>
+  <div class="callout">
+    <span class="label">決定 P-41　2人のレーンをまたぐ決定は作らない</span>
+    VISION 付録「同行・共同行動で、2人のレーンをまたぐ決定の扱い」への案。いまのコアの範囲では、同行は固定予定として前もって両者の予定に入っており、実行時の交渉が要らない。相手が抜けたときの影響は、Apply の決定的な後続（上の <code>cancel</code>）で表せる。誘う・応じるの交渉（FUTURE.html）を作るときに、改めて考える。
+  </div>
+</section>
+
+</main>
+
+<footer>Vivace 詳細設計 D5。構想の正は VISION.html。「案」は、ユーザーの合意を待っている提案。「決定」は合意したもの。</footer>
+</div>
+
+<button class="theme-btn" id="themeBtn" type="button" aria-label="表示テーマを切り替える">テーマ切替</button>
+<script src="page.js"></script>
+</body>
+</html>
