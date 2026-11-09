@@ -47,7 +47,7 @@ public class RegressionRulesTests
         var state = Fixture.WithKaori();
         var kaori = state.Personas[Fixture.Kaori] with
         {
-            Vitals = new Vitals(new VitalValue(Fixture.Now, 80, 0), new VitalValue(Fixture.Now, 100, 0), new VitalValue(Fixture.Now, 90, 0), new VitalValue(Fixture.Now, 0, 0), 1),
+            Vitals = new Vitals(new VitalTrack(Fixture.Now, 80, 0), new VitalTrack(Fixture.Now, 100, 0), new VitalTrack(Fixture.Now, 90, 0), new VitalTrack(Fixture.Now, 0, 0), 1),
         };
         state = Fixture.With(state, kaori);
         var half = Fixture.Now.AddMinutes(30);

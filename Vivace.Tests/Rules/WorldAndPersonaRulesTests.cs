@@ -96,8 +96,8 @@ public class WorldAndPersonaRulesTests
     {
         var definitions = TestWorld.LoadOrThrow();
         var kaori = definitions.Personas["kaori"].Vitals;
-        var energy = new VitalValue(Fixture.Now, 80, -4);
-        var social = new VitalValue(Fixture.Now, 0, 2);
+        var energy = new VitalTrack(Fixture.Now, 80, -4);
+        var social = new VitalTrack(Fixture.Now, 0, 2);
 
         Assert.Equal(0, VitalRules.Read(energy, Fixture.Now.AddHours(30), (0, 100)));
         Assert.Equal(60, VitalRules.Read(social, Fixture.Now.AddHours(100), VitalRules.Range(VitalName.Social, kaori)));

@@ -37,13 +37,13 @@ public static class VitalRules
     /// <param name="value">状態変数の1本。</param>
     /// <param name="now">読む時刻。</param>
     /// <param name="range">範囲。</param>
-    public static double Read(VitalValue value, DateTimeOffset now, (double Min, double Max) range) =>
+    public static double Read(VitalTrack value, DateTimeOffset now, (double Min, double Max) range) =>
         Clamp(value.BaseValue + value.Rate * (now - value.BaseTime).TotalHours, range);
 
     /// <summary>状態変数の1本を取り出す。</summary>
     /// <param name="vitals">状態変数の集まり。</param>
     /// <param name="vital">取り出す変数。</param>
-    public static VitalValue Get(Vitals vitals, VitalName vital) => vital switch
+    public static VitalTrack Get(Vitals vitals, VitalName vital) => vital switch
     {
         VitalName.Energy => vitals.Energy,
         VitalName.Health => vitals.Health,
@@ -55,7 +55,7 @@ public static class VitalRules
     /// <param name="vitals">状態変数の集まり。</param>
     /// <param name="vital">差し替える変数。</param>
     /// <param name="value">新しい値。</param>
-    public static Vitals Put(Vitals vitals, VitalName vital, VitalValue value) => vital switch
+    public static Vitals Put(Vitals vitals, VitalName vital, VitalTrack value) => vital switch
     {
         VitalName.Energy => vitals with { Energy = value },
         VitalName.Health => vitals with { Health = value },
@@ -131,7 +131,7 @@ public static class VitalRules
                 continue;
             }
 
-            vitals = Put(vitals, vital, new VitalValue(now, Read(old, now, range), rate));
+            vitals = Put(vitals, vital, new VitalTrack(now, Read(old, now, range), rate));
             changed = true;
         }
 
@@ -154,7 +154,7 @@ public static class VitalRules
         var old = Get(persona.Vitals, vital);
         var current = Read(old, now, range);
         var value = set ?? current + (delta ?? 0.0);
-        var vitals = Put(persona.Vitals, vital, new VitalValue(now, Clamp(value, range), old.Rate));
+        var vitals = Put(persona.Vitals, vital, new VitalTrack(now, Clamp(value, range), old.Rate));
         return persona with { Vitals = vitals with { Version = vitals.Version + 1 } };
     }
 

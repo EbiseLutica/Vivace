@@ -262,7 +262,7 @@ public sealed record DayPlan(
 /// <param name="BaseTime">基準の時刻。</param>
 /// <param name="BaseValue">基準の値。</param>
 /// <param name="Rate">いまの率（1時間あたり）。</param>
-public readonly record struct VitalValue(DateTimeOffset BaseTime, double BaseValue, double Rate);
+public readonly record struct VitalTrack(DateTimeOffset BaseTime, double BaseValue, double Rate);
 
 /// <summary>4つの状態変数と、その版。</summary>
 /// <param name="Energy">気力。</param>
@@ -271,10 +271,10 @@ public readonly record struct VitalValue(DateTimeOffset BaseTime, double BaseVal
 /// <param name="Social">社交欲求。</param>
 /// <param name="Version">状態変数の版。率が変わるたびに上がる。</param>
 public sealed record Vitals(
-    VitalValue Energy,
-    VitalValue Health,
-    VitalValue Boredom,
-    VitalValue Social,
+    VitalTrack Energy,
+    VitalTrack Health,
+    VitalTrack Boredom,
+    VitalTrack Social,
     long Version);
 
 /// <summary>ペルソナに付いている状態（風邪など）。</summary>

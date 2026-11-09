@@ -31,10 +31,10 @@ public class UtilityDeciderTests
         entries.ToImmutableDictionary(entry => entry.Vital, entry => entry.Value);
 
     private static Vitals VitalsWith(double energy, double boredom) => new(
-        new VitalValue(Fixture.Now, energy, 0),
-        new VitalValue(Fixture.Now, 100, 0),
-        new VitalValue(Fixture.Now, boredom, 0),
-        new VitalValue(Fixture.Now, 0, 0),
+        new VitalTrack(Fixture.Now, energy, 0),
+        new VitalTrack(Fixture.Now, 100, 0),
+        new VitalTrack(Fixture.Now, boredom, 0),
+        new VitalTrack(Fixture.Now, 0, 0),
         1);
 
     /// <summary>設計書の計算例（D5 5.3）：14:00、気力 30、退屈度 70。家で昼寝（60 分、気力 +20/時）、公園を散歩（移動 15 分 + 45 分、気力 −6/時、終了時に退屈度 −25）、家でゲーム（60 分、終了時に退屈度 −30、好き）。</summary>

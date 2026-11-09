@@ -115,10 +115,10 @@ public static class Rules
         var t = ev.Time;
         var socialRange = VitalRules.Range(VitalName.Social, personaDef.Vitals);
         var vitals = new Vitals(
-            new VitalValue(t, personaDef.Vitals.EnergyInitial, 0),
-            new VitalValue(t, 100, 0),
-            new VitalValue(t, 30, 0),
-            new VitalValue(t, VitalRules.Clamp(0, socialRange), 0),
+            new VitalTrack(t, personaDef.Vitals.EnergyInitial, 0),
+            new VitalTrack(t, 100, 0),
+            new VitalTrack(t, 30, 0),
+            new VitalTrack(t, VitalRules.Clamp(0, socialRange), 0),
             1);
         var persona = new PersonaState(
             id,

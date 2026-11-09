@@ -105,7 +105,7 @@ public class InvariantsTests
             Fixture.WithKaori(),
             Fixture.Get(Fixture.WithKaori(), Fixture.Kaori) with
             {
-                Vitals = Fixture.Get(Fixture.WithKaori(), Fixture.Kaori).Vitals with { Energy = new VitalValue(Fixture.Now, 150, 0) },
+                Vitals = Fixture.Get(Fixture.WithKaori(), Fixture.Kaori).Vitals with { Energy = new VitalTrack(Fixture.Now, 150, 0) },
             });
 
         Assert.Throws<InvariantViolationException>(() => Check(broken, [Pending(10, EventTypes.BlockStarted, new BlockStartedPayload(null, 1))]));
