@@ -12,9 +12,11 @@ public class ActivityRulesTests
     private static readonly PlaceId KaoriRoom = new("kaori_room");
     private static readonly PlaceId HomeLiving = new("home_living");
 
+    /// <summary>行動の開始のイベントを作る。</summary>
     private static SimEvent ActionStarted(long seq, string action, PlaceId place, TimeSpan duration, long version) =>
         Fixture.Event(seq, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload(action, place, duration, ActivityReason.Chosen, version, null), Fixture.Kaori);
 
+    /// <summary>決めどきのイベントを作る。</summary>
     private static SimEvent Request(long seq) =>
         Fixture.Event(seq, Fixture.Now, EventTypes.DecisionRequested, new DecisionRequestedPayload(DecisionReason.Free, null), Fixture.Kaori);
 

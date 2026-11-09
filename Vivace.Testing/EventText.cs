@@ -41,6 +41,7 @@ public static class EventText
         return builder.ToString();
     }
 
+    /// <summary>値を文字にして足す。</summary>
     private static void Write(StringBuilder builder, object? value)
     {
         switch (value)
@@ -95,6 +96,7 @@ public static class EventText
             || type.Name.StartsWith("HashSet", StringComparison.Ordinal)
             || type.Name.StartsWith("ImmutableHashSet", StringComparison.Ordinal));
 
+    /// <summary>列を文字にして足す。順序のない列は整列する。</summary>
     private static void WriteSequence(StringBuilder builder, IEnumerable sequence, bool unordered)
     {
         var items = new List<string>();
@@ -113,6 +115,7 @@ public static class EventText
         builder.Append('[').Append(string.Join(", ", items)).Append(']');
     }
 
+    /// <summary>オブジェクトのプロパティを、名前の順に文字にして足す。</summary>
     private static void WriteObject(StringBuilder builder, object value)
     {
         var type = value.GetType();

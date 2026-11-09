@@ -49,6 +49,7 @@ public class GoToNextWeightTests
         return DefinitionLoader.LoadFiles(files).Definitions ?? throw new InvalidOperationException("定義が読めない");
     }
 
+    /// <summary>定義から規則の文脈を作る。</summary>
     private static RuleContext ContextFor(Vivace.Core.Definitions.Definitions definitions) => new(definitions, RouteCache.Create(definitions));
 
     /// <summary>香織が家にいて、3 時間の自由時間のプランを持つ状態（この文脈の定義で作る）。</summary>

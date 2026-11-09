@@ -388,6 +388,7 @@ internal sealed class TableReader(TomlTable table, List<DefinitionIssue> issues)
     public void Error(DefinitionIssueCode code, SourceLocation location, string message) =>
         issues.Add(new DefinitionIssue(IssueSeverity.Error, code, location, message));
 
+    /// <summary>型が違うことをエラーにする。</summary>
     private void TypeError(TomlNode node, string key, string expected) =>
         Invalid(node, $"{key} は{expected}で書いてください。");
 }

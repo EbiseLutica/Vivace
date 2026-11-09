@@ -22,6 +22,7 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly IRandomSource _random;
     private readonly VirtualClock _clock;
     private readonly Lanes _lanes = new();
+    /// <summary>未適用のイベント。時刻、段、連番の順に取り出す。</summary>
     private readonly PriorityQueue<SimEvent, (DateTimeOffset Time, int Stage, long Seq)> _queue = new();
     private readonly Dictionary<long, Running> _running = [];
     private readonly List<Output> _held = [];
@@ -33,6 +34,7 @@ public sealed class SimEngine : IAsyncDisposable
     private int _sameInstantStreak;
     private SimState _state;
 
+    /// <summary>初期の状態と部品から、エンジンを作る。</summary>
     private SimEngine(RuleContext ctx, IDecider decider, IStorage storage, IRandomSource random, VirtualClock clock)
     {
         _ctx = ctx;
@@ -176,6 +178,7 @@ public sealed class SimEngine : IAsyncDisposable
             _ => (PersonaId?)null,
         }).Where(persona => persona is not null).Select(persona => persona!.Value));
 
+    /// <summary>後続のイベントに連番と出所を付けて、キューに入れる。</summary>
     private long Enqueue(NewEvent ev, Origin origin, long? cause)
     {
         var seq = ++_nextSeq;
@@ -197,6 +200,7 @@ public sealed class SimEngine : IAsyncDisposable
         return seq;
     }
 
+    /// <summary>シグナルを実行する。</summary>
     private void Handle(EngineSignal signal, Origin origin)
     {
         switch (signal)
@@ -243,6 +247,7 @@ public sealed class SimEngine : IAsyncDisposable
         });
     }
 
+    /// <summary>Decider を実行し、出力をイベントにする。</summary>
     private NewEvent Decide(StartDecider decide, SimState snapshot)
     {
         var persona = snapshot.Personas[decide.Persona];
@@ -253,6 +258,7 @@ public sealed class SimEngine : IAsyncDisposable
         return new NewEvent(decide.Now, EventTypes.ActivityChosen, persona.World, persona.Id, output.Payload, output.Guard, decide.BatchKey);
     }
 
+    /// <summary>Planner の代わりの出力を作り、イベントにする。</summary>
     private NewEvent Plan(StartPlanner plan, SimState snapshot)
     {
         var persona = snapshot.Personas[plan.Persona];
@@ -261,6 +267,7 @@ public sealed class SimEngine : IAsyncDisposable
         return new NewEvent(plan.Now, EventTypes.PlanCommitted, persona.World, persona.Id, new PlanCommittedPayload(planned), guard, plan.BatchKey);
     }
 
+    /// <summary>終わった仕事の出力を、ぜんぶ受け取る。</summary>
     private void DrainOutputs()
     {
         while (_outputs.Reader.TryRead(out var output))
@@ -269,6 +276,7 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
+    /// <summary>仕事の出力を受け取り、積む時を待つ列に入れる。仕事の例外は外へ投げる。</summary>
     private void Receive(Output output)
     {
         _running.Remove(output.BatchKey);
@@ -285,6 +293,7 @@ public sealed class SimEngine : IAsyncDisposable
         _held.Add(output);
     }
 
+    /// <summary>ホライズンが limit 以下になった出力を、契機の連番の順にキューへ入れる。</summary>
     private void InsertHeld(DateTimeOffset limit)
     {
         var ready = _held.Where(output => output.Horizon <= limit).OrderBy(output => output.BatchKey).ToList();
@@ -308,9 +317,12 @@ public sealed class SimEngine : IAsyncDisposable
             .Where(item => item.Element.PersonaId is not null)
             .ToLookup(item => item.Element.PersonaId!.Value, item => item.Element);
 
+    /// <summary>キューの先頭の時刻を返す。空なら null。</summary>
     private DateTimeOffset? EarliestPending() => _queue.TryPeek(out var head, out _) ? head.Time : null;
 
+    /// <summary>実行中の決める仕事。</summary>
     private sealed record Running(long Key, PersonaId Persona, DateTimeOffset Horizon, string Lane);
 
+    /// <summary>決める仕事の結果。</summary>
     private sealed record Output(long BatchKey, PersonaId Persona, DateTimeOffset Horizon, Origin Origin, ImmutableArray<NewEvent> Events, string? Error);
 }

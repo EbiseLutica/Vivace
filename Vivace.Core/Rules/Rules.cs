@@ -39,6 +39,7 @@ public static class Rules
         };
     }
 
+    /// <summary>ワールドを生成し、最初の日の始まりを積む。</summary>
     private static ApplyResult ApplyWorldCreated(RuleContext ctx, SimState state, SimEvent ev)
     {
         var payload = (WorldCreatedPayload)ev.Payload;
@@ -71,6 +72,7 @@ public static class Rules
         return ApplyResult.Applied(next, [new NewEvent(ev.Time, EventTypes.DayStarted, id, null, new DayStartedPayload(date))]);
     }
 
+    /// <summary>次の日の始まりを積む。</summary>
     private static ApplyResult ApplyDayStarted(RuleContext ctx, SimState state, SimEvent ev)
     {
         var payload = (DayStartedPayload)ev.Payload;
@@ -84,6 +86,7 @@ public static class Rules
         return ApplyResult.Applied(state, [new NewEvent(time, EventTypes.DayStarted, world, null, new DayStartedPayload(next))]);
     }
 
+    /// <summary>ペルソナを家に生成し、定義の初期値で状態変数を始める。</summary>
     private static ApplyResult ApplyPersonaCreated(RuleContext ctx, SimState state, SimEvent ev)
     {
         var payload = (PersonaCreatedPayload)ev.Payload;
@@ -143,6 +146,7 @@ public static class Rules
         return ApplyResult.Applied(next, signals: [new StartPlanner(ev.Seq, id, t)]);
     }
 
+    /// <summary>プランを差し替え、新しく入ったブロックの開始と、作り直しの時刻を積む。</summary>
     private static ApplyResult ApplyPlanCommitted(SimState state, SimEvent ev)
     {
         if (!TryPersona(state, ev, out var persona))
@@ -177,6 +181,7 @@ public static class Rules
         return ApplyResult.Applied(next, followUps.ToImmutableArray());
     }
 
+    /// <summary>プランの作り直しの時刻が来たら、Planner を起こす。</summary>
     private static ApplyResult ApplyPlanDue(RuleContext ctx, SimState state, SimEvent ev)
     {
         if (!TryPersona(state, ev, out var persona))
@@ -219,6 +224,7 @@ public static class Rules
     private static bool IsInPlan(DayPlan? plan, PlanBlock block) =>
         plan?.Blocks.Any(old => old.Kind == block.Kind && old.BlockId == block.BlockId && old.Start == block.Start && old.End == block.End) ?? false;
 
+    /// <summary>ブロックを始める。自由時間なら決めどきを積む。</summary>
     private static ApplyResult ApplyBlockStarted(RuleContext ctx, SimState state, SimEvent ev)
     {
         if (!TryPersona(state, ev, out var persona))
@@ -320,6 +326,7 @@ public static class Rules
         return ApplyResult.Applied(Put(state, updated), signals: signals);
     }
 
+    /// <summary>決めどきの印を立て、Decider の起動を依頼する。決め中なら捨てる。</summary>
     private static ApplyResult ApplyDecisionRequested(SimState state, SimEvent ev)
     {
         if (!TryPersona(state, ev, out var persona))
@@ -343,6 +350,7 @@ public static class Rules
             signals: [new StartDecider(ev.Seq, persona.Id, ev.Time, payload.Reason, payload.BlockId)]);
     }
 
+    /// <summary>行動の決定を当てる。場所が違えば移動を、同じなら行動の開始を積む。</summary>
     private static ApplyResult ApplyActivityChosen(RuleContext ctx, SimState state, SimEvent ev)
     {
         if (!TryPersona(state, ev, out var persona))
@@ -377,6 +385,7 @@ public static class Rules
         return ApplyResult.Applied(next, [followUp]);
     }
 
+    /// <summary>移動中の状態にし、到着を積む。</summary>
     private static ApplyResult ApplyTravelStarted(RuleContext ctx, SimState state, SimEvent ev)
     {
         if (!TryPersona(state, ev, out var persona))
@@ -405,6 +414,7 @@ public static class Rules
         return ApplyResult.Applied(next, [Next(payload.ArrivesAt, EventTypes.TravelArrived, persona, new TravelArrivedPayload(payload.To, payload.ActivityVersion))]);
     }
 
+    /// <summary>場所に着いた状態にし、次の行動かブロックか決めどきを積む。</summary>
     private static ApplyResult ApplyTravelArrived(RuleContext ctx, SimState state, SimEvent ev)
     {
         if (!TryPersona(state, ev, out var persona))
@@ -442,6 +452,7 @@ public static class Rules
         return ApplyResult.Applied(next, followUps);
     }
 
+    /// <summary>行動を始め、率を切り替え、終了を積む。</summary>
     private static ApplyResult ApplyActionStarted(RuleContext ctx, SimState state, SimEvent ev)
     {
         if (!TryPersona(state, ev, out var persona))
@@ -490,6 +501,7 @@ public static class Rules
         return ApplyResult.Applied(next, followUps, signals);
     }
 
+    /// <summary>行動を終え、終了時の効果を当て、次の決めどきを積む。</summary>
     private static ApplyResult ApplyActionEnded(RuleContext ctx, SimState state, SimEvent ev)
     {
         if (!TryPersona(state, ev, out var persona))
@@ -549,6 +561,7 @@ public static class Rules
         return ApplyResult.Applied(next, followUps);
     }
 
+    /// <summary>場所が行動の条件とつながりを満たすか。</summary>
     private static bool PlaceAllowsBlock(RuleContext ctx, PersonaState persona, ActionDef action, PlaceId place)
     {
         var worldDef = ctx.Defs.Worlds[persona.World.Value];
@@ -601,6 +614,7 @@ public static class Rules
         return null;
     }
 
+    /// <summary>却下の結果を作り、決め直しが要れば決めどきを積む。</summary>
     private static ApplyResult Rejected(SimState state, SimEvent ev, Guard guard, string reason)
     {
         var followUps = ImmutableArray<NewEvent>.Empty;
@@ -629,6 +643,7 @@ public static class Rules
         return false;
     }
 
+    /// <summary>ペルソナの状態を差し替えた全体の状態を返す。</summary>
     private static SimState Put(SimState state, PersonaState persona) =>
         state with { Personas = state.Personas.SetItem(persona.Id, persona) };
 
@@ -661,12 +676,15 @@ public static class Rules
         return state;
     }
 
+    /// <summary>ペルソナの後続のイベントを作る。</summary>
     private static NewEvent Next(DateTimeOffset time, string eventType, PersonaState persona, EventPayload payload) =>
         new(time, eventType, persona.World, persona.Id, payload);
 
+    /// <summary>決めどきのイベントを作る。</summary>
     private static NewEvent DecisionRequested(DateTimeOffset now, PersonaState persona, DecisionReason reason, string? blockId) =>
         Next(now, EventTypes.DecisionRequested, persona, new DecisionRequestedPayload(reason, blockId));
 
+    /// <summary>行動の開始のイベントを作る。</summary>
     private static NewEvent ActionStarted(DateTimeOffset now, PersonaState persona, string actionId, PlaceId place, TimeSpan duration, ActivityReason reason, string? blockId) =>
         Next(now, EventTypes.ActionStarted, persona, new ActionStartedPayload(actionId, place, duration, reason, persona.ActivityVersion, blockId));
 
@@ -679,6 +697,7 @@ public static class Rules
             && block.Start <= now
             && now < block.End);
 
+    /// <summary>移動の開始のイベントを作る。</summary>
     private static NewEvent TravelStarted(DateTimeOffset now, PersonaState persona, PlaceId from, PlaceId to, ImmutableArray<RouteStep> route, DateTimeOffset arrival, PendingAction? next) =>
         Next(now, EventTypes.TravelStarted, persona, new TravelStartedPayload(from, to, route, arrival, persona.ActivityVersion, next));
 }

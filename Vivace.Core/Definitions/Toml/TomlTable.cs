@@ -41,6 +41,7 @@ internal sealed class TomlTable(SourceLocation location) : TomlNode(location)
     /// </summary>
     public JsonElement ToJson() => JsonSerializer.SerializeToElement(ToJsonNode(this));
 
+    /// <summary>TOML の値を JSON の値に直す。</summary>
     private static JsonNode ToJsonNode(TomlNode node) => node switch
     {
         TomlTable table => ToObject(table),
@@ -56,6 +57,7 @@ internal sealed class TomlTable(SourceLocation location) : TomlNode(location)
         _ => null,
     };
 
+    /// <summary>TOML の表を JSON のオブジェクトに直す。</summary>
     private static JsonObject ToObject(TomlTable table)
     {
         var json = new JsonObject();

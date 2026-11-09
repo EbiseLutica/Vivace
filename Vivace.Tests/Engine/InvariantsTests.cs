@@ -14,6 +14,7 @@ public class InvariantsTests
 {
     private static readonly PlaceId KaoriRoom = new("kaori_room");
 
+    /// <summary>行動中の状態を作る。</summary>
     private static SimState Running(long version = 0) => Fixture.With(
         Fixture.WithKaori(),
         Fixture.Get(Fixture.WithKaori(), Fixture.Kaori) with
@@ -22,6 +23,7 @@ public class InvariantsTests
             ActivityVersion = version,
         });
 
+    /// <summary>移動中の状態を作る。</summary>
     private static SimState Traveling() => Fixture.With(
         Fixture.WithKaori(),
         Fixture.Get(Fixture.WithKaori(), Fixture.Kaori) with
@@ -29,13 +31,16 @@ public class InvariantsTests
             Location = new Traveling(KaoriRoom, new PlaceId("home_living"), ImmutableArray<RouteStep>.Empty, Fixture.Now, Fixture.Now.AddMinutes(1)),
         });
 
+    /// <summary>決め中の状態を作る。</summary>
     private static SimState Deciding() => Fixture.With(
         Fixture.WithKaori(),
         Fixture.Get(Fixture.WithKaori(), Fixture.Kaori) with { Deciding = true });
 
+    /// <summary>未適用のイベントを作る。</summary>
     private static SimEvent Pending(long seq, string type, EventPayload payload) =>
         Fixture.Event(seq, Fixture.Now.AddMinutes(30), type, payload, Fixture.Kaori);
 
+    /// <summary>不変条件を検査する。</summary>
     private static void Check(SimState state, IEnumerable<SimEvent> pending, bool busy = false)
     {
         var lookup = pending.ToLookup(ev => ev.PersonaId!.Value);

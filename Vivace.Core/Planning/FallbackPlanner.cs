@@ -62,6 +62,7 @@ public static class FallbackPlanner
         return new DayPlan(version, now, horizonEnd, rebuildAt, PlanSource.Fallback, blocks.ToImmutableArray(), null);
     }
 
+    /// <summary>絶対時刻に直した固定予定のブロック。</summary>
     private sealed record Resolved(ResolvedBlock Block, DateTimeOffset Start, DateTimeOffset End);
 
     /// <summary>前の日から次の日までの固定予定を、絶対時刻に直す。日をまたぐブロックは、開始の日のものとして持つ。</summary>
@@ -82,9 +83,11 @@ public static class FallbackPlanner
         return result;
     }
 
+    /// <summary>記憶の整理を起こす行動か。</summary>
     private static bool Consolidates(Definitions.Definitions definitions, string actionId) =>
         definitions.Actions.TryGetValue(actionId, out var action) && action.Effects.Sleep is { Consolidate: true };
 
+    /// <summary>固定予定のブロックを、プランのブロックにする。</summary>
     private static PlanBlock FixedBlock(Resolved entry)
     {
         var block = entry.Block;
@@ -101,6 +104,7 @@ public static class FallbackPlanner
             block.OnPartnerAbsent);
     }
 
+    /// <summary>自由時間のブロックを作る。</summary>
     private static PlanBlock FreeBlock(DateTimeOffset start, DateTimeOffset end) =>
         new(null, BlockKind.Free, start, end, null, null, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue);
 }

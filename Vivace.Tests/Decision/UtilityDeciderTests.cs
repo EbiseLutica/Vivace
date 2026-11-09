@@ -27,9 +27,11 @@ public class UtilityDeciderTests
         null,
         null);
 
+    /// <summary>状態変数ごとの数の表を作る。</summary>
     private static ImmutableDictionary<VitalName, double> Map(params (VitalName Vital, double Value)[] entries) =>
         entries.ToImmutableDictionary(entry => entry.Vital, entry => entry.Value);
 
+    /// <summary>気力と退屈度を指定した状態変数を作る。</summary>
     private static Vitals VitalsWith(double energy, double boredom) => new(
         new VitalTrack(Fixture.Now, energy, 0),
         new VitalTrack(Fixture.Now, 100, 0),
@@ -184,12 +186,14 @@ public class UtilityDeciderTests
         return Commit(plan);
     }
 
+    /// <summary>プランを確定した状態を作る。</summary>
     private static SimState Commit(DayPlan plan)
     {
         var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
         return Fixture.Apply(Fixture.WithKaori(), committed).State;
     }
 
+    /// <summary>乱数の位置を指定して決定する。</summary>
     private static DeciderOutput Decide(SimState state, ulong position)
     {
         var persona = state.Personas[Fixture.Kaori];

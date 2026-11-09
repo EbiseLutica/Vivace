@@ -26,12 +26,14 @@ public class PlanRulesTests
         ],
         null);
 
+    /// <summary>小さなプランを確定した状態を作る。</summary>
     private static SimState WithPlan()
     {
         var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
         return Fixture.Apply(Fixture.WithKaori(), committed).State;
     }
 
+    /// <summary>ブロックの開始のイベントを作る。</summary>
     private static SimEvent BlockStarted(long seq, DateTimeOffset time, string? block, long version = 1) =>
         Fixture.Event(seq, time, EventTypes.BlockStarted, new BlockStartedPayload(block, version), Fixture.Kaori);
 

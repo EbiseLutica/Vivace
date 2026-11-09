@@ -184,8 +184,10 @@ public sealed class UtilityDecider : IDecider
             && now.AddMinutes(option.Minutes) + duration + TimeSpan.FromMinutes(back) <= deadline;
     }
 
+    /// <summary>負の長さを 0 に切り上げる。</summary>
     private static TimeSpan Positive(TimeSpan duration) => duration < TimeSpan.Zero ? TimeSpan.Zero : duration;
 
+    /// <summary>直前まで同じ行動を続けた回数を返す。</summary>
     private static int ConsecutiveOf(PersonaState persona, string actionId) =>
         persona.Usage.TryGetValue(actionId, out var usage) ? usage.Consecutive : 0;
 

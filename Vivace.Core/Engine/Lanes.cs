@@ -34,6 +34,7 @@ public sealed class Lanes
         }
     }
 
+    /// <summary>レーンの仕事を順番に実行する。</summary>
     private static async Task RunAsync(Channel<Func<Task>> channel)
     {
         await foreach (var work in channel.Reader.ReadAllAsync())

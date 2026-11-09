@@ -70,6 +70,7 @@ internal static class TomlTreeBuilder
         }
     }
 
+    /// <summary>構文木をたどって、TOML の木を組み立てる。</summary>
     private sealed class Builder(string path, List<DefinitionIssue> issues, LineIndex lines)
     {
         public TomlTable Build(DocumentSyntax document)
@@ -110,6 +111,7 @@ internal static class TomlTreeBuilder
             return root;
         }
 
+        /// <summary>見出しの表を作る。二度書けば重複のエラーにする。</summary>
         private TomlTable DefineHeaderTable(TomlTable parent, string name, SourceLocation location)
         {
             if (parent.TryGet(name, out var existing) && existing is TomlArray)
@@ -129,6 +131,7 @@ internal static class TomlTreeBuilder
             return table;
         }
 
+        /// <summary>表の配列に要素を足す。</summary>
         private TomlTable AppendTableArrayElement(TomlTable parent, string name, SourceLocation location)
         {
             var element = new TomlTable(location) { HeaderDefined = true };
@@ -150,6 +153,7 @@ internal static class TomlTreeBuilder
             return element;
         }
 
+        /// <summary>途中の表を、なければ作って返す。</summary>
         private TomlTable GetOrCreateTable(TomlTable parent, string name, SourceLocation location)
         {
             if (!parent.TryGet(name, out var existing))
@@ -171,6 +175,7 @@ internal static class TomlTreeBuilder
             }
         }
 
+        /// <summary>キーと値を表に入れる。同じキーがあれば重複のエラーにする。</summary>
         private void SetKeyValue(TomlTable table, KeyValueSyntax keyValue)
         {
             var names = KeyNames(keyValue.Key);
@@ -191,6 +196,7 @@ internal static class TomlTreeBuilder
             container.Set(leaf, ConvertValue(keyValue.Value, location));
         }
 
+        /// <summary>構文の値を TOML の値に直す。</summary>
         private TomlNode ConvertValue(ValueSyntax value, SourceLocation location)
         {
             switch (value)
@@ -235,6 +241,7 @@ internal static class TomlTreeBuilder
             }
         }
 
+        /// <summary>キーの重複をエラーにする。</summary>
         private void Duplicate(string key, SourceLocation location) =>
             issues.Add(new DefinitionIssue(
                 IssueSeverity.Error,
@@ -242,8 +249,10 @@ internal static class TomlTreeBuilder
                 location,
                 $"キー \"{key}\" が重複しています。"));
 
+        /// <summary>構文の位置を、定義の位置に直す。</summary>
         private SourceLocation Location(SyntaxNodeBase node) => lines.At(path, node.Span.Start.Offset);
 
+        /// <summary>点で区切られたキーを、名前の列にする。</summary>
         private static List<string> KeyNames(KeySyntax key)
         {
             var names = new List<string> { KeyName(key.Key) };
@@ -255,6 +264,7 @@ internal static class TomlTreeBuilder
             return names;
         }
 
+        /// <summary>キーの1区切りの名前を返す。</summary>
         private static string KeyName(BareKeyOrStringValueSyntax key) => key switch
         {
             BareKeySyntax bare => bare.Key.Text,

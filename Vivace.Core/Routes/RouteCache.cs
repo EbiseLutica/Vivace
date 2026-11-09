@@ -9,6 +9,7 @@ public sealed class RouteCache
 {
     private readonly ImmutableDictionary<string, RouteTable> _tables;
 
+    /// <summary>組み終えた表から作る。</summary>
     private RouteCache(ImmutableDictionary<string, RouteTable> tables)
     {
         _tables = tables;

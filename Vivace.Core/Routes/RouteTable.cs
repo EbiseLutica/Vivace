@@ -13,6 +13,7 @@ public sealed class RouteTable
     private readonly int[,] _distance;
     private readonly int[,] _next;
 
+    /// <summary>計算済みの距離と次の場所から作る。</summary>
     private RouteTable(ImmutableArray<PlaceId> places, int[,] distance, int[,] next)
     {
         _places = places;

@@ -131,7 +131,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>B5（2）：同じブロックの times どうしが重なれば、ブロックの見出しに重なりのエラーが出る。</summary>
+    /// <summary>同じブロックの times どうしが重なれば、ブロックの見出しに重なりのエラーが出る。</summary>
     [Fact]
     public void OverlappingTimesOfOneBlockAreReported()
     {
@@ -193,7 +193,7 @@ public class ReviewRegressionTests
         Assert.Equal(header, issue.Location);
     }
 
-    /// <summary>B5（1）：例外日は前日の睡眠との重なりも見る（12-24 の 05:00〜07:00 と、前夜の睡眠〜06:30）。</summary>
+    /// <summary>例外日は前日の睡眠との重なりも見る（12-24 の 05:00〜07:00 と、前夜の睡眠〜06:30）。</summary>
     [Fact]
     public void ExceptionDayIsCheckedAgainstPreviousNight()
     {
@@ -209,7 +209,7 @@ public class ReviewRegressionTests
         Assert.Contains("前日から続くブロック", issue.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>B5（3）：例外日が 2028〜2055 の外でも、その前後の日を見る。</summary>
+    /// <summary>例外日が 2028〜2055 の外でも、その前後の日を見る。</summary>
     [Fact]
     public void ExceptionOutsideTheScanYearsIsStillChecked()
     {
@@ -518,7 +518,7 @@ public class ReviewRegressionTests
     }
 
     /// <summary>
-    /// B5（3）：2028 年には重ならず、28 年周期の別の年（2038 年は 1 月 1 日が金曜）にだけ重なるブロックは、解決で見つかる。
+    /// 2028 年には重ならず、28 年周期の別の年（2038 年は 1 月 1 日が金曜）にだけ重なるブロックは、解決で見つかる。
     /// </summary>
     [Fact]
     public void OverlapInOnlyALaterYearOfTheCycleIsFound()
@@ -545,7 +545,7 @@ public class ReviewRegressionTests
         Assert.Contains(in2038.Issues, issue => issue.Message.Contains("ny_a", StringComparison.Ordinal));
     }
 
-    /// <summary>B5（3）：同じ重なりを定義ファイルに書けば、読み込みのエラーとして、後のブロックの見出しに出る。</summary>
+    /// <summary>同じ重なりを定義ファイルに書けば、読み込みのエラーとして、後のブロックの見出しに出る。</summary>
     [Fact]
     public void OverlapInLaterCycleYearIsReportedByLoader()
     {

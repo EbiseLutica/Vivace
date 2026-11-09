@@ -9,6 +9,7 @@ namespace Vivace.Tests.Definitions;
 /// </summary>
 public class ScheduleGapTests
 {
+    /// <summary>隙間の警告だけを取り出す。</summary>
     private static ImmutableArray<DefinitionIssue> GapIssues(List<DefinitionFile> files) =>
         DefinitionLoader.LoadFiles(files).Issues.Where(issue => issue.Code == DefinitionIssueCode.ScheduleGap).ToImmutableArray();
 

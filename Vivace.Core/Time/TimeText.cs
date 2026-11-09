@@ -146,6 +146,7 @@ public static partial class TimeText
         return true;
     }
 
+    /// <summary>正規表現のグループの数字を読む。なければ 0 を返す。</summary>
     private static long ParseGroup(Group group) =>
         group.Success ? long.Parse(group.Value, NumberStyles.None, CultureInfo.InvariantCulture) : 0;
 }
