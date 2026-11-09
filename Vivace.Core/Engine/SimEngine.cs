@@ -13,12 +13,7 @@ using Vivace.Core.Time;
 
 namespace Vivace.Core.Engine;
 
-/// <summary>
-/// エンジン（D1 1.2、1.4）。状態を書くのは、このクラスのループだけ。キューのイベントを時刻、段、連番の順に1つずつ適用し、
-/// 決める側（レーンで動くハンドラ）の出力は、コマンドとして戻す。
-/// ホライズンの壁（D1 1.6）を守り、同じ時刻の出力は、契機の連番の順に積む（J-137）。
-/// 段階2 は、仮想時計だけを使い、メモリの上のストレージに書く（段階4 で SQLite に替える）。
-/// </summary>
+/// <summary>シミュレーションのエンジン。状態を書く唯一の場所で、イベントを時刻、段、連番の順に適用し、決める側の出力を取り込む。</summary>
 public sealed class SimEngine : IAsyncDisposable
 {
     private readonly RuleContext _ctx;
@@ -51,13 +46,13 @@ public sealed class SimEngine : IAsyncDisposable
             ImmutableDictionary<PersonaId, PersonaState>.Empty);
     }
 
-    /// <summary>エンジンを作る。ルートの最短経路の表を、ここで組む。固定予定の警告は定義の検証で出す（D7 7.2）。</summary>
+    /// <summary>エンジンを作る。</summary>
     /// <param name="definitions">読み込んだ定義。</param>
     /// <param name="storage">保存先。</param>
     /// <param name="random">乱数の列を開く口。</param>
     /// <param name="clock">仮想時計。</param>
     /// <param name="decider">自由時間の決定。省略すると効用による決定。</param>
-    /// <param name="holidays">祝日の暦。省略すると祝日のない暦（P-18）。</param>
+    /// <param name="holidays">祝日の暦。省略すると祝日のない暦。</param>
     public static SimEngine Create(Definitions.Definitions definitions, IStorage storage, IRandomSource random, VirtualClock clock, IDecider? decider = null, IHolidayCalendar? holidays = null) =>
         new(new RuleContext(definitions, RouteCache.Create(definitions), holidays ?? NoHolidays.Instance), decider ?? new UtilityDecider(), storage, random, clock);
 
@@ -67,10 +62,7 @@ public sealed class SimEngine : IAsyncDisposable
     /// <summary>適用の記録（適用された順）。</summary>
     public IReadOnlyList<LoggedEvent> Log => _log;
 
-    /// <summary>
-    /// イベントを、キューに入れる。窓口からの投入（Ingress）が使う。時刻は、いまより前にできない。
-    /// 走っている間は呼べない（段階2 は、投入と実行を同じスレッドで直列に行う）。
-    /// </summary>
+    /// <summary>イベントをキューに入れる。時刻は、いまより前にできない。走っている間は呼べない。</summary>
     /// <param name="ev">投入するイベント。</param>
     /// <param name="origin">出所。</param>
     /// <returns>割り当てた連番。</returns>
@@ -131,9 +123,7 @@ public sealed class SimEngine : IAsyncDisposable
         return _storage.DisposeAsync();
     }
 
-    /// <summary>
-    /// 1つのイベントを適用する（D1 1.4 の手順5、6）。コミットの後にシグナルを実行し、そのあとで不変条件を検査する。
-    /// </summary>
+    /// <summary>1つのイベントを適用する。不変条件を検査してからコミットし、シグナルを実行する。</summary>
     private async Task ApplyAsync(SimEvent ev, CancellationToken ct)
     {
         var previous = _state.Position.Time;
@@ -177,9 +167,7 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>
-    /// 適用の後に動いている決める仕事のペルソナ。これから起動するシグナルの分も含める（検査はコミットの前に行う）。
-    /// </summary>
+    /// <summary>適用の後に動いている決める仕事のペルソナ。これから起動するシグナルの分も含める。</summary>
     private ImmutableHashSet<PersonaId> BusyAfter(ImmutableArray<EngineSignal> signals) =>
         Busy().Union(signals.Select(signal => signal switch
         {
@@ -232,7 +220,7 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>取り消しの対象になるレーンか。決める側のレーンだけを止め、Planner は止めない（J-145）。</summary>
+    /// <summary>取り消しの対象になるレーンか。決める側のレーンだけを止め、Planner は止めない。</summary>
     /// <param name="lane">レーンの鍵。</param>
     internal static bool IsCancellable(string lane) => lane.StartsWith("decide:", StringComparison.Ordinal);
 

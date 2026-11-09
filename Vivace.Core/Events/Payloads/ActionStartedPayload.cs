@@ -2,7 +2,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Events;
 
-/// <summary>行動の開始（段 7）。</summary>
+/// <summary>行動の開始。</summary>
 /// <param name="ActionId">行動の定義 ID。</param>
 /// <param name="Place">場所。</param>
 /// <param name="Duration">所要時間。</param>

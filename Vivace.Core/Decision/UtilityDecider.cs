@@ -8,26 +8,22 @@ using Vivace.Core.Rules;
 
 namespace Vivace.Core.Decision;
 
-/// <summary>
-/// 効用による決定（D5 5.1〜5.3）。候補、所要時間、スコア、抽選の順に決める。
-/// 候補は行動 ID と場所 ID の順に並べ、乱数はその順に引くので、同じ写しと同じ位置なら同じ結果になる。
-/// 次の予定の場所へ向かう行動（core.go_to_next）は、いつも候補に残る（J-112、J-138）。
-/// </summary>
+/// <summary>効用で自由時間の行動を決める。同じ写しと同じ乱数の位置なら、同じ結果になる。</summary>
 public sealed class UtilityDecider : IDecider
 {
-    /// <summary>行動の切実さの効き目（D5 5.3、既定 3.0）。</summary>
+    /// <summary>行動の切実さの効き目（既定 3.0）。</summary>
     public const double Beta = 3.0;
 
-    /// <summary>同じ行動が続くたびに掛ける重み（D5 5.3）。</summary>
+    /// <summary>同じ行動が続くたびに掛ける重み。</summary>
     public const double RepeatFactor = 0.7;
 
-    /// <summary>移動の手間の尺度（分）。exp(−移動時間 / 30)（D5 5.3）。</summary>
+    /// <summary>移動の手間の尺度（分）。exp(−移動時間 / 30)。</summary>
     public const double TravelScaleMinutes = 30.0;
 
-    /// <summary>行動の既定の所要時間の刻み（D5 5.2、P-29）。</summary>
+    /// <summary>行動の既定の所要時間の刻み。</summary>
     public static readonly TimeSpan DurationStep = TimeSpan.FromMinutes(5);
 
-    /// <summary>次の予定の場所へ向かう行動の ID。所要時間を持たず、次の予定の開始まで待つ（J-112）。</summary>
+    /// <summary>次の予定の場所へ向かう行動の ID。所要時間を持たず、次の予定の開始まで待つ。</summary>
     public const string GoToNext = "core.go_to_next";
 
     /// <inheritdoc />
@@ -103,10 +99,7 @@ public sealed class UtilityDecider : IDecider
         public bool GoToNext => ActionId == UtilityDecider.GoToNext;
     }
 
-    /// <summary>
-    /// 候補の並び。行動 ID と場所 ID の順に並べる（次の予定の場所へ向かう行動も、同じ順に入る。D5 5.2）。
-    /// 経路がないときは、いまの場所で待つ候補にする。
-    /// </summary>
+    /// <summary>候補を、行動 ID と場所 ID の順に並べて返す。</summary>
     private static List<Option> Candidates(Definitions.Definitions defs, PersonaState persona, PersonaDef personaDef, WorldDef worldDef, PlaceId here, DateTimeOffset now, RouteTable routes, PlanBlock? next, DateTimeOffset deadline)
     {
         var options = new List<Option>();
@@ -155,7 +148,7 @@ public sealed class UtilityDecider : IDecider
             .ToList();
     }
 
-    /// <summary>所要時間。範囲なら5分刻みで一様に引く。固定なら引かない（D5 5.2、P-29）。</summary>
+    /// <summary>所要時間を決める。範囲なら5分刻みで一様に引き、固定なら引かない。</summary>
     private static TimeSpan DurationOf(Option option, IRandom random)
     {
         var duration = option.Action!.Duration!;
@@ -168,10 +161,7 @@ public sealed class UtilityDecider : IDecider
         return duration.Min + DurationStep * random.NextInt(0, steps + 1);
     }
 
-    /// <summary>
-    /// 帰還できるか（D5 5.2）。次の予定の場所へ向かう候補は、いつも残す（待ちが 0 以下なら、移動だけで終わる）。
-    /// ほかは、行けて、終えて、次の予定の場所へ戻れるものだけ残す。落ちた候補は引き直さない。
-    /// </summary>
+    /// <summary>行けて、終えて、次の予定の場所へ戻れる候補か。次の予定の場所へ向かう候補は、いつも残す。</summary>
     private static bool IsFeasible(Option option, TimeSpan duration, DateTimeOffset now, DateTimeOffset deadline, PlanBlock? next, RouteTable routes)
     {
         if (option.GoToNext)
@@ -199,9 +189,7 @@ public sealed class UtilityDecider : IDecider
     private static int ConsecutiveOf(PersonaState persona, string actionId) =>
         persona.Usage.TryGetValue(actionId, out var usage) ? usage.Consecutive : 0;
 
-    /// <summary>
-    /// 重み（D5 5.3）。要素の積で、どれか1つが 0 なら選ばれない。
-    /// </summary>
+    /// <summary>候補の重み。どれか1つの要素が 0 なら選ばれない。</summary>
     /// <param name="baseWeight">行動の基本の重み。</param>
     /// <param name="preference">好みの倍率。</param>
     /// <param name="need">欲求の倍率（<see cref="Need"/>）。</param>
@@ -219,10 +207,7 @@ public sealed class UtilityDecider : IDecider
         return baseWeight * preference * need * repeat * travel;
     }
 
-    /// <summary>
-    /// 欲求の倍率 exp(β × Σ u × g)（D5 5.3）。u は切実さ、g は行動を終えたときに良くなる量。
-    /// 行動の率と終了時の増減で、終えたときの値を予測する。退屈度の減少には、繰り返しの減衰（repeat_decay）を掛ける（D2 2.5）。
-    /// </summary>
+    /// <summary>欲求の倍率 exp(β × Σ u × g)。u は切実さ、g は行動を終えたときに良くなる量。</summary>
     /// <param name="state">全体の状態。</param>
     /// <param name="persona">ペルソナの状態。</param>
     /// <param name="personaDef">ペルソナの定義。</param>

@@ -2,7 +2,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Events;
 
-/// <summary>変換の辞書への記録（段 3）。</summary>
+/// <summary>変換の辞書への記録。</summary>
 /// <param name="Term">語。</param>
 /// <param name="Verdict">判定。</param>
 /// <param name="Mapped">変換先（変換のとき）。</param>

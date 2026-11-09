@@ -1,4 +1,4 @@
 namespace Vivace.Core.Events;
 
-/// <summary>ワールドの破棄（段 3）。</summary>
+/// <summary>ワールドの破棄。</summary>
 public sealed record WorldDestroyedPayload() : EventPayload(1);

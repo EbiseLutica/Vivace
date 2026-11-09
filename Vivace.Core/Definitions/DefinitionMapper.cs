@@ -8,10 +8,7 @@ using Vivace.Core.Time;
 
 namespace Vivace.Core.Definitions;
 
-/// <summary>
-/// TOML の表を、定義の型に写す。型と範囲の検査はここで行い、参照の検査は DefinitionValidator が行う。
-/// 問題があっても、既定値で型を作り続けて、全件のエラーを集める。
-/// </summary>
+/// <summary>TOML の表を定義の型に写す。問題があっても既定値で続け、エラーを全件集める。</summary>
 internal static partial class DefinitionMapper
 {
     private static readonly Dictionary<string, VitalName> VitalKeys = new()
@@ -855,7 +852,7 @@ internal static partial class DefinitionMapper
     private static ImmutableDictionary<VitalName, double> ReadVitalTable(TableReader parent, string key, double min, double max) =>
         ReadVitalTable(parent, key, _ => (min, max));
 
-    /// <summary>復元の範囲（D2 2.5）。気力、健康度、退屈度は 0〜100、社交欲求は −100〜100。</summary>
+    /// <summary>復元の範囲。気力、健康度、退屈度は 0〜100、社交欲求は −100〜100。</summary>
     private static (double Min, double Max) RestoreRange(VitalName vital) =>
         vital == VitalName.Social ? (-100, 100) : (0, 100);
 

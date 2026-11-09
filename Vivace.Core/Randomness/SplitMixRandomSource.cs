@@ -5,13 +5,11 @@ using System.Text;
 namespace Vivace.Core.Randomness;
 
 /// <summary>
-/// 持ち主と用途からシードを導き、SplitMix64 の列を開く（D5 5.9）。
+/// 持ち主と用途からシードを導き、SplitMix64 の列を開く。
 /// </summary>
 public sealed class SplitMixRandomSource : IRandomSource
 {
-    /// <summary>
-    /// 列を開く。シードは SHA-256("{ワールドの種}:{持ち主}:{用途}") の先頭 8 バイトを、リトルエンディアンで読んだもの。
-    /// </summary>
+    /// <summary>列を開く。持ち主と用途が同じなら、同じ列になる。</summary>
     /// <param name="worldSeed">ワールドの種。</param>
     /// <param name="owner">持ち主。</param>
     /// <param name="purpose">用途。</param>

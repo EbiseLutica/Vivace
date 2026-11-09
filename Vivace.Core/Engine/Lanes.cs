@@ -3,16 +3,12 @@ using System.Threading.Channels;
 
 namespace Vivace.Core.Engine;
 
-/// <summary>
-/// レーン（D1 1.5）。同じレーンの仕事は順番に、違うレーンの仕事は並列に動く。
-/// レーンの鍵は "decide:{ペルソナ}"、"plan:{ペルソナ}"、"world:{ワールド}"。
-/// 仕事は状態の写しと now だけを受け取り、結果はエンジンのコマンドのキューに返す。
-/// </summary>
+/// <summary>決める側の仕事の実行の列。同じレーンの仕事は順番に、違うレーンの仕事は並列に動く。鍵は "decide:{ペルソナ}"、"plan:{ペルソナ}"、"world:{ワールド}"。</summary>
 public sealed class Lanes
 {
     private readonly ConcurrentDictionary<string, Channel<Func<Task>>> _lanes = new(StringComparer.Ordinal);
 
-    /// <summary>レーンの末尾に仕事を積む。仕事は例外を投げないこと（エンジンが包む）。</summary>
+    /// <summary>レーンの末尾に仕事を積む。仕事は例外を投げないこと。</summary>
     /// <param name="lane">レーンの鍵。</param>
     /// <param name="work">仕事。</param>
     public void Post(string lane, Func<Task> work)

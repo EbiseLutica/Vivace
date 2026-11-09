@@ -4,11 +4,11 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Definitions;
 
-/// <summary>ペルソナの定義（D3 3.4）。</summary>
+/// <summary>ペルソナの定義。</summary>
 /// <param name="Id">定義 ID。</param>
 /// <param name="Name">名前。</param>
 /// <param name="World">居住するワールドの定義 ID。</param>
-/// <param name="Home">早退して帰る場所（P-19）。</param>
+/// <param name="Home">早退して帰る場所。</param>
 /// <param name="Lore">人物の説明。</param>
 /// <param name="Examples">発言例。</param>
 /// <param name="Channels">つながるチャンネル。</param>
@@ -19,8 +19,8 @@ namespace Vivace.Core.Definitions;
 /// <param name="Vitals">状態変数の設定。</param>
 /// <param name="Reflexes">反射のしきい値と行動。</param>
 /// <param name="Disruption">予定の乱れへの反応の重み。</param>
-/// <param name="MemoryHalfLife">記憶の半減期の倍率（P-47）。</param>
-/// <param name="FollowBack">フォローバックの方針（P-44）。</param>
+/// <param name="MemoryHalfLife">記憶の半減期の倍率。</param>
+/// <param name="FollowBack">フォローバックの方針。</param>
 /// <param name="ChannelSettings">チャンネルごとの設定。中身はプラグインが読む。</param>
 /// <param name="Schedule">固定予定。</param>
 /// <param name="Source">出どころ。</param>

@@ -1,6 +1,6 @@
 namespace Vivace.Core.Definitions;
 
-/// <summary>生成する場所の扱い（D3 3.3）。</summary>
+/// <summary>生成する場所の扱い。</summary>
 public enum GeneratedPlacesMode
 {
     /// <summary>自動で採用する。</summary>

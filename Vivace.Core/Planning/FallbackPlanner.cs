@@ -6,16 +6,13 @@ using Vivace.Core.Time;
 
 namespace Vivace.Core.Planning;
 
-/// <summary>
-/// 固定予定だけのプラン（Planner の代わりの出力、D5 5.5、J-132）。
-/// 固定予定のブロックと、そのあいだの自由時間を並べる。LLM を待たないので、ホライズンは契機の時刻。
-/// </summary>
+/// <summary>Planner の代わりの出力。固定予定のブロックと、そのあいだの自由時間を並べる。</summary>
 public static class FallbackPlanner
 {
-    /// <summary>次に記憶の整理を起こす行動が見つからないときの、作り直しまでの長さ（D5 5.5）。</summary>
+    /// <summary>次に記憶の整理を起こす行動が見つからないときの、作り直しまでの長さ。</summary>
     public static readonly TimeSpan DefaultRebuildSpan = TimeSpan.FromHours(21);
 
-    /// <summary>プランの範囲の、作り直しのあとの余裕（D5 5.5）。</summary>
+    /// <summary>プランの範囲の、作り直しのあとの余裕。</summary>
     public static readonly TimeSpan Margin = TimeSpan.FromHours(3);
 
     /// <summary>

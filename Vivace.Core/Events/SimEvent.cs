@@ -3,9 +3,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Events;
 
-/// <summary>
-/// シミュレーションのイベント（D2 2.1）。ID は連番と兼ねる（P-10）。段は持たず、イベントタイプから引く。
-/// </summary>
+/// <summary>シミュレーションのイベント。</summary>
 /// <param name="Seq">連番。ID を兼ねる。</param>
 /// <param name="Time">絶対時刻（UTC）。</param>
 /// <param name="EventType">イベントタイプの名前。</param>

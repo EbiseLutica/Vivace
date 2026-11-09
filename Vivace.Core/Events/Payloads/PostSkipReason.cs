@@ -1,6 +1,6 @@
 namespace Vivace.Core.Events;
 
-/// <summary>投稿が空振りした理由（D6 6.6）。</summary>
+/// <summary>投稿が空振りした理由。</summary>
 public enum PostSkipReason
 {
     /// <summary>話題が全部却下された。</summary>

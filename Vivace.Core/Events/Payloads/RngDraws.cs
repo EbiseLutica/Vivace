@@ -1,6 +1,6 @@
 namespace Vivace.Core.Events;
 
-/// <summary>乱数を引いた範囲。どの列の、どこからどこまで引いたかを残す（D5 5.9）。</summary>
+/// <summary>乱数を引いた範囲。どの列の、どこからどこまで引いたかを残す。</summary>
 /// <param name="Owner">持ち主。</param>
 /// <param name="Purpose">用途。</param>
 /// <param name="From">引き始めた位置。</param>

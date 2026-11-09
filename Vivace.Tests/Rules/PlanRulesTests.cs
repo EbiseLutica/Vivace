@@ -75,7 +75,7 @@ public class PlanRulesTests
         Assert.Equal(new DecisionRequestedPayload(DecisionReason.Free, null), Assert.Single(result.FollowUps).Payload);
     }
 
-    /// <summary>プランにないブロックの開始（ID がない、または時刻がずれている）は捨てる。版ではなく、いまのプランに入っているかで見る（J-135）。</summary>
+    /// <summary>プランにないブロックの開始（ID がない、または時刻がずれている）は捨てる。版ではなく、いまのプランに入っているかで見る。</summary>
     [Fact]
     public void UnknownOrMovedBlockStartIsSkipped()
     {
@@ -85,7 +85,7 @@ public class PlanRulesTests
         Assert.Equal(EventOutcome.Skipped, Fixture.Apply(plan, BlockStarted(12, Fixture.Now.AddHours(5), "reading@2026-11-01")).Outcome);
     }
 
-    /// <summary>新しいプランで続くブロックは、積み直さない。プランの確定が積むのは、新しいブロックと、いま続いているブロックだけ（J-135）。</summary>
+    /// <summary>新しいプランで続くブロックは、積み直さない。プランの確定が積むのは、新しいブロックと、いま続いているブロックだけ。</summary>
     [Fact]
     public void PlanCommittedDoesNotReEmitContinuingBlocks()
     {
@@ -133,7 +133,7 @@ public class PlanRulesTests
         Assert.Equal(new PendingAction("watch_tv", HomeLiving, TimeSpan.FromHours(1).Subtract(TimeSpan.FromMinutes(1)), ActivityReason.Block, "tv@2026-11-01"), travel.Next);
     }
 
-    /// <summary>固定ブロックの開始は、いまの行動を打ち切る。行動の版が上がり、ハンドラの取り消しを依頼する（D1 1.3、P-03）。</summary>
+    /// <summary>固定ブロックの開始は、いまの行動を打ち切る。行動の版が上がり、ハンドラの取り消しを依頼する。</summary>
     [Fact]
     public void BlockStartCutsRunningActivity()
     {
@@ -163,7 +163,7 @@ public class PlanRulesTests
         Assert.Equal(EventOutcome.Skipped, Fixture.Apply(plan, Fixture.Event(12, Fixture.Now.AddHours(21), EventTypes.PlanDue, new PlanDuePayload(0), Fixture.Kaori)).Outcome);
     }
 
-    /// <summary>規則にない型は、黙って捨てず、例外で止める（段階2 の範囲外）。</summary>
+    /// <summary>規則にない型は、黙って捨てず、例外で止める。</summary>
     [Fact]
     public void UnsupportedEventTypeThrows()
     {

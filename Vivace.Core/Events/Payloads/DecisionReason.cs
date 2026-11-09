@@ -1,6 +1,6 @@
 namespace Vivace.Core.Events;
 
-/// <summary>決めどきの理由（D2 2.3）。</summary>
+/// <summary>決めどきの理由。</summary>
 public enum DecisionReason
 {
     /// <summary>自由時間のブロックが始まった。</summary>

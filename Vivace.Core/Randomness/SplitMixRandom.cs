@@ -32,9 +32,7 @@ public sealed class SplitMixRandom : IRandom
     /// <inheritdoc />
     public double NextDouble() => (NextUInt64() >> 11) * (1.0 / (1UL << 53));
 
-    /// <summary>
-    /// 乗算と棄却による、偏りのない方法（Lemire）で整数を引く。
-    /// </summary>
+    /// <summary>偏りなく整数を引く。</summary>
     /// <param name="minInclusive">下限（含む）。</param>
     /// <param name="maxExclusive">上限（含まない）。下限より大きいこと。</param>
     public int NextInt(int minInclusive, int maxExclusive)

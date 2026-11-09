@@ -86,7 +86,7 @@ public class RouteTableTests
             RouteTable.Create([KaoriRoom, HomeLiving], [new RouteEdge(KaoriRoom, HomeLiving, 0)]));
     }
 
-    /// <summary>S9：経路は、移動時間つきの辺の列として取れる。</summary>
+    /// <summary>経路は、移動時間つきの辺の列として取れる。</summary>
     [Fact]
     public void StepsGiveEdgesWithMinutes()
     {
@@ -105,7 +105,7 @@ public class RouteTableTests
             steps.Value);
     }
 
-    /// <summary>S12：同じ長さの経路が2つあっても、場所の渡す順に関係なく同じ経路を選ぶ。</summary>
+    /// <summary>同じ長さの経路が2つあっても、場所の渡す順に関係なく同じ経路を選ぶ。</summary>
     [Fact]
     public void EqualLengthRoutesDoNotDependOnInputOrder()
     {

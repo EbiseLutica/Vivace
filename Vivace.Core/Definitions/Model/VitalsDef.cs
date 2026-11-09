@@ -1,6 +1,6 @@
 namespace Vivace.Core.Definitions;
 
-/// <summary>状態変数の設定。省略したものは既定値（D5 5.6）。</summary>
+/// <summary>状態変数の設定。省略したものは既定値。</summary>
 /// <param name="EnergyInitial">気力の初期値。</param>
 /// <param name="SocialFloor">社交欲求の下限。</param>
 /// <param name="SocialCeiling">社交欲求の上限。</param>

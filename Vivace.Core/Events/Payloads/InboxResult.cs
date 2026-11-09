@@ -1,6 +1,6 @@
 namespace Vivace.Core.Events;
 
-/// <summary>受信箱の1件の捌きの結果（D6 6.5）。</summary>
+/// <summary>受信箱の1件の捌きの結果。</summary>
 public enum InboxResult
 {
     /// <summary>返信した。</summary>

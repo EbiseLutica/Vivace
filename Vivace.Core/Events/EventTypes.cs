@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 namespace Vivace.Core.Events;
 
 /// <summary>
-/// イベントタイプの名前と、段と、ペイロードの型の表（D2 2.2、2.3）。
+/// イベントタイプの名前と、段と、ペイロードの型の表。
 /// </summary>
 public static class EventTypes
 {

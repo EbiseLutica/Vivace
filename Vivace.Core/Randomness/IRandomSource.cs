@@ -1,7 +1,7 @@
 namespace Vivace.Core.Randomness;
 
 /// <summary>
-/// 乱数の列を開く口（ポート）。持ち主と用途ごとに独立した列になる（D5 5.9）。
+/// 乱数の列を開く口（ポート）。持ち主と用途ごとに独立した列になる。
 /// </summary>
 public interface IRandomSource
 {

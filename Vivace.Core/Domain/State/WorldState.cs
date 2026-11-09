@@ -2,9 +2,7 @@ using System.Collections.Immutable;
 
 namespace Vivace.Core.Domain;
 
-/// <summary>
-/// 世界の状態。Apply のたびに変わったところだけを作り直す（D3 3.7）。
-/// </summary>
+/// <summary>世界の状態。</summary>
 /// <param name="Id">ワールドインスタンスの ID。</param>
 /// <param name="DefId">使っている定義の ID。</param>
 /// <param name="Seed">乱数のワールドの種。</param>

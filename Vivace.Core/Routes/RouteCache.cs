@@ -4,10 +4,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Routes;
 
-/// <summary>
-/// ワールドごとの最短経路の表。定義が変わるまで作り直さない。ワールドの ID は定義 ID と同じ。
-/// 固定予定の隙間の警告は、定義の検証（<see cref="DefinitionValidator"/>）で出す（D7 7.2、J-147）。
-/// </summary>
+/// <summary>ワールドごとの最短経路の表。定義が変わるまで作り直さない。</summary>
 public sealed class RouteCache
 {
     private readonly ImmutableDictionary<string, RouteTable> _tables;

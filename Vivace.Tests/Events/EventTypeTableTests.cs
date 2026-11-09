@@ -2,10 +2,10 @@ using Vivace.Core.Events;
 
 namespace Vivace.Tests.Events;
 
-/// <summary>イベントタイプの表が、D2 2.2 と 2.3 の全タイプを漏れなく持つことを確かめる。</summary>
+/// <summary>イベントタイプの表が、全タイプを漏れなく持つことを確かめる。</summary>
 public class EventTypeTableTests
 {
-    /// <summary>D2 2.2 の段の表と、2.3 のイベントタイプの全件（名前と段）。</summary>
+    /// <summary>段の表とイベントタイプの全件（名前と段）。</summary>
     private static readonly (string Name, EventStage Stage)[] Expected =
     [
         ("day.started", EventStage.DayTurn),
@@ -46,7 +46,7 @@ public class EventTypeTableTests
         ("post.skipped", EventStage.Decision),
     ];
 
-    /// <summary>表は、D2 の全タイプを、正しい段と一緒に過不足なく持つ。</summary>
+    /// <summary>表は、全タイプを、正しい段と一緒に過不足なく持つ。</summary>
     [Fact]
     public void TableHoldsEveryEventTypeWithItsStage()
     {

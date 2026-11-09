@@ -1,6 +1,6 @@
 namespace Vivace.Core.Definitions;
 
-/// <summary>フォローバックの方針（P-44）。</summary>
+/// <summary>フォローバックの方針。</summary>
 public enum FollowBackPolicy
 {
     /// <summary>フォローされたら必ずフォローし返す。</summary>

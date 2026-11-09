@@ -3,7 +3,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Events;
 
-/// <summary>生えた場所の追加（段 3）。</summary>
+/// <summary>生えた場所の追加。</summary>
 /// <param name="Place">場所の ID。</param>
 /// <param name="Name">表示名。</param>
 /// <param name="Tags">タグ。</param>

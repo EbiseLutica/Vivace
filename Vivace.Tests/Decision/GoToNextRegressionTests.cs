@@ -8,7 +8,7 @@ using Vivace.Tests.Support;
 namespace Vivace.Tests.Decision;
 
 /// <summary>
-/// 次の予定の場所へ向かう行動が、帰還ぎりぎりで候補から消えて、決める側が空になる誤りの再発防止（J-112、J-138）。
+/// 次の予定の場所へ向かう行動が、帰還ぎりぎりで候補から消えて、決める側が空になる誤りの再発防止。
 /// </summary>
 public class GoToNextRegressionTests
 {

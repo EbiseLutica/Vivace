@@ -56,7 +56,7 @@ public class ActivityRulesTests
         Assert.Empty(result.FollowUps);
     }
 
-    /// <summary>版が古い行動の終わりは捨てる。行動の終わりでは版は上がらない（J-131）。</summary>
+    /// <summary>版が古い行動の終わりは捨てる。行動の終わりでは版は上がらない。</summary>
     [Fact]
     public void StaleActionEndedIsSkippedAndEndDoesNotBumpVersion()
     {

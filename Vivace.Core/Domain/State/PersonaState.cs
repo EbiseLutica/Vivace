@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 
 namespace Vivace.Core.Domain;
 
-/// <summary>ペルソナの状態。Apply のたびに変わったところだけを作り直す（D3 3.7）。</summary>
+/// <summary>ペルソナの状態。</summary>
 /// <param name="Id">インスタンスの ID。</param>
 /// <param name="DefId">使っている定義の ID。</param>
 /// <param name="World">居住するワールド。</param>
@@ -21,9 +21,9 @@ namespace Vivace.Core.Domain;
 /// <param name="Inbox">未処理の通知。</param>
 /// <param name="Outbound">未送信の操作。</param>
 /// <param name="LastWake">日誌の範囲の起点（最後に起きた時刻）。</param>
-/// <param name="Deciding">決めどきの処理中かどうか（J-133）。決めどきの二重の積みを防ぐ。</param>
-/// <param name="LastBlockId">最後に始めたブロックの ID（J-135）。同じブロックは一度だけ始める。</param>
-/// <param name="PlannedFor">Planner を起こした期間の鍵（記憶の整理の行動のブロック ID、または時刻）。同じ期間では一度だけ動く（D5 5.5、J-141）。</param>
+/// <param name="Deciding">決めどきの処理中かどうか。決めどきの二重の積みを防ぐ。</param>
+/// <param name="LastBlockId">最後に始めたブロックの ID。同じブロックは一度だけ始める。</param>
+/// <param name="PlannedFor">Planner を起こした期間の鍵（記憶の整理の行動のブロック ID、または時刻）。同じ期間では一度だけ動く。</param>
 public sealed record PersonaState(
     PersonaId Id,
     string DefId,

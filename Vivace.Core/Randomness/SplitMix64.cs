@@ -3,7 +3,7 @@ using System.Buffers.Binary;
 namespace Vivace.Core.Randomness;
 
 /// <summary>
-/// SplitMix64 の混ぜ関数と、i 番目の値の直接計算（D5 5.9、P-38）。
+/// SplitMix64 の混ぜ関数と、i 番目の値の直接計算。
 /// </summary>
 public static class SplitMix64
 {

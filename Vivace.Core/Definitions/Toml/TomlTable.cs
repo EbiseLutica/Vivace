@@ -37,7 +37,7 @@ internal sealed class TomlTable(SourceLocation location) : TomlNode(location)
     }
 
     /// <summary>
-    /// 不変の JSON の要素にする（チャンネルの設定など、中身をプラグインに渡すもの。P-21）。
+    /// 不変の JSON の要素にする（チャンネルの設定など、中身をプラグインに渡すもの）。
     /// </summary>
     public JsonElement ToJson() => JsonSerializer.SerializeToElement(ToJsonNode(this));
 

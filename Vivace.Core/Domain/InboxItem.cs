@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace Vivace.Core.Domain;
 
 /// <summary>
-/// 受信箱のアイテム。チャンネルが届いた通知を、コアが読める形に訳したもの（D3 3.7.1）。
+/// 受信箱のアイテム。チャンネルが届いた通知を、コアが読める形に訳したもの。
 /// </summary>
 /// <param name="Seq">到着のイベントの連番（ID を兼ねる）。受け付けたときは 0 で、適用のときに入る。</param>
 /// <param name="Channel">チャンネルの種類（"misskey" など）。</param>

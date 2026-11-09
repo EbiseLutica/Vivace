@@ -3,9 +3,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Rules;
 
-/// <summary>
-/// イベントの適用の結果。状態は、適用したときだけ変わる（却下のときは決め中の印を下ろすだけのことがある）。
-/// </summary>
+/// <summary>イベントの適用の結果。</summary>
 /// <param name="State">新しい状態。</param>
 /// <param name="Outcome">結果。</param>
 /// <param name="Reason">捨てた、または却下した理由（適用のときは null）。</param>

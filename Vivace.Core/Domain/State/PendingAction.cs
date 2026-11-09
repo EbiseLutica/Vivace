@@ -1,6 +1,6 @@
 namespace Vivace.Core.Domain;
 
-/// <summary>移動のあとに始める行動（J-134）。到着の Apply が action.started を積むときの中身。</summary>
+/// <summary>移動のあとに始める行動。</summary>
 /// <param name="ActionId">行動の定義 ID。</param>
 /// <param name="Place">行動する場所。</param>
 /// <param name="Duration">所要時間。</param>

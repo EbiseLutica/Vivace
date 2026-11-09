@@ -1,6 +1,6 @@
 namespace Vivace.Core.Events;
 
-/// <summary>予定の乱れへの対応の選択（D5 5.4）。</summary>
+/// <summary>予定の乱れへの対応の選択。</summary>
 public enum DisruptionChoice
 {
     /// <summary>遅刻する。</summary>

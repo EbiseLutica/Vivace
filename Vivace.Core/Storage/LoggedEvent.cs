@@ -2,7 +2,7 @@ using Vivace.Core.Events;
 
 namespace Vivace.Core.Storage;
 
-/// <summary>適用の記録の1件。行は消さず、中身も書き換えない（D1 1.8）。</summary>
+/// <summary>適用の記録の1件。行は消さず、中身も書き換えない。</summary>
 /// <param name="Event">イベント。</param>
 /// <param name="Status">結果。</param>
 /// <param name="ApplyNo">適用番号（適用したときだけ）。</param>

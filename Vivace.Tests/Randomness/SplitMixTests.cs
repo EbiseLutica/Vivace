@@ -5,7 +5,7 @@ namespace Vivace.Tests.Randomness;
 /// <summary>乱数の列（SplitMix64、シードの導出、位置からの再開）を既知の値で固定する。</summary>
 public class SplitMixTests
 {
-    /// <summary>SplitMix64 の本体は、シード 1234567 の最初の 5 値が既知の値になる（D5 5.9）。</summary>
+    /// <summary>SplitMix64 の本体は、シード 1234567 の最初の 5 値が既知の値になる。</summary>
     [Fact]
     public void SeedFromKnownValueProducesKnownSequence()
     {
@@ -97,7 +97,7 @@ public class SplitMixTests
         Assert.Throws<ArgumentOutOfRangeException>(() => random.NextInt(3, 3));
     }
 
-    /// <summary>S13：シード 99 の NextInt(-5, 7) の既知の値（独立に計算した列）。</summary>
+    /// <summary>シード 99 の NextInt(-5, 7) の既知の値（独立に計算した列）。</summary>
     [Fact]
     public void NextIntMatchesKnownSequence()
     {
@@ -108,7 +108,7 @@ public class SplitMixTests
         Assert.Equal(new[] { -2, -5, 5, -4, -3, -3, 3, 3 }, values);
     }
 
-    /// <summary>S13：シード 1234567 の NextDouble の既知の値（独立に計算した列）。</summary>
+    /// <summary>シード 1234567 の NextDouble の既知の値（独立に計算した列）。</summary>
     [Fact]
     public void NextDoubleMatchesKnownSequence()
     {

@@ -3,10 +3,7 @@ using Vivace.Core.Events;
 
 namespace Vivace.Core.Rules;
 
-/// <summary>
-/// 後続のイベント（決定的に導けるもの）。Apply と同じトランザクションでキューに入る。
-/// 出す者の出所と、契機の連番は、エンジンが付ける。
-/// </summary>
+/// <summary>後続のイベント。Apply と同じトランザクションでキューに入る。</summary>
 /// <param name="Time">時刻。</param>
 /// <param name="EventType">イベントタイプの名前。</param>
 /// <param name="World">ワールド。</param>

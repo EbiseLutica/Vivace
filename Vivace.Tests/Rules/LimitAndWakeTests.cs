@@ -10,8 +10,8 @@ using Vivace.Tests.Support;
 namespace Vivace.Tests.Rules;
 
 /// <summary>
-/// 行動の制限は、決めた時刻でなく、その場所に着く時刻で見る（D5 5.2）。
-/// 睡眠の終わりで、起床の時刻（LastWake）を設定する（D2 2.5）。
+/// 行動の制限は、決めた時刻でなく、その場所に着く時刻で見る。
+/// 睡眠の終わりで、起床の時刻（LastWake）を設定する。
 /// </summary>
 public class LimitAndWakeTests
 {

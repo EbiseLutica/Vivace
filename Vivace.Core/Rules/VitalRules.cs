@@ -3,10 +3,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Rules;
 
-/// <summary>
-/// 状態変数の読み取りと率の切り替え（D5 5.6）。値は「基準の時刻と値」と「いまの率」から、値 + 率 × 経過時間で読む。
-/// 率が変わるのは、行動の開始と終了、移動の開始と到着、居合わせの変化のときだけ。Apply の計算は四則演算と比較だけで書く（決定性）。
-/// </summary>
+/// <summary>状態変数の読み取りと率の切り替え。値は、基準の時刻の値と率から、値 + 率 × 経過時間で読む。</summary>
 public static class VitalRules
 {
     /// <summary>起きている間の気力の率（1時間あたり）。</summary>
@@ -64,7 +61,7 @@ public static class VitalRules
     };
 
     /// <summary>
-    /// ペルソナのいまの居場所に、ほかの人がいるか。移動中の人は、どの場所にもいないものとして扱う（D5 5.10）。
+    /// ペルソナのいまの居場所に、ほかの人がいるか。移動中の人は、どの場所にもいないものとして扱う。
     /// </summary>
     /// <param name="state">全体の状態。</param>
     /// <param name="persona">ペルソナ。</param>
@@ -159,7 +156,7 @@ public static class VitalRules
     }
 
     /// <summary>
-    /// 状態変数の値の検査（D7 7.4）。基準の値が範囲の中にあるかを見る。
+    /// 状態変数の値の検査。基準の値が範囲の中にあるかを見る。
     /// </summary>
     /// <param name="persona">ペルソナ。</param>
     /// <param name="defs">定義。</param>

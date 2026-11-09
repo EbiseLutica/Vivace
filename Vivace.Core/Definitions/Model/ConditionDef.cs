@@ -3,7 +3,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Definitions;
 
-/// <summary>状態（コンディション）の定義（D2 2.7）。</summary>
+/// <summary>状態（コンディション）の定義。</summary>
 /// <param name="Id">定義 ID。</param>
 /// <param name="Display">表示名。</param>
 /// <param name="Rates">既定の率に足す率。</param>

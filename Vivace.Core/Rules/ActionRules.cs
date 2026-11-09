@@ -6,17 +6,17 @@ using Vivace.Core.Time;
 namespace Vivace.Core.Rules;
 
 /// <summary>
-/// 行動の候補の判定（D5 5.2）と、制限の判定（D2 2.6）。Decider と Apply の両方が使う。
+/// 行動の候補の判定と、制限の判定。Decider と Apply の両方が使う。
 /// </summary>
 public static class ActionRules
 {
-    /// <summary>次の予定の場所へ向かう行動の ID（J-112）。使える行動と、スケジュールだけの印は見ない（J-138）。</summary>
+    /// <summary>次の予定の場所へ向かう行動の ID。</summary>
     public const string GoToNextId = "core.go_to_next";
 
-    /// <summary>好き（like）の倍率（D5 5.3）。</summary>
+    /// <summary>好き（like）の倍率。</summary>
     public const double LikeFactor = 2.0;
 
-    /// <summary>嫌い（dislike）の倍率（D5 5.3）。</summary>
+    /// <summary>嫌い（dislike）の倍率。</summary>
     public const double DislikeFactor = 0.4;
 
     /// <summary>
@@ -84,7 +84,7 @@ public static class ActionRules
         return factor;
     }
 
-    /// <summary>場所のタグと、携行品が、行動の requires を満たすか。チャンネルの条件は、段階2 では満たさない。</summary>
+    /// <summary>場所のタグと携行品が、行動の requires を満たすか。</summary>
     /// <param name="action">行動の定義。</param>
     /// <param name="persona">ペルソナの定義。</param>
     /// <param name="place">場所の定義。</param>
@@ -94,7 +94,7 @@ public static class ActionRules
         && action.Requires.Items.All(item => persona.Items.Contains(item, StringComparer.Ordinal));
 
     /// <summary>
-    /// 制限（クールダウン、1日の回数、時刻の範囲）を満たすか（D2 2.6）。時刻は現地の時刻で見る。
+    /// 制限（クールダウン、1日の回数、時刻の範囲）を満たすか。時刻は現地の時刻で見る。
     /// </summary>
     /// <param name="action">行動の定義。</param>
     /// <param name="usage">行動の利用の記録（なければ null）。</param>
@@ -132,10 +132,7 @@ public static class ActionRules
         return true;
     }
 
-    /// <summary>
-    /// 行動を決めたときの実行の判定（D1 1.7 の feasible）。ペルソナが場所にいて、行動が使えて、場所とつながり、制限を満たす。
-    /// 帰還できるかは、プランの締め切りを知る Decider が見る。
-    /// </summary>
+    /// <summary>行動を決めたときに実行できるか。ペルソナが場所にいて、行動が使えて、場所とつながり、制限を満たすこと。帰還できるかは見ない。</summary>
     /// <param name="ctx">規則の文脈。</param>
     /// <param name="state">全体の状態。</param>
     /// <param name="persona">ペルソナの状態。</param>
@@ -176,9 +173,7 @@ public static class ActionRules
         return true;
     }
 
-    /// <summary>
-    /// 繰り返しの減衰の係数（D2 2.5）。直前に同じ行動を k 回続けていたら、decay を k 回掛ける（掛け算の繰り返し。Apply で Math.Pow を使わない、D5 5.6）。
-    /// </summary>
+    /// <summary>繰り返しの減衰の係数。直前に同じ行動を k 回続けていたら、decay の k 乗になる。</summary>
     /// <param name="decay">行動の repeat_decay。</param>
     /// <param name="k">直前に続けた回数。</param>
     public static double RepeatDecayFactor(double decay, int k)
@@ -193,7 +188,7 @@ public static class ActionRules
     }
 
     /// <summary>
-    /// 行動を始めたときの利用の記録を更新する。同じ行動が続いた回数（Consecutive）を数え、ほかの行動の連続は切る（D5 5.3）。
+    /// 行動を始めたときの利用の記録を更新する。同じ行動が続いた回数（Consecutive）を数え、ほかの行動の連続は切る。
     /// </summary>
     /// <param name="usage">いまの利用の記録。</param>
     /// <param name="actionId">始めた行動の定義 ID。</param>

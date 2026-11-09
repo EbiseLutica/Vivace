@@ -1,8 +1,6 @@
 namespace Vivace.Core.Time;
 
-/// <summary>
-/// 時刻と待ち。時計を読むのは、エンジンと配信役と到着の受付だけ（D1 1.10）。
-/// </summary>
+/// <summary>時刻と待ちの口。</summary>
 public interface IClock
 {
     /// <summary>いまの UTC の時刻。</summary>

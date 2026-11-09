@@ -1,6 +1,6 @@
 namespace Vivace.Core.Time;
 
-/// <summary>祝日のない暦。ワールドが暦を持たないとき（P-18 の既定）に使う。</summary>
+/// <summary>祝日のない暦。ワールドが暦を持たないときに使う。</summary>
 public sealed class NoHolidays : IHolidayCalendar
 {
     /// <summary>共有の1つ。</summary>

@@ -1,7 +1,7 @@
 namespace Vivace.Core.Events;
 
 /// <summary>
-/// イベントの出所の大分類（D2 2.9）。
+/// イベントの出所の大分類。
 /// </summary>
 public enum OriginKind
 {

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 namespace Vivace.Tests.Support;
 
 /// <summary>
-/// スナップショットの比較。Verify を呼ぶのは、このヘルパーだけ（J-136）。
+/// スナップショットの比較。Verify を呼ぶのは、このヘルパーだけ。
 /// テストは、文字の列を渡すだけにする。
 /// </summary>
 public static class Snapshot

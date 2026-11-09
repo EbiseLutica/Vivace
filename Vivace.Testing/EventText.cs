@@ -6,11 +6,7 @@ using Vivace.Core.Storage;
 
 namespace Vivace.Testing;
 
-/// <summary>
-/// イベントの列を、決まった形の文字に直す（D7 7.4 のスナップショット）。
-/// 辞書は、キーの序数順に並べて書く。プロパティは名前の序数順。数は文化に依らず書く（J-125）。
-/// 差し替えるときは、この形が変わることを確かめる。
-/// </summary>
+/// <summary>イベントの列を、比較できる決まった形の文字に直す。</summary>
 public static class EventText
 {
     /// <summary>適用されたイベントの1行を返す。捨てたものと却下したものは含めない（事実だけ）。</summary>

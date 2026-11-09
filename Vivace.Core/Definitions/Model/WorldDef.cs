@@ -3,14 +3,14 @@ using Vivace.Core.Time;
 
 namespace Vivace.Core.Definitions;
 
-/// <summary>ワールドの定義（D3 3.3）。</summary>
+/// <summary>ワールドの定義。</summary>
 /// <param name="Id">定義 ID。</param>
 /// <param name="Name">名前。</param>
 /// <param name="Lore">世界観の説明。</param>
 /// <param name="UtcOffset">時差。</param>
 /// <param name="GeneratedPlaces">生成する場所の扱い。</param>
 /// <param name="NotExist">存在しないものの一覧（任意）。</param>
-/// <param name="HolidayCalendar">祝日の暦の提供元（P-18）。なければ祝日なし。</param>
+/// <param name="HolidayCalendar">祝日の暦の提供元。なければ祝日なし。</param>
 /// <param name="Events">年中行事（月日 → 名前）。</param>
 /// <param name="Terms">変換の辞書の初期値。</param>
 /// <param name="Places">定義の場所。</param>

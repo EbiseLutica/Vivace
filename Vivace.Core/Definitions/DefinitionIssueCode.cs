@@ -1,6 +1,6 @@
 namespace Vivace.Core.Definitions;
 
-/// <summary>問題の種類（D7 7.2）。</summary>
+/// <summary>問題の種類。</summary>
 public enum DefinitionIssueCode
 {
     /// <summary>TOML の構文。</summary>
@@ -27,7 +27,7 @@ public enum DefinitionIssueCode
     /// <summary>固定予定のブロックが重なる、または親の時間からはみ出す。</summary>
     ScheduleOverlap,
 
-    /// <summary>固定予定の隙間が、場所の間の移動時間より短い（警告。D7 7.2、J-147）。</summary>
+    /// <summary>固定予定の隙間が、場所の間の移動時間より短い（警告）。</summary>
     ScheduleGap,
 
     /// <summary>反射の行動の所要時間が範囲になっている。</summary>
@@ -54,6 +54,6 @@ public enum DefinitionIssueCode
     /// <summary>使う行動のワイルドカード（misskey.* など）に、当たる行動がない（警告。プラグインなしでも読める）。</summary>
     UnmatchedWildcard,
 
-    /// <summary>同行の相手と、時刻、場所、行動が一致しない（警告。D5 5.11）。</summary>
+    /// <summary>同行の相手と、時刻、場所、行動が一致しない（警告）。</summary>
     PartnerMismatch,
 }

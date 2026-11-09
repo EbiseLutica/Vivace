@@ -7,7 +7,7 @@ using Vivace.Core.Time;
 namespace Vivace.Core.Schedule;
 
 /// <summary>
-/// 日付から、その日の固定予定のブロックを出す（D3 3.5）。
+/// 日付から、その日の固定予定のブロックを出す。
 /// 期間（最も短いものを採る）、例外日、祝日、入れ子（within）、時間帯の並べ書き（times）を踏まえる。
 /// </summary>
 public static class FixedScheduleResolver
@@ -193,9 +193,7 @@ public static class FixedScheduleResolver
         }
     }
 
-    /// <summary>
-    /// 例外日に足したブロックは入れ子を持たない。同じ ID の基本のブロックの子を引き込まないよう、子を探さずに区間を並べる。
-    /// </summary>
+    /// <summary>例外日に足したブロックを、区間に並べる。入れ子は持たない。</summary>
     private static void AddLeaf(BlockDef block, IReadOnlyList<Span> spans, DayContext context)
     {
         var inherited = new Inherited(block.Action, block.Place, block.Phone, block.PhoneEvery, block.SkipHoliday);

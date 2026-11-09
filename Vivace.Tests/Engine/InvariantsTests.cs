@@ -7,7 +7,7 @@ using Vivace.Tests.Support;
 namespace Vivace.Tests.Engine;
 
 /// <summary>
-/// 「各ペルソナに次の自分のイベントがある」の検査を、わざと壊した状態で確かめる（D7 7.4）。
+/// 「各ペルソナに次の自分のイベントがある」の検査を、わざと壊した状態で確かめる。
 /// 行動中は同じ版の行動の終わり、移動中は到着、決め中は決める仕事、自由時間の手空きは決めどきが、それぞれ予定されていなければならない。
 /// </summary>
 public class InvariantsTests
@@ -111,7 +111,7 @@ public class InvariantsTests
         Assert.Throws<InvariantViolationException>(() => Check(broken, [Pending(10, EventTypes.BlockStarted, new BlockStartedPayload(null, 1))]));
     }
 
-    /// <summary>時刻が進まないまま、上限を超えて適用が続くと止まる。上限以内なら通る（B5）。</summary>
+    /// <summary>時刻が進まないまま、上限を超えて適用が続くと止まる。上限以内なら通る。</summary>
     [Fact]
     public void ProgressGuardStopsEndlessApplicationAtOneInstant()
     {

@@ -5,7 +5,7 @@ using Vivace.Testing;
 namespace Vivace.Tests.Definitions;
 
 /// <summary>
-/// 固定予定の隙間が、場所の間の移動時間より短いことの警告（D7 7.2、J-147）。定義の検証で、位置つきで出す。
+/// 固定予定の隙間が、場所の間の移動時間より短いことの警告。定義の検証で、位置つきで出す。
 /// </summary>
 public class ScheduleGapTests
 {

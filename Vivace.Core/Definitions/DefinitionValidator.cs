@@ -7,10 +7,7 @@ using Vivace.Core.Time;
 
 namespace Vivace.Core.Definitions;
 
-/// <summary>
-/// 読み込んだ定義の参照と整合性を検査する（D7 7.2）。
-/// 結果は、ファイルと行と列の位置つきのエラーと警告の一覧。エディタからも呼べる。
-/// </summary>
+/// <summary>読み込んだ定義の参照と整合性を検査し、位置つきのエラーと警告を返す。</summary>
 public static class DefinitionValidator
 {
     /// <summary>固定予定の重なりを見る最初の年。28 年周期（うるう年と曜日の組み合わせを一巡する）で見る。</summary>
@@ -106,7 +103,7 @@ public static class DefinitionValidator
 
     private static void ValidateAction(ActionDef action, HashSet<string> reflexActions, List<DefinitionIssue> issues)
     {
-        // core.go_to_next は所要時間を持たない。着いたあとの待ちは次の予定で決まる（J-112）。
+        // core.go_to_next は所要時間を持たない。着いたあとの待ちは次の予定で決まる。
         if (action.Duration is null && !action.ScheduleOnly && !reflexActions.Contains(action.Id) && action.Id != "core.go_to_next")
         {
             Add(issues, DefinitionIssueCode.MissingRequired, action.Source.Location,
@@ -469,11 +466,7 @@ public static class DefinitionValidator
         return null;
     }
 
-    /// <summary>
-    /// 28 年周期（2028 年から）の全日と、例外日の前後の日について、固定予定の重なりと、同行の時刻、場所、行動の一致を見る。
-    /// 通常の日は（期間、曜日）が同じなら解決の結果が同じなので、その組ごとに一度だけ解決して使い回す。
-    /// 例外日とその前後の日だけは、日付ごとに解決する。
-    /// </summary>
+    /// <summary>28 年周期の全日と、例外日の前後の日について、固定予定の重なりと、同行の時刻、場所、行動の一致を見る。</summary>
     private static void CheckScheduleOverlaps(PersonaDef persona, Definitions definitions, List<DefinitionIssue> issues)
     {
         var reported = new HashSet<(string Message, SourceLocation Location)>();
@@ -544,9 +537,7 @@ public static class DefinitionValidator
         return dates;
     }
 
-    /// <summary>
-    /// ペルソナの日ごとの解決を、（期間、曜日）の組ごとに一度だけ行って使い回す。例外日の前後は日付ごとに解決する。
-    /// </summary>
+    /// <summary>ペルソナの日ごとの解決。同じ結果になる日は、一度だけ解決する。</summary>
     private sealed class DayResolver(Definitions definitions, PersonaDef persona, HashSet<DateOnly> specials)
     {
         private readonly Dictionary<string, ResolvedDay> _byKey = new(StringComparer.Ordinal);
@@ -556,7 +547,7 @@ public static class DefinitionValidator
             ? "date:" + date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
             : FixedScheduleResolver.PeriodOf(persona.Schedule.Periods, date) + "|" + ((int)date.DayOfWeek).ToString(CultureInfo.InvariantCulture);
 
-        /// <summary>その日の解決の結果（同じ鍵の日は、一度の解決を使い回す）。</summary>
+        /// <summary>その日の解決の結果。</summary>
         public ResolvedDay Get(DateOnly date)
         {
             var key = KeyOf(date);
@@ -630,10 +621,7 @@ public static class DefinitionValidator
         }
     }
 
-    /// <summary>
-    /// 固定予定の隙間が、場所の間の移動時間より短いものを警告にする（D7 7.2、J-147）。
-    /// 前の日の夜のブロックとの隙間も見る（前の日が続いているときだけ）。警告は、後のブロックの定義の位置に付ける。
-    /// </summary>
+    /// <summary>固定予定の隙間が、場所の間の移動時間より短いものを警告にする。警告は後のブロックの定義の位置に付ける。</summary>
     private static void ReportScheduleGaps(
         ResolvedDay? previous,
         ResolvedDay day,

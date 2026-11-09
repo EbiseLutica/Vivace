@@ -12,7 +12,7 @@ using Vivace.Testing;
 namespace Vivace.Tests.Decision;
 
 /// <summary>
-/// 次の予定の場所へ向かう行動の基本の重みと好み（D5 5.3）。Decider を通して、選ばれる頻度で確かめる。
+/// 次の予定の場所へ向かう行動の基本の重みと好み。Decider を通して、選ばれる頻度で確かめる。
 /// </summary>
 public class GoToNextWeightTests
 {

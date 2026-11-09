@@ -7,7 +7,7 @@ namespace Vivace.Tests.Engine;
 
 /// <summary>
 /// シナリオ（テスト用の町で、2人のペルソナを仮想時計で7日回す）。不変条件はエンジンが全適用で検査するので、
-/// 途中で破れれば、ここで例外になる（D7 7.4）。
+/// 途中で破れれば、ここで例外になる。
 /// </summary>
 public class ScenarioTests
 {
@@ -30,7 +30,7 @@ public class ScenarioTests
         Assert.Equal(EventText.Lines(first.Log), EventText.Lines(second.Log));
     }
 
-    /// <summary>適用されたイベントは、段階2 の範囲のタイプだけ。</summary>
+    /// <summary>適用されたイベントは、扱うタイプだけ。</summary>
     [Fact]
     public async Task OnlyPhaseTwoEventTypesAreApplied()
     {

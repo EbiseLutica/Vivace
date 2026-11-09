@@ -4,7 +4,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Events;
 
-/// <summary>言ったこと（発話）の決定（段 7）。「言ったこと」として残る。</summary>
+/// <summary>言ったこと（発話）の決定。「言ったこと」として残る。</summary>
 /// <param name="Channel">チャンネルの種類。</param>
 /// <param name="Kind">投稿か返信か。</param>
 /// <param name="Body">本文。</param>

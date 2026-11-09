@@ -4,10 +4,7 @@ using Vivace.Core.Rules;
 
 namespace Vivace.Core.Ingress;
 
-/// <summary>
-/// 窓口（最小）。ワールドとペルソナの生成のイベントを作る（D2 2.8）。
-/// 段階2 は、生成だけを受け付ける。定義の確かめと、ほかの投入は段階3 で足す。
-/// </summary>
+/// <summary>ワールドとペルソナの生成のイベントを作る窓口。</summary>
 public static class Ingress
 {
     /// <summary>ワールドの生成のイベントを作る。</summary>

@@ -1,7 +1,7 @@
 namespace Vivace.Core.Events;
 
 /// <summary>
-/// 適用に失敗したときの動き（D1 1.7）。
+/// 適用に失敗したときの動き。
 /// </summary>
 public enum RejectAction
 {

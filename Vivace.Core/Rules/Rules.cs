@@ -6,17 +6,14 @@ using Vivace.Core.Time;
 
 namespace Vivace.Core.Rules;
 
-/// <summary>
-/// イベントの適用（D1 1.3）。状態、イベント、定義から、新しい状態と後続のイベントとシグナルを決定的に返す。
-/// 乱数もハンドラも使わない。段階2 のイベントタイプだけを扱う。
-/// </summary>
+/// <summary>イベントを適用し、新しい状態と後続のイベントとシグナルを返す。同じ入力なら同じ結果になる。</summary>
 public static class Rules
 {
-    /// <summary>1つのイベントを適用する。guard を先に評価し、通らなければ却下する（D1 1.7）。</summary>
+    /// <summary>1つのイベントを適用する。guard を先に評価し、通らなければ却下する。</summary>
     /// <param name="ctx">規則の文脈。</param>
     /// <param name="state">適用の前の状態。</param>
     /// <param name="ev">適用するイベント。</param>
-    /// <exception cref="NotSupportedException">段階2 で扱わないイベントタイプ。</exception>
+    /// <exception cref="NotSupportedException">扱わないイベントタイプ。</exception>
     public static ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev)
     {
         if (ev.Guard is { } guard && CheckGuard(ctx, state, ev, guard) is { } failure)
@@ -245,10 +242,7 @@ public static class Rules
         return StartFixedBlock(ctx, state, persona, payload.BlockId, ev.Time, ev.Seq);
     }
 
-    /// <summary>
-    /// 固定・計画のブロックの開始。いまの行動は打ち切り、行動の場所まで移動してから、行動を始める。
-    /// 満たせなければ、予定の乱れの決めどきを積む（段階2 では自由時間と同じく扱う。J-138）。
-    /// </summary>
+    /// <summary>固定・計画のブロックを始める。いまの行動を打ち切り、行動の場所まで移動してから、行動を始める。満たせなければ、予定の乱れの決めどきを積む。</summary>
     private static ApplyResult StartFixedBlock(RuleContext ctx, SimState state, PersonaState persona, string blockId, DateTimeOffset now, long seq)
     {
         var block = PlanRules.CurrentBlock(persona.Plan, blockId, now);
@@ -312,9 +306,7 @@ public static class Rules
     private static bool IsConsolidating(RuleContext ctx, PlanBlock block) =>
         block.ActionId is { } action && ctx.Defs.Actions.TryGetValue(action, out var def) && def.Effects.Sleep is { Consolidate: true };
 
-    /// <summary>
-    /// 睡眠のブロックが始まれないときに、Planner を起こす（B5、D5 5.5）。期間の鍵は、そのブロック。同じ期間では一度だけ。
-    /// </summary>
+    /// <summary>睡眠のブロックが始まれないときに、Planner を起こす。同じ期間では一度だけ。</summary>
     private static ApplyResult PlannerFor(SimState state, PersonaState persona, PlanBlock block, long seq, DateTimeOffset now)
     {
         var blockId = block.BlockId!;

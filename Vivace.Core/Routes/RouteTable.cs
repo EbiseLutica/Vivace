@@ -3,10 +3,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Routes;
 
-/// <summary>
-/// 全点対の最短経路の表（Floyd–Warshall、D5 5.10）。作り直すのは、グラフの版が上がったとき。
-/// 閉鎖中の場所は、渡す場所の列に入れない（行き先にも経路の途中にもしない）。
-/// </summary>
+/// <summary>全点対の最短経路の表。閉鎖中の場所は、渡す場所の列に入れない。</summary>
 public sealed class RouteTable
 {
     private const int Unreachable = int.MaxValue / 4;
@@ -110,9 +107,7 @@ public sealed class RouteTable
         return _distance[i, j] >= Unreachable ? null : _distance[i, j];
     }
 
-    /// <summary>
-    /// 最短経路を辺の列で返す（移動の経路は辺の列として確定させる。D5 5.10）。つながらなければ null。出発と同じ場所なら空の列。
-    /// </summary>
+    /// <summary>最短経路を辺の列で返す。つながらなければ null。出発と同じ場所なら空の列。</summary>
     /// <param name="from">出発地。</param>
     /// <param name="to">目的地。</param>
     public ImmutableArray<RouteStep>? Steps(PlaceId from, PlaceId to)

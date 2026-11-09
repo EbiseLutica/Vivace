@@ -10,7 +10,7 @@ using Vivace.Core.Time;
 namespace Vivace.Testing;
 
 /// <summary>
-/// シナリオの実行（D7 7.4）。テスト用の小さな町に、2人のペルソナを仮想時計で数日回す。
+/// シナリオの実行。テスト用の小さな町に、2人のペルソナを仮想時計で数日回す。
 /// 外に出さず、メモリの保存先を使う。
 /// </summary>
 public static class Scenario

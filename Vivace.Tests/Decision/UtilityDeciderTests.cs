@@ -11,7 +11,7 @@ using Vivace.Testing;
 namespace Vivace.Tests.Decision;
 
 /// <summary>
-/// 自由時間の決定。欲求の倍率と重みは、設計書（D5 5.3）の計算例の数字で確かめる。候補と締め切りは、小さなプランで確かめる。
+/// 自由時間の決定。欲求の倍率と重みは、設計書の計算例の数字で確かめる。候補と締め切りは、小さなプランで確かめる。
 /// </summary>
 public class UtilityDeciderTests
 {
@@ -37,7 +37,7 @@ public class UtilityDeciderTests
         new VitalTrack(Fixture.Now, 0, 0),
         1);
 
-    /// <summary>設計書の計算例（D5 5.3）：14:00、気力 30、退屈度 70。家で昼寝（60 分、気力 +20/時）、公園を散歩（移動 15 分 + 45 分、気力 −6/時、終了時に退屈度 −25）、家でゲーム（60 分、終了時に退屈度 −30、好き）。</summary>
+    /// <summary>設計書の計算例：14:00、気力 30、退屈度 70。家で昼寝（60 分、気力 +20/時）、公園を散歩（移動 15 分 + 45 分、気力 −6/時、終了時に退屈度 −25）、家でゲーム（60 分、終了時に退屈度 −30、好き）。</summary>
     [Fact]
     public void NeedMatchesDesignWorkedExample()
     {
@@ -77,7 +77,7 @@ public class UtilityDeciderTests
         Assert.Equal(0.58, gameWeight / (napWeight + walkWeight + gameWeight), 2);
     }
 
-    /// <summary>重みは要素の積。同じ行動が続くと 0.7 を掛け、移動は 30 分ごとに e^−1 を掛ける（D5 5.3）。</summary>
+    /// <summary>重みは要素の積。同じ行動が続くと 0.7 を掛け、移動は 30 分ごとに e^−1 を掛ける。</summary>
     [Fact]
     public void WeightMultipliesFactors()
     {

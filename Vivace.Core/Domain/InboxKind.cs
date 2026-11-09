@@ -1,6 +1,6 @@
 namespace Vivace.Core.Domain;
 
-/// <summary>受信箱のアイテムの大分類。コアはこれで捌き方を決める（D6 6.5）。</summary>
+/// <summary>受信箱のアイテムの大分類。コアはこれで捌き方を決める。</summary>
 public enum InboxKind
 {
     /// <summary>言葉で話しかけられた（メンション、返信、引用、DM）。</summary>

@@ -1,7 +1,7 @@
 namespace Vivace.Core.Randomness;
 
 /// <summary>
-/// 1本の乱数の列。位置（引いた回数）だけを状態として保存すれば、同じ列を再現できる（D5 5.9）。
+/// 1本の乱数の列。位置（引いた回数）だけを状態として保存すれば、同じ列を再現できる。
 /// </summary>
 public interface IRandom
 {

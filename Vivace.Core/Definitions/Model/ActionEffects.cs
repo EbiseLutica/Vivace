@@ -3,7 +3,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Definitions;
 
-/// <summary>行動の効果（D2 2.5）。</summary>
+/// <summary>行動の効果。</summary>
 /// <param name="Rates">行動の間の率（置き換え）。</param>
 /// <param name="OnStart">開始時の増減。</param>
 /// <param name="OnEnd">終了時の増減。</param>

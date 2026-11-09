@@ -3,7 +3,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Definitions;
 
-/// <summary>固定予定のブロック（D3 3.5）。</summary>
+/// <summary>固定予定のブロック。</summary>
 /// <param name="Id">ブロックの定義 ID。</param>
 /// <param name="Within">親のブロックの ID（入れ子のとき）。</param>
 /// <param name="In">所属する期間の ID。空なら、すべての期間で使う。</param>
@@ -15,7 +15,7 @@ namespace Vivace.Core.Definitions;
 /// <param name="Phone">スマホを開けるか。</param>
 /// <param name="With">同行するペルソナの定義 ID。</param>
 /// <param name="OnPartnerAbsent">同行者が抜けたときの扱い。</param>
-/// <param name="PhoneEvery">長いブロックの途中で、スマホを開く機会を出す間隔（P-32）。書いたときだけ。</param>
+/// <param name="PhoneEvery">長いブロックの途中で、スマホを開く機会を出す間隔。書いたときだけ。</param>
 /// <param name="Source">出どころ。</param>
 public sealed record BlockDef(
     string Id,

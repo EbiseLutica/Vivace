@@ -9,15 +9,12 @@ using Vivace.Testing;
 
 namespace Vivace.Tests.Rules;
 
-/// <summary>レビューで見つかった誤りの再発防止（睡眠の率、次の行動の候補、繰り返しの減衰、状態変数の版）。</summary>
+/// <summary>睡眠の率、次の行動の候補、繰り返しの減衰、状態変数の版の再発防止。</summary>
 public class RegressionRulesTests
 {
     private static readonly PlaceId KaoriRoom = new("kaori_room");
 
-    /// <summary>
-    /// 睡眠の開始が Planner を起こすとき、睡眠の率（気力 0）が残る。切り替えの前の状態で上書きしていた誤りの再発防止。
-    /// 期間の鍵は、睡眠のブロック ID で持つ。
-    /// </summary>
+    /// <summary>睡眠の開始が Planner を起こすとき、睡眠の率（気力 0）が残る。期間の鍵は、睡眠のブロック ID で持つ。</summary>
     [Fact]
     public void ConsolidatingSleepKeepsSleepRatesAndPeriodKey()
     {
@@ -83,7 +80,7 @@ public class RegressionRulesTests
     }
 
     /// <summary>
-    /// 作り直しの時刻と睡眠の開始が同じなら、プランの作り直しの予定は動かず、睡眠の開始が Planner を一度だけ起こす（D5 5.5）。
+    /// 作り直しの時刻と睡眠の開始が同じなら、プランの作り直しの予定は動かず、睡眠の開始が Planner を一度だけ起こす。
     /// </summary>
     [Fact]
     public void PlanDueYieldsToSleepStartingAtTheSameTime()
@@ -106,7 +103,7 @@ public class RegressionRulesTests
         Assert.Equal(new StartPlanner(12, Fixture.Kaori, sleepAt), Assert.Single(sleep.Signals));
     }
 
-    /// <summary>状態変数を急に変えても、版が上がる（VISION 6 章。率の切り替えと同じく、版で古い予測を捨てる）。</summary>
+    /// <summary>状態変数を急に変えても、版が上がる。古い予測を捨てるため。</summary>
     [Fact]
     public void AbruptVitalChangeBumpsVersion()
     {

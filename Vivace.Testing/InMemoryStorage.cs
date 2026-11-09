@@ -4,9 +4,7 @@ using Vivace.Core.Storage;
 
 namespace Vivace.Testing;
 
-/// <summary>
-/// メモリの上の保存先（段階2 の最小の実装、段階4 で捨てる前提）。記録と、最後にコミットした状態を持つ。
-/// </summary>
+/// <summary>メモリの上の保存先。記録と、最後にコミットした状態を持つ。</summary>
 public sealed class InMemoryStorage : IStorage
 {
     private readonly List<LoggedEvent> _events = [];

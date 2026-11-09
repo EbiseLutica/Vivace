@@ -3,7 +3,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Events;
 
-/// <summary>行動の決定（段 7。Decider の出力）。</summary>
+/// <summary>行動の決定（Decider の出力）。</summary>
 /// <param name="ActionId">行動の定義 ID。</param>
 /// <param name="Place">行動する場所。</param>
 /// <param name="Route">辺の列。移動がなければ空。</param>

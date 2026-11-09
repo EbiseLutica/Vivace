@@ -1,11 +1,9 @@
 namespace Vivace.Core.Decision;
 
-/// <summary>
-/// 自由時間の決定（D4 4.2）。同期の純粋な関数で、LLM は使わない。差し替えて試せるように口にする（VISION 5章）。
-/// </summary>
+/// <summary>自由時間に何をするかを決める口。同じ文脈なら、同じ結果を返すこと。</summary>
 public interface IDecider
 {
-    /// <summary>決める。出力は activity.chosen の1件（P-12）。</summary>
+    /// <summary>文脈から次の行動を1つ決める。</summary>
     /// <param name="context">決めどきの文脈。</param>
     DeciderOutput Decide(DecisionContext context);
 }

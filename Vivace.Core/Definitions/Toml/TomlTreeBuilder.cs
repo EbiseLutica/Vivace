@@ -5,9 +5,7 @@ using Tomlyn.Syntax;
 
 namespace Vivace.Core.Definitions.Toml;
 
-/// <summary>
-/// Tomlyn の構文木から、位置つきの TOML の木を作る。位置は文字の位置（オフセット）から求める。
-/// </summary>
+/// <summary>Tomlyn の構文木から、位置つきの TOML の木を作る。</summary>
 internal static class TomlTreeBuilder
 {
     /// <summary>
@@ -41,9 +39,7 @@ internal static class TomlTreeBuilder
         return new Builder(path, issues, lines).Build(document);
     }
 
-    /// <summary>
-    /// 文字の位置（オフセット）から、行と列（1 から数える）を求める。Tomlyn の Line と Column は使わない。
-    /// </summary>
+    /// <summary>文字の位置（オフセット）から、行と列（1 から数える）を求める。</summary>
     private sealed class LineIndex
     {
         private readonly int[] _lineStarts;
