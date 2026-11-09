@@ -8,38 +8,6 @@ using Vivace.Core.Rules;
 
 namespace Vivace.Core.Decision;
 
-/// <summary>決めどきの文脈。写しと now と、決める側が引く乱数の列（位置は写しから始まる）。</summary>
-/// <param name="State">全体の状態の写し。</param>
-/// <param name="Persona">ペルソナ。</param>
-/// <param name="Now">決めどきの時刻（ホライズンになる）。</param>
-/// <param name="Reason">決めどきの理由。</param>
-/// <param name="BlockId">関係するブロック（あれば）。</param>
-/// <param name="Rules">規則の文脈。</param>
-/// <param name="Random">決める側の乱数の列（用途 decide）。</param>
-public sealed record DecisionContext(
-    SimState State,
-    PersonaId Persona,
-    DateTimeOffset Now,
-    DecisionReason Reason,
-    string? BlockId,
-    RuleContext Rules,
-    IRandom Random);
-
-/// <summary>決める側の出力。activity.chosen の中身と、適用してよい条件。</summary>
-/// <param name="Payload">行動の決定。</param>
-/// <param name="Guard">適用前の検査。</param>
-public sealed record DeciderOutput(ActivityChosenPayload Payload, Guard Guard);
-
-/// <summary>
-/// 自由時間の決定（D4 4.2）。同期の純粋な関数で、LLM は使わない。差し替えて試せるように口にする（VISION 5章）。
-/// </summary>
-public interface IDecider
-{
-    /// <summary>決める。出力は activity.chosen の1件（P-12）。</summary>
-    /// <param name="context">決めどきの文脈。</param>
-    DeciderOutput Decide(DecisionContext context);
-}
-
 /// <summary>
 /// 効用による決定（D5 5.1〜5.3）。候補、所要時間、スコア、抽選の順に決める。
 /// 候補は行動 ID と場所 ID の順に並べ、乱数はその順に引くので、同じ写しと同じ位置なら同じ結果になる。

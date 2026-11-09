@@ -7,45 +7,6 @@ using Vivace.Core.Time;
 namespace Vivace.Core.Schedule;
 
 /// <summary>
-/// 1日の固定予定のブロック（現地の日付と、0:00 からの分）。
-/// 日をまたぐブロックは、開始した日のものとして、EndMinute が 1440 を超える。
-/// </summary>
-/// <param name="Id">ブロックの ID（定義 ID@開始日。分割したものは .2 などの番号つき）。</param>
-/// <param name="DefId">ブロックの定義 ID。</param>
-/// <param name="Date">開始の日付。</param>
-/// <param name="StartMinute">開始（0:00 からの分）。</param>
-/// <param name="EndMinute">終了（0:00 からの分）。1440 を超えれば翌日。</param>
-/// <param name="Action">行動の定義 ID（親から引き継いだものを含む）。</param>
-/// <param name="Place">場所の ID。指定がなければ null。</param>
-/// <param name="Phone">スマホを開けるか（ブロック、親、行動の順に決める）。</param>
-/// <param name="PhoneEvery">長いブロックの途中の機会の間隔。</param>
-/// <param name="With">同行するペルソナの定義 ID。</param>
-/// <param name="OnPartnerAbsent">同行者が抜けたときの扱い。</param>
-public sealed record ResolvedBlock(
-    string Id,
-    string DefId,
-    DateOnly Date,
-    int StartMinute,
-    int EndMinute,
-    string Action,
-    string? Place,
-    PhonePolicy Phone,
-    TimeSpan? PhoneEvery,
-    ImmutableArray<string> With,
-    PartnerAbsentPolicy OnPartnerAbsent);
-
-/// <summary>固定予定の問題。どのブロックの定義で起きたかを持つ。</summary>
-/// <param name="Block">問題のブロックの定義。</param>
-/// <param name="Message">説明。</param>
-public sealed record ScheduleIssue(BlockDef Block, string Message);
-
-/// <summary>1日の固定予定の結果。</summary>
-/// <param name="Date">日付。</param>
-/// <param name="Blocks">開始が今日のブロック。開始の順。</param>
-/// <param name="Issues">重なりや、親からのはみ出し。</param>
-public sealed record ResolvedDay(DateOnly Date, ImmutableArray<ResolvedBlock> Blocks, ImmutableArray<ScheduleIssue> Issues);
-
-/// <summary>
 /// 日付から、その日の固定予定のブロックを出す（D3 3.5）。
 /// 期間（最も短いものを採る）、例外日、祝日、入れ子（within）、時間帯の並べ書き（times）を踏まえる。
 /// </summary>

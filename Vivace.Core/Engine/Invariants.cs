@@ -4,9 +4,6 @@ using Vivace.Core.Rules;
 
 namespace Vivace.Core.Engine;
 
-/// <summary>不変条件が破れた。エンジンを止める。</summary>
-public sealed class InvariantViolationException(string message) : Exception(message);
-
 /// <summary>
 /// 全適用で検査する不変条件（D7 7.4）。時刻が戻らない、状態変数が範囲の中、各ペルソナに次の自分のイベントがある、未適用のイベントが現在位置より前にない、時刻が進んでいる。
 /// 「次の自分のイベント」は、状態ごとに、版まで合わせて見る（行動中は同じ版の action.ended、移動中は travel.arrived、決め中は決める仕事か activity.chosen、自由時間で手空きなら決めどき）。
