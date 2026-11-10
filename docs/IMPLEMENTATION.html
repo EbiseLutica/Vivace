@@ -206,7 +206,7 @@
 
 <section id="phase3">
   <h3>段階3 生活を揃える</h3>
-  <p>LLM を除く決定的なルールを、すべて揃える。人がドライランの結果を読めるようにして、数値の調整もここから始める。段階3 は、下の 3-1〜3-8 の PR に分けて、上から順に進める。</p>
+  <p>LLM を除く決定的なルールを、すべて揃える。人がドライランの結果を読めるようにして、数値の調整もここから始める。段階3 は、下の 3-1〜3-8 の PRに分けて、上から順に進める。</p>
   <p><strong>参照</strong>：<a href="design/1-execution.html#lifecycle">D1 1.13</a>、<a href="design/2-events.html">D2 全体</a>、<a href="design/4-components.html#api">D4 4.6</a>、<a href="design/5-decision.html#special">D5 5.4</a>、<a href="design/5-decision.html#vitals">5.6</a>〜<a href="design/5-decision.html#incidents">5.8</a>、<a href="design/5-decision.html#routes">5.10</a>、<a href="design/5-decision.html#together">5.11</a>、<a href="design/7-operations.html#errors">D7 7.1</a>、<a href="design/7-operations.html#cli">7.5</a></p>
   <p><strong>完了条件</strong>（3-8 で満たす）：<code>vivace dry-run --days 7</code> で2人の1週間が読め、反射、出来事、同行を含むシナリオが通る。全イベントタイプに Apply の単体テストがある。</p>
 
@@ -234,6 +234,19 @@
     <li><input type="checkbox" checked disabled>表が、段階2 で扱うタイプをすべて持つことのテスト</li>
   </ul>
   <p><strong>範囲外</strong>：振る舞いの変更、新しいイベントタイプ、プラグインがルールを足す仕組み。</p>
+  <p><strong>完了条件</strong>：既存のテストがすべて通り、<code>.verified.txt</code> の差分がない。</p>
+
+  <h4 id="phase3-1b">3-1b 状態の操作を record のメソッドに寄せる</h4>
+  <p>振る舞いを変えないリファクタ。規則まわりの static のヘルパーを減らし、状態の読み取りと差し替えを、そのデータを持つ record のインスタンスメソッドにする。公開 API（3-2）で状態の型が外に見える前に、形を整える。</p>
+  <p><strong>参照</strong>：<a href="design/1-execution.html#apply">D1 1.3</a></p>
+  <ul class="tasks">
+    <li><input type="checkbox" disabled>その record 自身のデータ（と、同じ層のほかの record）だけで完結する読み取りと差し替えは、その record のインスタンスメソッドにする（例：ペルソナの取り出しと差し替えは <code>SimState</code>、プランの読み取りは <code>DayPlan</code>、状態変数の読み書きは <code>Vitals</code> と <code>VitalTrack</code>）。record は不変のままにし、メソッドは新しい値を返す</li>
+    <li><input type="checkbox" disabled>定義や経路、規則の文脈が要るもの（guard の検査の評価、率の計算、行動の制限の判定など）は、record に置かず、規則の側に置く。型で処理を分けるときは、record の仮想メソッドでなく、規則の側のパターンマッチングにする。記録されるデータ型が、規則の層を参照しないようにするため</li>
+    <li><input type="checkbox" disabled>上のどちらにも置きにくいもの（null を受ける読み取りなど）は、名前に <code>Helper</code> を付けた static クラスに集める。同じ領域（状態変数、行動、プランなど）の static クラスは、なるべく1つにする</li>
+    <li><input type="checkbox" disabled>後続のイベントの生成（3-1 の <code>FollowUpEvents</code>）は、<code>NewEvent</code> の static のファクトリメソッドにする</li>
+    <li><input type="checkbox" disabled>3-1 で分けた共有の処理（<code>PersonaAccess</code>、<code>Rebalancing</code>、<code>PeriodKeys</code>）と、既存の <code>VitalRules</code>、<code>ActionRules</code>、<code>PlanRules</code> を、上の形に移す。Decider と Planner の呼び出しも合わせる</li>
+  </ul>
+  <p><strong>範囲外</strong>：振る舞いの変更、Apply を純粋な関数とする形（状態を返し、副作用はシグナルで返す）の変更、ルールの表の形の変更。</p>
   <p><strong>完了条件</strong>：既存のテストがすべて通り、<code>.verified.txt</code> の差分がない。</p>
 
   <h4 id="phase3-2">3-2 公開 API と CLI</h4>
