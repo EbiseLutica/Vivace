@@ -94,7 +94,7 @@ public sealed class EventApplier
             && persona.Status == PersonaStatus.Alive)
         {
             state = state.WithPersona(persona with { Deciding = false });
-            followUps = [FollowUpEvents.DecisionRequested(ev.Time, persona, DecisionReason.Retry, null)];
+            followUps = [NewEvent.DecisionRequested(ev.Time, persona, DecisionReason.Retry, null)];
         }
 
         return new ApplyResult(state, EventOutcome.Rejected, reason, followUps, []);

@@ -1,7 +1,6 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
-using static Vivace.Core.Rules.FollowUpEvents;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -59,11 +58,11 @@ internal sealed class ActionEndedRule : EventRule<ActionEndedPayload>
         {
             if (ended.Plan?.FreeAt(now) is not null)
             {
-                followUps = [DecisionRequested(now, ended, DecisionReason.Ended, null)];
+                followUps = [NewEvent.DecisionRequested(now, ended, DecisionReason.Ended, null)];
             }
             else if (ended.Plan?.BlockCoveringAt(now) is { } covering)
             {
-                followUps = [DecisionRequested(now, ended, DecisionReason.Disruption, covering.BlockId)];
+                followUps = [NewEvent.DecisionRequested(now, ended, DecisionReason.Disruption, covering.BlockId)];
             }
         }
 

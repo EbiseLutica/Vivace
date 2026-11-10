@@ -1,7 +1,6 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
-using static Vivace.Core.Rules.FollowUpEvents;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -28,18 +27,18 @@ internal sealed class PlanCommittedRule : EventRule<PlanCommittedPayload>
             {
                 if (!IsInPlan(persona.Plan, block))
                 {
-                    followUps.Add(Next(block.Start, EventTypes.BlockStarted, persona, new BlockStartedPayload(block.BlockId, plan.Version)));
+                    followUps.Add(NewEvent.Next(block.Start, EventTypes.BlockStarted, persona, new BlockStartedPayload(block.BlockId, plan.Version)));
                 }
             }
             else if (block.BlockId is null || block.BlockId != persona.LastBlockId)
             {
-                followUps.Add(Next(ev.Time, EventTypes.BlockStarted, persona, new BlockStartedPayload(block.BlockId, plan.Version)));
+                followUps.Add(NewEvent.Next(ev.Time, EventTypes.BlockStarted, persona, new BlockStartedPayload(block.BlockId, plan.Version)));
             }
         }
 
         if (plan.NextRebuildAt > ev.Time)
         {
-            followUps.Add(Next(plan.NextRebuildAt, EventTypes.PlanDue, persona, new PlanDuePayload(plan.Version)));
+            followUps.Add(NewEvent.Next(plan.NextRebuildAt, EventTypes.PlanDue, persona, new PlanDuePayload(plan.Version)));
         }
 
         return ApplyResult.Applied(next, followUps.ToImmutableArray());

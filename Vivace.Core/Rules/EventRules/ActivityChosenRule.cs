@@ -1,6 +1,5 @@
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
-using static Vivace.Core.Rules.FollowUpEvents;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -31,15 +30,15 @@ internal sealed class ActivityChosenRule : EventRule<ActivityChosenPayload>
         {
             NewEvent? moveOnly = payload.Place == from
                 ? null
-                : TravelStarted(ev.Time, updated, from, payload.Place, payload.Route, ev.Time.AddMinutes(payload.TravelMinutes), null);
+                : NewEvent.TravelStarted(ev.Time, updated, from, payload.Place, payload.Route, ev.Time.AddMinutes(payload.TravelMinutes), null);
             return moveOnly is null
                 ? ApplyResult.Applied(next)
                 : ApplyResult.Applied(next, [moveOnly]);
         }
 
         var followUp = payload.Place == from
-            ? ActionStarted(ev.Time, updated, payload.ActionId, payload.Place, payload.Duration, ActivityReason.Chosen, null)
-            : TravelStarted(ev.Time, updated, from, payload.Place, payload.Route, ev.Time.AddMinutes(payload.TravelMinutes),
+            ? NewEvent.ActionStarted(ev.Time, updated, payload.ActionId, payload.Place, payload.Duration, ActivityReason.Chosen, null)
+            : NewEvent.TravelStarted(ev.Time, updated, from, payload.Place, payload.Route, ev.Time.AddMinutes(payload.TravelMinutes),
                 new PendingAction(payload.ActionId, payload.Place, payload.Duration, ActivityReason.Chosen, null));
         return ApplyResult.Applied(next, [followUp]);
     }

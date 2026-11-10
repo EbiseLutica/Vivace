@@ -3,7 +3,6 @@ using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using Vivace.Core.Routes;
-using static Vivace.Core.Rules.FollowUpEvents;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -30,7 +29,7 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
 
             return persona.Plan?.FreeAt(ev.Time) is null
                 ? ApplyResult.Skipped(state, "自由時間でない")
-                : ApplyResult.Applied(state, [DecisionRequested(ev.Time, persona, DecisionReason.Free, null)]);
+                : ApplyResult.Applied(state, [NewEvent.DecisionRequested(ev.Time, persona, DecisionReason.Free, null)]);
         }
 
         return StartFixedBlock(ctx, state, persona, payload.BlockId, ev.Time, ev.Seq);
@@ -73,17 +72,17 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
         var followUps = ImmutableArray<NewEvent>.Empty;
         if (!feasible)
         {
-            followUps = [DecisionRequested(now, current, DecisionReason.Disruption, blockId)];
+            followUps = [NewEvent.DecisionRequested(now, current, DecisionReason.Disruption, blockId)];
         }
         else if (minutes == 0)
         {
-            followUps = [ActionStarted(now, current, block.ActionId, place, block.End - now, ActivityReason.Block, blockId)];
+            followUps = [NewEvent.ActionStarted(now, current, block.ActionId, place, block.End - now, ActivityReason.Block, blockId)];
         }
         else
         {
             var arrival = now.AddMinutes(minutes ?? 0);
             var pending = new PendingAction(block.ActionId, place, block.End - arrival, ActivityReason.Block, blockId);
-            followUps = [TravelStarted(now, current, from.Place, place, routes.Steps(from.Place, place) ?? ImmutableArray<RouteStep>.Empty, arrival, pending)];
+            followUps = [NewEvent.TravelStarted(now, current, from.Place, place, routes.Steps(from.Place, place) ?? ImmutableArray<RouteStep>.Empty, arrival, pending)];
         }
 
         var planning = !feasible && IsConsolidating(ctx, block) && current.PlannedFor != blockId;
