@@ -358,14 +358,14 @@ threshold.health = 25</code></pre>
     ImmutableDictionary&lt;PersonaId, PersonaState&gt; Personas);
 
 sealed record WorldState(
-    WorldId Id, string DefId, ulong Seed, WorldStatus Status,
+    WorldId Id, WorldDefId DefId, ulong Seed, WorldStatus Status,
     ImmutableDictionary&lt;PlaceId, RuntimePlace&gt; GeneratedPlaces,   // 生えた場所（候補、採用、廃止）
     ImmutableDictionary&lt;string, TermEntry&gt; Terms,                 // 変換の辞書の実行中の記録
     ImmutableDictionary&lt;long, ActiveIncident&gt; Incidents,          // 発生中の出来事
     long GraphVersion);                                           // 場所のグラフが変わるたびに上げる
 
 sealed record PersonaState(
-    PersonaId Id, string DefId, WorldId World, PersonaStatus Status,
+    PersonaId Id, PersonaDefId DefId, WorldId World, PersonaStatus Status,
     Location Location,                                  // 場所 ID、または移動中（経路と出発時刻）
     Activity? Activity, long ActivityVersion,           // 実行中の行動（D1 1.8）
     Activity? Overlay,                                  // 固定ブロック中にスマホを使っている間だけ（開く、投稿する）
@@ -381,6 +381,7 @@ sealed record PersonaState(
     bool Deciding, string? LastBlockId, string? PlannedFor);  // 決め中の印、最後に始めたブロック、Planner を起こした期間の鍵（J-133、J-135、J-141）</code></pre>
   <ul>
     <li>ID は <code>readonly record struct</code> で型を分ける（<code>PersonaId</code>、<code>WorldId</code>、<code>PlaceId</code>）。文字列の取り違えをコンパイラで防ぐ</li>
+    <li>ワールドとペルソナは、定義の ID にも型を作る（<code>WorldDefId</code>、<code>PersonaDefId</code>）。<code>Definitions</code> の辞書の鍵と、状態とペイロードが持つ定義の ID は、この型にする。作り直したインスタンス（P-22 の <code>#2</code>）の ID は定義の ID と一致しないので、定義はインスタンスの ID でなく <code>DefId</code> から引く（J-150）</li>
     <li>ワールドやペルソナの状態のような、項目の多いものは <code>sealed record</code>（参照型）にする。参照が同じかどうかだけで「変わったか」がわかり（変わった行だけを SQLite に書くため）、辞書から取り出したり写しを渡したりするたびの丸ごとのコピーも起きない。<code>default</code> で中身の空な状態が作られることもない。ID、イベントの並びの位置、状態変数1本ぶん（値、基準時刻、率）のような小さな値は、<code>readonly record struct</code> にする</li>
     <li>受信箱は、ペルソナインスタンスの状態に持つ（VISION 2章）。アイテムの形は下の「受信箱のアイテム」</li>
     <li>プランのブロック（<code>PlanBlock</code>）は、開始、終了（UTC）、種類（固定、計画、自由）、行動、場所に加えて、電話の指定、間隔、同行、同行者が抜けたときの扱いを、プランを作ったときの固定予定から写して持つ。ID は固定と計画のブロックだけが持ち、自由時間は null（J-124。変更は次のプランから。D1 1.12）</li>
@@ -394,8 +395,8 @@ sealed record PersonaState(
     VISION 付録「決める側に渡す状態の写しの作り方」への案。状態が不変なら、写しは参照を渡すだけでよく、コピーもロックも要らない。前提の規模（最大 10 人）なら、Apply のたびに数個の record を作り直すコストは無視できる。
   </div>
   <div class="callout">
-    <span class="label">決定 P-22　インスタンス ID は「定義 ID@ワールド ID」</span>
-    <code>kaori@tokyo</code>。破棄したあとに同じ定義から同じワールドに生成し直したら、<code>kaori@tokyo#2</code> のように番号を付ける。ログと記憶の表で、人が読んで誰かわかる形にする。
+    <span class="label">決定 P-22　インスタンス ID は定義 ID</span>
+    <code>kaori</code>、<code>tokyo</code>。1つの定義から生成するインスタンスは1つだけ（VISION 2章）なので、ワールド ID を含めなくても決まる。破棄したあとに同じ定義から生成し直したら、<code>kaori#2</code> のように番号を付け、前のインスタンスと見分ける。ログと記憶の表で、人が読んで誰かわかる形にする。（当初は「定義 ID@ワールド ID」としていたが、ペルソナはワールドを跨いでも1人なので改めた）
   </div>
 </section>
 

@@ -131,7 +131,7 @@
       <tr><td>P-19</td><td>ペルソナ定義に <code>home</code> を足す <span class="chip fixed">合意</span></td><td><a href="3-data.html#persona-def">D3 3.4</a></td></tr>
       <tr><td>P-20</td><td>固定予定の書き方（期間、ブロックの <code>in</code>、例外日） <span class="chip fixed">合意</span></td><td><a href="3-data.html#schedule">D3 3.5</a></td></tr>
       <tr><td>P-21</td><td><strong>状態は不変オブジェクトで持ち、写しは参照を渡す</strong> <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
-      <tr><td>P-22</td><td>インスタンス ID は「定義 ID@ワールド ID」 <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
+      <tr><td>P-22</td><td>インスタンス ID は定義 ID <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>P-23</td><td>SQLite の表は「よく使う列 + JSON」 <span class="chip fixed">合意</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
       <tr><td>P-24</td><td>時刻は UTC の Unix ミリ秒で保存する <span class="chip fixed">合意</span></td><td><a href="3-data.html#sqlite">D3 3.8</a></td></tr>
       <tr><td>P-25</td><td>アセンブリの分け方（7つ） <span class="chip fixed">合意</span></td><td><a href="4-components.html#assemblies">D4 4.1</a></td></tr>
@@ -173,7 +173,7 @@
 
 <section id="judgments">
   <h2><span class="num">0.5</span>枠の外の判断</h2>
-  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-149）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
+  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-150）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
   <h3>VISION の解釈で決めたもの</h3>
   <p>VISION から導いたつもりで、実際には読み方を1つに決めたもの。いちばん見落としやすいので、先に見てほしい。</p>
   <div class="table-wrap">
@@ -306,6 +306,7 @@
       <tr><td>J-147</td><td>固定予定の隙間の警告は、定義の検証（<code>DefinitionValidator</code>）で位置つきで出す（コードは <code>ScheduleGap</code>、警告）。全日の走査は重なりの検査と同じ（28 年と例外日、(期間, 曜日) の使い回し）で、前日からの隙間も見る。<code>RouteCache</code> は経路の表を組むだけにした <span class="chip fixed">合意</span></td><td><a href="7-operations.html#validation">D7 7.2</a>、J-104</td></tr>
       <tr><td>J-148</td><td>記憶の整理を起こすブロック（睡眠）が始まれないとき（場所の条件を満たさない、移動が間に合わない、移動中に来た）は、Planner を起こす。期間の鍵はそのブロック。同じ時刻の決めどきは積み直さず、場所にいて移動も行動もない決定は何も積まない。時刻が進まない状態は、不変条件（自由時間の手空き）と、同じ時刻の適用の上限（10,000 件）で止める <span class="chip fixed">合意</span></td><td><a href="5-decision.html#planner">D5 5.5</a>、<a href="7-operations.html#testing">D7 7.4</a></td></tr>
       <tr><td>J-149</td><td>Apply の入口は static の関数の集まりでなく、インスタンスのクラス <code>EventApplier</code> にする。コンストラクタで規則の文脈を受け取り、<code>Apply(state, ev)</code> を持つ。持つのは不変の文脈とルールの表だけで、純粋さは変えない。エンジンは入口を1つ作って持つ。イベントタイプごとのルール（<code>IEventRule</code>）は文脈を引数で受ける <span class="chip fixed">合意</span></td><td><a href="4-components.html#inside">D4 4.5</a></td></tr>
+      <tr><td>J-150</td><td>ワールドとペルソナの定義の ID にも型を作る（<code>WorldDefId</code>、<code>PersonaDefId</code>）。<code>Definitions</code> の辞書の鍵と、状態とペイロードが持つ定義の ID は、この型にする。作り直したインスタンス（<code>tokyo#2</code>）の ID は定義の ID と一致しないので、インスタンスの ID から定義を引くのを型で防ぐ。定義はインスタンスの <code>DefId</code> から引く <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>

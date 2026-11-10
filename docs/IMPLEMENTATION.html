@@ -249,6 +249,17 @@
   <p><strong>範囲外</strong>：振る舞いの変更、Apply を純粋な関数とする形（状態を返し、副作用はシグナルで返す）の変更、ルールの表の形の変更。</p>
   <p><strong>完了条件</strong>：既存のテストがすべて通り、<code>.verified.txt</code> の差分がない。</p>
 
+  <h4 id="phase3-1c">3-1c ワールドとペルソナの ID を整える</h4>
+  <p>1つの定義から生成するインスタンスは1つだけ（VISION 2章）なので、ペルソナのインスタンス ID からワールド ID を外す。あわせて、定義の ID に型を作り、インスタンスの ID から定義を引けないようにする。公開 API と CLI（3-2）で ID が外に見える前に、形を決める。</p>
+  <p><strong>参照</strong>：<a href="design/3-data.html#domain">D3 3.7（P-22、J-150）</a></p>
+  <ul class="tasks">
+    <li><input type="checkbox" disabled>定義の ID の型（<code>WorldDefId</code>、<code>PersonaDefId</code>）を作り、<code>Definitions</code> の辞書の鍵、状態とペイロードの <code>DefId</code>、ペルソナ定義の居住ワールド、投入の窓口の引数をこの型にする。インスタンスの ID の中身を剥がして定義を引いているところ（<code>defs.Worlds[persona.World.Value]</code> など）は、インスタンスの <code>DefId</code> から引く形にする。振る舞いは変えず、<code>.verified.txt</code> の差分がないことを確かめる</li>
+    <li><input type="checkbox" disabled>ペルソナの生成で、インスタンス ID を「定義 ID@ワールド ID」から定義 ID にする</li>
+    <li><input type="checkbox" disabled>テストで、古い形の ID を書いているところを直す。乱数列はインスタンス ID から派生させるので、ID が変わると乱数を引いた結果も変わる。スナップショットは更新し、変わった理由が ID の形と乱数列の違いで説明できることを確かめる</li>
+  </ul>
+  <p><strong>範囲外</strong>：破棄したあとに生成し直したときの番号（<code>#2</code>。3-8 で破棄と一緒に作る）、ほかの振る舞いの変更。</p>
+  <p><strong>完了条件</strong>：テストがすべて通り、<code>.verified.txt</code> の差分が、ID の形の変化と、それによる乱数列の違いだけで説明できる。</p>
+
   <h4 id="phase3-2">3-2 公開 API と CLI</h4>
   <p>いまの生活（固定予定と Decider）を、外から動かして読めるようにする。以後の PR は、ここで作る <code>dry-run</code> で振る舞いの変化を見せる。</p>
   <p><strong>参照</strong>：<a href="design/4-components.html#api">D4 4.6</a>、<a href="design/2-events.html#injection">D2 2.8</a>、<a href="design/1-execution.html#clock">D1 1.10</a>、<a href="design/7-operations.html#validation">D7 7.2</a>、<a href="design/7-operations.html#cli">7.5</a></p>
@@ -318,6 +329,7 @@
   <p><strong>参照</strong>：<a href="design/1-execution.html#lifecycle">D1 1.13</a>、<a href="design/2-events.html#types">D2 2.3</a></p>
   <ul class="tasks">
     <li><input type="checkbox" disabled>ペルソナとワールドの破棄</li>
+    <li><input type="checkbox" disabled>破棄したあとに同じ定義から生成し直したら、インスタンス ID に番号を付ける（<code>kaori#2</code>、<code>tokyo#2</code>。P-22）。生成済みかの判定は、破棄済みのインスタンスを除いて行う</li>
     <li><input type="checkbox" disabled>残りのイベントタイプの Apply と guard。出し手がまだないもの（受信箱、発話、投稿など）も、ルールと単体テストは作る</li>
     <li><input type="checkbox" disabled>全イベントタイプにルールと単体テストがあることを、表と照らして確かめるテスト</li>
   </ul>
