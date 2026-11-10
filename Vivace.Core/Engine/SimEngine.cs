@@ -20,7 +20,7 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly IDecider _decider;
     private readonly IStorage _storage;
     private readonly IRandomSource _random;
-    private readonly VirtualClock _clock;
+    private readonly IClock _clock;
     private readonly Lanes _lanes = new();
     /// <summary>未適用のイベント。時刻、段、連番の順に取り出す。</summary>
     private readonly PriorityQueue<SimEvent, (DateTimeOffset Time, int Stage, long Seq)> _queue = new();
@@ -35,7 +35,7 @@ public sealed class SimEngine : IAsyncDisposable
     private SimState _state;
 
     /// <summary>初期の状態と部品から、エンジンを作る。</summary>
-    private SimEngine(RuleContext ctx, IDecider decider, IStorage storage, IRandomSource random, VirtualClock clock)
+    private SimEngine(RuleContext ctx, IDecider decider, IStorage storage, IRandomSource random, IClock clock)
     {
         _ctx = ctx;
         _decider = decider;
@@ -52,10 +52,10 @@ public sealed class SimEngine : IAsyncDisposable
     /// <param name="definitions">読み込んだ定義。</param>
     /// <param name="storage">保存先。</param>
     /// <param name="random">乱数の列を開く口。</param>
-    /// <param name="clock">仮想時計。</param>
-    /// <param name="decider">自由時間の決定。省略すると効用による決定。</param>
+    /// <param name="clock">時計。イベントの時刻まで待ってから適用する。</param>
+    /// <param name="decider">自由時間の決定。省略すると UtilityDecider。</param>
     /// <param name="holidays">祝日の暦。省略すると祝日のない暦。</param>
-    public static SimEngine Create(Definitions.Definitions definitions, IStorage storage, IRandomSource random, VirtualClock clock, IDecider? decider = null, IHolidayCalendar? holidays = null) =>
+    public static SimEngine Create(Definitions.Definitions definitions, IStorage storage, IRandomSource random, IClock clock, IDecider? decider = null, IHolidayCalendar? holidays = null) =>
         new(new RuleContext(definitions, RouteCache.Create(definitions), holidays ?? NoHolidays.Instance), decider ?? new UtilityDecider(), storage, random, clock);
 
     /// <summary>いまの状態（不変）。</summary>
@@ -114,7 +114,7 @@ public sealed class SimEngine : IAsyncDisposable
 
         if (_clock.UtcNow < until)
         {
-            _clock.AdvanceTo(until);
+            await _clock.WaitUntilAsync(until, ct);
         }
     }
 
@@ -129,7 +129,7 @@ public sealed class SimEngine : IAsyncDisposable
     private async Task ApplyAsync(SimEvent ev, CancellationToken ct)
     {
         var previous = _state.Position.Time;
-        _clock.AdvanceTo(ev.Time);
+        await _clock.WaitUntilAsync(ev.Time, ct);
         var result = Rules.Rules.Apply(_ctx, _state, ev);
         long? applyNo = null;
         if (result.Outcome == EventOutcome.Applied)
