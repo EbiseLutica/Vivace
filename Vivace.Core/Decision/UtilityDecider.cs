@@ -42,8 +42,9 @@ public sealed class UtilityDecider : IDecider
         }
 
         var personaDef = defs.Personas[persona.DefId];
-        var worldDef = defs.Worlds[persona.World.Value];
-        var routes = context.Rules.Routes.For(persona.World);
+        var worldDefId = state.Worlds[persona.World].DefId;
+        var worldDef = defs.Worlds[worldDefId];
+        var routes = context.Rules.Routes.For(worldDefId);
         var plan = persona.Plan;
         var next = plan?.NextFixedAfter(now);
         var deadline = next?.Start ?? plan?.HorizonEnd ?? now;

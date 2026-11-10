@@ -29,7 +29,7 @@ internal sealed class PersonaCreatedRule : EventRule<PersonaCreatedPayload>
             return ApplyResult.Skipped(state, "家の場所がない");
         }
 
-        var id = new PersonaId($"{personaDef.Id}@{world.Value}");
+        var id = new PersonaId($"{personaDef.Id.Value}@{world.Value}");
         if (state.Personas.ContainsKey(id))
         {
             return ApplyResult.Skipped(state, "すでに生成済み");

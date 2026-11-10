@@ -14,7 +14,7 @@ public class WorldAndPersonaRulesTests
     [Fact]
     public void WorldCreatedAddsWorldAndSchedulesTodayStart()
     {
-        var result = Fixture.Apply(Fixture.Empty(), Fixture.Event(1, Fixture.Now, EventTypes.WorldCreated, new WorldCreatedPayload(TestWorld.WorldId, 42), null));
+        var result = Fixture.Apply(Fixture.Empty(), Fixture.Event(1, Fixture.Now, EventTypes.WorldCreated, new WorldCreatedPayload(TestWorld.DefId, 42), null));
 
         Assert.Equal(EventOutcome.Applied, result.Outcome);
         Assert.Equal(WorldStatus.Alive, result.State.Worlds[Fixture.World].Status);
@@ -28,7 +28,7 @@ public class WorldAndPersonaRulesTests
     public void WorldCreatedTwiceIsSkipped()
     {
         var state = Fixture.WithWorld();
-        var result = Fixture.Apply(state, Fixture.Event(9, Fixture.Now, EventTypes.WorldCreated, new WorldCreatedPayload(TestWorld.WorldId, 42), null));
+        var result = Fixture.Apply(state, Fixture.Event(9, Fixture.Now, EventTypes.WorldCreated, new WorldCreatedPayload(TestWorld.DefId, 42), null));
 
         Assert.Equal(EventOutcome.Skipped, result.Outcome);
         Assert.Same(state, result.State);
@@ -52,7 +52,7 @@ public class WorldAndPersonaRulesTests
     [Fact]
     public void PersonaCreatedStartsAtHomeWithInitialVitals()
     {
-        var result = Fixture.Apply(Fixture.WithWorld(), Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload("kaori", new PlaceId("kaori_room")), null));
+        var result = Fixture.Apply(Fixture.WithWorld(), Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("kaori"), new PlaceId("kaori_room")), null));
 
         var persona = result.State.Personas[Fixture.Kaori];
         Assert.Equal(new AtPlace(new PlaceId("kaori_room")), persona.Location);
@@ -71,7 +71,7 @@ public class WorldAndPersonaRulesTests
     [Fact]
     public void PersonaCreatedWithUnknownHomeIsSkipped()
     {
-        var result = Fixture.Apply(Fixture.WithWorld(), Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload("kaori", new PlaceId("nowhere")), null));
+        var result = Fixture.Apply(Fixture.WithWorld(), Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("kaori"), new PlaceId("nowhere")), null));
 
         Assert.Equal(EventOutcome.Skipped, result.Outcome);
         Assert.Empty(result.State.Personas);
@@ -82,7 +82,7 @@ public class WorldAndPersonaRulesTests
     public void SocialRateFollowsCoPresence()
     {
         var kaoriHome = Fixture.WithKaori();
-        var result = Fixture.Apply(kaoriHome, Fixture.Event(3, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload("shiori", new PlaceId("kaori_room")), null));
+        var result = Fixture.Apply(kaoriHome, Fixture.Event(3, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("shiori"), new PlaceId("kaori_room")), null));
 
         Assert.Equal(-4.0, result.State.Personas[Fixture.Kaori].Vitals.Social.Rate);
         Assert.Equal(-3.0, result.State.Personas[Fixture.Shiori].Vitals.Social.Rate);
@@ -95,7 +95,7 @@ public class WorldAndPersonaRulesTests
     public void ReadClampsToRange()
     {
         var definitions = TestWorld.LoadOrThrow();
-        var kaori = definitions.Personas["kaori"].Vitals;
+        var kaori = definitions.Personas[new PersonaDefId("kaori")].Vitals;
         var energy = new VitalTrack(Fixture.Now, 80, -4);
         var social = new VitalTrack(Fixture.Now, 0, 2);
 

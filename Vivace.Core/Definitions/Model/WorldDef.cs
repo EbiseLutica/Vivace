@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Vivace.Core.Domain;
 using Vivace.Core.Time;
 
 namespace Vivace.Core.Definitions;
@@ -16,7 +17,7 @@ namespace Vivace.Core.Definitions;
 /// <param name="Places">定義の場所。</param>
 /// <param name="Source">出どころ。</param>
 public sealed record WorldDef(
-    string Id,
+    WorldDefId Id,
     string Name,
     string Lore,
     TimeSpan UtcOffset,

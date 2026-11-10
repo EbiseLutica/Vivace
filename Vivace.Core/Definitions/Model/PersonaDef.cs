@@ -25,9 +25,9 @@ namespace Vivace.Core.Definitions;
 /// <param name="Schedule">固定予定。</param>
 /// <param name="Source">出どころ。</param>
 public sealed record PersonaDef(
-    string Id,
+    PersonaDefId Id,
     string Name,
-    string World,
+    WorldDefId World,
     string Home,
     string Lore,
     ImmutableArray<string> Examples,

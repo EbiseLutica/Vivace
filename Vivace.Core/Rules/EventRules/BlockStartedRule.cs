@@ -62,11 +62,12 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
             : persona;
         var signals = cut ? ImmutableArray.Create<EngineSignal>(new CancelHandler(persona.Id)) : ImmutableArray<EngineSignal>.Empty;
         var place = block.Place ?? from.Place;
-        var routes = ctx.Routes.For(persona.World);
+        var worldDefId = state.Worlds[persona.World].DefId;
+        var routes = ctx.Routes.For(worldDefId);
         var minutes = routes.Minutes(from.Place, place);
         var feasible = minutes is not null
             && ctx.Defs.Actions.TryGetValue(block.ActionId, out var action)
-            && PlaceAllowsBlock(ctx, persona, action, place)
+            && PlaceAllowsBlock(ctx, state, persona, action, place)
             && now.AddMinutes(minutes.Value) < block.End;
 
         var followUps = ImmutableArray<NewEvent>.Empty;
@@ -113,9 +114,9 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
     }
 
     /// <summary>場所が行動の条件とつながりを満たすか。</summary>
-    private static bool PlaceAllowsBlock(RuleContext ctx, PersonaState persona, ActionDef action, PlaceId place)
+    private static bool PlaceAllowsBlock(RuleContext ctx, SimState state, PersonaState persona, ActionDef action, PlaceId place)
     {
-        var worldDef = ctx.Defs.Worlds[persona.World.Value];
+        var worldDef = ctx.Defs.Worlds[state.Worlds[persona.World].DefId];
         var personaDef = ctx.Defs.Personas[persona.DefId];
         return worldDef.Places.FirstOrDefault(p => p.Id == place.Value) is { } placeDef
             && ActionRules.PlaceAllows(action, personaDef, placeDef);

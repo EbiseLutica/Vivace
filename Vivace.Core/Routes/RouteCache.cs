@@ -7,10 +7,10 @@ namespace Vivace.Core.Routes;
 /// <summary>ワールドごとの最短経路の表。定義が変わるまで作り直さない。</summary>
 public sealed class RouteCache
 {
-    private readonly ImmutableDictionary<string, RouteTable> _tables;
+    private readonly ImmutableDictionary<WorldDefId, RouteTable> _tables;
 
     /// <summary>組み終えた表から作る。</summary>
-    private RouteCache(ImmutableDictionary<string, RouteTable> tables)
+    private RouteCache(ImmutableDictionary<WorldDefId, RouteTable> tables)
     {
         _tables = tables;
     }
@@ -19,8 +19,8 @@ public sealed class RouteCache
     /// <param name="definitions">読み込んだ定義。</param>
     public static RouteCache Create(Definitions.Definitions definitions)
     {
-        var tables = ImmutableDictionary.CreateBuilder<string, RouteTable>(StringComparer.Ordinal);
-        foreach (var world in definitions.Worlds.Values.OrderBy(w => w.Id, StringComparer.Ordinal))
+        var tables = ImmutableDictionary.CreateBuilder<WorldDefId, RouteTable>();
+        foreach (var world in definitions.Worlds.Values.OrderBy(w => w.Id.Value, StringComparer.Ordinal))
         {
             tables[world.Id] = BuildTable(world);
         }
@@ -40,6 +40,6 @@ public sealed class RouteCache
     }
 
     /// <summary>ワールドの最短経路の表。定義にないワールドなら例外。</summary>
-    /// <param name="world">ワールド ID。</param>
-    public RouteTable For(WorldId world) => _tables[world.Value];
+    /// <param name="world">ワールドの定義 ID。</param>
+    public RouteTable For(WorldDefId world) => _tables[world];
 }

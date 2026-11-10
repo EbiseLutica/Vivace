@@ -17,7 +17,7 @@ public static class Fixture
     public static readonly DateTimeOffset Now = new(2026, 11, 1, 14, 0, 0, TimeSpan.Zero);
 
     /// <summary>テストのワールドの ID。</summary>
-    public static readonly WorldId World = new(TestWorld.WorldId);
+    public static readonly WorldId World = new(TestWorld.DefId.Value);
 
     /// <summary>香織のインスタンス ID。</summary>
     public static readonly PersonaId Kaori = new("kaori@testville");
@@ -42,15 +42,15 @@ public static class Fixture
 
     /// <summary>ワールドを作った状態。</summary>
     public static SimState WithWorld() =>
-        Apply(Empty(), Event(1, Now, EventTypes.WorldCreated, new WorldCreatedPayload(TestWorld.WorldId, 42), null)).State;
+        Apply(Empty(), Event(1, Now, EventTypes.WorldCreated, new WorldCreatedPayload(TestWorld.DefId, 42), null)).State;
 
     /// <summary>ワールドと香織（家は kaori_room）を作った状態。</summary>
     public static SimState WithKaori() =>
-        Apply(WithWorld(), Event(2, Now, EventTypes.PersonaCreated, new PersonaCreatedPayload("kaori", new PlaceId("kaori_room")), null)).State;
+        Apply(WithWorld(), Event(2, Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("kaori"), new PlaceId("kaori_room")), null)).State;
 
     /// <summary>ワールドと香織と栞（家は home_living）を作った状態。</summary>
     public static SimState WithBoth() =>
-        Apply(WithKaori(), Event(3, Now, EventTypes.PersonaCreated, new PersonaCreatedPayload("shiori", new PlaceId("home_living")), null)).State;
+        Apply(WithKaori(), Event(3, Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("shiori"), new PlaceId("home_living")), null)).State;
 
     /// <summary>規則を1つ適用する。</summary>
     public static ApplyResult Apply(SimState state, SimEvent ev) => new EventApplier(Context).Apply(state, ev);

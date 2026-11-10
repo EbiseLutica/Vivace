@@ -28,7 +28,7 @@ public class LimitAndWakeTests
         var walk = Fixture.Context.Defs.Actions["walk_park"];
         var at2045 = Fixture.Now.AddMinutes(-135);
         var at2055 = Fixture.Now.AddMinutes(-125);
-        var offset = Fixture.Context.Defs.Worlds["testville"].UtcOffset;
+        var offset = Fixture.Context.Defs.Worlds[new WorldDefId("testville")].UtcOffset;
 
         Assert.True(ActionRules.WithinLimits(walk, null, at2045.AddMinutes(14), offset));
         Assert.False(ActionRules.WithinLimits(walk, null, at2055.AddMinutes(14), offset));

@@ -18,7 +18,7 @@ public class FixedScheduleResolverTests
     private static readonly Vivace.Core.Definitions.Definitions Defs = TestWorld.LoadOrThrow();
 
     /// <summary>ペルソナの定義を、ID で引く。</summary>
-    private static PersonaDef Kaori() => Defs.Personas["kaori"];
+    private static PersonaDef Kaori() => Defs.Personas[new PersonaDefId("kaori")];
 
     /// <summary>テスト用の祝日の暦。指定した日だけが祝日。</summary>
     private sealed class FixedHolidays(params DateOnly[] holidays) : IHolidayCalendar

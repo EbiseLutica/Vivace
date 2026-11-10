@@ -26,7 +26,7 @@ namespace Vivace.Core.Domain;
 /// <param name="PlannedFor">Planner を起こした期間の鍵（記憶の整理の行動のブロック ID、または時刻）。同じ期間では一度だけ動く。</param>
 public sealed record PersonaState(
     PersonaId Id,
-    string DefId,
+    PersonaDefId DefId,
     WorldId World,
     PersonaStatus Status,
     Location Location,

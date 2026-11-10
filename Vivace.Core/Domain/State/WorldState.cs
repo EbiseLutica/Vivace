@@ -13,7 +13,7 @@ namespace Vivace.Core.Domain;
 /// <param name="GraphVersion">場所のグラフが変わるたびに上がる版。</param>
 public sealed record WorldState(
     WorldId Id,
-    string DefId,
+    WorldDefId DefId,
     ulong Seed,
     WorldStatus Status,
     ImmutableDictionary<PlaceId, RuntimePlace> GeneratedPlaces,

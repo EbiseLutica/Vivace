@@ -2,6 +2,7 @@ using System.Collections;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
+using Vivace.Core.Domain;
 using Vivace.Core.Storage;
 
 namespace Vivace.Testing;
@@ -51,6 +52,12 @@ public static class EventText
                 return;
             case string text:
                 builder.Append('"').Append(text).Append('"');
+                return;
+            case WorldDefId worldDef:
+                builder.Append('"').Append(worldDef.Value).Append('"');
+                return;
+            case PersonaDefId personaDef:
+                builder.Append('"').Append(personaDef.Value).Append('"');
                 return;
             case bool flag:
                 builder.Append(flag ? "true" : "false");

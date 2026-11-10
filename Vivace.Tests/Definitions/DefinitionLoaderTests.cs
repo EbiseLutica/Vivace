@@ -13,15 +13,15 @@ public class DefinitionLoaderTests
     {
         var definitions = TestWorld.LoadOrThrow();
 
-        var world = definitions.Worlds[TestWorld.WorldId];
+        var world = definitions.Worlds[TestWorld.DefId];
         Assert.Equal(TimeSpan.FromHours(9), world.UtcOffset);
         Assert.Equal(6, world.Places.Length);
         Assert.Equal("クリスマスイブ", world.Events[new Vivace.Core.Time.MonthDay(12, 24)]);
         Assert.Equal(TermVerdict.Pass, world.Terms.Single().Verdict);
 
-        var kaori = definitions.Personas["kaori"];
+        var kaori = definitions.Personas[new PersonaDefId("kaori")];
         Assert.Equal("kaori_room", kaori.Home);
-        Assert.Equal(TestWorld.WorldId, kaori.World);
+        Assert.Equal(TestWorld.DefId, kaori.World);
         Assert.Equal(60, kaori.Vitals.SocialCeiling);
         Assert.Equal(TimeSpan.FromHours(7), kaori.Vitals.SleepTarget);
         Assert.Equal(PreferenceKind.Factor, kaori.Prefs["cafe"].Kind);
@@ -33,7 +33,7 @@ public class DefinitionLoaderTests
     [Fact]
     public void OmittedValuesTakeDefaults()
     {
-        var shiori = TestWorld.LoadOrThrow().Personas["shiori"];
+        var shiori = TestWorld.LoadOrThrow().Personas[new PersonaDefId("shiori")];
 
         Assert.Equal(80, shiori.Vitals.EnergyInitial);
         Assert.Equal(-50, shiori.Vitals.SocialFloor);
