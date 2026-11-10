@@ -91,12 +91,16 @@ public sealed class SimEngine : IAsyncDisposable
         while (true)
         {
             ct.ThrowIfCancellationRequested();
+            ThrowIfLaneFailed();
             DrainOutputs();
             var head = _queue.TryPeek(out var next, out _) ? next : null;
             var limit = head?.Time ?? DateTimeOffset.MaxValue;
             if (_running.Values.Any(run => run.Horizon <= limit))
             {
-                Receive(await _outputs.Reader.ReadAsync(ct));
+                var read = _outputs.Reader.ReadAsync(ct).AsTask();
+                await Task.WhenAny(read, _lanes.Failure);
+                ThrowIfLaneFailed();
+                Receive(await read);
                 continue;
             }
 
@@ -121,11 +125,26 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>レーンを止める。動いている仕事は、結果を捨てる。</summary>
-    public ValueTask DisposeAsync()
+    /// <summary>
+    /// レーンを止め、動いている仕事の終わりを待ってから、保存先を閉じる。仕事の結果は捨てる。
+    /// レーンの仕事の例外は、ここでは投げない（走らせている間に RunUntilAsync が投げる）。
+    /// </summary>
+    public async ValueTask DisposeAsync()
     {
-        _lanes.Complete();
-        return _storage.DisposeAsync();
+        await _lanes.CompleteAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        await _storage.DisposeAsync();
+    }
+
+    /// <summary>決める側の仕事の実行の列。</summary>
+    internal Lanes Lanes => _lanes;
+
+    /// <summary>レーンの仕事が例外を投げていたら、エンジンを止めるために例外を投げる。</summary>
+    private void ThrowIfLaneFailed()
+    {
+        if (_lanes.Failure.IsCompleted)
+        {
+            throw new InvalidOperationException("決める側のレーンの仕事が失敗した", _lanes.Failure.Result);
+        }
     }
 
     /// <summary>1つのイベントを適用する。不変条件を検査してからコミットし、シグナルを実行する。</summary>
