@@ -32,10 +32,10 @@ public class DailyVitalsTests
                 var social = VitalRules.Range(VitalName.Social, definitions.Personas[persona.DefId].Vitals);
                 text.Append(midnight.ToUniversalTime().ToString("yyyy-MM-ddTHH:mmZ", CultureInfo.InvariantCulture))
                     .Append(' ').Append(persona.Id.Value)
-                    .Append(" energy=").Append(F(VitalRules.Read(vitals.Energy, midnight, (0, 100))))
-                    .Append(" health=").Append(F(VitalRules.Read(vitals.Health, midnight, (0, 100))))
-                    .Append(" boredom=").Append(F(VitalRules.Read(vitals.Boredom, midnight, (0, 100))))
-                    .Append(" social=").Append(F(VitalRules.Read(vitals.Social, midnight, social)))
+                    .Append(" energy=").Append(F(vitals.Energy.ValueAt(midnight, (0, 100))))
+                    .Append(" health=").Append(F(vitals.Health.ValueAt(midnight, (0, 100))))
+                    .Append(" boredom=").Append(F(vitals.Boredom.ValueAt(midnight, (0, 100))))
+                    .Append(" social=").Append(F(vitals.Social.ValueAt(midnight, social)))
                     .Append('\n');
             }
         }

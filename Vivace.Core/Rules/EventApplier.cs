@@ -88,13 +88,10 @@ public sealed class EventApplier
     private static ApplyResult Rejected(SimState state, SimEvent ev, Guard guard, string reason)
     {
         var followUps = ImmutableArray<NewEvent>.Empty;
-        if (guard.OnReject == RejectAction.Redecide
-            && ev.PersonaId is { } id
-            && state.Personas.TryGetValue(id, out var persona)
-            && persona.Status == PersonaStatus.Alive)
+        if (guard.OnReject == RejectAction.Redecide && state.AlivePersona(ev.PersonaId) is { } persona)
         {
-            state = PersonaAccess.Put(state, persona with { Deciding = false });
-            followUps = [FollowUpEvents.DecisionRequested(ev.Time, persona, DecisionReason.Retry, null)];
+            state = state.WithPersona(persona with { Deciding = false });
+            followUps = [NewEvent.DecisionRequested(ev.Time, persona, DecisionReason.Retry, null)];
         }
 
         return new ApplyResult(state, EventOutcome.Rejected, reason, followUps, []);

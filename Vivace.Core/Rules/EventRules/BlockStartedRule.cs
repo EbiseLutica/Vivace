@@ -3,9 +3,6 @@ using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using Vivace.Core.Routes;
-using static Vivace.Core.Rules.FollowUpEvents;
-using static Vivace.Core.Rules.PersonaAccess;
-using static Vivace.Core.Rules.Rebalancing;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -18,7 +15,7 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
     /// <summary>ブロックを始める。自由時間なら決めどきを積む。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, BlockStartedPayload payload)
     {
-        if (!TryPersona(state, ev, out var persona))
+        if (state.AlivePersona(ev.PersonaId) is not { } persona)
         {
             return ApplyResult.Skipped(state, "ペルソナがない");
         }
@@ -30,9 +27,9 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
                 return ApplyResult.Skipped(state, "行動中か、決め中");
             }
 
-            return PlanRules.FreeAt(persona.Plan, ev.Time) is null
+            return persona.Plan?.FreeAt(ev.Time) is null
                 ? ApplyResult.Skipped(state, "自由時間でない")
-                : ApplyResult.Applied(state, [DecisionRequested(ev.Time, persona, DecisionReason.Free, null)]);
+                : ApplyResult.Applied(state, [NewEvent.DecisionRequested(ev.Time, persona, DecisionReason.Free, null)]);
         }
 
         return StartFixedBlock(ctx, state, persona, payload.BlockId, ev.Time, ev.Seq);
@@ -41,7 +38,7 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
     /// <summary>固定・計画のブロックを始める。いまの行動を打ち切り、行動の場所まで移動してから、行動を始める。満たせなければ、予定の乱れの決めどきを積む。</summary>
     private static ApplyResult StartFixedBlock(RuleContext ctx, SimState state, PersonaState persona, string blockId, DateTimeOffset now, long seq)
     {
-        var block = PlanRules.CurrentBlock(persona.Plan, blockId, now);
+        var block = persona.Plan?.CurrentBlock(blockId, now);
         if (block is null || block.ActionId is null)
         {
             return ApplyResult.Skipped(state, "ブロックがない");
@@ -75,26 +72,28 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
         var followUps = ImmutableArray<NewEvent>.Empty;
         if (!feasible)
         {
-            followUps = [DecisionRequested(now, current, DecisionReason.Disruption, blockId)];
+            followUps = [NewEvent.DecisionRequested(now, current, DecisionReason.Disruption, blockId)];
         }
         else if (minutes == 0)
         {
-            followUps = [ActionStarted(now, current, block.ActionId, place, block.End - now, ActivityReason.Block, blockId)];
+            followUps = [NewEvent.ActionStarted(now, current, block.ActionId, place, block.End - now, ActivityReason.Block, blockId)];
         }
         else
         {
             var arrival = now.AddMinutes(minutes ?? 0);
             var pending = new PendingAction(block.ActionId, place, block.End - arrival, ActivityReason.Block, blockId);
-            followUps = [TravelStarted(now, current, from.Place, place, routes.Steps(from.Place, place) ?? ImmutableArray<RouteStep>.Empty, arrival, pending)];
+            followUps = [NewEvent.TravelStarted(now, current, from.Place, place, routes.Steps(from.Place, place) ?? ImmutableArray<RouteStep>.Empty, arrival, pending)];
         }
 
-        var planning = !feasible && IsConsolidating(ctx, block) && current.PlannedFor != blockId;
-        if (planning)
+        var wake = !feasible && IsConsolidating(ctx, block)
+            ? PlannerHelper.Wake(current, blockId, seq, now)
+            : null;
+        if (wake is { } planner)
         {
-            signals = signals.Add(new StartPlanner(seq, persona.Id, now));
+            signals = signals.Add(planner.Signal);
         }
 
-        var next = Rebalance(ctx, Put(state, current with { LastBlockId = blockId, PlannedFor = planning ? blockId : current.PlannedFor }), now, current.Id, from.Place);
+        var next = VitalRules.Rebalance(ctx, state.WithPersona((wake?.Persona ?? current) with { LastBlockId = blockId }), now, current.Id, from.Place);
         return ApplyResult.Applied(next, followUps, signals);
     }
 
@@ -106,14 +105,11 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
     private static ApplyResult PlannerFor(SimState state, PersonaState persona, PlanBlock block, long seq, DateTimeOffset now)
     {
         var blockId = block.BlockId!;
-        var updated = persona with
-        {
-            PlannedFor = blockId,
-        };
-        var signals = persona.PlannedFor == blockId
-            ? ImmutableArray<EngineSignal>.Empty
-            : ImmutableArray.Create<EngineSignal>(new StartPlanner(seq, persona.Id, now));
-        return ApplyResult.Applied(Put(state, updated), signals: signals);
+        var wake = PlannerHelper.Wake(persona, blockId, seq, now);
+        var signals = wake is { } planner
+            ? ImmutableArray.Create<EngineSignal>(planner.Signal)
+            : ImmutableArray<EngineSignal>.Empty;
+        return ApplyResult.Applied(state.WithPersona(wake?.Persona ?? persona), signals: signals);
     }
 
     /// <summary>場所が行動の条件とつながりを満たすか。</summary>

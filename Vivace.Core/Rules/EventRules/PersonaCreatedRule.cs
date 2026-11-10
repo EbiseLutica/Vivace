@@ -1,9 +1,6 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
-using static Vivace.Core.Rules.PeriodKeys;
-using static Vivace.Core.Rules.PersonaAccess;
-using static Vivace.Core.Rules.Rebalancing;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -44,7 +41,7 @@ internal sealed class PersonaCreatedRule : EventRule<PersonaCreatedPayload>
             new VitalTrack(t, personaDef.Vitals.EnergyInitial, 0),
             new VitalTrack(t, 100, 0),
             new VitalTrack(t, 30, 0),
-            new VitalTrack(t, VitalRules.Clamp(0, socialRange), 0),
+            new VitalTrack(t, VitalTrack.Clamp(0, socialRange), 0),
             1);
         var persona = new PersonaState(
             id,
@@ -67,8 +64,8 @@ internal sealed class PersonaCreatedRule : EventRule<PersonaCreatedPayload>
             null,
             Deciding: false,
             LastBlockId: null,
-            PlannedFor: PeriodKeyAt(t));
-        var next = Rebalance(ctx, Put(state, persona), t, id, payload.Home);
+            PlannedFor: PlannerHelper.PeriodKeyAt(t));
+        var next = VitalRules.Rebalance(ctx, state.WithPersona(persona), t, id, payload.Home);
         return ApplyResult.Applied(next, signals: [new StartPlanner(ev.Seq, id, t)]);
     }
 }

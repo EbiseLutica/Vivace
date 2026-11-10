@@ -99,8 +99,8 @@ public class WorldAndPersonaRulesTests
         var energy = new VitalTrack(Fixture.Now, 80, -4);
         var social = new VitalTrack(Fixture.Now, 0, 2);
 
-        Assert.Equal(0, VitalRules.Read(energy, Fixture.Now.AddHours(30), (0, 100)));
-        Assert.Equal(60, VitalRules.Read(social, Fixture.Now.AddHours(100), VitalRules.Range(VitalName.Social, kaori)));
-        Assert.Equal(56, VitalRules.Read(energy, Fixture.Now.AddHours(6), (0, 100)));
+        Assert.Equal(0, energy.ValueAt(Fixture.Now.AddHours(30), (0, 100)));
+        Assert.Equal(60, social.ValueAt(Fixture.Now.AddHours(100), VitalRules.Range(VitalName.Social, kaori)));
+        Assert.Equal(56, energy.ValueAt(Fixture.Now.AddHours(6), (0, 100)));
     }
 }

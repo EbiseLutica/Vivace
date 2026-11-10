@@ -60,8 +60,7 @@ public static class Fixture
         new(seq, time, type, World, persona, payload, guard, batch, null, Origin.Test, null, null);
 
     /// <summary>ペルソナの状態を差し替えた状態。</summary>
-    public static SimState With(SimState state, PersonaState persona) =>
-        state with { Personas = state.Personas.SetItem(persona.Id, persona) };
+    public static SimState With(SimState state, PersonaState persona) => state.WithPersona(persona);
 
     /// <summary>ペルソナの状態を取り出す。</summary>
     public static PersonaState Get(SimState state, PersonaId id) => state.Personas[id];

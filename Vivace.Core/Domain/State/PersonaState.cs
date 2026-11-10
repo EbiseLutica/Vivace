@@ -45,4 +45,28 @@ public sealed record PersonaState(
     DateTimeOffset? LastWake,
     bool Deciding = false,
     string? LastBlockId = null,
-    string? PlannedFor = null);
+    string? PlannedFor = null)
+{
+    /// <summary>
+    /// 行動を始めたときの利用の記録を更新する。同じ行動が続いた回数（Consecutive）を数え、ほかの行動の連続は切る。
+    /// </summary>
+    /// <param name="actionId">始めた行動の定義 ID。</param>
+    /// <param name="now">開始の時刻。</param>
+    /// <param name="localDate">現地の日付。</param>
+    public PersonaState StartUsage(string actionId, DateTimeOffset now, DateOnly localDate)
+    {
+        var current = Usage.TryGetValue(actionId, out var found) ? found : new ActionUsage(null, localDate, 0, 0);
+        var countToday = current.CountDate == localDate ? current.CountToday + 1 : 1;
+        var builder = Usage.ToBuilder();
+        foreach (var key in Usage.Keys)
+        {
+            if (key != actionId && Usage[key].Consecutive != 0)
+            {
+                builder[key] = Usage[key] with { Consecutive = 0 };
+            }
+        }
+
+        builder[actionId] = new ActionUsage(now, localDate, countToday, current.Consecutive + 1);
+        return this with { Usage = builder.ToImmutable() };
+    }
+}

@@ -2,10 +2,6 @@ using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using Vivace.Core.Time;
-using static Vivace.Core.Rules.FollowUpEvents;
-using static Vivace.Core.Rules.PeriodKeys;
-using static Vivace.Core.Rules.PersonaAccess;
-using static Vivace.Core.Rules.Rebalancing;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -18,7 +14,7 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
     /// <summary>行動を始め、率を切り替え、終了を積む。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, ActionStartedPayload payload)
     {
-        if (!TryPersona(state, ev, out var persona))
+        if (state.AlivePersona(ev.PersonaId) is not { } persona)
         {
             return ApplyResult.Skipped(state, "ペルソナがない");
         }
@@ -40,10 +36,9 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
 
         var now = ev.Time;
         var localDate = LocalClock.ToLocal(now, ctx.Defs.Worlds[persona.World.Value].UtcOffset).Date;
-        var started = persona with
+        var started = persona.StartUsage(payload.ActionId, now, localDate) with
         {
             Activity = new Activity(payload.ActionId, payload.Place, now, now + payload.Duration, payload.Reason, payload.BlockId),
-            Usage = ActionRules.RecordStart(persona.Usage, payload.ActionId, now, localDate),
         };
         foreach (var (vital, delta) in action.Effects.OnStart)
         {
@@ -51,15 +46,15 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
         }
 
         var signals = ImmutableArray<EngineSignal>.Empty;
-        var periodKey = payload.BlockId ?? PeriodKeyAt(now);
-        if (action.Effects.Sleep is { Consolidate: true } && started.PlannedFor != periodKey)
+        var periodKey = payload.BlockId ?? PlannerHelper.PeriodKeyAt(now);
+        if (action.Effects.Sleep is { Consolidate: true } && PlannerHelper.Wake(started, periodKey, ev.Seq, now) is { } wake)
         {
-            started = started with { PlannedFor = periodKey };
-            signals = ImmutableArray.Create<EngineSignal>(new StartPlanner(ev.Seq, started.Id, now));
+            started = wake.Persona;
+            signals = ImmutableArray.Create<EngineSignal>(wake.Signal);
         }
 
-        var next = Rebalance(ctx, Put(state, started), now, started.Id);
-        var followUps = ImmutableArray.Create(Next(now + payload.Duration, EventTypes.ActionEnded, started, new ActionEndedPayload(payload.ActionId, payload.ActivityVersion)));
+        var next = VitalRules.Rebalance(ctx, state.WithPersona(started), now, started.Id);
+        var followUps = ImmutableArray.Create(NewEvent.Next(now + payload.Duration, EventTypes.ActionEnded, started, new ActionEndedPayload(payload.ActionId, payload.ActivityVersion)));
         return ApplyResult.Applied(next, followUps, signals);
     }
 }

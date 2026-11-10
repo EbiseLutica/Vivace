@@ -165,6 +165,75 @@ public class PlanRulesTests
         Assert.Equal(EventOutcome.Skipped, Fixture.Apply(plan, Fixture.Event(12, Fixture.Now.AddHours(21), EventTypes.PlanDue, new PlanDuePayload(0), Fixture.Kaori)).Outcome);
     }
 
+    /// <summary>移動中に記憶の整理のブロック（睡眠）が始まると、Planner を一度だけ起こす。期間の印はブロック ID で、同じブロックでは起こさない。</summary>
+    [Fact]
+    public void ConsolidatingBlockWhileTravelingWakesPlannerOnce()
+    {
+        const string blockId = "sleep@2026-11-01";
+        var plan = new DayPlan(
+            1,
+            Fixture.Now,
+            Fixture.Now.AddHours(24),
+            Fixture.Now.AddHours(21),
+            PlanSource.Fallback,
+            [new PlanBlock(blockId, BlockKind.Fixed, Fixture.Now, Fixture.Now.AddHours(8), "core.sleep", null, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue)],
+            null);
+        var planned = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop))).State;
+        var travel = Fixture.Event(11, Fixture.Now, EventTypes.TravelStarted, new TravelStartedPayload(KaoriRoom, HomeLiving, ImmutableArray<RouteStep>.Empty, Fixture.Now.AddHours(1), 0, null), Fixture.Kaori);
+        var traveling = Fixture.Apply(planned, travel).State;
+        var start = BlockStarted(12, Fixture.Now.AddMinutes(30), blockId);
+
+        var first = Fixture.Apply(traveling, start);
+
+        Assert.Equal(EventOutcome.Applied, first.Outcome);
+        Assert.Equal(new StartPlanner(12, Fixture.Kaori, Fixture.Now.AddMinutes(30)), Assert.Single(first.Signals));
+        Assert.Equal(blockId, first.State.Personas[Fixture.Kaori].PlannedFor);
+
+        var second = Fixture.Apply(first.State, start);
+
+        Assert.Equal(EventOutcome.Applied, second.Outcome);
+        Assert.Empty(second.Signals);
+    }
+
+    /// <summary>在室で記憶の整理のブロックを満たせないとき、いまの行動を打ち切り、Planner を起こす。期間の印と、最後に始めたブロックは、そのブロック ID になる。</summary>
+    [Fact]
+    public void InfeasibleConsolidatingBlockCutsActivityAndWakesPlanner()
+    {
+        const string blockId = "sleep@2026-11-01";
+        var plan = new DayPlan(
+            1,
+            Fixture.Now,
+            Fixture.Now.AddHours(24),
+            Fixture.Now.AddHours(21),
+            PlanSource.Fallback,
+            [new PlanBlock(blockId, BlockKind.Fixed, Fixture.Now, Fixture.Now.AddMinutes(1), "core.sleep", HomeLiving, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue)],
+            null);
+        var withActivity = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(11, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", KaoriRoom, TimeSpan.FromHours(2), ActivityReason.Chosen, 0, null), Fixture.Kaori)).State;
+        var planned = Fixture.Apply(withActivity, Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop))).State;
+
+        var result = Fixture.Apply(planned, BlockStarted(12, Fixture.Now, blockId));
+
+        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(
+            new EngineSignal[] { new CancelHandler(Fixture.Kaori), new StartPlanner(12, Fixture.Kaori, Fixture.Now) },
+            result.Signals.ToArray());
+        Assert.Equal(blockId, result.State.Personas[Fixture.Kaori].PlannedFor);
+        Assert.Equal(blockId, result.State.Personas[Fixture.Kaori].LastBlockId);
+    }
+
+    /// <summary>プランがないペルソナは、行動の終わりで決めどきを積まない（自由時間でも、ブロックの途中でもないため）。</summary>
+    [Fact]
+    public void ActionEndWithoutPlanRequestsNoDecision()
+    {
+        var running = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(10, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", KaoriRoom, TimeSpan.FromHours(2), ActivityReason.Chosen, 0, null), Fixture.Kaori)).State;
+
+        var result = Fixture.Apply(running, Fixture.Event(11, Fixture.Now.AddHours(2), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 0), Fixture.Kaori));
+
+        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Empty(result.FollowUps);
+        Assert.Null(result.State.Personas[Fixture.Kaori].Activity);
+    }
+
     /// <summary>規則にない型は、黙って捨てず、例外で止める。</summary>
     [Fact]
     public void UnsupportedEventTypeThrows()

@@ -11,4 +11,26 @@ public sealed record Vitals(
     VitalTrack Health,
     VitalTrack Boredom,
     VitalTrack Social,
-    long Version);
+    long Version)
+{
+    /// <summary>状態変数の1本を取り出す。</summary>
+    /// <param name="vital">取り出す変数。</param>
+    public VitalTrack Get(VitalName vital) => vital switch
+    {
+        VitalName.Energy => Energy,
+        VitalName.Health => Health,
+        VitalName.Boredom => Boredom,
+        _ => Social,
+    };
+
+    /// <summary>状態変数の1本を差し替えた集まりを返す。版は変えない。</summary>
+    /// <param name="vital">差し替える変数。</param>
+    /// <param name="value">新しい値。</param>
+    public Vitals With(VitalName vital, VitalTrack value) => vital switch
+    {
+        VitalName.Energy => this with { Energy = value },
+        VitalName.Health => this with { Health = value },
+        VitalName.Boredom => this with { Boredom = value },
+        _ => this with { Social = value },
+    };
+}

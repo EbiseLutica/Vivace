@@ -240,14 +240,27 @@
   <p>振る舞いを変えないリファクタ。規則まわりの static のヘルパーを減らし、状態の読み取りと差し替えを、そのデータを持つ record のインスタンスメソッドにする。公開 API（3-2）で状態の型が外に見える前に、形を整える。</p>
   <p><strong>参照</strong>：<a href="design/1-execution.html#apply">D1 1.3</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" disabled>その record 自身のデータ（と、同じ層のほかの record）だけで完結する読み取りと差し替えは、その record のインスタンスメソッドにする（例：ペルソナの取り出しと差し替えは <code>SimState</code>、プランの読み取りは <code>DayPlan</code>、状態変数の読み書きは <code>Vitals</code> と <code>VitalTrack</code>）。record は不変のままにし、メソッドは新しい値を返す</li>
-    <li><input type="checkbox" disabled>定義や経路、規則の文脈が要るもの（guard の検査の評価、率の計算、行動の制限の判定など）は、record に置かず、規則の側に置く。型で処理を分けるときは、record の仮想メソッドでなく、規則の側のパターンマッチングにする。記録されるデータ型が、規則の層を参照しないようにするため</li>
-    <li><input type="checkbox" disabled>上のどちらにも置きにくいもの（null を受ける読み取りなど）は、名前に <code>Helper</code> を付けた static クラスに集める。同じ領域（状態変数、行動、プランなど）の static クラスは、なるべく1つにする</li>
-    <li><input type="checkbox" disabled>後続のイベントの生成（3-1 の <code>FollowUpEvents</code>）は、<code>NewEvent</code> の static のファクトリメソッドにする</li>
-    <li><input type="checkbox" disabled>3-1 で分けた共有の処理（<code>PersonaAccess</code>、<code>Rebalancing</code>、<code>PeriodKeys</code>）と、既存の <code>VitalRules</code>、<code>ActionRules</code>、<code>PlanRules</code> を、上の形に移す。Decider と Planner の呼び出しも合わせる</li>
+    <li><input type="checkbox" checked disabled>その record 自身のデータ（と、同じ層のほかの record）だけで完結する読み取りと差し替えは、その record のインスタンスメソッドにする（例：ペルソナの取り出しと差し替えは <code>SimState</code>、プランの読み取りは <code>DayPlan</code>、状態変数の読み書きは <code>Vitals</code> と <code>VitalTrack</code>）。record は不変のままにし、メソッドは新しい値を返す</li>
+    <li><input type="checkbox" checked disabled>定義や経路、規則の文脈が要るもの（guard の検査の評価、率の計算、行動の制限の判定など）は、record に置かず、規則の側に置く。型で処理を分けるときは、record の仮想メソッドでなく、規則の側のパターンマッチングにする。記録されるデータ型が、規則の層を参照しないようにするため</li>
+    <li><input type="checkbox" checked disabled>上のどちらにも置きにくいもの（null を受ける読み取りなど）は、名前に <code>Helper</code> を付けた static クラスに集める。同じ領域（状態変数、行動、プランなど）の static クラスは、なるべく1つにする</li>
+    <li><input type="checkbox" checked disabled>後続のイベントの生成（3-1 の <code>FollowUpEvents</code>）は、<code>NewEvent</code> の static のファクトリメソッドにする</li>
+    <li><input type="checkbox" checked disabled>3-1 で分けた共有の処理（<code>PersonaAccess</code>、<code>Rebalancing</code>、<code>PeriodKeys</code>）と、既存の <code>VitalRules</code>、<code>ActionRules</code>、<code>PlanRules</code> を、上の形に移す。Decider と Planner の呼び出しも合わせる</li>
+    <li><input type="checkbox" checked disabled>居合わせ（同じ場所にほかの人がいるか。移動中はどこにもいない）の判定は、<code>SimState</code> のメソッドにして、社交欲求の率（<code>VitalRules.IsTogether</code>）と Decider の予測の両方から使う。いまの居場所で見るものと、候補の場所で見るものの2つ</li>
+    <li><input type="checkbox" checked disabled>Planner を同じ期間で一度だけ起こす手順（<code>PlannedFor</code> を比べ、印を付け、<code>StartPlanner</code> を出す）は、規則の側のヘルパーにまとめ、<code>ActionStartedRule</code>、<code>BlockStartedRule</code>、<code>PlanDueRule</code> から使う</li>
   </ul>
   <p><strong>範囲外</strong>：振る舞いの変更、Apply を純粋な関数とする形（状態を返し、副作用はシグナルで返す）の変更、ルールの表の形の変更。</p>
   <p><strong>完了条件</strong>：既存のテストがすべて通り、<code>.verified.txt</code> の差分がない。</p>
+
+  <h4 id="phase3-1c">3-1c ワールドとペルソナの ID を整える</h4>
+  <p>1つの定義から生成するインスタンスは1つだけ（VISION 2章）なので、ペルソナのインスタンス ID からワールド ID を外す。あわせて、定義の ID に型を作り、インスタンスの ID から定義を引けないようにする。公開 API と CLI（3-2）で ID が外に見える前に、形を決める。</p>
+  <p><strong>参照</strong>：<a href="design/3-data.html#domain">D3 3.7（P-22、J-150）</a></p>
+  <ul class="tasks">
+    <li><input type="checkbox" disabled>定義の ID の型（<code>WorldDefId</code>、<code>PersonaDefId</code>）を作り、<code>Definitions</code> の辞書の鍵、状態とペイロードの <code>DefId</code>、ペルソナ定義の居住ワールド、投入の窓口の引数をこの型にする。インスタンスの ID の中身を剥がして定義を引いているところ（<code>defs.Worlds[persona.World.Value]</code> など）は、インスタンスの <code>DefId</code> から引く形にする。振る舞いは変えず、<code>.verified.txt</code> の差分がないことを確かめる</li>
+    <li><input type="checkbox" disabled>ペルソナの生成で、インスタンス ID を「定義 ID@ワールド ID」から定義 ID にする</li>
+    <li><input type="checkbox" disabled>テストで、古い形の ID を書いているところを直す。乱数列はインスタンス ID から派生させるので、ID が変わると乱数を引いた結果も変わる。スナップショットは更新し、変わった理由が ID の形と乱数列の違いで説明できることを確かめる</li>
+  </ul>
+  <p><strong>範囲外</strong>：破棄したあとに生成し直したときの番号（<code>#2</code>。3-8 で破棄と一緒に作る）、ほかの振る舞いの変更。</p>
+  <p><strong>完了条件</strong>：テストがすべて通り、<code>.verified.txt</code> の差分が、ID の形の変化と、それによる乱数列の違いだけで説明できる。</p>
 
   <h4 id="phase3-2">3-2 公開 API と CLI</h4>
   <p>いまの生活（固定予定と Decider）を、外から動かして読めるようにする。以後の PR は、ここで作る <code>dry-run</code> で振る舞いの変化を見せる。</p>
@@ -318,6 +331,7 @@
   <p><strong>参照</strong>：<a href="design/1-execution.html#lifecycle">D1 1.13</a>、<a href="design/2-events.html#types">D2 2.3</a></p>
   <ul class="tasks">
     <li><input type="checkbox" disabled>ペルソナとワールドの破棄</li>
+    <li><input type="checkbox" disabled>破棄したあとに同じ定義から生成し直したら、インスタンス ID に番号を付ける（<code>kaori#2</code>、<code>tokyo#2</code>。P-22）。生成済みかの判定は、破棄済みのインスタンスを除いて行う</li>
     <li><input type="checkbox" disabled>残りのイベントタイプの Apply と guard。出し手がまだないもの（受信箱、発話、投稿など）も、ルールと単体テストは作る</li>
     <li><input type="checkbox" disabled>全イベントタイプにルールと単体テストがあることを、表と照らして確かめるテスト</li>
   </ul>

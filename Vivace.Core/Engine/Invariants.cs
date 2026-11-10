@@ -73,7 +73,7 @@ public static class Invariants
 
             if (persona.Location is AtPlace
                 && !persona.Deciding
-                && PlanRules.FreeAt(persona.Plan, state.Position.Time) is not null
+                && persona.Plan?.FreeAt(state.Position.Time) is not null
                 && !events.Any(ev => ev.EventType is EventTypes.DecisionRequested
                     or EventTypes.ActivityChosen
                     or EventTypes.ActionStarted
