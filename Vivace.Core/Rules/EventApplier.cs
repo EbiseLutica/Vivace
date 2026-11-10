@@ -93,7 +93,7 @@ public sealed class EventApplier
             && state.Personas.TryGetValue(id, out var persona)
             && persona.Status == PersonaStatus.Alive)
         {
-            state = PersonaAccess.Put(state, persona with { Deciding = false });
+            state = state.WithPersona(persona with { Deciding = false });
             followUps = [FollowUpEvents.DecisionRequested(ev.Time, persona, DecisionReason.Retry, null)];
         }
 

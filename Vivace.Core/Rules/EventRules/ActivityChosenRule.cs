@@ -1,7 +1,6 @@
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using static Vivace.Core.Rules.FollowUpEvents;
-using static Vivace.Core.Rules.PersonaAccess;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -14,7 +13,7 @@ internal sealed class ActivityChosenRule : EventRule<ActivityChosenPayload>
     /// <summary>行動の決定を当てる。場所が違えば移動を、同じなら行動の開始を積む。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, ActivityChosenPayload payload)
     {
-        if (!TryPersona(state, ev, out var persona))
+        if (state.AlivePersona(ev.PersonaId) is not { } persona)
         {
             return ApplyResult.Skipped(state, "ペルソナがない");
         }
@@ -27,7 +26,7 @@ internal sealed class ActivityChosenRule : EventRule<ActivityChosenPayload>
         var from = ((AtPlace)persona.Location).Place;
         var rng = payload.Draws is { } draws ? persona.Rng.SetItem(draws.Purpose, draws.To) : persona.Rng;
         var updated = persona with { Deciding = false, ActivityVersion = persona.ActivityVersion + 1, Rng = rng };
-        var next = Put(state, updated);
+        var next = state.WithPersona(updated);
         if (payload.Duration <= TimeSpan.Zero)
         {
             NewEvent? moveOnly = payload.Place == from

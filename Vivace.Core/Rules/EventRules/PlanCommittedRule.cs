@@ -2,7 +2,6 @@ using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using static Vivace.Core.Rules.FollowUpEvents;
-using static Vivace.Core.Rules.PersonaAccess;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -15,13 +14,13 @@ internal sealed class PlanCommittedRule : EventRule<PlanCommittedPayload>
     /// <summary>プランを差し替え、新しく入ったブロックの開始と、作り直しの時刻を積む。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, PlanCommittedPayload payload)
     {
-        if (!TryPersona(state, ev, out var persona))
+        if (state.AlivePersona(ev.PersonaId) is not { } persona)
         {
             return ApplyResult.Skipped(state, "ペルソナがない");
         }
 
         var plan = payload.Plan with { Version = persona.PlanVersion + 1 };
-        var next = Put(state, persona with { Plan = plan, PlanVersion = plan.Version });
+        var next = state.WithPersona(persona with { Plan = plan, PlanVersion = plan.Version });
         var followUps = new List<NewEvent>();
         foreach (var block in plan.Blocks.Where(block => block.End > ev.Time))
         {

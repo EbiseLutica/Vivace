@@ -1,6 +1,5 @@
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
-using static Vivace.Core.Rules.PersonaAccess;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -13,7 +12,7 @@ internal sealed class DecisionRequestedRule : EventRule<DecisionRequestedPayload
     /// <summary>決めどきの印を立て、Decider の起動を依頼する。決め中なら捨てる。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, DecisionRequestedPayload payload)
     {
-        if (!TryPersona(state, ev, out var persona))
+        if (state.AlivePersona(ev.PersonaId) is not { } persona)
         {
             return ApplyResult.Skipped(state, "ペルソナがない");
         }
@@ -29,7 +28,7 @@ internal sealed class DecisionRequestedRule : EventRule<DecisionRequestedPayload
         }
 
         return ApplyResult.Applied(
-            Put(state, persona with { Deciding = true }),
+            state.WithPersona(persona with { Deciding = true }),
             signals: [new StartDecider(ev.Seq, persona.Id, ev.Time, payload.Reason, payload.BlockId)]);
     }
 }

@@ -2,7 +2,6 @@ using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using static Vivace.Core.Rules.FollowUpEvents;
-using static Vivace.Core.Rules.PersonaAccess;
 using static Vivace.Core.Rules.Rebalancing;
 
 namespace Vivace.Core.Rules.EventRules;
@@ -16,7 +15,7 @@ internal sealed class ActionEndedRule : EventRule<ActionEndedPayload>
     /// <summary>行動を終え、終了時の効果を当て、次の決めどきを積む。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, ActionEndedPayload payload)
     {
-        if (!TryPersona(state, ev, out var persona))
+        if (state.AlivePersona(ev.PersonaId) is not { } persona)
         {
             return ApplyResult.Skipped(state, "ペルソナがない");
         }
@@ -55,7 +54,7 @@ internal sealed class ActionEndedRule : EventRule<ActionEndedPayload>
             ended = ended with { LastWake = now };
         }
 
-        var next = Rebalance(ctx, Put(state, ended), now, ended.Id);
+        var next = Rebalance(ctx, state.WithPersona(ended), now, ended.Id);
         var followUps = ImmutableArray<NewEvent>.Empty;
         if (!ended.Deciding && !PlanRules.BlockStartsAt(ended.Plan, now))
         {

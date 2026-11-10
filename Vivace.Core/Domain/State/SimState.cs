@@ -9,4 +9,15 @@ namespace Vivace.Core.Domain;
 public sealed record SimState(
     Position Position,
     ImmutableDictionary<WorldId, WorldState> Worlds,
-    ImmutableDictionary<PersonaId, PersonaState> Personas);
+    ImmutableDictionary<PersonaId, PersonaState> Personas)
+{
+    /// <summary>ペルソナの ID で、生きているペルソナの状態を取り出す。ID がない、または生きていなければ null。</summary>
+    /// <param name="id">ペルソナの ID。</param>
+    public PersonaState? AlivePersona(PersonaId? id) =>
+        id is { } key && Personas.TryGetValue(key, out var found) && found.Status == PersonaStatus.Alive ? found : null;
+
+    /// <summary>ペルソナの状態を差し替えた全体の状態を返す。</summary>
+    /// <param name="persona">差し替えるペルソナの状態。</param>
+    public SimState WithPersona(PersonaState persona) =>
+        this with { Personas = Personas.SetItem(persona.Id, persona) };
+}

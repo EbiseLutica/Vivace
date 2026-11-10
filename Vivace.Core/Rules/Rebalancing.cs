@@ -28,7 +28,7 @@ internal static class Rebalancing
             var refreshed = VitalRules.Refresh(state, persona, now, ctx.Defs);
             if (!ReferenceEquals(refreshed, persona))
             {
-                state = PersonaAccess.Put(state, refreshed);
+                state = state.WithPersona(refreshed);
             }
         }
 

@@ -1,7 +1,6 @@
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using static Vivace.Core.Rules.PeriodKeys;
-using static Vivace.Core.Rules.PersonaAccess;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -14,7 +13,7 @@ internal sealed class PlanDueRule : EventRule<PlanDuePayload>
     /// <summary>プランの作り直しの時刻が来たら、Planner を起こす。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, PlanDuePayload payload)
     {
-        if (!TryPersona(state, ev, out var persona))
+        if (state.AlivePersona(ev.PersonaId) is not { } persona)
         {
             return ApplyResult.Skipped(state, "ペルソナがない");
         }
@@ -35,7 +34,7 @@ internal sealed class PlanDueRule : EventRule<PlanDuePayload>
             return ApplyResult.Skipped(state, "この期間の Planner は動いている");
         }
 
-        return ApplyResult.Applied(Put(state, persona with { PlannedFor = key }), signals: [new StartPlanner(ev.Seq, persona.Id, ev.Time)]);
+        return ApplyResult.Applied(state.WithPersona(persona with { PlannedFor = key }), signals: [new StartPlanner(ev.Seq, persona.Id, ev.Time)]);
     }
 
     /// <summary>時刻 t に、記憶の整理を起こす行動（睡眠など）のブロックが始まるなら、それを返す。</summary>

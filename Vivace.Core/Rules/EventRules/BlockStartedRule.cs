@@ -4,7 +4,6 @@ using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using Vivace.Core.Routes;
 using static Vivace.Core.Rules.FollowUpEvents;
-using static Vivace.Core.Rules.PersonaAccess;
 using static Vivace.Core.Rules.Rebalancing;
 
 namespace Vivace.Core.Rules.EventRules;
@@ -18,7 +17,7 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
     /// <summary>ブロックを始める。自由時間なら決めどきを積む。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, BlockStartedPayload payload)
     {
-        if (!TryPersona(state, ev, out var persona))
+        if (state.AlivePersona(ev.PersonaId) is not { } persona)
         {
             return ApplyResult.Skipped(state, "ペルソナがない");
         }
@@ -94,7 +93,7 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
             signals = signals.Add(new StartPlanner(seq, persona.Id, now));
         }
 
-        var next = Rebalance(ctx, Put(state, current with { LastBlockId = blockId, PlannedFor = planning ? blockId : current.PlannedFor }), now, current.Id, from.Place);
+        var next = Rebalance(ctx, state.WithPersona(current with { LastBlockId = blockId, PlannedFor = planning ? blockId : current.PlannedFor }), now, current.Id, from.Place);
         return ApplyResult.Applied(next, followUps, signals);
     }
 
@@ -113,7 +112,7 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
         var signals = persona.PlannedFor == blockId
             ? ImmutableArray<EngineSignal>.Empty
             : ImmutableArray.Create<EngineSignal>(new StartPlanner(seq, persona.Id, now));
-        return ApplyResult.Applied(Put(state, updated), signals: signals);
+        return ApplyResult.Applied(state.WithPersona(updated), signals: signals);
     }
 
     /// <summary>場所が行動の条件とつながりを満たすか。</summary>

@@ -2,7 +2,6 @@ using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using static Vivace.Core.Rules.FollowUpEvents;
-using static Vivace.Core.Rules.PersonaAccess;
 using static Vivace.Core.Rules.Rebalancing;
 
 namespace Vivace.Core.Rules.EventRules;
@@ -16,7 +15,7 @@ internal sealed class TravelArrivedRule : EventRule<TravelArrivedPayload>
     /// <summary>場所に着いた状態にし、次の行動かブロックか決めどきを積む。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, TravelArrivedPayload payload)
     {
-        if (!TryPersona(state, ev, out var persona))
+        if (state.AlivePersona(ev.PersonaId) is not { } persona)
         {
             return ApplyResult.Skipped(state, "ペルソナがない");
         }
@@ -32,7 +31,7 @@ internal sealed class TravelArrivedRule : EventRule<TravelArrivedPayload>
         }
 
         var arrived = persona with { Location = new AtPlace(payload.Place) };
-        var next = Rebalance(ctx, Put(state, arrived), ev.Time, arrived.Id, payload.Place);
+        var next = Rebalance(ctx, state.WithPersona(arrived), ev.Time, arrived.Id, payload.Place);
         var followUps = ImmutableArray<NewEvent>.Empty;
         if (travel.Next is { } pending)
         {
