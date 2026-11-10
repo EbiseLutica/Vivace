@@ -53,7 +53,7 @@ public static class Fixture
         Apply(WithKaori(), Event(3, Now, EventTypes.PersonaCreated, new PersonaCreatedPayload("shiori", new PlaceId("home_living")), null)).State;
 
     /// <summary>規則を1つ適用する。</summary>
-    public static ApplyResult Apply(SimState state, SimEvent ev) => Vivace.Core.Rules.Rules.Apply(Context, state, ev);
+    public static ApplyResult Apply(SimState state, SimEvent ev) => new EventApplier(Context).Apply(state, ev);
 
     /// <summary>適用に使うイベントを作る（テストの出所）。</summary>
     public static SimEvent Event(long seq, DateTimeOffset time, string type, EventPayload payload, PersonaId? persona, Guard? guard = null, long? batch = null) =>

@@ -71,7 +71,7 @@ public class RegressionRulesTests
         var definitions = DefinitionLoader.LoadFiles(files).Definitions!;
         var context = new RuleContext(definitions, RouteCache.Create(definitions));
         var state = Fixture.WithWorld();
-        state = Vivace.Core.Rules.Rules.Apply(context, state, Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload("kaori", KaoriRoom), null)).State;
+        state = new EventApplier(context).Apply(state, Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload("kaori", KaoriRoom), null)).State;
 
         var kaori = state.Personas[Fixture.Kaori];
 

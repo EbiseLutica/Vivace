@@ -227,11 +227,11 @@
   <p>振る舞いを変えないリファクタ。<code>Rules</code> を、イベントタイプごとのルールに分け、表から引いて呼ぶ形にする。</p>
   <p><strong>参照</strong>：<a href="design/1-execution.html#apply">D1 1.3</a>、<a href="design/1-execution.html#guard">1.7</a>、<a href="design/2-events.html#types">D2 2.3</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" disabled><code>IEventRule</code>（イベントタイプと <code>Apply</code>）と、ペイロードを型つきで受け取る基底 <code>EventRule&lt;TPayload&gt;</code></li>
-    <li><input type="checkbox" disabled>段階2 で扱うイベントタイプごとに、ルールのクラスを1つずつ作る。ルールはフィールドを持たず、ルールどうしで呼び合わない</li>
-    <li><input type="checkbox" disabled><code>Rules.Apply</code> は、guard の評価と、表からルールを引いて呼ぶことだけにする。表は起動時に組む不変の辞書。表にないタイプは、いまと同じく例外にする</li>
-    <li><input type="checkbox" disabled>複数のルールが使う処理（状態の差し替え、後続のイベントの生成、ブロックの開始、率の計算し直しなど）は、関心ごとのクラスに分ける。1つの共通クラスに寄せない</li>
-    <li><input type="checkbox" disabled>表が、段階2 で扱うタイプをすべて持つことのテスト</li>
+    <li><input type="checkbox" checked disabled><code>IEventRule</code>（イベントタイプと <code>Apply</code>）と、ペイロードを型つきで受け取る基底 <code>EventRule&lt;TPayload&gt;</code></li>
+    <li><input type="checkbox" checked disabled>段階2 で扱うイベントタイプごとに、ルールのクラスを1つずつ作る。ルールはフィールドを持たず、ルールどうしで呼び合わない</li>
+    <li><input type="checkbox" checked disabled>適用の入口 <code>EventApplier.Apply</code> は、guard の評価と、表からルールを引いて呼ぶことだけにする。入口はインスタンスで、不変の規則の文脈を持つ。表は起動時に組む不変の辞書。表にないタイプは、いまと同じく例外にする</li>
+    <li><input type="checkbox" checked disabled>複数のルールが使う処理（状態の差し替え、後続のイベントの生成、ブロックの開始、率の計算し直しなど）は、関心ごとのクラスに分ける。1つの共通クラスに寄せない</li>
+    <li><input type="checkbox" checked disabled>表が、段階2 で扱うタイプをすべて持つことのテスト</li>
   </ul>
   <p><strong>範囲外</strong>：振る舞いの変更、新しいイベントタイプ、プラグインがルールを足す仕組み。</p>
   <p><strong>完了条件</strong>：既存のテストがすべて通り、<code>.verified.txt</code> の差分がない。</p>
