@@ -1,3 +1,4 @@
+using Vivace.Core.Routes;
 using System.Collections.Immutable;
 using System.Globalization;
 using Vivace.Core.Domain;
@@ -6,10 +7,7 @@ using Vivace.Core.Time;
 
 namespace Vivace.Core.Definitions;
 
-/// <summary>
-/// 読み込んだ定義の参照と整合性を検査する（D7 7.2）。
-/// 結果は、ファイルと行と列の位置つきのエラーと警告の一覧。エディタからも呼べる。
-/// </summary>
+/// <summary>読み込んだ定義の参照と整合性を検査し、位置つきのエラーと警告を返す。</summary>
 public static class DefinitionValidator
 {
     /// <summary>固定予定の重なりを見る最初の年。28 年周期（うるう年と曜日の組み合わせを一巡する）で見る。</summary>
@@ -54,6 +52,7 @@ public static class DefinitionValidator
         return issues.ToImmutableArray();
     }
 
+    /// <summary>ワールドの定義の参照と整合性を見る。</summary>
     private static void ValidateWorld(WorldDef world, List<DefinitionIssue> issues)
     {
         var placeIds = new HashSet<string>(StringComparer.Ordinal);
@@ -103,9 +102,10 @@ public static class DefinitionValidator
         }
     }
 
+    /// <summary>行動の定義の整合性を見る。</summary>
     private static void ValidateAction(ActionDef action, HashSet<string> reflexActions, List<DefinitionIssue> issues)
     {
-        // core.go_to_next は所要時間を持たない。着いたあとの待ちは次の予定で決まる（J-112）。
+        // core.go_to_next は所要時間を持たない。着いたあとの待ちは次の予定で決まる。
         if (action.Duration is null && !action.ScheduleOnly && !reflexActions.Contains(action.Id) && action.Id != "core.go_to_next")
         {
             Add(issues, DefinitionIssueCode.MissingRequired, action.Source.Location,
@@ -113,6 +113,7 @@ public static class DefinitionValidator
         }
     }
 
+    /// <summary>ペルソナの定義の参照と整合性を見る。</summary>
     private static void ValidatePersona(PersonaDef persona, Definitions definitions, List<DefinitionIssue> issues)
     {
         var hasWorld = definitions.Worlds.TryGetValue(persona.World, out var world);
@@ -183,6 +184,7 @@ public static class DefinitionValidator
         ValidateSchedule(persona, definitions, issues);
     }
 
+    /// <summary>ペルソナが一度も実行できない行動を警告にする。</summary>
     private static void CheckRequirements(PersonaDef persona, WorldDef world, Definitions definitions, List<DefinitionIssue> issues)
     {
         var worldTags = world.Places.SelectMany(place => place.Tags).ToHashSet(StringComparer.Ordinal);
@@ -209,6 +211,7 @@ public static class DefinitionValidator
         }
     }
 
+    /// <summary>ペルソナの使う行動の一覧を、ワイルドカードを開いて返す。</summary>
     private static IEnumerable<ActionDef> ResolveUse(PersonaDef persona, Definitions definitions)
     {
         foreach (var entry in persona.Use)
@@ -231,6 +234,7 @@ public static class DefinitionValidator
         }
     }
 
+    /// <summary>出来事の定義の参照を見る。</summary>
     private static void ValidateIncident(IncidentDef incident, Definitions definitions, List<DefinitionIssue> issues)
     {
         var condition = incident.Effects.Condition;
@@ -251,6 +255,7 @@ public static class DefinitionValidator
         }
     }
 
+    /// <summary>どの行動も出来事も要求しない場所のタグを警告にする。</summary>
     private static void ValidateUnusedPlaceTags(Definitions definitions, List<DefinitionIssue> issues)
     {
         var usedTags = new HashSet<string>(StringComparer.Ordinal);
@@ -286,6 +291,7 @@ public static class DefinitionValidator
         }
     }
 
+    /// <summary>固定予定の参照と入れ子を見る。</summary>
     private static void ValidateSchedule(PersonaDef persona, Definitions definitions, List<DefinitionIssue> issues)
     {
         var schedule = persona.Schedule;
@@ -342,6 +348,7 @@ public static class DefinitionValidator
         CheckScheduleOverlaps(persona, definitions, issues);
     }
 
+    /// <summary>ブロック1つの参照と組み合わせを見る。</summary>
     private static void CheckBlock(BlockDef block, ScheduleDef schedule, PersonaDef persona, Definitions definitions, HashSet<string> periodIds, List<DefinitionIssue> issues)
     {
         foreach (var period in block.In)
@@ -439,6 +446,7 @@ public static class DefinitionValidator
         return false;
     }
 
+    /// <summary>親をたどって、ブロックに実際に効く値を返す。</summary>
     private static string? EffectiveValue(BlockDef block, ScheduleDef schedule, Func<BlockDef, string?> pick)
     {
         var visited = new HashSet<string>(StringComparer.Ordinal);
@@ -468,14 +476,11 @@ public static class DefinitionValidator
         return null;
     }
 
-    /// <summary>
-    /// 28 年周期（2028 年から）の全日と、例外日の前後の日について、固定予定の重なりと、同行の時刻、場所、行動の一致を見る。
-    /// 通常の日は（期間、曜日）が同じなら解決の結果が同じなので、その組ごとに一度だけ解決して使い回す。
-    /// 例外日とその前後の日だけは、日付ごとに解決する。
-    /// </summary>
+    /// <summary>28 年周期の全日と、例外日の前後の日について、固定予定の重なりと、同行の時刻、場所、行動の一致を見る。</summary>
     private static void CheckScheduleOverlaps(PersonaDef persona, Definitions definitions, List<DefinitionIssue> issues)
     {
         var reported = new HashSet<(string Message, SourceLocation Location)>();
+        var table = definitions.Worlds.TryGetValue(persona.World, out var world) ? RouteCache.BuildTable(world) : null;
         var first = new DateOnly(ScheduleCheckFirstYear, 1, 1);
         var last = first.AddYears(ScheduleCheckYears).AddDays(-1);
         var specials = SpecialDates(persona);
@@ -503,9 +508,15 @@ public static class DefinitionValidator
         {
             var day = own.Get(date);
             ReportScheduleIssues(day.Issues, issues, reported);
-            if (previousDate is { } before && before == date.AddDays(-1) && previousDay is not null)
+            var consecutive = previousDate is { } before && before == date.AddDays(-1) ? previousDay : null;
+            if (consecutive is not null)
             {
-                ReportCrossMidnight(previousDay, day, persona, issues, reported);
+                ReportCrossMidnight(consecutive, day, persona, issues, reported);
+            }
+
+            if (table is not null)
+            {
+                ReportScheduleGaps(consecutive, day, persona, table, issues, reported);
             }
 
             CheckPartnersOn(date, day, own.KeyOf(date), persona, definitions, partnerResolvers, checkedPairs, issues, reported);
@@ -536,9 +547,7 @@ public static class DefinitionValidator
         return dates;
     }
 
-    /// <summary>
-    /// ペルソナの日ごとの解決を、（期間、曜日）の組ごとに一度だけ行って使い回す。例外日の前後は日付ごとに解決する。
-    /// </summary>
+    /// <summary>ペルソナの日ごとの解決。同じ結果になる日は、一度だけ解決する。</summary>
     private sealed class DayResolver(Definitions definitions, PersonaDef persona, HashSet<DateOnly> specials)
     {
         private readonly Dictionary<string, ResolvedDay> _byKey = new(StringComparer.Ordinal);
@@ -548,7 +557,7 @@ public static class DefinitionValidator
             ? "date:" + date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
             : FixedScheduleResolver.PeriodOf(persona.Schedule.Periods, date) + "|" + ((int)date.DayOfWeek).ToString(CultureInfo.InvariantCulture);
 
-        /// <summary>その日の解決の結果（同じ鍵の日は、一度の解決を使い回す）。</summary>
+        /// <summary>その日の解決の結果。</summary>
         public ResolvedDay Get(DateOnly date)
         {
             var key = KeyOf(date);
@@ -562,6 +571,7 @@ public static class DefinitionValidator
         }
     }
 
+    /// <summary>同じ日の同行の相手と、時刻、場所、行動が一致するかを見る。</summary>
     private static void CheckPartnersOn(
         DateOnly date,
         ResolvedDay day,
@@ -622,6 +632,46 @@ public static class DefinitionValidator
         }
     }
 
+    /// <summary>固定予定の隙間が、場所の間の移動時間より短いものを警告にする。警告は後のブロックの定義の位置に付ける。</summary>
+    private static void ReportScheduleGaps(
+        ResolvedDay? previous,
+        ResolvedDay day,
+        PersonaDef persona,
+        Routes.RouteTable table,
+        List<DefinitionIssue> issues,
+        HashSet<(string Message, SourceLocation Location)> reported)
+    {
+        var sequence = (previous?.Blocks ?? ImmutableArray<ResolvedBlock>.Empty)
+            .Select(block => (Block: block, Start: block.StartMinute - MinutesPerDay, End: block.EndMinute - MinutesPerDay, Current: false))
+            .Concat(day.Blocks.Select(block => (Block: block, Start: block.StartMinute, End: block.EndMinute, Current: true)))
+            .Where(entry => entry.Block.Place is not null)
+            .OrderBy(entry => entry.Start)
+            .ThenBy(entry => entry.Block.Id, StringComparer.Ordinal)
+            .ToList();
+        for (var i = 1; i < sequence.Count; i++)
+        {
+            var before = sequence[i - 1];
+            var after = sequence[i];
+            if (!after.Current)
+            {
+                continue;
+            }
+
+            var gap = after.Start - before.End;
+            if (table.Minutes(new PlaceId(before.Block.Place!), new PlaceId(after.Block.Place!)) is not { } travel || gap >= travel)
+            {
+                continue;
+            }
+
+            var message = $"{persona.Id}: 固定予定の隙間（{before.Block.DefId} と {after.Block.DefId} の間は {gap} 分）が、移動時間（{travel} 分）より短い";
+            if (FindDefinition(after.Block.DefId, persona) is { } definition && reported.Add((message, definition.Source.Location)))
+            {
+                Add(issues, DefinitionIssueCode.ScheduleGap, definition.Source.Location, message);
+            }
+        }
+    }
+
+    /// <summary>固定予定の解決で出た問題を、重複を除いて一覧に足す。</summary>
     private static void ReportScheduleIssues(IEnumerable<ScheduleIssue> items, List<DefinitionIssue> issues, HashSet<(string Message, SourceLocation Location)> reported)
     {
         foreach (var item in items)
@@ -633,6 +683,7 @@ public static class DefinitionValidator
         }
     }
 
+    /// <summary>前の日から続くブロックと今日のブロックの重なりを一覧に足す。</summary>
     private static void ReportCrossMidnight(
         ResolvedDay previous,
         ResolvedDay day,
@@ -664,17 +715,22 @@ public static class DefinitionValidator
         }
     }
 
+    /// <summary>解決したブロックの定義を、定義 ID で引く。</summary>
     private static BlockDef? FindDefinition(string defId, PersonaDef persona) =>
         persona.Schedule.Blocks.FirstOrDefault(block => block.Id == defId)
         ?? persona.Schedule.Exceptions.SelectMany(item => item.Blocks).FirstOrDefault(block => block.Id == defId);
 
+    /// <summary>ワイルドカードの書き方か。</summary>
     private static bool IsWildcard(string entry) => entry.EndsWith(".*", StringComparison.Ordinal);
 
+    /// <summary>ワイルドカードの前の部分を返す（末尾の "." を含む）。</summary>
     private static string WildcardPrefix(string entry) => entry[..^1];
 
+    /// <summary>問題を一覧に足す。重さはコードから決める。</summary>
     private static void Add(List<DefinitionIssue> issues, DefinitionIssueCode code, SourceLocation location, string message) =>
         issues.Add(new DefinitionIssue(SeverityOf(code), code, location, message));
 
+    /// <summary>問題のコードの重さを返す。</summary>
     private static IssueSeverity SeverityOf(DefinitionIssueCode code) => code switch
     {
         DefinitionIssueCode.UnknownKey
@@ -682,7 +738,8 @@ public static class DefinitionValidator
             or DefinitionIssueCode.UnsatisfiableRequirement
             or DefinitionIssueCode.OneSidedWith
             or DefinitionIssueCode.UnmatchedWildcard
-            or DefinitionIssueCode.PartnerMismatch => IssueSeverity.Warning,
+            or DefinitionIssueCode.PartnerMismatch
+            or DefinitionIssueCode.ScheduleGap => IssueSeverity.Warning,
         _ => IssueSeverity.Error,
     };
 }

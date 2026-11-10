@@ -165,7 +165,7 @@
       </ul>
     </li>
     <li>返信するものは、会話ごとに <code>inbox.reply</code> で本文を作る。文脈には、本文、添付、それまでの会話（<code>Thread</code>）を入れる（6.3）。相手が持ち込んだ話題が世界観に合わなければ、「知らない」と答える（VISION 11章）。そのための判定は、投稿と同じ辞書と <code>post.judge</code> を使い、却下なら「知らない」と答えるよう指示する。作った本文は、送る前に校閲を通す（6.10）</li>
-    <li>出力を、行動の終了の時刻で返す。<code>outbound.speech</code>（返信）、<code>outbound.operation</code>（リアクション、フォロー）、<code>inbox.handled</code>（まとめて捌いた通知も、それぞれ処理済みにする）</li>
+    <li>出力を、行動の終了の時刻で返す。出力は、同じ時刻の <code>action.ended</code> より先に取り込まれ（D1 1.4）、<code>action.ended</code> は版を上げないので（D2 2.3、J-131）、guard の行動の版が通る。<code>outbound.speech</code>（返信）、<code>outbound.operation</code>（リアクション、フォロー）、<code>inbox.handled</code>（まとめて捌いた通知も、それぞれ処理済みにする）</li>
   </ol>
   <div class="callout">
     <span class="label">決定 P-44　フォローバックの方針の持ち方</span>

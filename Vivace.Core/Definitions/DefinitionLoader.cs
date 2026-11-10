@@ -6,7 +6,7 @@ using Vivace.Core.Definitions.Toml;
 namespace Vivace.Core.Definitions;
 
 /// <summary>
-/// 定義を読む。TOML の文字列やフォルダから Definitions を作り、定義の検証を通す（D7 7.2）。
+/// 定義を読む。TOML の文字列やフォルダから Definitions を作り、定義の検証を通す。
 /// エラーがあれば Definitions は作らない（起動しない、読み直しは古い定義で動き続ける）。
 /// </summary>
 public static class DefinitionLoader
@@ -124,12 +124,14 @@ public static class DefinitionLoader
         return [new DefinitionFile(BuiltinActionsPath, reader.ReadToEnd(), IsBuiltin: true)];
     }
 
+    /// <summary>相対パスの、ファイルの直前のフォルダ名を返す。定義の種類の判定に使う。</summary>
     private static string FolderOf(string path)
     {
         var parts = path.Split('/');
         return parts.Length >= 2 ? parts[^2] : string.Empty;
     }
 
+    /// <summary>定義を ID で登録する。同じ ID が二度あれば、重複のエラーにする。</summary>
     private static void Register<T>(Dictionary<string, T> map, string id, T value, SourceLocation location, List<DefinitionIssue> issues)
     {
         if (id.Length == 0)
@@ -150,6 +152,7 @@ public static class DefinitionLoader
         map[id] = value;
     }
 
+    /// <summary>定義ファイルの内容のハッシュを、ファイルの順に依らず求める。</summary>
     private static string HashOf(IEnumerable<DefinitionFile> files)
     {
         var builder = new StringBuilder();

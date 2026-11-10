@@ -1,8 +1,6 @@
 namespace Vivace.Core.Time;
 
-/// <summary>
-/// 現地時刻と UTC の相互変換。時差は固定なので、タイムゾーンのライブラリは使わない（P-24）。
-/// </summary>
+/// <summary>現地時刻と UTC の相互変換。時差は固定。</summary>
 public static class LocalClock
 {
     /// <summary>UTC の時刻を、現地の日付と時刻にする。</summary>

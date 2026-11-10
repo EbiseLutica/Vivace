@@ -200,6 +200,7 @@ record ApplyResult(
   </div>
 </section>
 
+<p><strong>取り消し</strong>（J-145）：<code>CancelHandler</code> は、決める側のレーンだけを止める。Planner のレーンは止めない。段階2 では、決めどきは出力を待つ間に並列に止まらないので、規則だけを単体で確かめる。</p>
 <section id="step">
   <h2><span class="num">1.4</span>エンジンの1歩</h2>
   <p>エンジンは、次の手順を繰り返す。</p>
@@ -211,7 +212,7 @@ record ApplyResult(
     <li><strong>適用する。</strong>Apply を呼び、新しい状態、イベントの状態の更新、適用番号、後続のイベント、付随する表（受信箱、未送信の操作など）を、1つのトランザクションで書く</li>
     <li><strong>シグナルを実行する。</strong>コミットのあとで、ハンドラの起動、配信、記憶の整理の起動を行い、購読者に適用済みのイベントを流す</li>
   </ol>
-  <p>キューは、SQLite の未適用のイベントを、メモリの優先度つきキュー（<code>PriorityQueue</code>）に写したもの。起動時に読み込み、以後はエンジンが両方を同時に更新する。読むのはメモリのほうだけ。</p>
+  <p>キューは、SQLite の未適用のイベントを、メモリの優先度つきキュー（<code>PriorityQueue</code>）に写したもの。決める側の出力は、契機の連番の順に、ホライズンが先頭の時刻以下になったときに積む（同じ時刻の出力の連番は、並列に動いても毎回同じ。J-137）。シグナルは、コミットのあとに実行する（D1 1.3。J-145）。起動時に読み込み、以後はエンジンが両方を同時に更新する。読むのはメモリのほうだけ。</p>
   <figure class="diagram">
     <svg viewBox="0 0 760 360" role="img" aria-label="決めどきの処理の流れ">
       <text class="title" x="110" y="28" text-anchor="middle">エンジン</text>
@@ -411,7 +412,7 @@ record ApplyResult(
       <path class="arrow dash" d="M298 205 C 200 235, 110 225, 105 150"/>
       <text class="sub" x="40" y="200">終了・中断</text>
     </svg>
-    <figcaption>ペルソナの行動の状態。どの遷移でも、行動の版番号が上がる</figcaption>
+    <figcaption>ペルソナの行動の状態。行動の版番号が上がるのは、決めたとき（<code>activity.chosen</code>）と、割り込みで打ち切られたとき。行動の終わり（<code>action.ended</code>）では上げない（J-131）</figcaption>
   </figure>
   <ul>
     <li>行動中のまま、固定ブロックの開始で次の行動に移ることもある（ブロックの開始が、前の行動を終わらせる）。着いて待っているとき、出来事で予定が押したとき、ブロックの中でスマホを使っているときに起きる。ただし、反射の行動（気絶、早退して休む）は打ち切らない（D5 5.7）</li>

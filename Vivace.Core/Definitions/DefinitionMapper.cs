@@ -8,10 +8,7 @@ using Vivace.Core.Time;
 
 namespace Vivace.Core.Definitions;
 
-/// <summary>
-/// TOML の表を、定義の型に写す。型と範囲の検査はここで行い、参照の検査は DefinitionValidator が行う。
-/// 問題があっても、既定値で型を作り続けて、全件のエラーを集める。
-/// </summary>
+/// <summary>TOML の表を定義の型に写す。問題があっても既定値で続け、エラーを全件集める。</summary>
 internal static partial class DefinitionMapper
 {
     private static readonly Dictionary<string, VitalName> VitalKeys = new()
@@ -33,9 +30,11 @@ internal static partial class DefinitionMapper
         ["sun"] = DayOfWeek.Sunday,
     };
 
+    /// <summary>ユーザーの定義の ID の形式。</summary>
     [GeneratedRegex(@"^[a-z0-9_]+$", RegexOptions.CultureInvariant)]
     private static partial Regex UserIdPattern();
 
+    /// <summary>組み込みの定義の ID の形式。</summary>
     [GeneratedRegex(@"^core\.[a-z0-9_]+$", RegexOptions.CultureInvariant)]
     private static partial Regex CoreIdPattern();
 
@@ -455,6 +454,7 @@ internal static partial class DefinitionMapper
             Src(table));
     }
 
+    /// <summary>表の位置とキーの位置から、定義の出どころを作る。</summary>
     private static DefinitionSource Src(TomlTable table)
     {
         var keys = ImmutableDictionary.CreateBuilder<string, SourceLocation>();
@@ -476,6 +476,7 @@ internal static partial class DefinitionMapper
         }
     }
 
+    /// <summary>生成する場所の扱いを読む。</summary>
     private static GeneratedPlacesMode ReadGeneratedPlaces(TableReader r)
     {
         var text = r.String("generated_places");
@@ -487,12 +488,14 @@ internal static partial class DefinitionMapper
         };
     }
 
+    /// <summary>生成する場所の扱いが読めないことをエラーにし、既定値を返す。</summary>
     private static GeneratedPlacesMode ReportGeneratedPlaces(TableReader r, string text)
     {
         r.InvalidAt("generated_places", $"generated_places は auto か review で書いてください: {text}");
         return GeneratedPlacesMode.Auto;
     }
 
+    /// <summary>変換の辞書の1語を読む。</summary>
     private static TermDef MapTerm(TomlTable table, List<DefinitionIssue> issues)
     {
         var r = new TableReader(table, issues);
@@ -520,6 +523,7 @@ internal static partial class DefinitionMapper
         return new TermDef(from, verdict, to, Src(table));
     }
 
+    /// <summary>場所の定義を読む。</summary>
     private static PlaceDef MapPlace(TomlTable table, List<DefinitionIssue> issues)
     {
         var r = new TableReader(table, issues);
@@ -555,6 +559,7 @@ internal static partial class DefinitionMapper
             Src(table));
     }
 
+    /// <summary>好みの値を読む。文字列の語か、0 以上の倍率。</summary>
     private static Preference? ReadPreference(TomlNode node, TableReader r, string key)
     {
         if (node is TomlScalar { Value: string text })
@@ -586,12 +591,14 @@ internal static partial class DefinitionMapper
         return null;
     }
 
+    /// <summary>好みの値が読めないことをエラーにする。</summary>
     private static Preference? ReportPreference(TableReader r, TomlNode node, string key)
     {
         r.Invalid(node, $"好みは like、dislike、forbid、数のどれかで書いてください: {key}");
         return null;
     }
 
+    /// <summary>状態変数の設定を読む。省略したものは既定値にする。</summary>
     private static VitalsDef MapVitals(TableReader r)
     {
         var energyInitial = 80.0;
@@ -643,6 +650,7 @@ internal static partial class DefinitionMapper
         return new VitalsDef(energyInitial, floor, ceiling, rateAlone, rateTogether, sleepTarget);
     }
 
+    /// <summary>反射のしきい値と行動を読む。社交欲求は書けない。</summary>
     private static ImmutableDictionary<VitalName, ReflexDef> MapReflexes(TableReader r)
     {
         var reflexes = ImmutableDictionary.CreateBuilder<VitalName, ReflexDef>();
@@ -693,12 +701,14 @@ internal static partial class DefinitionMapper
         return reflexes.ToImmutable();
     }
 
+    /// <summary>状態変数ごとの既定の反射の行動を返す。</summary>
     private static string DefaultReflexAction(VitalName vital) => vital switch
     {
         VitalName.Health => "core.go_home_rest",
         _ => "core.faint",
     };
 
+    /// <summary>予定の乱れへの反応の重みを読む。</summary>
     private static DisruptionWeights MapDisruption(TableReader r)
     {
         var late = 1.0;
@@ -717,6 +727,7 @@ internal static partial class DefinitionMapper
         return new DisruptionWeights(late, absent, wait);
     }
 
+    /// <summary>行動の効果を読む。</summary>
     private static ActionEffects MapActionEffects(TableReader r)
     {
         var effectsTable = r.Table("effects");
@@ -749,6 +760,7 @@ internal static partial class DefinitionMapper
         return new ActionEffects(rates, onStart, onEnd, restore, repeatDecay, sleep, handler);
     }
 
+    /// <summary>何も起こさない行動の効果を作る。</summary>
     private static ActionEffects EmptyEffects() => new(
         ImmutableDictionary<VitalName, double>.Empty,
         ImmutableDictionary<VitalName, double>.Empty,
@@ -758,6 +770,7 @@ internal static partial class DefinitionMapper
         null,
         null);
 
+    /// <summary>出来事の効果を読む。書いたものだけが入る。</summary>
     private static IncidentEffects MapIncidentEffects(TableReader r)
     {
         var effectsTable = r.Table("effects");
@@ -827,6 +840,7 @@ internal static partial class DefinitionMapper
         return value.Value;
     }
 
+    /// <summary>0 以上の有限の数を読む。外れていればエラーにして、既定値を返す。</summary>
     private static double ReadNonNegative(TableReader r, string key, double fallback)
     {
         var value = r.Number(key);
@@ -844,6 +858,7 @@ internal static partial class DefinitionMapper
         return value.Value;
     }
 
+    /// <summary>場所 ID か場所のタグの、ちょうど一方が書かれていることを確かめる。</summary>
     private static void CheckPlaceChoice(TableReader r, string? place, string? placeTag)
     {
         if ((place is null) == (placeTag is null))
@@ -852,15 +867,18 @@ internal static partial class DefinitionMapper
         }
     }
 
+    /// <summary>状態変数ごとの数の表を、共通の範囲で読む。</summary>
     private static ImmutableDictionary<VitalName, double> ReadVitalTable(TableReader parent, string key, double min, double max) =>
         ReadVitalTable(parent, key, _ => (min, max));
 
-    /// <summary>復元の範囲（D2 2.5）。気力、健康度、退屈度は 0〜100、社交欲求は −100〜100。</summary>
+    /// <summary>復元の範囲。気力、健康度、退屈度は 0〜100、社交欲求は −100〜100。</summary>
     private static (double Min, double Max) RestoreRange(VitalName vital) =>
         vital == VitalName.Social ? (-100, 100) : (0, 100);
 
+    /// <summary>範囲の端の数を、エラーの文面の形にする。</summary>
     private static string FormatBound(double value) => value.ToString(CultureInfo.InvariantCulture);
 
+    /// <summary>状態変数ごとの数の表を、状態変数ごとの範囲で読む。</summary>
     private static ImmutableDictionary<VitalName, double> ReadVitalTable(TableReader parent, string key, Func<VitalName, (double Min, double Max)> range)
     {
         var builder = ImmutableDictionary.CreateBuilder<VitalName, double>();
@@ -901,6 +919,7 @@ internal static partial class DefinitionMapper
         return builder.ToImmutable();
     }
 
+    /// <summary>スマホの指定を読む。</summary>
     private static PhonePolicy? ReadPhone(TableReader r, string key)
     {
         var text = r.String(key);
@@ -913,12 +932,14 @@ internal static partial class DefinitionMapper
         };
     }
 
+    /// <summary>スマホの指定が読めないことをエラーにする。</summary>
     private static PhonePolicy? ReportPhone(TableReader r, string key, string text)
     {
         r.InvalidAt(key, $"phone は open か closed で書いてください: {text}");
         return null;
     }
 
+    /// <summary>固定予定を読む。</summary>
     private static ScheduleDef MapSchedule(TomlTable table, List<DefinitionIssue> issues)
     {
         var r = new TableReader(table, issues);
@@ -952,6 +973,7 @@ internal static partial class DefinitionMapper
         return new ScheduleDef(periods.ToImmutable(), blocks.ToImmutable(), exceptions.ToImmutable());
     }
 
+    /// <summary>期間を読む。読めなければ null を返す。</summary>
     private static PeriodDef? MapPeriod(TomlTable table, List<DefinitionIssue> issues)
     {
         var r = new TableReader(table, issues);
@@ -994,6 +1016,7 @@ internal static partial class DefinitionMapper
         return id;
     }
 
+    /// <summary>例外日を読む。読めなければ null を返す。</summary>
     private static ExceptionDef? MapException(TomlTable table, List<DefinitionIssue> issues)
     {
         var r = new TableReader(table, issues);
@@ -1025,6 +1048,7 @@ internal static partial class DefinitionMapper
             Src(table));
     }
 
+    /// <summary>固定予定のブロックを読む。</summary>
     private static BlockDef MapBlock(TomlTable table, List<DefinitionIssue> issues, bool isException)
     {
         var r = new TableReader(table, issues);
@@ -1071,6 +1095,7 @@ internal static partial class DefinitionMapper
             Src(table));
     }
 
+    /// <summary>曜日の列を読む。</summary>
     private static ImmutableArray<DayOfWeek> ReadDays(TableReader r)
     {
         var builder = ImmutableArray.CreateBuilder<DayOfWeek>();
@@ -1089,6 +1114,7 @@ internal static partial class DefinitionMapper
         return builder.ToImmutable();
     }
 
+    /// <summary>時間帯を読む。1つの範囲と、並べ書きの両方を受け付ける。</summary>
     private static ImmutableArray<TimeRange> ReadRanges(TableReader r, TomlTable table)
     {
         var builder = ImmutableArray.CreateBuilder<TimeRange>();
@@ -1135,6 +1161,7 @@ internal static partial class DefinitionMapper
         return builder.ToImmutable();
     }
 
+    /// <summary>同行者が抜けたときの扱いを読む。</summary>
     private static PartnerAbsentPolicy? ReadPartnerAbsent(TableReader r)
     {
         var text = r.String("on_partner_absent");
@@ -1147,6 +1174,7 @@ internal static partial class DefinitionMapper
         };
     }
 
+    /// <summary>同行者が抜けたときの扱いが読めないことをエラーにする。</summary>
     private static PartnerAbsentPolicy? ReportPartnerAbsent(TableReader r, string text)
     {
         r.InvalidAt("on_partner_absent", $"on_partner_absent は continue か cancel で書いてください: {text}");

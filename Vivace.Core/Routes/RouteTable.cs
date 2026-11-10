@@ -3,18 +3,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Routes;
 
-/// <summary>
-/// 場所の間のつながり（無向の辺と移動時間（分））。
-/// </summary>
-/// <param name="A">片方の場所。</param>
-/// <param name="B">もう片方の場所。</param>
-/// <param name="Minutes">移動時間（分）。正の整数。</param>
-public readonly record struct RouteEdge(PlaceId A, PlaceId B, int Minutes);
-
-/// <summary>
-/// 全点対の最短経路の表（Floyd–Warshall、D5 5.10）。作り直すのは、グラフの版が上がったとき。
-/// 閉鎖中の場所は、渡す場所の列に入れない（行き先にも経路の途中にもしない）。
-/// </summary>
+/// <summary>全点対の最短経路の表。閉鎖中の場所は、渡す場所の列に入れない。</summary>
 public sealed class RouteTable
 {
     private const int Unreachable = int.MaxValue / 4;
@@ -24,6 +13,7 @@ public sealed class RouteTable
     private readonly int[,] _distance;
     private readonly int[,] _next;
 
+    /// <summary>計算済みの距離と次の場所から作る。</summary>
     private RouteTable(ImmutableArray<PlaceId> places, int[,] distance, int[,] next)
     {
         _places = places;
@@ -118,9 +108,7 @@ public sealed class RouteTable
         return _distance[i, j] >= Unreachable ? null : _distance[i, j];
     }
 
-    /// <summary>
-    /// 最短経路を辺の列で返す（移動の経路は辺の列として確定させる。D5 5.10）。つながらなければ null。出発と同じ場所なら空の列。
-    /// </summary>
+    /// <summary>最短経路を辺の列で返す。つながらなければ null。出発と同じ場所なら空の列。</summary>
     /// <param name="from">出発地。</param>
     /// <param name="to">目的地。</param>
     public ImmutableArray<RouteStep>? Steps(PlaceId from, PlaceId to)

@@ -3,40 +3,7 @@ using System.Collections.Immutable;
 namespace Vivace.Core.Events;
 
 /// <summary>
-/// 段。同じ時刻のイベントを並べる順番（D2 2.2）。数が小さいほど先に適用する。
-/// </summary>
-public enum EventStage
-{
-    /// <summary>1: 日付が変わる。</summary>
-    DayTurn = 1,
-
-    /// <summary>2: 終わることが終わる。</summary>
-    Ending = 2,
-
-    /// <summary>3: 世界が変わる。</summary>
-    World = 3,
-
-    /// <summary>4: 体が反応する。</summary>
-    Reaction = 4,
-
-    /// <summary>5: 外から届く。</summary>
-    External = 5,
-
-    /// <summary>6: 予定の時刻になる。</summary>
-    Schedule = 6,
-
-    /// <summary>7: 決めて始める。</summary>
-    Decision = 7,
-}
-
-/// <summary>イベントタイプの1件。名前、段、ペイロードの型。</summary>
-/// <param name="Name">イベントタイプの名前（"action.started" など）。</param>
-/// <param name="Stage">段。</param>
-/// <param name="PayloadType">ペイロードの型。</param>
-public sealed record EventTypeInfo(string Name, EventStage Stage, Type PayloadType);
-
-/// <summary>
-/// イベントタイプの名前と、段と、ペイロードの型の表（D2 2.2、2.3）。
+/// イベントタイプの名前と、段と、ペイロードの型の表。
 /// </summary>
 public static class EventTypes
 {

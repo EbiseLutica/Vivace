@@ -3,9 +3,7 @@ using Vivace.Testing;
 
 namespace Vivace.Tests.Definitions;
 
-/// <summary>
-/// D7 7.2 のエラーの各項目に、それを起こす壊れた定義を1本ずつ当てる。位置（ファイル、行、列）もそろえて確かめる。
-/// </summary>
+/// <summary>エラーの各項目に、それを起こす壊れた定義を1本ずつ当てる。位置（ファイル、行、列）もそろえて確かめる。</summary>
 public class DefinitionErrorTests
 {
     /// <summary>TOML の構文が壊れていれば、構文のエラーが行の位置つきで出る。</summary>

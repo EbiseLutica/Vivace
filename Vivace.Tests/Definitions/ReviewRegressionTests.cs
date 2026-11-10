@@ -9,9 +9,7 @@ using Vivace.Testing;
 
 namespace Vivace.Tests.Definitions;
 
-/// <summary>
-/// 段階1 のレビュー指摘（B1〜B8、S 系、警告）を直したことを、指摘ごとに壊した定義で確かめる。
-/// </summary>
+/// <summary>壊した定義で、読み込みが位置つきの問題を返すことを確かめる。</summary>
 public class ReviewRegressionTests
 {
     private const string Kaori = "personas/kaori.toml";
@@ -20,7 +18,7 @@ public class ReviewRegressionTests
     private const string World = "worlds/testville.toml";
     private const string Shiori = "personas/shiori.toml";
 
-    /// <summary>周期 B1：期間の日付が不正でも例外は出ず、位置つきのエラーになる。</summary>
+    /// <summary>周期：期間の日付が不正でも例外は出ず、位置つきのエラーになる。</summary>
     [Fact]
     public void ImpossiblePeriodDateIsReportedWithoutThrowing()
     {
@@ -33,7 +31,7 @@ public class ReviewRegressionTests
         Assert.Null(result.Definitions);
     }
 
-    /// <summary>B1：期間の終わりがなければ、必須のエラーが期間の見出しに出る。例外は出ない。</summary>
+    /// <summary>期間の終わりがなければ、必須のエラーが期間の見出しに出る。例外は出ない。</summary>
     [Fact]
     public void PeriodMissingEndIsReportedAtHeader()
     {
@@ -45,7 +43,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.MissingRequired, header);
     }
 
-    /// <summary>B1：長さの文字列が桁あふれや全角の数字でも、例外は出ず、位置つきの値のエラーになる。</summary>
+    /// <summary>長さの文字列が桁あふれや全角の数字でも、例外は出ず、位置つきの値のエラーになる。</summary>
     [Theory]
     [InlineData("99999999999999m")]
     [InlineData("99999999d")]
@@ -60,7 +58,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>B1 と J-101：単位が d、h、m 以外（"7w"）は読めず、値のエラーになる。</summary>
+    /// <summary>単位が d、h、m 以外（"7w"）は読めず、値のエラーになる。</summary>
     [Fact]
     public void DurationWithUnknownUnitIsRejected()
     {
@@ -72,7 +70,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>B3：移動時間は 1 以上の整数。0、負の値、int に入らない値は、値のエラーになる。</summary>
+    /// <summary>移動時間は 1 以上の整数。0、負の値、int に入らない値は、値のエラーになる。</summary>
     [Theory]
     [InlineData("park = 0")]
     [InlineData("park = -3")]
@@ -87,7 +85,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>B2：schedule_only でない行動に所要時間がなければ、行動の見出しに必須のエラーが出る。</summary>
+    /// <summary>schedule_only でない行動に所要時間がなければ、行動の見出しに必須のエラーが出る。</summary>
     [Fact]
     public void NonScheduleActionWithoutDurationIsReported()
     {
@@ -99,7 +97,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.MissingRequired, header);
     }
 
-    /// <summary>B2（S17）：core.go_to_next は所要時間を持たなくてよい（次の予定で決まる）。組み込みは読める。</summary>
+    /// <summary>core.go_to_next は所要時間を持たなくてよい（次の予定で決まる）。組み込みは読める。</summary>
     [Fact]
     public void GoToNextMayHaveNoDuration()
     {
@@ -109,7 +107,7 @@ public class ReviewRegressionTests
         Assert.Null(result.Definitions!.Actions["core.go_to_next"].Duration);
     }
 
-    /// <summary>B4：自分自身を親にした within は、循環としてエラーになる。</summary>
+    /// <summary>自分自身を親にした within は、循環としてエラーになる。</summary>
     [Fact]
     public void WithinSelfReferenceIsReported()
     {
@@ -121,7 +119,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>B4：2 つのブロックが互いを親にすれば、循環としてエラーになる。解決は止まらない。</summary>
+    /// <summary>2 つのブロックが互いを親にすれば、循環としてエラーになる。解決は止まらない。</summary>
     [Fact]
     public void WithinCycleIsReported()
     {
@@ -133,7 +131,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>B5（2）：同じブロックの times どうしが重なれば、ブロックの見出しに重なりのエラーが出る。</summary>
+    /// <summary>同じブロックの times どうしが重なれば、ブロックの見出しに重なりのエラーが出る。</summary>
     [Fact]
     public void OverlappingTimesOfOneBlockAreReported()
     {
@@ -179,7 +177,7 @@ public class ReviewRegressionTests
     }
 
     /// <summary>
-    /// B5（4）と S7：日またぎの重なりは、前日からの睡眠との重なりを、定義ごとに1件だけ出す（同じ内容を何百件も出さない）。
+    /// 日またぎの重なりは、前日からの睡眠との重なりを、定義ごとに1件だけ出す（同じ内容を何百件も出さない）。
     /// </summary>
     [Fact]
     public void CrossMidnightOverlapIsReportedOncePerDefinition()
@@ -195,7 +193,7 @@ public class ReviewRegressionTests
         Assert.Equal(header, issue.Location);
     }
 
-    /// <summary>B5（1）：例外日は前日の睡眠との重なりも見る（12-24 の 05:00〜07:00 と、前夜の睡眠〜06:30）。</summary>
+    /// <summary>例外日は前日の睡眠との重なりも見る（12-24 の 05:00〜07:00 と、前夜の睡眠〜06:30）。</summary>
     [Fact]
     public void ExceptionDayIsCheckedAgainstPreviousNight()
     {
@@ -211,7 +209,7 @@ public class ReviewRegressionTests
         Assert.Contains("前日から続くブロック", issue.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>B5（3）：例外日が 2028〜2055 の外でも、その前後の日を見る。</summary>
+    /// <summary>例外日が 2028〜2055 の外でも、その前後の日を見る。</summary>
     [Fact]
     public void ExceptionOutsideTheScanYearsIsStillChecked()
     {
@@ -226,7 +224,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.ScheduleOverlap, header);
     }
 
-    /// <summary>J-103：例外日のブロックに in を書けば、エラーになる。</summary>
+    /// <summary>例外日のブロックに in を書けば、エラーになる。</summary>
     [Fact]
     public void ExceptionBlockWithInIsRejected()
     {
@@ -238,7 +236,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>S6：例外日の skip は基本のブロックだけに当たる。同じ ID で足したブロックは消えない。</summary>
+    /// <summary>例外日の skip は基本のブロックだけに当たる。同じ ID で足したブロックは消えない。</summary>
     [Fact]
     public void ExceptionSkipDoesNotRemoveAddedBlockWithSameId()
     {
@@ -255,7 +253,7 @@ public class ReviewRegressionTests
         Assert.Contains(day.Blocks, block => block.Id == "school@2026-12-24" && block.StartMinute == 540);
     }
 
-    /// <summary>S2：場所、ブロックの ID に名前空間の "." や "@" は使えない。</summary>
+    /// <summary>場所、ブロックの ID に名前空間の "." や "@" は使えない。</summary>
     [Theory]
     [InlineData(World, "id = \"street\"", "id = \"st.reet\"")]
     [InlineData(Kaori, "id = \"school\"", "id = \"lunch.2@x\"")]
@@ -269,7 +267,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>S2：行動の ID が空なら、値のエラーになる（黙って捨てない）。</summary>
+    /// <summary>行動の ID が空なら、値のエラーになる（黙って捨てない）。</summary>
     [Fact]
     public void EmptyActionIdIsRejected()
     {
@@ -281,7 +279,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>S3：使う行動のワイルドカードに当たる行動がなくても、読める。警告にする。</summary>
+    /// <summary>使う行動のワイルドカードに当たる行動がなくても、読める。警告にする。</summary>
     [Fact]
     public void UnmatchedWildcardIsWarnedNotFailed()
     {
@@ -295,7 +293,7 @@ public class ReviewRegressionTests
         Assert.NotNull(result.Definitions);
     }
 
-    /// <summary>S4：確率に nan は使えない。値のエラーになる。</summary>
+    /// <summary>確率に nan は使えない。値のエラーになる。</summary>
     [Fact]
     public void NanChanceIsRejected()
     {
@@ -307,7 +305,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>S4：好みの数は 0 以上。負の倍率は値のエラーになる。</summary>
+    /// <summary>好みの数は 0 以上。負の倍率は値のエラーになる。</summary>
     [Fact]
     public void NegativePreferenceFactorIsRejected()
     {
@@ -319,7 +317,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>S4：負の乱れの重みは値のエラーになる。</summary>
+    /// <summary>負の乱れの重みは値のエラーになる。</summary>
     [Fact]
     public void NegativeDisruptionWeightIsRejected()
     {
@@ -331,7 +329,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>S4：repeat_decay は 0 より大きく 1 以下。5.0 は値のエラーになる。</summary>
+    /// <summary>repeat_decay は 0 より大きく 1 以下。5.0 は値のエラーになる。</summary>
     [Fact]
     public void RepeatDecayOutOfRangeIsRejected()
     {
@@ -343,7 +341,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>S4：slow_place は場所（place か place_tag）のどちらか一方が必要。</summary>
+    /// <summary>slow_place は場所（place か place_tag）のどちらか一方が必要。</summary>
     [Theory]
     [InlineData("effects.slow_place = { add = \"15m\" }")]
     [InlineData("effects.slow_place = { place = \"street\", place_tag = \"road\", add = \"15m\" }")]
@@ -357,7 +355,7 @@ public class ReviewRegressionTests
             issue.Code == DefinitionIssueCode.InvalidValue && issue.Location.Path == Incidents);
     }
 
-    /// <summary>S4：slow_place は add か factor の少なくとも一方が必要。</summary>
+    /// <summary>slow_place は add か factor の少なくとも一方が必要。</summary>
     [Fact]
     public void SlowPlaceNeedsAddOrFactor()
     {
@@ -369,7 +367,7 @@ public class ReviewRegressionTests
             issue.Code == DefinitionIssueCode.InvalidValue && issue.Location.Path == Incidents);
     }
 
-    /// <summary>S4：ワールド向けの出来事に状態（condition）を付けると、値のエラーになる。</summary>
+    /// <summary>ワールド向けの出来事に状態（condition）を付けると、値のエラーになる。</summary>
     [Fact]
     public void WorldTargetWithConditionIsRejected()
     {
@@ -381,7 +379,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>S5：同じ表の見出しを2回書けば、重複のエラーになる。</summary>
+    /// <summary>同じ表の見出しを2回書けば、重複のエラーになる。</summary>
     [Fact]
     public void DuplicateTableHeaderIsReported()
     {
@@ -396,7 +394,7 @@ public class ReviewRegressionTests
         Assert.Null(result.Definitions);
     }
 
-    /// <summary>S11：チャンネルの設定は、不変の JSON の要素として読める（プラグインが読む）。</summary>
+    /// <summary>チャンネルの設定は、不変の JSON の要素として読める（プラグインが読む）。</summary>
     [Fact]
     public void ChannelSettingsAreKeptAsJsonElement()
     {
@@ -407,7 +405,7 @@ public class ReviewRegressionTests
         Assert.True(definitions.Personas["kaori"].ChannelSettings["misskey"].GetProperty("reversi").GetBoolean());
     }
 
-    /// <summary>S12：ファイルの渡す順を変えても、問題の一覧とハッシュは変わらない。</summary>
+    /// <summary>ファイルの渡す順を変えても、問題の一覧とハッシュは変わらない。</summary>
     [Fact]
     public void FileOrderDoesNotChangeIssuesOrHash()
     {
@@ -421,7 +419,7 @@ public class ReviewRegressionTests
         Assert.Equal(forward.Definitions is null, backward.Definitions is null);
     }
 
-    /// <summary>S12：場所のつながりは ID の順に並ぶ。</summary>
+    /// <summary>場所のつながりは ID の順に並ぶ。</summary>
     [Fact]
     public void PlaceLinksAreSortedById()
     {
@@ -430,7 +428,7 @@ public class ReviewRegressionTests
         Assert.Equal(["cafe", "park", "school_2a"], street.Links.Select(link => link.To).ToArray());
     }
 
-    /// <summary>S14：要素の型が違えば、位置つきの値のエラーになる。</summary>
+    /// <summary>要素の型が違えば、位置つきの値のエラーになる。</summary>
     [Fact]
     public void WrongValueTypeIsRejected()
     {
@@ -442,7 +440,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>S14：効果の語彙にないキーは、未知のキーの警告になる。定義は読める。</summary>
+    /// <summary>効果の語彙にないキーは、未知のキーの警告になる。定義は読める。</summary>
     [Fact]
     public void UnknownEffectKeyIsWarned()
     {
@@ -456,7 +454,7 @@ public class ReviewRegressionTests
         Assert.NotNull(result.Definitions);
     }
 
-    /// <summary>S14 と J-108：好みのキーにない行動があれば、参照のエラーになる。</summary>
+    /// <summary>好みのキーにない行動があれば、参照のエラーになる。</summary>
     [Fact]
     public void PreferenceForUnknownActionIsReported()
     {
@@ -469,7 +467,7 @@ public class ReviewRegressionTests
     }
 
     /// <summary>
-    /// S14：親の子ではない場所の一覧（同行のブロックのずれ）。同行の相手と時刻、場所、行動がそろわなければ、警告になる（D5 5.11）。
+    /// 親の子ではない場所の一覧（同行のブロックのずれ）。同行の相手と時刻、場所、行動がそろわなければ、警告になる。
     /// </summary>
     [Fact]
     public void PartnerWithDifferentPlaceIsWarned()
@@ -499,7 +497,7 @@ public class ReviewRegressionTests
     }
 
     /// <summary>
-    /// B8：カルチャが変わっても、ブロックの ID の日付は西暦の "yyyy-MM-dd" のまま。
+    /// カルチャが変わっても、ブロックの ID の日付は西暦の "yyyy-MM-dd" のまま。
     /// </summary>
     [Fact]
     public void BlockIdsDoNotDependOnCulture()
@@ -520,7 +518,7 @@ public class ReviewRegressionTests
     }
 
     /// <summary>
-    /// B5（3）：2028 年には重ならず、28 年周期の別の年（2038 年は 1 月 1 日が金曜）にだけ重なるブロックは、解決で見つかる。
+    /// 2028 年には重ならず、28 年周期の別の年（2038 年は 1 月 1 日が金曜）にだけ重なるブロックは、解決で見つかる。
     /// </summary>
     [Fact]
     public void OverlapInOnlyALaterYearOfTheCycleIsFound()
@@ -547,7 +545,7 @@ public class ReviewRegressionTests
         Assert.Contains(in2038.Issues, issue => issue.Message.Contains("ny_a", StringComparison.Ordinal));
     }
 
-    /// <summary>B5（3）：同じ重なりを定義ファイルに書けば、読み込みのエラーとして、後のブロックの見出しに出る。</summary>
+    /// <summary>同じ重なりを定義ファイルに書けば、読み込みのエラーとして、後のブロックの見出しに出る。</summary>
     [Fact]
     public void OverlapInLaterCycleYearIsReportedByLoader()
     {
@@ -564,7 +562,7 @@ public class ReviewRegressionTests
     }
 
     /// <summary>
-    /// R5（J-118）：数は有限で範囲内。nan、inf、範囲外、int に入らない値、target と効果の組み合わせの違いは、位置つきの値のエラーになる。
+    /// 数は有限で範囲内。nan、inf、範囲外、int に入らない値、target と効果の組み合わせの違いは、位置つきの値のエラーになる。
     /// </summary>
     [Theory]
     [InlineData("actions/actions.toml", "weight = 1.0", "weight = nan")]
@@ -593,7 +591,7 @@ public class ReviewRegressionTests
         Assert.Null(result.Definitions);
     }
 
-    /// <summary>R13：所要時間が読めなければ、値のエラーだけを出し、欠落のエラーを重ねない。</summary>
+    /// <summary>所要時間が読めなければ、値のエラーだけを出し、欠落のエラーを重ねない。</summary>
     [Fact]
     public void UnreadableDurationIsNotAlsoReportedAsMissing()
     {
@@ -606,7 +604,7 @@ public class ReviewRegressionTests
         Assert.Contains(result.Issues, issue => issue.Code == DefinitionIssueCode.InvalidValue && issue.Location.Path == Actions);
     }
 
-    /// <summary>R6：自由時間の開始は ID を持たない。固定と計画のブロックの開始は ID を持つ。</summary>
+    /// <summary>自由時間の開始は ID を持たない。固定と計画のブロックの開始は ID を持つ。</summary>
     [Fact]
     public void BlockStartedMayHaveNoIdForFreeTime()
     {
@@ -617,7 +615,7 @@ public class ReviewRegressionTests
         Assert.Equal("school@2026-11-02", fixedBlock.BlockId);
     }
 
-    /// <summary>Q1：率は −1000〜1000、復元は気力などが 0〜100、社交欲求が −100〜100。範囲の外は位置つきの値のエラーになる。</summary>
+    /// <summary>率は −1000〜1000、復元は気力などが 0〜100、社交欲求が −100〜100。範囲の外は位置つきの値のエラーになる。</summary>
     [Theory]
     [InlineData("actions/actions.toml", "effects.on_end.boredom = -15", "effects.on_end.boredom = -15\neffects.rate.energy = 1e300")]
     [InlineData("actions/actions.toml", "effects.on_end.boredom = -15", "effects.on_end.boredom = -15\neffects.rate.energy = 5000")]
@@ -637,7 +635,7 @@ public class ReviewRegressionTests
         Assert.Null(result.Definitions);
     }
 
-    /// <summary>Q1：社交欲求の復元は −100〜100 の中なら読める。</summary>
+    /// <summary>社交欲求の復元は −100〜100 の中なら読める。</summary>
     [Fact]
     public void SocialRestoreInsideRangeIsAccepted()
     {
@@ -648,7 +646,7 @@ public class ReviewRegressionTests
         Assert.DoesNotContain(result.Issues, issue => issue.Severity == IssueSeverity.Error);
     }
 
-    /// <summary>Q2：社交欲求にはしきい値がない（D5 5.6）。反射に書けばエラーになる。</summary>
+    /// <summary>社交欲求にはしきい値がない。反射に書けばエラーになる。</summary>
     [Fact]
     public void SocialReflexIsRejected()
     {
@@ -663,7 +661,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>Q2：状態のしきい値にも社交欲求は書けない。</summary>
+    /// <summary>状態のしきい値にも社交欲求は書けない。</summary>
     [Fact]
     public void SocialConditionThresholdIsRejected()
     {
@@ -675,7 +673,7 @@ public class ReviewRegressionTests
             issue.Severity == IssueSeverity.Error && issue.Code == DefinitionIssueCode.InvalidValue && issue.Location.Path == Incidents);
     }
 
-    /// <summary>Q10：上限のない重みは、どんな有限の数も読める（範囲の文面を出さない）。</summary>
+    /// <summary>上限のない重みは、どんな有限の数も読める（範囲の文面を出さない）。</summary>
     [Fact]
     public void UnboundedWeightAcceptsLargeFiniteNumbers()
     {
@@ -686,7 +684,7 @@ public class ReviewRegressionTests
         Assert.DoesNotContain(result.Issues, issue => issue.Severity == IssueSeverity.Error && issue.Location.Path == Actions);
     }
 
-    /// <summary>Q10：範囲のエラーの文面は、読める形の数（カルチャに依らず、1.79E+308 のような数を出さない）。</summary>
+    /// <summary>範囲のエラーの文面は、読める形の数（カルチャに依らず、1.79E+308 のような数を出さない）。</summary>
     [Fact]
     public void RangeMessageUsesPlainInvariantBounds()
     {
@@ -702,7 +700,7 @@ public class ReviewRegressionTests
     }
 
     /// <summary>
-    /// Q11：同行の相手の例外日が範囲の外（2027 年）でも、範囲の中（2030 年）でも、香織への警告は同じ（1件、同じ文面）。
+    /// 同行の相手の例外日が範囲の外（2027 年）でも、範囲の中（2030 年）でも、香織への警告は同じ（1件、同じ文面）。
     /// </summary>
     [Theory]
     [InlineData("2027-03-15")]
@@ -722,7 +720,7 @@ public class ReviewRegressionTests
         Assert.DoesNotContain(date, single.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>R1：読めない例外日（不正な日付、欠落）は、例外にならず、位置つきのエラーになる。</summary>
+    /// <summary>読めない例外日（不正な日付、欠落）は、例外にならず、位置つきのエラーになる。</summary>
     [Theory]
     [InlineData("2026-13-40")]
     [InlineData("not-a-date")]
@@ -737,7 +735,7 @@ public class ReviewRegressionTests
         Assert.Null(result.Definitions);
     }
 
-    /// <summary>R1：例外日の欠落は、必須のエラーになる。例外にはならない。</summary>
+    /// <summary>例外日の欠落は、必須のエラーになる。例外にはならない。</summary>
     [Fact]
     public void MissingExceptionDateIsReported()
     {
@@ -750,7 +748,7 @@ public class ReviewRegressionTests
         Assert.Null(result.Definitions);
     }
 
-    /// <summary>R1：日付の範囲の両端（0001-01-01、9999-12-31）の例外日は、前後の日を越えて見ず、例外にならない。</summary>
+    /// <summary>日付の範囲の両端（0001-01-01、9999-12-31）の例外日は、前後の日を越えて見ず、例外にならない。</summary>
     [Theory]
     [InlineData("0001-01-01")]
     [InlineData("9999-12-31")]
@@ -763,7 +761,7 @@ public class ReviewRegressionTests
         Assert.DoesNotContain(result.Issues, issue => issue.Severity == IssueSeverity.Error && issue.Code != DefinitionIssueCode.ScheduleOverlap);
     }
 
-    /// <summary>R2：例外日が 2028-01-01（範囲の端）でも、前夜の睡眠との重なりを見る。</summary>
+    /// <summary>例外日が 2028-01-01（範囲の端）でも、前夜の睡眠との重なりを見る。</summary>
     [Fact]
     public void ExceptionOnFirstDayOfScanIsCheckedAgainstPreviousNight()
     {
@@ -779,7 +777,7 @@ public class ReviewRegressionTests
         Assert.Contains("前日から続くブロック", issue.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>R3：同行の不一致は、ブロックの日ごとではなく定義ごとに1件だけ出る。</summary>
+    /// <summary>同行の不一致は、ブロックの日ごとではなく定義ごとに1件だけ出る。</summary>
     [Fact]
     public void PartnerMismatchIsReportedOncePerDefinition()
     {
@@ -797,7 +795,7 @@ public class ReviewRegressionTests
         });
     }
 
-    /// <summary>B6：出来事の発生は、移動時間と閉鎖の両方の解決済みの効果を残せる。定義がなくてもよい（その場の定義）。</summary>
+    /// <summary>出来事の発生は、移動時間と閉鎖の両方の解決済みの効果を残せる。定義がなくてもよい（その場の定義）。</summary>
     [Fact]
     public void IncidentPayloadKeepsBothSlowAndClosedEffects()
     {
@@ -814,7 +812,7 @@ public class ReviewRegressionTests
         Assert.Equal(new PlaceId("park"), payload.Effects.ClosedPlace);
     }
 
-    /// <summary>J-102：曜日を省略したブロックは毎日使う。</summary>
+    /// <summary>曜日を省略したブロックは毎日使う。</summary>
     [Fact]
     public void BlockWithoutDaysAppliesEveryDay()
     {
@@ -826,9 +824,7 @@ public class ReviewRegressionTests
         Assert.DoesNotContain(saturday.Blocks, block => block.DefId == "school");
     }
 
-    /// <summary>
-    /// 片側判定：同行の相手の例外日のブロックに同行が書いてあれば、片側とはしない（J-22 の補足、判定の範囲を例外日まで広げた）。
-    /// </summary>
+    /// <summary>片側判定：同行の相手の例外日のブロックに同行が書いてあれば、片側とはしない。</summary>
     [Fact]
     public void OneSidedWithAcceptsPartnerExceptionBlock()
     {
@@ -842,7 +838,7 @@ public class ReviewRegressionTests
         Assert.DoesNotContain(result.Issues, issue => issue.Code == DefinitionIssueCode.OneSidedWith);
     }
 
-    /// <summary>S4：出来事の効果が指す場所がどのワールドにもなければ、参照のエラーになる。</summary>
+    /// <summary>出来事の効果が指す場所がどのワールドにもなければ、参照のエラーになる。</summary>
     [Fact]
     public void IncidentPlaceMustExist()
     {

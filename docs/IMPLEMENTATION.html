@@ -192,14 +192,14 @@
   <p>1人が固定予定と Decider だけで暮らす。ここで扱うイベントタイプは、<code>world.created</code>、<code>persona.created</code>、<code>day.started</code>、<code>plan.committed</code>、<code>plan.due</code>、<code>block.started</code>、<code>decision.requested</code>、<code>activity.chosen</code>、<code>travel.*</code>、<code>action.*</code> に絞る。</p>
   <p><strong>参照</strong>：<a href="design/1-execution.html#structure">D1 1.2</a>〜<a href="design/1-execution.html#lanes">1.5</a>、<a href="design/1-execution.html#guard">1.7</a>、<a href="design/1-execution.html#states">1.8</a>、<a href="design/2-events.html#types">D2 2.3</a>〜<a href="design/2-events.html#requires">2.6</a>、<a href="design/5-decision.html#decider">D5 5.1</a>〜<a href="design/5-decision.html#score">5.3</a>、<a href="design/5-decision.html#planner">5.5</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" disabled><code>Rules</code>：上のイベントタイプの Apply、guard、行動の決定的な効果、状態変数の読み取りと率の切り替え</li>
-    <li><input type="checkbox" disabled><code>Engine</code>：コマンドのキュー、優先度つきキュー、ホライズンの壁、適用、<code>StartHandler</code> の実行</li>
-    <li><input type="checkbox" disabled><code>Lanes</code>：ペルソナごとの決定と計画、ワールドごとのレーン</li>
-    <li><input type="checkbox" disabled><code>UtilityDecider</code>：候補、所要時間、スコア、抽選</li>
-    <li><input type="checkbox" disabled>Planner の代わりの出力：固定予定だけのプランを出す。起動は、記憶の整理を起こす行動の開始と <code>plan.due</code>。整理の待ちは、段階7 まで入れない</li>
-    <li><input type="checkbox" disabled><code>InMemoryStorage</code>（<code>Vivace.Testing</code>）：<code>IStorage</code> の最小の実装。段階4 で捨てる前提で作る</li>
-    <li><input type="checkbox" disabled><code>Ingress</code> の最小：ワールドとペルソナの生成</li>
-    <li><input type="checkbox" disabled>不変条件の検査と、シナリオのスナップショットの仕組み</li>
+    <li><input type="checkbox" checked disabled><code>Rules</code>：上のイベントタイプの Apply、guard、行動の決定的な効果、状態変数の読み取りと率の切り替え</li>
+    <li><input type="checkbox" checked disabled><code>Engine</code>：コマンドのキュー、優先度つきキュー、ホライズンの壁、適用、<code>StartHandler</code> の実行</li>
+    <li><input type="checkbox" checked disabled><code>Lanes</code>：ペルソナごとの決定と計画のレーン（ワールドのレーンは、出来事を作る段階3 で足す）</li>
+    <li><input type="checkbox" checked disabled><code>UtilityDecider</code>：候補、所要時間、スコア、抽選</li>
+    <li><input type="checkbox" checked disabled>Planner の代わりの出力：固定予定だけのプランを出す。起動は、記憶の整理を起こす行動の開始と <code>plan.due</code>。整理の待ちは、段階7 まで入れない</li>
+    <li><input type="checkbox" checked disabled><code>InMemoryStorage</code>（<code>Vivace.Testing</code>）：<code>IStorage</code> の最小の実装。段階4 で捨てる前提で作る</li>
+    <li><input type="checkbox" checked disabled><code>Ingress</code> の最小：ワールドとペルソナの生成</li>
+    <li><input type="checkbox" checked disabled>不変条件の検査と、シナリオのスナップショットの仕組み</li>
   </ul>
   <p><strong>完了条件</strong>：仮想時計で7日回し、事実のイベントの列がスナップショットと一致する。全適用で不変条件が通る。</p>
 </section>
@@ -210,9 +210,10 @@
   <p><strong>参照</strong>：<a href="design/1-execution.html#lifecycle">D1 1.13</a>、<a href="design/2-events.html">D2 全体</a>、<a href="design/4-components.html#api">D4 4.6</a>、<a href="design/5-decision.html#special">D5 5.4</a>、<a href="design/5-decision.html#vitals">5.6</a>〜<a href="design/5-decision.html#incidents">5.8</a>、<a href="design/5-decision.html#routes">5.10</a>、<a href="design/5-decision.html#together">5.11</a>、<a href="design/7-operations.html#errors">D7 7.1</a>、<a href="design/7-operations.html#cli">7.5</a></p>
   <ul class="tasks">
     <li><input type="checkbox" disabled>しきい値の予測と反射、寝不足、居合わせと社交欲求の率</li>
-    <li><input type="checkbox" disabled>予定の乱れ（<code>block.responded</code>）</li>
+    <li><input type="checkbox" disabled>予定の乱れ（<code>block.responded</code>）。移動より短いブロックの欠席も、事実として残す（J-143、段階2 では何も残らない）</li>
     <li><input type="checkbox" disabled>スマホを開く機会と副行動（候補はスマホを開く、投稿する、何もしない）。効果のハンドラは、何もしないものを入れておく</li>
     <li><input type="checkbox" disabled>出来事：<code>IncidentLottery</code>、効果、状態、到着の積み直し</li>
+    <li><input type="checkbox" disabled>ワールドごとのレーン（日の始まりに、出来事の抽選を動かす）</li>
     <li><input type="checkbox" disabled>同行（<code>with</code>、<code>on_partner_absent</code>）</li>
     <li><input type="checkbox" disabled>ペルソナとワールドの破棄</li>
     <li><input type="checkbox" disabled>残りのイベントタイプの Apply と guard</li>
@@ -296,11 +297,10 @@
 
 <section id="gaps">
   <h2>いま見えている設計の穴</h2>
-  <p>手順を組む途中で、設計書のどうしが噛み合わない所を2つ見つけた。どれも、表の段階に入るときに決めて、設計書を直す。</p>
+  <p>手順を組む途中で、設計書のどうしが噛み合わない所を見つけた。段階2 で決めた穴（効果のハンドラの出力が必ず却下される）は、J-131 で解消した。残りは、表の段階に入るときに決めて、設計書を直す。</p>
   <div class="table-wrap">
     <table>
       <tr><th>穴</th><th>場所</th><th>起きること</th><th>決める時期</th></tr>
-      <tr><td>効果のハンドラの出力が、必ず却下される</td><td>D1 1.7、1.8、D2 2.2、D6 6.5</td><td>出力は行動の終了の時刻で段7。同じ時刻の <code>action.ended</code>（段2）が先に適用される。D1 1.8 の「どの遷移でも版が上がる」のとおりなら、<code>activityVersion</code> の guard が通らない</td><td>段階2。<code>action.ended</code> は版を上げず、打ち切りだけが上げる形が有力</td></tr>
       <tr><td>再起動で起動し直せないハンドラがある</td><td>D1 1.3、1.11、D2 2.3</td><td>復元の対象は処理中の決めどきだけ。<code>day.started</code> の抽選も同じで、再実行は J-123 で同じ結果になる（段階4 で扱う）。Planner、出来事の抽選、効果のハンドラは <code>day.started</code>、<code>action.started</code>、<code>plan.due</code> から起動するので、途中で落ちると、出力が届かないまま進む</td><td>段階4</td></tr>
     </table>
   </div>

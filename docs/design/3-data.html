@@ -155,6 +155,7 @@ links = { street_home = 1 }</code></pre>
   </div>
 </section>
 
+<p><strong>暦</strong>（J-140）：祝日の暦は、エンジンの作成時に渡す（<code>IHolidayCalendar</code>、P-18）。段階2 のテストの暦は、2026-11-03 だけを祝日にする。日本の暦は段階8。</p>
 <section id="persona-def">
   <h2><span class="num">3.4</span>ペルソナ定義</h2>
 <pre><code>id = "kaori"
@@ -295,6 +296,7 @@ place = "home_living"</code></pre>
   </div>
 </section>
 
+<p><strong>暦</strong>（J-140）：固定予定の解決（プラン、学校の休み）は、エンジンに渡した暦を使う。隙間の警告（検証）は、祝日を考えずに全日を見る。</p>
 <section id="action-def">
   <h2><span class="num">3.6</span>行動と出来事の定義</h2>
 <pre><code>[[action]]
@@ -375,7 +377,8 @@ sealed record PersonaState(
     PostingState Posting,                               // 最後の投稿、空振り、サーバーの制限
     ImmutableList&lt;InboxItem&gt; Inbox,                    // 未処理の通知だけ
     ImmutableList&lt;OutboundOp&gt; Outbound,                // 未送信の操作だけ
-    DateTimeOffset? LastWake);                          // 日誌の範囲の起点（VISION 13章）</code></pre>
+    DateTimeOffset? LastWake,                           // 日誌の範囲の起点（VISION 13章）。睡眠の終わりで設定する（J-145）
+    bool Deciding, string? LastBlockId, string? PlannedFor);  // 決め中の印、最後に始めたブロック、Planner を起こした期間の鍵（J-133、J-135、J-141）</code></pre>
   <ul>
     <li>ID は <code>readonly record struct</code> で型を分ける（<code>PersonaId</code>、<code>WorldId</code>、<code>PlaceId</code>）。文字列の取り違えをコンパイラで防ぐ</li>
     <li>ワールドやペルソナの状態のような、項目の多いものは <code>sealed record</code>（参照型）にする。参照が同じかどうかだけで「変わったか」がわかり（変わった行だけを SQLite に書くため）、辞書から取り出したり写しを渡したりするたびの丸ごとのコピーも起きない。<code>default</code> で中身の空な状態が作られることもない。ID、イベントの並びの位置、状態変数1本ぶん（値、基準時刻、率）のような小さな値は、<code>readonly record struct</code> にする</li>
