@@ -24,42 +24,6 @@ public static class VitalRules
         _ => (0.0, 100.0),
     };
 
-    /// <summary>範囲に切り詰める。</summary>
-    /// <param name="value">値。</param>
-    /// <param name="range">範囲。</param>
-    public static double Clamp(double value, (double Min, double Max) range) =>
-        value < range.Min ? range.Min : value > range.Max ? range.Max : value;
-
-    /// <summary>いまの値を読む。範囲の中に切り詰める。</summary>
-    /// <param name="value">状態変数の1本。</param>
-    /// <param name="now">読む時刻。</param>
-    /// <param name="range">範囲。</param>
-    public static double Read(VitalTrack value, DateTimeOffset now, (double Min, double Max) range) =>
-        Clamp(value.BaseValue + value.Rate * (now - value.BaseTime).TotalHours, range);
-
-    /// <summary>状態変数の1本を取り出す。</summary>
-    /// <param name="vitals">状態変数の集まり。</param>
-    /// <param name="vital">取り出す変数。</param>
-    public static VitalTrack Get(Vitals vitals, VitalName vital) => vital switch
-    {
-        VitalName.Energy => vitals.Energy,
-        VitalName.Health => vitals.Health,
-        VitalName.Boredom => vitals.Boredom,
-        _ => vitals.Social,
-    };
-
-    /// <summary>状態変数の1本を差し替えた集まりを返す。版は変えない。</summary>
-    /// <param name="vitals">状態変数の集まり。</param>
-    /// <param name="vital">差し替える変数。</param>
-    /// <param name="value">新しい値。</param>
-    public static Vitals Put(Vitals vitals, VitalName vital, VitalTrack value) => vital switch
-    {
-        VitalName.Energy => vitals with { Energy = value },
-        VitalName.Health => vitals with { Health = value },
-        VitalName.Boredom => vitals with { Boredom = value },
-        _ => vitals with { Social = value },
-    };
-
     /// <summary>
     /// ペルソナのいまの居場所に、ほかの人がいるか。移動中の人は、どの場所にもいないものとして扱う。
     /// </summary>
@@ -121,14 +85,14 @@ public static class VitalRules
         foreach (var vital in AllVitals)
         {
             var range = Range(vital, def.Vitals);
-            var old = Get(vitals, vital);
+            var old = vitals.Get(vital);
             var rate = EffectiveRate(state, persona, vital, defs);
             if (rate == old.Rate)
             {
                 continue;
             }
 
-            vitals = Put(vitals, vital, new VitalTrack(now, Read(old, now, range), rate));
+            vitals = vitals.With(vital, new VitalTrack(now, old.ValueAt(now, range), rate));
             changed = true;
         }
 
@@ -148,10 +112,10 @@ public static class VitalRules
     public static PersonaState Change(PersonaState persona, VitalName vital, DateTimeOffset now, Definitions.Definitions defs, double? delta, double? set)
     {
         var range = Range(vital, defs.Personas[persona.DefId].Vitals);
-        var old = Get(persona.Vitals, vital);
-        var current = Read(old, now, range);
+        var old = persona.Vitals.Get(vital);
+        var current = old.ValueAt(now, range);
         var value = set ?? current + (delta ?? 0.0);
-        var vitals = Put(persona.Vitals, vital, new VitalTrack(now, Clamp(value, range), old.Rate));
+        var vitals = persona.Vitals.With(vital, new VitalTrack(now, VitalTrack.Clamp(value, range), old.Rate));
         return persona with { Vitals = vitals with { Version = vitals.Version + 1 } };
     }
 
@@ -166,7 +130,7 @@ public static class VitalRules
         return AllVitals.All(vital =>
         {
             var (min, max) = Range(vital, def);
-            var value = Get(persona.Vitals, vital).BaseValue;
+            var value = persona.Vitals.Get(vital).BaseValue;
             return value >= min && value <= max;
         });
     }

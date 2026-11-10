@@ -43,7 +43,7 @@ internal sealed class PersonaCreatedRule : EventRule<PersonaCreatedPayload>
             new VitalTrack(t, personaDef.Vitals.EnergyInitial, 0),
             new VitalTrack(t, 100, 0),
             new VitalTrack(t, 30, 0),
-            new VitalTrack(t, VitalRules.Clamp(0, socialRange), 0),
+            new VitalTrack(t, VitalTrack.Clamp(0, socialRange), 0),
             1);
         var persona = new PersonaState(
             id,

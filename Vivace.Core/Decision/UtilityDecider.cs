@@ -234,7 +234,7 @@ public sealed class UtilityDecider : IDecider
         {
             var range = VitalRules.Range(vital, personaDef.Vitals);
             var (target, width) = vital is VitalName.Energy or VitalName.Health ? (100.0, 100.0) : (0.0, 100.0);
-            var current = VitalRules.Read(VitalRules.Get(persona.Vitals, vital), now, range);
+            var current = persona.Vitals.Get(vital).ValueAt(now, range);
             var defaultRate = vital switch
             {
                 VitalName.Energy => VitalRules.AwakeEnergyRate,
@@ -242,9 +242,9 @@ public sealed class UtilityDecider : IDecider
                 VitalName.Boredom => VitalRules.DefaultBoredomRate,
                 _ => together ? personaDef.Vitals.SocialRateTogether : personaDef.Vitals.SocialRateAlone,
             };
-            var middle = VitalRules.Clamp(current + defaultRate * travelMinutes / 60.0, range);
+            var middle = VitalTrack.Clamp(current + defaultRate * travelMinutes / 60.0, range);
             var rate = action is not null && action.Effects.Rates.TryGetValue(vital, out var actionRate) ? actionRate : defaultRate;
-            var end = VitalRules.Clamp(middle + rate * duration.TotalHours, range);
+            var end = VitalTrack.Clamp(middle + rate * duration.TotalHours, range);
             if (action is not null && action.Effects.OnEnd.TryGetValue(vital, out var delta))
             {
                 if (delta < 0 && vital == VitalName.Boredom && action.Effects.RepeatDecay is { } decay)
@@ -252,12 +252,12 @@ public sealed class UtilityDecider : IDecider
                     delta *= ActionRules.RepeatDecayFactor(decay, consecutive);
                 }
 
-                end = VitalRules.Clamp(end + delta, range);
+                end = VitalTrack.Clamp(end + delta, range);
             }
 
             if (action is not null && action.Effects.Restore.TryGetValue(vital, out var restored))
             {
-                end = VitalRules.Clamp(restored, range);
+                end = VitalTrack.Clamp(restored, range);
             }
 
             var urgency = Math.Pow((current - target) / width, 2);
