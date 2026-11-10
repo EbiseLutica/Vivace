@@ -243,7 +243,7 @@ public sealed record LlmPolicy(
     <table>
       <tr><th>部品</th><th>役目</th><th>詳細</th></tr>
       <tr><td><code>Engine</code></td><td>コマンドの処理、キュー、ホライズンの壁、締め切り、適用、シグナルの実行</td><td>D1</td></tr>
-      <tr><td><code>Rules</code></td><td>Apply 本体。イベントタイプごとの関数の集まり。static で、副作用を持たない</td><td>D2</td></tr>
+      <tr><td><code>EventApplier</code> / <code>IEventRule</code></td><td>Apply の入口と、イベントタイプごとのルール。入口はインスタンスで、不変の規則の文脈とルールの表だけを持つ。副作用を持たない</td><td>D2</td></tr>
       <tr><td><code>Guards</code></td><td>適用前の検査の評価</td><td>D1 1.7</td></tr>
       <tr><td><code>Lanes</code></td><td>レーンごとの直列の実行と、LLM の同時実行数の制限</td><td>D1 1.5</td></tr>
       <tr><td><code>Dispatcher</code></td><td>配信役。未送信の操作を送り、結果をコマンドで返す</td><td>VISION 10章</td></tr>

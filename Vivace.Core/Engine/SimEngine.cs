@@ -17,6 +17,8 @@ namespace Vivace.Core.Engine;
 public sealed class SimEngine : IAsyncDisposable
 {
     private readonly RuleContext _ctx;
+    /// <summary>イベントの適用の入口。</summary>
+    private readonly EventApplier _applier;
     private readonly IDecider _decider;
     private readonly IStorage _storage;
     private readonly IRandomSource _random;
@@ -38,6 +40,7 @@ public sealed class SimEngine : IAsyncDisposable
     private SimEngine(RuleContext ctx, IDecider decider, IStorage storage, IRandomSource random, IClock clock)
     {
         _ctx = ctx;
+        _applier = new EventApplier(ctx);
         _decider = decider;
         _storage = storage;
         _random = random;
@@ -130,7 +133,7 @@ public sealed class SimEngine : IAsyncDisposable
     {
         var previous = _state.Position.Time;
         await _clock.WaitUntilAsync(ev.Time, ct);
-        var result = Rules.Rules.Apply(_ctx, _state, ev);
+        var result = _applier.Apply(_state, ev);
         long? applyNo = null;
         if (result.Outcome == EventOutcome.Applied)
         {

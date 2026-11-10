@@ -55,8 +55,8 @@ public class GoToNextWeightTests
     /// <summary>香織が家にいて、3 時間の自由時間のプランを持つ状態（この文脈の定義で作る）。</summary>
     private static SimState FreeDay(RuleContext context)
     {
-        var state = Vivace.Core.Rules.Rules.Apply(context, Fixture.Empty(), Fixture.Event(1, Fixture.Now, EventTypes.WorldCreated, new WorldCreatedPayload(TestWorld.WorldId, 42), null)).State;
-        state = Vivace.Core.Rules.Rules.Apply(context, state, Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload("kaori", new PlaceId("kaori_room")), null)).State;
+        var state = new EventApplier(context).Apply(Fixture.Empty(), Fixture.Event(1, Fixture.Now, EventTypes.WorldCreated, new WorldCreatedPayload(TestWorld.WorldId, 42), null)).State;
+        state = new EventApplier(context).Apply(state, Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload("kaori", new PlaceId("kaori_room")), null)).State;
         var plan = new DayPlan(
             1,
             Fixture.Now,
@@ -66,7 +66,7 @@ public class GoToNextWeightTests
             [new PlanBlock(null, BlockKind.Free, Fixture.Now, Fixture.Now.AddHours(3), null, null, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue)],
             null);
         var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
-        return Vivace.Core.Rules.Rules.Apply(context, state, committed).State;
+        return new EventApplier(context).Apply(state, committed).State;
     }
 
     /// <summary>乱数の位置を変えて、Decider が選んだ行動の ID を集める。</summary>
