@@ -30,14 +30,14 @@ public class RuleTableTests
     {
         Assert.Equal(
             Stage2EventTypes.Order(StringComparer.Ordinal),
-            RuleTable.Entries.Keys.Order(StringComparer.Ordinal));
+            EventApplier.Table.Keys.Order(StringComparer.Ordinal));
     }
 
     /// <summary>各ルールの EventType は、表でそのルールを引くキーと一致する。</summary>
     [Fact]
     public void EachRuleReportsTheKeyItIsListedUnder()
     {
-        foreach (var (key, rule) in RuleTable.Entries)
+        foreach (var (key, rule) in EventApplier.Table)
         {
             Assert.Equal(key, rule.EventType);
         }

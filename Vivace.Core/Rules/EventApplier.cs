@@ -1,5 +1,7 @@
+using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
+using Vivace.Core.Rules.EventRules;
 using static Vivace.Core.Rules.Guards;
 
 namespace Vivace.Core.Rules;
@@ -7,6 +9,9 @@ namespace Vivace.Core.Rules;
 /// <summary>イベントの適用の入口。イベントを適用し、新しい状態と後続のイベントとシグナルを返す。同じ入力なら同じ結果になる。</summary>
 public sealed class EventApplier
 {
+    /// <summary>扱うイベントタイプとルールの表。起動時に組み、以後は変えない。キーは序数で比べる。</summary>
+    internal static readonly ImmutableDictionary<string, IEventRule> Table = BuildTable();
+
     /// <summary>規則の文脈。</summary>
     private readonly RuleContext _ctx;
 
@@ -28,11 +33,29 @@ public sealed class EventApplier
             return Rejected(state, ev, guard, failure);
         }
 
-        if (!RuleTable.Entries.TryGetValue(ev.EventType, out var rule))
+        if (!Table.TryGetValue(ev.EventType, out var rule))
         {
             throw new NotSupportedException($"非対応のイベントタイプです: {ev.EventType}");
         }
 
         return rule.Apply(_ctx, state, ev);
     }
+
+    /// <summary>全ルールから表を組む。同じイベントタイプのルールがあれば例外になる。</summary>
+    private static ImmutableDictionary<string, IEventRule> BuildTable() =>
+        new IEventRule[]
+        {
+            new WorldCreatedRule(),
+            new DayStartedRule(),
+            new PersonaCreatedRule(),
+            new PlanCommittedRule(),
+            new PlanDueRule(),
+            new BlockStartedRule(),
+            new DecisionRequestedRule(),
+            new ActivityChosenRule(),
+            new TravelStartedRule(),
+            new TravelArrivedRule(),
+            new ActionStartedRule(),
+            new ActionEndedRule(),
+        }.ToImmutableDictionary(rule => rule.EventType, rule => rule, StringComparer.Ordinal);
 }
