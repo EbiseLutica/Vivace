@@ -20,10 +20,10 @@ public static class Fixture
     public static readonly WorldId World = new(TestWorld.DefId.Value);
 
     /// <summary>香織のインスタンス ID。</summary>
-    public static readonly PersonaId Kaori = new("kaori@testville");
+    public static readonly PersonaId Kaori = new("kaori");
 
     /// <summary>栞のインスタンス ID。</summary>
-    public static readonly PersonaId Shiori = new("shiori@testville");
+    public static readonly PersonaId Shiori = new("shiori");
 
     private static readonly Lazy<RuleContext> Shared = new(() =>
     {

@@ -27,7 +27,7 @@ public class StuckSleepRegressionTests
         var applied = engine.Log.Where(entry => entry.Status == EventStatus.Applied).ToList();
         Assert.True(applied.Count < 20_000, $"適用が多すぎる（時刻が進んでいない可能性）: {applied.Count}");
         Assert.True(applied.Max(entry => entry.Event.Time) <= until);
-        foreach (var persona in new[] { "kaori@testville", "shiori@testville" })
+        foreach (var persona in new[] { "kaori", "shiori" })
         {
             var plans = applied.Count(entry => entry.Event.EventType == EventTypes.PlanCommitted && entry.Event.PersonaId?.Value == persona);
             Assert.True(plans >= 3, $"{persona} の計画が作り直されていない: {plans}");
