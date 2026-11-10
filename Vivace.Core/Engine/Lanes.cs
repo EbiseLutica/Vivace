@@ -15,6 +15,11 @@ public sealed class Lanes
     private readonly Dictionary<string, Lane> _lanes = new(StringComparer.Ordinal);
     /// <summary>CompleteAsync を呼んだか。</summary>
     private bool _completed;
+    /// <summary>最初にレーンを閉じた仕事の例外を伝える口。</summary>
+    private readonly TaskCompletionSource<Exception> _failure = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    /// <summary>どれかのレーンで仕事が初めて例外を投げたときに、その例外を結果として完了する。失敗がなければ完了しない。</summary>
+    public Task<Exception> Failure => _failure.Task;
 
     /// <summary>レーンの末尾に仕事を積む。閉じたレーンと、終わらせた後の Lanes には積めない。</summary>
     /// <param name="lane">レーンの鍵。</param>
@@ -39,7 +44,7 @@ public sealed class Lanes
                 throw new InvalidOperationException($"レーンは終わっていて、レーン {lane} を作れない");
             }
 
-            target = new Lane();
+            target = new Lane(ex => _failure.TrySetResult(ex));
             _lanes.Add(lane, target);
             target.Jobs.Writer.TryWrite(work);
         }
@@ -75,9 +80,14 @@ public sealed class Lanes
         /// <summary>レーンを閉じた仕事の例外。</summary>
         private volatile Exception? _fault;
 
+        /// <summary>レーンを閉じたことの知らせ先。</summary>
+        private readonly Action<Exception> _onFault;
+
         /// <summary>仕事の列を作り、読み手のループを起動する。</summary>
-        public Lane()
+        /// <param name="onFault">仕事の例外でレーンを閉じたときに、その例外を受け取る。</param>
+        public Lane(Action<Exception> onFault)
         {
+            _onFault = onFault;
             Loop = Task.Run(RunAsync);
         }
 
@@ -90,7 +100,7 @@ public sealed class Lanes
         /// <summary>レーンを閉じた仕事の例外。閉じていなければ null。</summary>
         public Exception? Fault => _fault;
 
-        /// <summary>仕事を順番に実行する。仕事が例外を投げたら、レーンを閉じて例外を投げ直す。</summary>
+        /// <summary>仕事を順番に実行する。仕事が例外を投げたら、レーンを閉じて知らせ、例外を投げ直す。</summary>
         private async Task RunAsync()
         {
             await foreach (var work in Jobs.Reader.ReadAllAsync())
@@ -103,6 +113,7 @@ public sealed class Lanes
                 {
                     _fault = ex;
                     Jobs.Writer.TryComplete(ex);
+                    _onFault(ex);
                     throw;
                 }
             }

@@ -41,6 +41,7 @@ public class LanesTests
         release.SetResult();
         await secondStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         await lanes.CompleteAsync();
+        Assert.False(lanes.Failure.IsCompleted);
 
         lock (sync)
         {
@@ -125,6 +126,7 @@ public class LanesTests
 
         Assert.True(closed);
         Assert.Same(failure, rejected!.InnerException);
+        Assert.Same(failure, await lanes.Failure.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
 
         lanes.Post("plan:b", () =>
         {

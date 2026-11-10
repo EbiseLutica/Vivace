@@ -23,6 +23,29 @@ public class EngineFailureTests
         Assert.Contains("決める側の仕事が失敗", error.Message, StringComparison.Ordinal);
     }
 
+    /// <summary>レーンの仕事が包みを抜けて例外を投げたら、出力を待っているエンジンも、待ちをやめて例外で止まる。破棄は投げずに終わる。</summary>
+    [Fact]
+    public async Task LaneFailureStopsWaitingEngine()
+    {
+        var decider = new BlockingDecider();
+        var failure = new InvalidOperationException("わざと失敗させたレーンの仕事");
+        await using var engine = Scenario.Create(Scenario.WorldSeed, decider);
+        try
+        {
+            var run = engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None);
+            await decider.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+            engine.Lanes.Post("world:test", () => throw failure);
+
+            var error = await Assert.ThrowsAsync<InvalidOperationException>(() => run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+            Assert.Same(failure, error.InnerException);
+        }
+        finally
+        {
+            decider.Release.Set();
+        }
+    }
+
     /// <summary>guard が通らない出力は、却下として記録され、決め直しで続く。</summary>
     [Fact]
     public async Task StaleDecisionIsRecordedAsRejectedAndRunContinues()
@@ -41,6 +64,25 @@ public class EngineFailureTests
     private sealed class ThrowingDecider : IDecider
     {
         public DeciderOutput Decide(DecisionContext context) => throw new InvalidOperationException("わざと失敗させた決定");
+    }
+
+    /// <summary>最初の決定で、解放されるまで止まる Decider。</summary>
+    private sealed class BlockingDecider : IDecider
+    {
+        private readonly UtilityDecider _inner = new();
+
+        /// <summary>決定に入ったら完了する。</summary>
+        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        /// <summary>決定を先へ進める合図。</summary>
+        public ManualResetEventSlim Release { get; } = new();
+
+        public DeciderOutput Decide(DecisionContext context)
+        {
+            Entered.TrySetResult();
+            Release.Wait();
+            return _inner.Decide(context);
+        }
     }
 
     private sealed class RejectOnceDecider : IDecider
