@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Tests.Support;
+using Vivace.Testing;
 
 namespace Vivace.Tests.Domain;
 
@@ -98,5 +99,44 @@ public class SimStateTests
 
         Assert.True(state.IsTogether(Fixture.Get(state, Fixture.Kaori)));
         Assert.False(traveling.IsTogether(Fixture.Get(traveling, Fixture.Kaori)));
+    }
+
+    /// <summary>定義 ID に当たる生きているワールドは、そのまま取り出せる。</summary>
+    [Fact]
+    public void AliveWorldReturnsLivingWorldOfDefinition()
+    {
+        var state = Fixture.WithWorld();
+
+        Assert.Equal(state.Worlds[Fixture.World], state.AliveWorld(TestWorld.DefId));
+    }
+
+    /// <summary>定義 ID に当たるワールドがなければ null。</summary>
+    [Fact]
+    public void AliveWorldIsNullForUnknownDefinition()
+    {
+        Assert.Null(Fixture.WithWorld().AliveWorld(new WorldDefId("nowhere")));
+    }
+
+    /// <summary>定義 ID に当たるワールドが破棄されていれば null。</summary>
+    [Fact]
+    public void AliveWorldIsNullWhenDestroyed()
+    {
+        var state = Fixture.WithWorld();
+        var destroyed = state.Worlds[Fixture.World] with { Status = WorldStatus.Destroyed };
+        state = state with { Worlds = state.Worlds.SetItem(Fixture.World, destroyed) };
+
+        Assert.Null(state.AliveWorld(TestWorld.DefId));
+    }
+
+    /// <summary>破棄された testville と、生きている testville#2（定義は testville）があれば、生きている testville#2 を返す。</summary>
+    [Fact]
+    public void AliveWorldSkipsDestroyedInstance()
+    {
+        var state = Fixture.WithWorld();
+        var destroyed = state.Worlds[Fixture.World] with { Status = WorldStatus.Destroyed };
+        var alive = destroyed with { Id = new WorldId("testville#2"), Status = WorldStatus.Alive };
+        state = state with { Worlds = state.Worlds.SetItem(Fixture.World, destroyed).SetItem(alive.Id, alive) };
+
+        Assert.Equal(new WorldId("testville#2"), state.AliveWorld(TestWorld.DefId)!.Id);
     }
 }
