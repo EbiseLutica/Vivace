@@ -2,7 +2,6 @@ using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using Vivace.Core.Rules.EventRules;
-using static Vivace.Core.Rules.Guards;
 
 namespace Vivace.Core.Rules;
 
@@ -28,7 +27,7 @@ public sealed class EventApplier
     /// <exception cref="NotSupportedException">扱わないイベントタイプ。</exception>
     public ApplyResult Apply(SimState state, SimEvent ev)
     {
-        if (ev.Guard is { } guard && CheckGuard(_ctx, state, ev, guard) is { } failure)
+        if (ev.Guard is { } guard && CheckGuard(state, ev, guard) is { } failure)
         {
             return Rejected(state, ev, guard, failure);
         }
@@ -39,6 +38,66 @@ public sealed class EventApplier
         }
 
         return rule.Apply(_ctx, state, ev);
+    }
+
+    /// <summary>guard を順に評価する。通らなければ理由を返す。</summary>
+    private string? CheckGuard(SimState state, SimEvent ev, Guard guard)
+    {
+        var persona = ev.PersonaId is { } id && state.Personas.TryGetValue(id, out var found) ? found : null;
+        foreach (var check in guard.Checks)
+        {
+            switch (check)
+            {
+                case ActivityVersionCheck version:
+                    if (persona is null || persona.ActivityVersion != version.Expected)
+                    {
+                        return "行動の版が違う";
+                    }
+
+                    break;
+                case FeasibleCheck feasible:
+                    if (persona is null || !ActionRules.CanChoose(_ctx, state, persona, feasible.ActionId, feasible.Place, ev.Time))
+                    {
+                        return "行動が実行できない";
+                    }
+
+                    break;
+                case RngCursorCheck cursor:
+                    if (persona is null || persona.Rng.GetValueOrDefault(cursor.Purpose) != cursor.Position)
+                    {
+                        return "乱数の位置が違う";
+                    }
+
+                    break;
+                case PlanVersionCheck plan:
+                    if (persona is null || persona.PlanVersion != plan.Expected)
+                    {
+                        return "プランの版が違う";
+                    }
+
+                    break;
+                default:
+                    return "段階2 では扱わない検査";
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>却下の結果を作り、決め直しが要れば決めどきを積む。</summary>
+    private static ApplyResult Rejected(SimState state, SimEvent ev, Guard guard, string reason)
+    {
+        var followUps = ImmutableArray<NewEvent>.Empty;
+        if (guard.OnReject == RejectAction.Redecide
+            && ev.PersonaId is { } id
+            && state.Personas.TryGetValue(id, out var persona)
+            && persona.Status == PersonaStatus.Alive)
+        {
+            state = PersonaAccess.Put(state, persona with { Deciding = false });
+            followUps = [FollowUpEvents.DecisionRequested(ev.Time, persona, DecisionReason.Retry, null)];
+        }
+
+        return new ApplyResult(state, EventOutcome.Rejected, reason, followUps, []);
     }
 
     /// <summary>全ルールから表を組む。同じイベントタイプのルールがあれば例外になる。</summary>
