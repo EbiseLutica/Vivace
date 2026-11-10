@@ -173,7 +173,7 @@
 
 <section id="judgments">
   <h2><span class="num">0.5</span>枠の外の判断</h2>
-  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-151）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
+  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-152）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
   <h3>VISION の解釈で決めたもの</h3>
   <p>VISION から導いたつもりで、実際には読み方を1つに決めたもの。いちばん見落としやすいので、先に見てほしい。</p>
   <div class="table-wrap">
@@ -308,6 +308,7 @@
       <tr><td>J-149</td><td>Apply の入口は static の関数の集まりでなく、インスタンスのクラス <code>EventApplier</code> にする。コンストラクタで規則の文脈を受け取り、<code>Apply(state, ev)</code> を持つ。持つのは不変の文脈とルールの表だけで、純粋さは変えない。エンジンは入口を1つ作って持つ。イベントタイプごとのルール（<code>IEventRule</code>）は文脈を引数で受ける <span class="chip fixed">合意</span></td><td><a href="4-components.html#inside">D4 4.5</a></td></tr>
       <tr><td>J-150</td><td>ワールドとペルソナの定義の ID にも型を作る（<code>WorldDefId</code>、<code>PersonaDefId</code>）。<code>Definitions</code> の辞書の鍵と、状態とペイロードが持つ定義の ID は、この型にする。作り直したインスタンス（<code>tokyo#2</code>）の ID は定義の ID と一致しないので、インスタンスの ID から定義を引くのを型で防ぐ。定義はインスタンスの <code>DefId</code> から引く <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>J-151</td><td>レーンの仕事が例外を投げたら、記録して続けずに、そのレーンを閉じる（後の仕事は実行せず、次の投入を失敗させる）。エンジンは、出力を待っている途中でもすぐに例外を受けて止まる（ハンドラの包みから漏れた例外はバグなので、Apply の例外と同じく止める）。エンジンを閉じるときは、動いている仕事の終わりを待つが、レーンの例外は投げない（走らせている間に出し済みで、破棄の例外が元の例外を隠すのを避ける）。終わらせた後は、新しいレーンも作らない <span class="chip fixed">合意</span></td><td><a href="1-execution.html#lanes">D1 1.5</a>、<a href="1-execution.html#startup">D1 1.11</a>、<a href="7-operations.html#errors">D7 7.1</a></td></tr>
+      <tr><td>J-152</td><td>ID の型（5型）に共通のインターフェース <code>IEntityId</code> を付ける。テスト用の文字列化（<code>EventText</code>）が、型を並べずに ID を見分けて中身の文字列で書くため <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>
