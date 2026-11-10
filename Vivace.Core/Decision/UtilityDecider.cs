@@ -224,11 +224,7 @@ public sealed class UtilityDecider : IDecider
     /// <param name="consecutive">行動を始める前に、同じ行動が連続した回数。</param>
     internal static double Need(SimState state, PersonaState persona, PersonaDef personaDef, DateTimeOffset now, ActionDef? action, PlaceId place, int travelMinutes, TimeSpan duration, int consecutive)
     {
-        var together = state.Personas.Values.Any(other =>
-            other.Id != persona.Id
-            && other.Status == PersonaStatus.Alive
-            && other.Location is AtPlace otherAt
-            && otherAt.Place == place);
+        var together = state.AnyoneElseAt(place, persona.Id);
         var sum = 0.0;
         foreach (var vital in VitalRules.AllVitals)
         {

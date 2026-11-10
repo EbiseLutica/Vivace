@@ -25,25 +25,6 @@ public static class VitalRules
     };
 
     /// <summary>
-    /// ペルソナのいまの居場所に、ほかの人がいるか。移動中の人は、どの場所にもいないものとして扱う。
-    /// </summary>
-    /// <param name="state">全体の状態。</param>
-    /// <param name="persona">ペルソナ。</param>
-    public static bool IsTogether(SimState state, PersonaState persona)
-    {
-        if (persona.Location is not AtPlace at)
-        {
-            return false;
-        }
-
-        return state.Personas.Values.Any(other =>
-            other.Id != persona.Id
-            && other.Status == PersonaStatus.Alive
-            && other.Location is AtPlace otherAt
-            && otherAt.Place == at.Place);
-    }
-
-    /// <summary>
     /// 状態変数のいまの率。行動が率を書けばそれを使い、書かなければ既定の率（社交欲求は居合わせで変わる）。
     /// </summary>
     /// <param name="state">全体の状態。</param>
@@ -65,7 +46,7 @@ public static class VitalRules
             VitalName.Energy => AwakeEnergyRate,
             VitalName.Health => DefaultHealthRate,
             VitalName.Boredom => DefaultBoredomRate,
-            _ => IsTogether(state, persona) ? personaDef.Vitals.SocialRateTogether : personaDef.Vitals.SocialRateAlone,
+            _ => state.IsTogether(persona) ? personaDef.Vitals.SocialRateTogether : personaDef.Vitals.SocialRateAlone,
         };
     }
 

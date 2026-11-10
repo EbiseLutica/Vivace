@@ -20,4 +20,21 @@ public sealed record SimState(
     /// <param name="persona">差し替えるペルソナの状態。</param>
     public SimState WithPersona(PersonaState persona) =>
         this with { Personas = Personas.SetItem(persona.Id, persona) };
+
+    /// <summary>
+    /// ペルソナのいまの居場所に、ほかの人がいるか。移動中の人は、どの場所にもいないものとして扱う。
+    /// </summary>
+    /// <param name="persona">ペルソナ。</param>
+    public bool IsTogether(PersonaState persona) =>
+        persona.Location is AtPlace at && AnyoneElseAt(at.Place, persona.Id);
+
+    /// <summary>場所 place に、self 以外の生きている人がいるか。移動中の人は、どの場所にもいないものとして扱う。</summary>
+    /// <param name="place">場所。</param>
+    /// <param name="self">自分の ID（数えない）。</param>
+    public bool AnyoneElseAt(PlaceId place, PersonaId self) =>
+        Personas.Values.Any(other =>
+            other.Id != self
+            && other.Status == PersonaStatus.Alive
+            && other.Location is AtPlace otherAt
+            && otherAt.Place == place);
 }
