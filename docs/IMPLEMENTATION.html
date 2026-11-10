@@ -332,6 +332,7 @@
   <ul class="tasks">
     <li><input type="checkbox" disabled>ペルソナとワールドの破棄</li>
     <li><input type="checkbox" disabled>破棄したあとに同じ定義から生成し直したら、インスタンス ID に番号を付ける（<code>kaori#2</code>、<code>tokyo#2</code>。P-22）。生成済みかの判定は、破棄済みのインスタンスを除いて行う</li>
+    <li><input type="checkbox" disabled>採番は <code>WorldCreatedRule</code> と <code>PersonaCreatedRule</code> で行う。生成済みかの判定は <code>SimState.AliveWorld</code>（と、ペルソナの同じ形）を使う</li>
     <li><input type="checkbox" disabled>残りのイベントタイプの Apply と guard。出し手がまだないもの（受信箱、発話、投稿など）も、ルールと単体テストは作る</li>
     <li><input type="checkbox" disabled>全イベントタイプにルールと単体テストがあることを、表と照らして確かめるテスト</li>
   </ul>
