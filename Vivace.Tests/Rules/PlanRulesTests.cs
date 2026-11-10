@@ -221,6 +221,19 @@ public class PlanRulesTests
         Assert.Equal(blockId, result.State.Personas[Fixture.Kaori].LastBlockId);
     }
 
+    /// <summary>プランがないペルソナは、行動の終わりで決めどきを積まない（自由時間でも、ブロックの途中でもないため）。</summary>
+    [Fact]
+    public void ActionEndWithoutPlanRequestsNoDecision()
+    {
+        var running = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(10, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", KaoriRoom, TimeSpan.FromHours(2), ActivityReason.Chosen, 0, null), Fixture.Kaori)).State;
+
+        var result = Fixture.Apply(running, Fixture.Event(11, Fixture.Now.AddHours(2), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 0), Fixture.Kaori));
+
+        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Empty(result.FollowUps);
+        Assert.Null(result.State.Personas[Fixture.Kaori].Activity);
+    }
+
     /// <summary>規則にない型は、黙って捨てず、例外で止める。</summary>
     [Fact]
     public void UnsupportedEventTypeThrows()
