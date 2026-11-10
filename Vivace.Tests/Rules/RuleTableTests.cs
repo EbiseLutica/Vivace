@@ -51,6 +51,6 @@ public class RuleTableTests
 
         var ex = Assert.Throws<NotSupportedException>(() => Fixture.Apply(Fixture.Empty(), ev));
 
-        Assert.Equal("段階2 では扱わないイベントタイプです: incident.occurred", ex.Message);
+        Assert.Equal("非対応のイベントタイプです: incident.occurred", ex.Message);
     }
 }

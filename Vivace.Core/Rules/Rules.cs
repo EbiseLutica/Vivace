@@ -21,7 +21,7 @@ public static class Rules
 
         if (!RuleTable.Entries.TryGetValue(ev.EventType, out var rule))
         {
-            throw new NotSupportedException($"段階2 では扱わないイベントタイプです: {ev.EventType}");
+            throw new NotSupportedException($"非対応のイベントタイプです: {ev.EventType}");
         }
 
         return rule.Apply(ctx, state, ev);
