@@ -28,7 +28,7 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
                 return ApplyResult.Skipped(state, "行動中か、決め中");
             }
 
-            return PlanRules.FreeAt(persona.Plan, ev.Time) is null
+            return persona.Plan?.FreeAt(ev.Time) is null
                 ? ApplyResult.Skipped(state, "自由時間でない")
                 : ApplyResult.Applied(state, [DecisionRequested(ev.Time, persona, DecisionReason.Free, null)]);
         }
@@ -39,7 +39,7 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
     /// <summary>固定・計画のブロックを始める。いまの行動を打ち切り、行動の場所まで移動してから、行動を始める。満たせなければ、予定の乱れの決めどきを積む。</summary>
     private static ApplyResult StartFixedBlock(RuleContext ctx, SimState state, PersonaState persona, string blockId, DateTimeOffset now, long seq)
     {
-        var block = PlanRules.CurrentBlock(persona.Plan, blockId, now);
+        var block = persona.Plan?.CurrentBlock(blockId, now);
         if (block is null || block.ActionId is null)
         {
             return ApplyResult.Skipped(state, "ブロックがない");

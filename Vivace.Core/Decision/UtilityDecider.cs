@@ -45,7 +45,7 @@ public sealed class UtilityDecider : IDecider
         var worldDef = defs.Worlds[persona.World.Value];
         var routes = context.Rules.Routes.For(persona.World);
         var plan = persona.Plan;
-        var next = PlanRules.NextFixedAfter(plan, now);
+        var next = plan?.NextFixedAfter(now);
         var deadline = next?.Start ?? plan?.HorizonEnd ?? now;
         var from = context.Random.Position;
         var random = context.Random;

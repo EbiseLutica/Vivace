@@ -40,7 +40,7 @@ internal sealed class TravelArrivedRule : EventRule<TravelArrivedPayload>
         {
             followUps = ImmutableArray.Create(Next(ev.Time, EventTypes.BlockStarted, arrived, new BlockStartedPayload(block.BlockId, arrived.PlanVersion)));
         }
-        else if (PlanRules.FreeAt(arrived.Plan, ev.Time) is not null)
+        else if (arrived.Plan?.FreeAt(ev.Time) is not null)
         {
             followUps = ImmutableArray.Create(DecisionRequested(ev.Time, arrived, DecisionReason.Ended, null));
         }
