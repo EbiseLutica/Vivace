@@ -121,11 +121,17 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>レーンを止める。動いている仕事は、結果を捨てる。</summary>
-    public ValueTask DisposeAsync()
+    /// <summary>レーンを止め、動いている仕事の終わりを待ってから、保存先を閉じる。仕事の結果は捨てる。</summary>
+    public async ValueTask DisposeAsync()
     {
-        _lanes.Complete();
-        return _storage.DisposeAsync();
+        try
+        {
+            await _lanes.CompleteAsync();
+        }
+        finally
+        {
+            await _storage.DisposeAsync();
+        }
     }
 
     /// <summary>1つのイベントを適用する。不変条件を検査してからコミットし、シグナルを実行する。</summary>
