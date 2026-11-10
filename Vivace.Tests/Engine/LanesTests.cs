@@ -12,7 +12,7 @@ public class LanesTests
         var lanes = new Lanes();
         var release = new TaskCompletionSource();
         var events = new List<string>();
-        var sync = new object();
+        var sync = new Lock();
         var secondStarted = new TaskCompletionSource();
         var otherLaneDone = new TaskCompletionSource();
 

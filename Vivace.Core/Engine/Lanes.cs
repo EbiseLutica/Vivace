@@ -10,7 +10,7 @@ namespace Vivace.Core.Engine;
 public sealed class Lanes
 {
     /// <summary>レーンの作成と、終わりの印を守る錠。</summary>
-    private readonly object _gate = new();
+    private readonly Lock _gate = new();
     /// <summary>鍵ごとのレーン。</summary>
     private readonly Dictionary<string, Lane> _lanes = new(StringComparer.Ordinal);
     /// <summary>CompleteAsync を呼んだか。</summary>
