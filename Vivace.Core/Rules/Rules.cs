@@ -3,6 +3,11 @@ using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using Vivace.Core.Time;
+using static Vivace.Core.Rules.FollowUpEvents;
+using static Vivace.Core.Rules.Guards;
+using static Vivace.Core.Rules.PeriodKeys;
+using static Vivace.Core.Rules.PersonaAccess;
+using static Vivace.Core.Rules.Rebalancing;
 
 namespace Vivace.Core.Rules;
 
@@ -207,9 +212,6 @@ public static class Rules
 
         return ApplyResult.Applied(Put(state, persona with { PlannedFor = key }), signals: [new StartPlanner(ev.Seq, persona.Id, ev.Time)]);
     }
-
-    /// <summary>期間の鍵（時刻）。記憶の整理を起こすブロックのない期間で使う。</summary>
-    private static string PeriodKeyAt(DateTimeOffset time) => "time:" + time.ToUniversalTime().ToString("o", System.Globalization.CultureInfo.InvariantCulture);
 
     /// <summary>時刻 t に、記憶の整理を起こす行動（睡眠など）のブロックが始まるなら、それを返す。</summary>
     private static PlanBlock? ConsolidatingBlockAt(RuleContext ctx, DayPlan? plan, DateTimeOffset t) =>
@@ -570,124 +572,6 @@ public static class Rules
             && ActionRules.PlaceAllows(action, personaDef, placeDef);
     }
 
-    /// <summary>guard を順に評価する。通らなければ理由を返す。</summary>
-    private static string? CheckGuard(RuleContext ctx, SimState state, SimEvent ev, Guard guard)
-    {
-        var persona = ev.PersonaId is { } id && state.Personas.TryGetValue(id, out var found) ? found : null;
-        foreach (var check in guard.Checks)
-        {
-            switch (check)
-            {
-                case ActivityVersionCheck version:
-                    if (persona is null || persona.ActivityVersion != version.Expected)
-                    {
-                        return "行動の版が違う";
-                    }
-
-                    break;
-                case FeasibleCheck feasible:
-                    if (persona is null || !ActionRules.CanChoose(ctx, state, persona, feasible.ActionId, feasible.Place, ev.Time))
-                    {
-                        return "行動が実行できない";
-                    }
-
-                    break;
-                case RngCursorCheck cursor:
-                    if (persona is null || persona.Rng.GetValueOrDefault(cursor.Purpose) != cursor.Position)
-                    {
-                        return "乱数の位置が違う";
-                    }
-
-                    break;
-                case PlanVersionCheck plan:
-                    if (persona is null || persona.PlanVersion != plan.Expected)
-                    {
-                        return "プランの版が違う";
-                    }
-
-                    break;
-                default:
-                    return "段階2 では扱わない検査";
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>却下の結果を作り、決め直しが要れば決めどきを積む。</summary>
-    private static ApplyResult Rejected(SimState state, SimEvent ev, Guard guard, string reason)
-    {
-        var followUps = ImmutableArray<NewEvent>.Empty;
-        if (guard.OnReject == RejectAction.Redecide
-            && ev.PersonaId is { } id
-            && state.Personas.TryGetValue(id, out var persona)
-            && persona.Status == PersonaStatus.Alive)
-        {
-            state = Put(state, persona with { Deciding = false });
-            followUps = [DecisionRequested(ev.Time, persona, DecisionReason.Retry, null)];
-        }
-
-        return new ApplyResult(state, EventOutcome.Rejected, reason, followUps, []);
-    }
-
-    /// <summary>ペルソナが生きていれば取り出す。</summary>
-    private static bool TryPersona(SimState state, SimEvent ev, out PersonaState persona)
-    {
-        if (ev.PersonaId is { } id && state.Personas.TryGetValue(id, out var found) && found.Status == PersonaStatus.Alive)
-        {
-            persona = found;
-            return true;
-        }
-
-        persona = null!;
-        return false;
-    }
-
-    /// <summary>ペルソナの状態を差し替えた全体の状態を返す。</summary>
-    private static SimState Put(SimState state, PersonaState persona) =>
-        state with { Personas = state.Personas.SetItem(persona.Id, persona) };
-
-    /// <summary>
-    /// 状態変数の率を計算し直す。mover と、places にいる人が対象（居合わせが変わったので、社交欲求の率が変わりうる）。
-    /// </summary>
-    private static SimState Rebalance(RuleContext ctx, SimState state, DateTimeOffset now, PersonaId mover, params PlaceId[] places)
-    {
-        foreach (var id in state.Personas.Keys.OrderBy(key => key.Value, StringComparer.Ordinal).ToList())
-        {
-            var persona = state.Personas[id];
-            if (persona.Status != PersonaStatus.Alive)
-            {
-                continue;
-            }
-
-            var affected = id == mover || (persona.Location is AtPlace at && places.Contains(at.Place));
-            if (!affected)
-            {
-                continue;
-            }
-
-            var refreshed = VitalRules.Refresh(state, persona, now, ctx.Defs);
-            if (!ReferenceEquals(refreshed, persona))
-            {
-                state = Put(state, refreshed);
-            }
-        }
-
-        return state;
-    }
-
-    /// <summary>ペルソナの後続のイベントを作る。</summary>
-    private static NewEvent Next(DateTimeOffset time, string eventType, PersonaState persona, EventPayload payload) =>
-        new(time, eventType, persona.World, persona.Id, payload);
-
-    /// <summary>決めどきのイベントを作る。</summary>
-    private static NewEvent DecisionRequested(DateTimeOffset now, PersonaState persona, DecisionReason reason, string? blockId) =>
-        Next(now, EventTypes.DecisionRequested, persona, new DecisionRequestedPayload(reason, blockId));
-
-    /// <summary>行動の開始のイベントを作る。</summary>
-    private static NewEvent ActionStarted(DateTimeOffset now, PersonaState persona, string actionId, PlaceId place, TimeSpan duration, ActivityReason reason, string? blockId) =>
-        Next(now, EventTypes.ActionStarted, persona, new ActionStartedPayload(actionId, place, duration, reason, persona.ActivityVersion, blockId));
-
     /// <summary>到着の時刻に、まだ始めていない固定・計画のブロックがあれば、それを返す（移動中に始まったブロックの取りこぼしを防ぐ）。</summary>
     private static PlanBlock? CoveringFixedBlock(PersonaState persona, DateTimeOffset now) =>
         persona.Plan?.Blocks.FirstOrDefault(block =>
@@ -696,8 +580,4 @@ public static class Rules
             && block.BlockId != persona.LastBlockId
             && block.Start <= now
             && now < block.End);
-
-    /// <summary>移動の開始のイベントを作る。</summary>
-    private static NewEvent TravelStarted(DateTimeOffset now, PersonaState persona, PlaceId from, PlaceId to, ImmutableArray<RouteStep> route, DateTimeOffset arrival, PendingAction? next) =>
-        Next(now, EventTypes.TravelStarted, persona, new TravelStartedPayload(from, to, route, arrival, persona.ActivityVersion, next));
 }
