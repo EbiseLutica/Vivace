@@ -5,7 +5,7 @@ namespace Vivace.Core.Time;
 /// </summary>
 public sealed class VirtualClock : IClock
 {
-    private readonly object _gate = new();
+    private readonly Lock _gate = new();
     private DateTimeOffset _now;
 
     /// <summary>仮想の時計を作る。</summary>
