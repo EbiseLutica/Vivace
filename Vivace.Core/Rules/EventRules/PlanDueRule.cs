@@ -1,6 +1,5 @@
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
-using static Vivace.Core.Rules.PeriodKeys;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -28,13 +27,12 @@ internal sealed class PlanDueRule : EventRule<PlanDuePayload>
             return ApplyResult.Skipped(state, "同じ時刻に睡眠が始まり、その開始が Planner を起こす");
         }
 
-        var key = PeriodKeyAt(ev.Time);
-        if (persona.PlannedFor == key)
+        if (PlannerHelper.Wake(persona, PlannerHelper.PeriodKeyAt(ev.Time), ev.Seq, ev.Time) is not { } wake)
         {
             return ApplyResult.Skipped(state, "この期間の Planner は動いている");
         }
 
-        return ApplyResult.Applied(state.WithPersona(persona with { PlannedFor = key }), signals: [new StartPlanner(ev.Seq, persona.Id, ev.Time)]);
+        return ApplyResult.Applied(state.WithPersona(wake.Persona), signals: [wake.Signal]);
     }
 
     /// <summary>時刻 t に、記憶の整理を起こす行動（睡眠など）のブロックが始まるなら、それを返す。</summary>

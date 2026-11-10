@@ -85,13 +85,15 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
             followUps = [NewEvent.TravelStarted(now, current, from.Place, place, routes.Steps(from.Place, place) ?? ImmutableArray<RouteStep>.Empty, arrival, pending)];
         }
 
-        var planning = !feasible && IsConsolidating(ctx, block) && current.PlannedFor != blockId;
-        if (planning)
+        var wake = !feasible && IsConsolidating(ctx, block)
+            ? PlannerHelper.Wake(current, blockId, seq, now)
+            : null;
+        if (wake is { } planner)
         {
-            signals = signals.Add(new StartPlanner(seq, persona.Id, now));
+            signals = signals.Add(planner.Signal);
         }
 
-        var next = VitalRules.Rebalance(ctx, state.WithPersona(current with { LastBlockId = blockId, PlannedFor = planning ? blockId : current.PlannedFor }), now, current.Id, from.Place);
+        var next = VitalRules.Rebalance(ctx, state.WithPersona((wake?.Persona ?? current) with { LastBlockId = blockId }), now, current.Id, from.Place);
         return ApplyResult.Applied(next, followUps, signals);
     }
 
@@ -103,14 +105,11 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
     private static ApplyResult PlannerFor(SimState state, PersonaState persona, PlanBlock block, long seq, DateTimeOffset now)
     {
         var blockId = block.BlockId!;
-        var updated = persona with
-        {
-            PlannedFor = blockId,
-        };
-        var signals = persona.PlannedFor == blockId
-            ? ImmutableArray<EngineSignal>.Empty
-            : ImmutableArray.Create<EngineSignal>(new StartPlanner(seq, persona.Id, now));
-        return ApplyResult.Applied(state.WithPersona(updated), signals: signals);
+        var wake = PlannerHelper.Wake(persona, blockId, seq, now);
+        var signals = wake is { } planner
+            ? ImmutableArray.Create<EngineSignal>(planner.Signal)
+            : ImmutableArray<EngineSignal>.Empty;
+        return ApplyResult.Applied(state.WithPersona(wake?.Persona ?? persona), signals: signals);
     }
 
     /// <summary>場所が行動の条件とつながりを満たすか。</summary>

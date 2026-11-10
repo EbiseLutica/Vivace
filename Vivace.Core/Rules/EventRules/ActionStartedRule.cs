@@ -2,7 +2,6 @@ using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using Vivace.Core.Time;
-using static Vivace.Core.Rules.PeriodKeys;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -47,11 +46,11 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
         }
 
         var signals = ImmutableArray<EngineSignal>.Empty;
-        var periodKey = payload.BlockId ?? PeriodKeyAt(now);
-        if (action.Effects.Sleep is { Consolidate: true } && started.PlannedFor != periodKey)
+        var periodKey = payload.BlockId ?? PlannerHelper.PeriodKeyAt(now);
+        if (action.Effects.Sleep is { Consolidate: true } && PlannerHelper.Wake(started, periodKey, ev.Seq, now) is { } wake)
         {
-            started = started with { PlannedFor = periodKey };
-            signals = ImmutableArray.Create<EngineSignal>(new StartPlanner(ev.Seq, started.Id, now));
+            started = wake.Persona;
+            signals = ImmutableArray.Create<EngineSignal>(wake.Signal);
         }
 
         var next = VitalRules.Rebalance(ctx, state.WithPersona(started), now, started.Id);
