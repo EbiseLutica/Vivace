@@ -1,7 +1,6 @@
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using static Vivace.Core.Rules.FollowUpEvents;
-using static Vivace.Core.Rules.Rebalancing;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -35,7 +34,7 @@ internal sealed class TravelStartedRule : EventRule<TravelStartedPayload>
         }
 
         var moving = persona with { Location = new Traveling(payload.From, payload.To, payload.Route, ev.Time, payload.ArrivesAt, payload.Next) };
-        var next = Rebalance(ctx, state.WithPersona(moving), ev.Time, moving.Id, payload.From);
+        var next = VitalRules.Rebalance(ctx, state.WithPersona(moving), ev.Time, moving.Id, payload.From);
         return ApplyResult.Applied(next, [Next(payload.ArrivesAt, EventTypes.TravelArrived, persona, new TravelArrivedPayload(payload.To, payload.ActivityVersion))]);
     }
 }

@@ -4,7 +4,6 @@ using Vivace.Core.Events;
 using Vivace.Core.Time;
 using static Vivace.Core.Rules.FollowUpEvents;
 using static Vivace.Core.Rules.PeriodKeys;
-using static Vivace.Core.Rules.Rebalancing;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -57,7 +56,7 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
             signals = ImmutableArray.Create<EngineSignal>(new StartPlanner(ev.Seq, started.Id, now));
         }
 
-        var next = Rebalance(ctx, state.WithPersona(started), now, started.Id);
+        var next = VitalRules.Rebalance(ctx, state.WithPersona(started), now, started.Id);
         var followUps = ImmutableArray.Create(Next(now + payload.Duration, EventTypes.ActionEnded, started, new ActionEndedPayload(payload.ActionId, payload.ActivityVersion)));
         return ApplyResult.Applied(next, followUps, signals);
     }

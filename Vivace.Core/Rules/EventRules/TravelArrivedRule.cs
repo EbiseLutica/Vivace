@@ -2,7 +2,6 @@ using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using static Vivace.Core.Rules.FollowUpEvents;
-using static Vivace.Core.Rules.Rebalancing;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -31,7 +30,7 @@ internal sealed class TravelArrivedRule : EventRule<TravelArrivedPayload>
         }
 
         var arrived = persona with { Location = new AtPlace(payload.Place) };
-        var next = Rebalance(ctx, state.WithPersona(arrived), ev.Time, arrived.Id, payload.Place);
+        var next = VitalRules.Rebalance(ctx, state.WithPersona(arrived), ev.Time, arrived.Id, payload.Place);
         var followUps = ImmutableArray<NewEvent>.Empty;
         if (travel.Next is { } pending)
         {

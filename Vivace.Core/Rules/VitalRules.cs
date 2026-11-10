@@ -70,6 +70,40 @@ public static class VitalRules
     }
 
     /// <summary>
+    /// 状態変数の率を計算し直す。mover と、places にいる人が対象（居合わせが変わったので、社交欲求の率が変わりうる）。
+    /// </summary>
+    /// <param name="ctx">規則の文脈。</param>
+    /// <param name="state">全体の状態。</param>
+    /// <param name="now">時刻。</param>
+    /// <param name="mover">動いたペルソナ。</param>
+    /// <param name="places">居合わせが変わった場所。</param>
+    internal static SimState Rebalance(RuleContext ctx, SimState state, DateTimeOffset now, PersonaId mover, params PlaceId[] places)
+    {
+        foreach (var id in state.Personas.Keys.OrderBy(key => key.Value, StringComparer.Ordinal).ToList())
+        {
+            var persona = state.Personas[id];
+            if (persona.Status != PersonaStatus.Alive)
+            {
+                continue;
+            }
+
+            var affected = id == mover || (persona.Location is AtPlace at && places.Contains(at.Place));
+            if (!affected)
+            {
+                continue;
+            }
+
+            var refreshed = Refresh(state, persona, now, ctx.Defs);
+            if (!ReferenceEquals(refreshed, persona))
+            {
+                state = state.WithPersona(refreshed);
+            }
+        }
+
+        return state;
+    }
+
+    /// <summary>
     /// ペルソナの状態変数の率を、いまの状態に合わせて計算し直す。率が変わった変数だけ、いまの値を基準にして置き直す。
     /// 率が1つでも変わったら、状態変数の版を上げる。
     /// </summary>

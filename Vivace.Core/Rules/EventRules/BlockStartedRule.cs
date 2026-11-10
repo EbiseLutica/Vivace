@@ -4,7 +4,6 @@ using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using Vivace.Core.Routes;
 using static Vivace.Core.Rules.FollowUpEvents;
-using static Vivace.Core.Rules.Rebalancing;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -93,7 +92,7 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
             signals = signals.Add(new StartPlanner(seq, persona.Id, now));
         }
 
-        var next = Rebalance(ctx, state.WithPersona(current with { LastBlockId = blockId, PlannedFor = planning ? blockId : current.PlannedFor }), now, current.Id, from.Place);
+        var next = VitalRules.Rebalance(ctx, state.WithPersona(current with { LastBlockId = blockId, PlannedFor = planning ? blockId : current.PlannedFor }), now, current.Id, from.Place);
         return ApplyResult.Applied(next, followUps, signals);
     }
 

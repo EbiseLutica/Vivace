@@ -2,7 +2,6 @@ using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using static Vivace.Core.Rules.FollowUpEvents;
-using static Vivace.Core.Rules.Rebalancing;
 
 namespace Vivace.Core.Rules.EventRules;
 
@@ -54,7 +53,7 @@ internal sealed class ActionEndedRule : EventRule<ActionEndedPayload>
             ended = ended with { LastWake = now };
         }
 
-        var next = Rebalance(ctx, state.WithPersona(ended), now, ended.Id);
+        var next = VitalRules.Rebalance(ctx, state.WithPersona(ended), now, ended.Id);
         var followUps = ImmutableArray<NewEvent>.Empty;
         if (!ended.Deciding && !PlanRules.BlockStartsAt(ended.Plan, now))
         {
