@@ -25,7 +25,7 @@ internal sealed class PlanCommittedRule : EventRule<PlanCommittedPayload>
         {
             if (block.Start >= ev.Time)
             {
-                if (!IsInPlan(persona.Plan, block))
+                if (persona.Plan?.Contains(block) != true)
                 {
                     followUps.Add(NewEvent.Next(block.Start, EventTypes.BlockStarted, persona, new BlockStartedPayload(block.BlockId, plan.Version)));
                 }
@@ -43,8 +43,4 @@ internal sealed class PlanCommittedRule : EventRule<PlanCommittedPayload>
 
         return ApplyResult.Applied(next, followUps.ToImmutableArray());
     }
-
-    /// <summary>ブロックが、プランに同じ種類・ID・時刻で入っているか。</summary>
-    private static bool IsInPlan(DayPlan? plan, PlanBlock block) =>
-        plan?.Blocks.Any(old => old.Kind == block.Kind && old.BlockId == block.BlockId && old.Start == block.Start && old.End == block.End) ?? false;
 }

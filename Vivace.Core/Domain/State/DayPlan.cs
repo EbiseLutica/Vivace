@@ -24,6 +24,11 @@ public sealed record DayPlan(
     public PlanBlock? FreeAt(DateTimeOffset t) =>
         Blocks.FirstOrDefault(block => block.Kind == BlockKind.Free && block.Start <= t && t < block.End);
 
+    /// <summary>ブロックが、プランに同じ種類・ID・時刻で入っているか。</summary>
+    /// <param name="block">ブロック。</param>
+    public bool Contains(PlanBlock block) =>
+        Blocks.Any(old => old.Kind == block.Kind && old.BlockId == block.BlockId && old.Start == block.Start && old.End == block.End);
+
     /// <summary>時刻 t に、固定・計画のブロックが始まるものがあるか。</summary>
     /// <param name="t">時刻。</param>
     public bool BlockStartsAt(DateTimeOffset t) =>
