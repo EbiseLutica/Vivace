@@ -404,13 +404,13 @@ public static class DefinitionValidator
 
         foreach (var partnerId in block.With)
         {
-            if (!definitions.Personas.TryGetValue(partnerId, out var partner))
+            if (!definitions.Personas.TryGetValue(new PersonaDefId(partnerId), out var partner))
             {
                 Add(issues, DefinitionIssueCode.MissingReference, block.Source.At("with"), $"同行するペルソナがありません: {partnerId}");
                 continue;
             }
 
-            if (!AllBlocks(partner).Any(item => item.With.Contains(persona.Id)))
+            if (!AllBlocks(partner).Any(item => item.With.Contains(persona.Id.Value)))
             {
                 Add(issues, DefinitionIssueCode.OneSidedWith, block.Source.At("with"),
                     $"同行を片側にしか書いていません（{partnerId} の予定にも書いてください）。同行としては扱いません。");
@@ -489,7 +489,7 @@ public static class DefinitionValidator
         // 同行の相手の例外日も、この人の日付として見る（相手の例外日が範囲の外でも、同じ警告になる）。
         foreach (var partnerId in AllBlocks(persona).SelectMany(block => block.With).Distinct(StringComparer.Ordinal))
         {
-            if (definitions.Personas.TryGetValue(partnerId, out var partner))
+            if (definitions.Personas.TryGetValue(new PersonaDefId(partnerId), out var partner))
             {
                 dates.UnionWith(SpecialDates(partner));
             }
@@ -586,7 +586,7 @@ public static class DefinitionValidator
         var withBlocks = day.Blocks.Where(block => block.With.Length > 0).ToList();
         foreach (var partnerId in withBlocks.SelectMany(block => block.With).Distinct(StringComparer.Ordinal))
         {
-            if (!definitions.Personas.TryGetValue(partnerId, out var partner))
+            if (!definitions.Personas.TryGetValue(new PersonaDefId(partnerId), out var partner))
             {
                 continue;
             }
@@ -607,7 +607,7 @@ public static class DefinitionValidator
             foreach (var block in withBlocks.Where(block => block.With.Contains(partnerId, StringComparer.Ordinal)))
             {
                 var matched = partnerDay.Blocks.Any(other =>
-                    other.With.Contains(persona.Id, StringComparer.Ordinal)
+                    other.With.Contains(persona.Id.Value, StringComparer.Ordinal)
                     && other.StartMinute == block.StartMinute
                     && other.EndMinute == block.EndMinute
                     && other.Action == block.Action

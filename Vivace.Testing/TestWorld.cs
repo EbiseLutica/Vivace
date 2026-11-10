@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Reflection;
 using System.Text;
 using Vivace.Core.Definitions;
+using Vivace.Core.Domain;
 
 namespace Vivace.Testing;
 
@@ -12,10 +13,7 @@ namespace Vivace.Testing;
 public static class TestWorld
 {
     /// <summary>テスト用のワールドの定義 ID。</summary>
-    public const string WorldId = "testville";
-
-    /// <summary>テスト用のペルソナの定義 ID（昼休みに同行する2人）。</summary>
-    public static ImmutableArray<string> PersonaIds { get; } = ["kaori", "shiori"];
+    public static readonly WorldDefId DefId = new("testville");
 
     /// <summary>埋め込みのテスト用の定義ファイルを、読み込みの入力の形で返す。</summary>
     public static ImmutableArray<DefinitionFile> Files()

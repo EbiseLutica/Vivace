@@ -44,7 +44,7 @@ public class UtilityDeciderTests
     public void NeedMatchesDesignWorkedExample()
     {
         var definitions = TestWorld.LoadOrThrow();
-        var kaoriDef = definitions.Personas["kaori"];
+        var kaoriDef = definitions.Personas[new PersonaDefId("kaori")];
         var basis = definitions.Actions["read_book"];
         var state = Fixture.WithKaori();
         var kaori = state.Personas[Fixture.Kaori] with { Vitals = VitalsWith(30, 70) };

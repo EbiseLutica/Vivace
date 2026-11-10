@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Security.Cryptography;
 using System.Text;
 using Vivace.Core.Definitions.Toml;
+using Vivace.Core.Domain;
 
 namespace Vivace.Core.Definitions;
 
@@ -54,11 +55,11 @@ public static class DefinitionLoader
             {
                 case "worlds":
                     var world = DefinitionMapper.MapWorld(root, issues, file.IsBuiltin);
-                    Register(worlds, world.Id, world, world.Source.Location, issues);
+                    Register(worlds, world.Id.Value, world, world.Source.Location, issues);
                     break;
                 case "personas":
                     var persona = DefinitionMapper.MapPersona(root, issues);
-                    Register(personas, persona.Id, persona, persona.Source.Location, issues);
+                    Register(personas, persona.Id.Value, persona, persona.Source.Location, issues);
                     break;
                 case "actions":
                     var reader = new Toml.TableReader(root, issues);
@@ -97,8 +98,8 @@ public static class DefinitionLoader
         }
 
         var definitions = new Definitions(
-            worlds.ToImmutableDictionary(),
-            personas.ToImmutableDictionary(),
+            worlds.ToImmutableDictionary(pair => new WorldDefId(pair.Key), pair => pair.Value),
+            personas.ToImmutableDictionary(pair => new PersonaDefId(pair.Key), pair => pair.Value),
             actions.ToImmutableDictionary(),
             incidents.ToImmutableDictionary(),
             conditions.ToImmutableDictionary(),

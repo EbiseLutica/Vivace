@@ -32,9 +32,9 @@ public static class Scenario
         var loaded = definitions ?? TestWorld.LoadOrThrow();
         var clock = new VirtualClock(Start);
         var engine = SimEngine.Create(loaded, new InMemoryStorage(), new SplitMixRandomSource(), clock, decider, TestHolidays.Instance);
-        engine.Inject(Ingress.WorldCreated(Start, TestWorld.WorldId, seed), Origin.Test);
-        engine.Inject(Ingress.PersonaCreated(Start, TestWorld.WorldId, "kaori", new PlaceId("kaori_room")), Origin.Test);
-        engine.Inject(Ingress.PersonaCreated(Start, TestWorld.WorldId, "shiori", new PlaceId("home_living")), Origin.Test);
+        engine.Inject(Ingress.WorldCreated(Start, TestWorld.DefId, seed), Origin.Test);
+        engine.Inject(Ingress.PersonaCreated(Start, TestWorld.DefId, new PersonaDefId("kaori"), new PlaceId("kaori_room")), Origin.Test);
+        engine.Inject(Ingress.PersonaCreated(Start, TestWorld.DefId, new PersonaDefId("shiori"), new PlaceId("home_living")), Origin.Test);
         return engine;
     }
 

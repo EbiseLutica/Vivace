@@ -19,7 +19,7 @@ internal sealed class WorldCreatedRule : EventRule<WorldCreatedPayload>
             return ApplyResult.Skipped(state, "定義がない");
         }
 
-        var id = new WorldId(payload.DefId);
+        var id = new WorldId(payload.DefId.Value);
         if (state.Worlds.ContainsKey(id))
         {
             return ApplyResult.Skipped(state, "すでに生成済み");

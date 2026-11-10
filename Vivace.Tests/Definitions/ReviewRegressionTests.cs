@@ -248,7 +248,7 @@ public class ReviewRegressionTests
         Assert.True(result.Definitions is not null, string.Join(" | ", result.Issues.Select(issue => issue.ToString())));
         var definitions = result.Definitions!;
 
-        var day = FixedScheduleResolver.Resolve(definitions, definitions.Personas["kaori"], new DateOnly(2026, 12, 24), NoHolidays.Instance);
+        var day = FixedScheduleResolver.Resolve(definitions, definitions.Personas[new PersonaDefId("kaori")], new DateOnly(2026, 12, 24), NoHolidays.Instance);
 
         Assert.Contains(day.Blocks, block => block.Id == "school@2026-12-24" && block.StartMinute == 540);
     }
@@ -402,7 +402,7 @@ public class ReviewRegressionTests
 
         var definitions = Assert.IsType<Vivace.Core.Definitions.Definitions>(DefinitionLoader.LoadFiles(files).Definitions);
 
-        Assert.True(definitions.Personas["kaori"].ChannelSettings["misskey"].GetProperty("reversi").GetBoolean());
+        Assert.True(definitions.Personas[new PersonaDefId("kaori")].ChannelSettings["misskey"].GetProperty("reversi").GetBoolean());
     }
 
     /// <summary>ファイルの渡す順を変えても、問題の一覧とハッシュは変わらない。</summary>
@@ -423,7 +423,7 @@ public class ReviewRegressionTests
     [Fact]
     public void PlaceLinksAreSortedById()
     {
-        var street = TestWorld.LoadOrThrow().Worlds[TestWorld.WorldId].Places.Single(place => place.Id == "street");
+        var street = TestWorld.LoadOrThrow().Worlds[TestWorld.DefId].Places.Single(place => place.Id == "street");
 
         Assert.Equal(["cafe", "park", "school_2a"], street.Links.Select(link => link.To).ToArray());
     }
@@ -507,7 +507,7 @@ public class ReviewRegressionTests
         try
         {
             CultureInfo.CurrentCulture = new CultureInfo("th-TH");
-            var day = FixedScheduleResolver.Resolve(definitions, definitions.Personas["kaori"], new DateOnly(2026, 11, 2), NoHolidays.Instance);
+            var day = FixedScheduleResolver.Resolve(definitions, definitions.Personas[new PersonaDefId("kaori")], new DateOnly(2026, 11, 2), NoHolidays.Instance);
 
             Assert.Contains(day.Blocks, block => block.Id == "school@2026-11-02");
         }
@@ -525,7 +525,7 @@ public class ReviewRegressionTests
     {
         var source = new DefinitionSource(new SourceLocation(Kaori, 1, 1), ImmutableDictionary<string, SourceLocation>.Empty);
         var definitions = TestWorld.LoadOrThrow();
-        var kaori = definitions.Personas["kaori"];
+        var kaori = definitions.Personas[new PersonaDefId("kaori")];
         var period = new PeriodDef("ny", new MonthDay(1, 1), new MonthDay(1, 1), source);
         var fridayOnly = new BlockDef("ny_a", null, ["ny"], [DayOfWeek.Friday], [new TimeRange(new TimeOnly(12, 0), new TimeOnly(13, 0))], "core.idle", "kaori_room", null, null, [], null, null, source);
         var everyYear = new BlockDef("ny_b", null, ["ny"], [], [new TimeRange(new TimeOnly(12, 0), new TimeOnly(13, 0))], "core.idle", "kaori_room", null, null, [], null, null, source);
@@ -818,7 +818,7 @@ public class ReviewRegressionTests
     {
         var definitions = TestWorld.LoadOrThrow();
 
-        var saturday = FixedScheduleResolver.Resolve(definitions, definitions.Personas["kaori"], new DateOnly(2026, 11, 7), NoHolidays.Instance);
+        var saturday = FixedScheduleResolver.Resolve(definitions, definitions.Personas[new PersonaDefId("kaori")], new DateOnly(2026, 11, 7), NoHolidays.Instance);
 
         Assert.Contains(saturday.Blocks, block => block.DefId == "sleep_weekday");
         Assert.DoesNotContain(saturday.Blocks, block => block.DefId == "school");

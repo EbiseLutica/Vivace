@@ -135,7 +135,7 @@ internal static partial class DefinitionMapper
 
         r.Done();
         return new WorldDef(
-            id,
+            new WorldDefId(id),
             name,
             lore,
             offset,
@@ -250,9 +250,9 @@ internal static partial class DefinitionMapper
 
         r.Done();
         return new PersonaDef(
-            id,
+            new PersonaDefId(id),
             name,
-            world,
+            new WorldDefId(world),
             home,
             lore,
             examples,

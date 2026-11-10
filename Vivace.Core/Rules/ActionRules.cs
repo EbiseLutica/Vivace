@@ -147,8 +147,9 @@ public static class ActionRules
             return false;
         }
 
-        var world = ctx.Defs.Worlds[persona.World.Value];
-        var minutes = ctx.Routes.For(persona.World).Minutes(at.Place, place);
+        var worldDefId = state.Worlds[persona.World].DefId;
+        var world = ctx.Defs.Worlds[worldDefId];
+        var minutes = ctx.Routes.For(worldDefId).Minutes(at.Place, place);
         if (minutes is null)
         {
             return false;

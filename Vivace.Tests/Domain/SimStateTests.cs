@@ -25,7 +25,7 @@ public class SimStateTests
     [Fact]
     public void AlivePersonaIsNullForUnknownId()
     {
-        Assert.Null(Fixture.WithKaori().AlivePersona(new PersonaId("nobody@testville")));
+        Assert.Null(Fixture.WithKaori().AlivePersona(new PersonaId("nobody")));
     }
 
     /// <summary>生きていないペルソナは、取り出せない（記録としては残るが、規則の対象にしない）。</summary>

@@ -27,7 +27,7 @@ public static class FallbackPlanner
     public static DayPlan Plan(Definitions.Definitions definitions, PersonaState persona, DateTimeOffset now, long version, IHolidayCalendar? holidays = null)
     {
         var personaDef = definitions.Personas[persona.DefId];
-        var worldDef = definitions.Worlds[persona.World.Value];
+        var worldDef = definitions.Worlds[personaDef.World];
         var today = LocalClock.ToLocal(now, worldDef.UtcOffset).Date;
         var fixedBlocks = ResolveAround(definitions, personaDef, worldDef.UtcOffset, today, holidays ?? NoHolidays.Instance);
 

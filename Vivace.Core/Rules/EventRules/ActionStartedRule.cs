@@ -35,7 +35,7 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
         }
 
         var now = ev.Time;
-        var localDate = LocalClock.ToLocal(now, ctx.Defs.Worlds[persona.World.Value].UtcOffset).Date;
+        var localDate = LocalClock.ToLocal(now, ctx.Defs.Worlds[state.Worlds[persona.World].DefId].UtcOffset).Date;
         var started = persona.StartUsage(payload.ActionId, now, localDate) with
         {
             Activity = new Activity(payload.ActionId, payload.Place, now, now + payload.Duration, payload.Reason, payload.BlockId),
