@@ -514,8 +514,9 @@ record ApplyResult(
   <h3>生成</h3>
   <ul>
     <li><strong>ワールドの生成</strong>（<code>world.created</code>）：インスタンスを作り、乱数の種を決め、最初の日の始まり（<code>day.started</code>）を積む</li>
-    <li><strong>ペルソナの生成</strong>（<code>persona.created</code>）：定義から、居住ワールドにインスタンスを作る。居場所（家）と状態変数の初期値を決める。最初の Planner のホライズンまでは、固定予定と Decider だけで過ごす（D5 P-34）。生成先のワールドが生成済みで、破棄されていないことが条件</li>
+    <li><strong>ペルソナの生成</strong>（<code>persona.created</code>）：定義から、居住ワールドにインスタンスを作る。居場所（家）と状態変数の初期値を決める。最初の Planner のホライズンまでは、固定予定と Decider だけで過ごす（D5 P-34）。居住ワールドの生きているインスタンスがあることが条件</li>
   </ul>
+  <p>生成のイベントは、対象のワールドのインスタンス ID を持たない。インスタンスは Apply が決める。<code>world.created</code> は ID を割り当て、<code>persona.created</code> は定義の居住ワールドの、生きているインスタンスを引く。投入から適用までに破棄と生成し直しがあっても、適用のときの生きているインスタンスに入る。</p>
   <h3>ペルソナの破棄</h3>
   <p><code>persona.destroyed</code> の Apply が、次をすべて1つのトランザクションで行う。</p>
   <ol>
