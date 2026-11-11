@@ -53,11 +53,8 @@ public static class EventText
             case string text:
                 builder.Append('"').Append(text).Append('"');
                 return;
-            case WorldDefId worldDef:
-                builder.Append('"').Append(worldDef.Value).Append('"');
-                return;
-            case PersonaDefId personaDef:
-                builder.Append('"').Append(personaDef.Value).Append('"');
+            case IEntityId id:
+                builder.Append('"').Append(id.Value).Append('"');
                 return;
             case bool flag:
                 builder.Append(flag ? "true" : "false");

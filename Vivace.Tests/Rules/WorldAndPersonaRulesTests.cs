@@ -77,6 +77,37 @@ public class WorldAndPersonaRulesTests
         Assert.Empty(result.State.Personas);
     }
 
+    /// <summary>
+    /// 同じ定義の testville が破棄されていて、生きている testville#2 があれば、ペルソナは testville#2 に生まれる。イベントの WorldId（testville）は使わない。
+    /// </summary>
+    [Fact]
+    public void PersonaCreatedUsesLivingWorldInstanceOfHomeDefinition()
+    {
+        var state = Fixture.WithWorld();
+        var destroyed = state.Worlds[Fixture.World] with { Status = WorldStatus.Destroyed };
+        var alive = destroyed with { Id = new WorldId("testville#2"), Status = WorldStatus.Alive };
+        state = state with { Worlds = state.Worlds.SetItem(Fixture.World, destroyed).SetItem(alive.Id, alive) };
+
+        var result = Fixture.Apply(state, Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("kaori"), new PlaceId("kaori_room")), null));
+
+        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(new WorldId("testville#2"), result.State.Personas[Fixture.Kaori].World);
+    }
+
+    /// <summary>生きているワールドのインスタンスがなければ、ペルソナは作らない。</summary>
+    [Fact]
+    public void PersonaCreatedWithoutLivingWorldIsSkipped()
+    {
+        var state = Fixture.WithWorld();
+        var destroyed = state.Worlds[Fixture.World] with { Status = WorldStatus.Destroyed };
+        state = state with { Worlds = state.Worlds.SetItem(Fixture.World, destroyed) };
+
+        var result = Fixture.Apply(state, Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("kaori"), new PlaceId("kaori_room")), null));
+
+        Assert.Equal(EventOutcome.Skipped, result.Outcome);
+        Assert.Empty(result.State.Personas);
+    }
+
     /// <summary>同じ場所に人がいると、社交欲求の率は同席の率（−4）になる。出ていくと、両方とも一人の率（+2）に戻る。</summary>
     [Fact]
     public void SocialRateFollowsCoPresence()

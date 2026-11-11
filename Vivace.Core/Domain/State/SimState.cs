@@ -16,6 +16,14 @@ public sealed record SimState(
     public PersonaState? AlivePersona(PersonaId? id) =>
         id is { } key && Personas.TryGetValue(key, out var found) && found.Status == PersonaStatus.Alive ? found : null;
 
+    /// <summary>定義 ID で、生きているワールドの状態を取り出す。生きたものがなければ null。複数あれば ID の序数で先頭のもの。</summary>
+    /// <param name="defId">ワールドの定義 ID。</param>
+    public WorldState? AliveWorld(WorldDefId defId) =>
+        Worlds.Values
+            .Where(world => world.DefId == defId && world.Status == WorldStatus.Alive)
+            .OrderBy(world => world.Id.Value, StringComparer.Ordinal)
+            .FirstOrDefault();
+
     /// <summary>ペルソナの状態を差し替えた全体の状態を返す。</summary>
     /// <param name="persona">差し替えるペルソナの状態。</param>
     public SimState WithPersona(PersonaState persona) =>

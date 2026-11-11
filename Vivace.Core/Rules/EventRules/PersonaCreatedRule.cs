@@ -13,14 +13,14 @@ internal sealed class PersonaCreatedRule : EventRule<PersonaCreatedPayload>
     /// <summary>ペルソナを家に生成し、定義の初期値で状態変数を始める。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, PersonaCreatedPayload payload)
     {
-        if (ev.WorldId is not { } world || !state.Worlds.TryGetValue(world, out var worldState) || worldState.Status != WorldStatus.Alive)
-        {
-            return ApplyResult.Skipped(state, "ワールドがない");
-        }
-
-        if (!ctx.Defs.Personas.TryGetValue(payload.DefId, out var personaDef) || personaDef.World != worldState.DefId)
+        if (!ctx.Defs.Personas.TryGetValue(payload.DefId, out var personaDef))
         {
             return ApplyResult.Skipped(state, "定義がない");
+        }
+
+        if (state.AliveWorld(personaDef.World) is not { } worldState)
+        {
+            return ApplyResult.Skipped(state, "ワールドがない");
         }
 
         var worldDef = ctx.Defs.Worlds[worldState.DefId];
@@ -46,7 +46,7 @@ internal sealed class PersonaCreatedRule : EventRule<PersonaCreatedPayload>
         var persona = new PersonaState(
             id,
             personaDef.Id,
-            world,
+            worldState.Id,
             PersonaStatus.Alive,
             new AtPlace(payload.Home),
             null,
