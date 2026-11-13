@@ -1,0 +1,139 @@
+using Vivace.Core.Decision;
+using Vivace.Core.Definitions;
+using Vivace.Core.Definitions.Model;
+using Vivace.Core.Randomness;
+using Vivace.Core.Storage;
+using Vivace.Core.Time;
+
+namespace Vivace.Core;
+
+/// <summary>エンジンを組むビルダー。定義、保存先、時計は必須で、ほかは省略すると既定のものを使う。</summary>
+public sealed class VivaceEngineBuilder
+{
+    /// <summary>定義のフォルダ。定義そのものを渡したときは null。</summary>
+    private string? _definitionDirectory;
+
+    /// <summary>読み込み済みの定義。フォルダを渡したときは null。</summary>
+    private DefinitionPack? _definitions;
+
+    /// <summary>保存先。</summary>
+    private IStorage? _storage;
+
+    /// <summary>時計。</summary>
+    private IClock? _clock;
+
+    /// <summary>自由時間の決定。省略すると効用による決定。</summary>
+    private IDecider? _decider;
+
+    /// <summary>祝日の暦。省略すると祝日のない暦。</summary>
+    private IHolidayCalendar? _holidays;
+
+    /// <summary>乱数の列を開く口。省略すると SplitMix。</summary>
+    private IRandomSource? _random;
+
+    /// <summary>空のビルダーを作る。VivaceEngine.Create から使う。</summary>
+    internal VivaceEngineBuilder()
+    {
+    }
+
+    /// <summary>ドライラン（外に何も出さない）として組むかどうか。</summary>
+    internal bool IsDryRun { get; private set; }
+
+    /// <summary>定義のフォルダを使う。読み込みは Build で行う。</summary>
+    /// <param name="directory">定義のフォルダ。</param>
+    public VivaceEngineBuilder UseDefinitions(string directory)
+    {
+        _definitionDirectory = directory;
+        _definitions = null;
+        return this;
+    }
+
+    /// <summary>読み込み済みの定義を使う。</summary>
+    /// <param name="definitions">定義。</param>
+    public VivaceEngineBuilder UseDefinitions(DefinitionPack definitions)
+    {
+        _definitions = definitions;
+        _definitionDirectory = null;
+        return this;
+    }
+
+    /// <summary>保存先を使う。</summary>
+    /// <param name="storage">保存先。エンジンを破棄すると、一緒に破棄する。</param>
+    public VivaceEngineBuilder UseStorage(IStorage storage)
+    {
+        _storage = storage;
+        return this;
+    }
+
+    /// <summary>時計を使う。</summary>
+    /// <param name="clock">時計。</param>
+    public VivaceEngineBuilder UseClock(IClock clock)
+    {
+        _clock = clock;
+        return this;
+    }
+
+    /// <summary>自由時間の決定を使う。</summary>
+    /// <param name="decider">決定。</param>
+    public VivaceEngineBuilder UseDecider(IDecider decider)
+    {
+        _decider = decider;
+        return this;
+    }
+
+    /// <summary>祝日の暦を使う。</summary>
+    /// <param name="holidays">祝日の暦。</param>
+    public VivaceEngineBuilder UseHolidays(IHolidayCalendar holidays)
+    {
+        _holidays = holidays;
+        return this;
+    }
+
+    /// <summary>乱数の列を開く口を使う。</summary>
+    /// <param name="random">乱数の列を開く口。</param>
+    public VivaceEngineBuilder UseRandom(IRandomSource random)
+    {
+        _random = random;
+        return this;
+    }
+
+    /// <summary>ドライラン（外に何も出さない）として組む。</summary>
+    public VivaceEngineBuilder DryRun()
+    {
+        IsDryRun = true;
+        return this;
+    }
+
+    /// <summary>エンジンを組む。</summary>
+    /// <exception cref="InvalidOperationException">定義がない、定義にエラーがある、保存先がない、時計がない。</exception>
+    public VivaceEngine Build()
+    {
+        var definitions = LoadDefinitions();
+        var storage = _storage ?? throw new InvalidOperationException("保存先がない（UseStorage で指定する）");
+        var clock = _clock ?? throw new InvalidOperationException("時計がない（UseClock で指定する）");
+        return new VivaceEngine(SimEngine.Create(definitions, storage, _random ?? new SplitMixRandomSource(), clock, _decider, _holidays));
+    }
+
+    /// <summary>指定された定義を返す。フォルダなら読み込み、エラーがあれば例外にする。</summary>
+    private DefinitionPack LoadDefinitions()
+    {
+        if (_definitions is not null)
+        {
+            return _definitions;
+        }
+
+        if (_definitionDirectory is null)
+        {
+            throw new InvalidOperationException("定義がない（UseDefinitions で指定する）");
+        }
+
+        var result = DefinitionLoader.LoadDirectory(_definitionDirectory);
+        if (result.HasErrors || result.Definitions is null)
+        {
+            var errors = result.Issues.Where(issue => issue.Severity == IssueSeverity.Error).Select(issue => issue.ToString());
+            throw new InvalidOperationException("定義にエラーがある: " + string.Join("; ", errors));
+        }
+
+        return result.Definitions;
+    }
+}
