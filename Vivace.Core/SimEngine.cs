@@ -73,7 +73,7 @@ public sealed class SimEngine : IAsyncDisposable
     /// <param name="ev">投入するイベント。</param>
     /// <param name="origin">出所。</param>
     /// <returns>割り当てた連番。</returns>
-    public long Inject(NewEvent ev, Origin origin)
+    public long Inject(EventDraft ev, Origin origin)
     {
         if (ev.Time < _clock.UtcNow)
         {
@@ -197,7 +197,7 @@ public sealed class SimEngine : IAsyncDisposable
         }).Where(persona => persona is not null).Select(persona => persona!.Value));
 
     /// <summary>後続のイベントに連番と出所を付けて、キューに入れる。</summary>
-    private long Enqueue(NewEvent ev, Origin origin, long? cause)
+    private long Enqueue(EventDraft ev, Origin origin, long? cause)
     {
         var seq = ++_nextSeq;
         var stage = EventTypes.StageOf(ev.EventType);
@@ -205,8 +205,8 @@ public sealed class SimEngine : IAsyncDisposable
             seq,
             ev.Time,
             ev.EventType,
-            ev.World,
-            ev.Persona,
+            ev.WorldId,
+            ev.PersonaId,
             ev.Payload,
             ev.Guard,
             ev.BatchSeq,
@@ -225,11 +225,11 @@ public sealed class SimEngine : IAsyncDisposable
         {
             case StartDeciderSignal decide:
                 var decideSnapshot = _state;
-                StartHandler(decide.BatchKey, decide.Persona, decide.Now, $"decide:{decide.Persona}", origin, () => Decide(decide, decideSnapshot));
+                StartHandler(decide.BatchSeq, decide.Persona, decide.Now, $"decide:{decide.Persona}", origin, () => Decide(decide, decideSnapshot));
                 break;
             case StartPlannerSignal plan:
                 var planSnapshot = _state;
-                StartHandler(plan.BatchKey, plan.Persona, plan.Now, $"plan:{plan.Persona}", origin, () => Plan(plan, planSnapshot));
+                StartHandler(plan.BatchSeq, plan.Persona, plan.Now, $"plan:{plan.Persona}", origin, () => Plan(plan, planSnapshot));
                 break;
             case CancelHandlerSignal cancel:
                 foreach (var run in _running.Values.Where(run => run.Persona == cancel.Persona && IsCancellable(run.Lane)).ToList())
@@ -247,7 +247,7 @@ public sealed class SimEngine : IAsyncDisposable
     internal static bool IsCancellable(string lane) => lane.StartsWith("decide:", StringComparison.Ordinal);
 
     /// <summary>決める側の仕事を、レーンで起動する。仕事は写し（起動の時点の状態）だけを読む。</summary>
-    private void StartHandler(long key, PersonaId persona, DateTimeOffset horizon, string lane, Origin origin, Func<NewEvent> work)
+    private void StartHandler(long key, PersonaId persona, DateTimeOffset horizon, string lane, Origin origin, Func<EventDraft> work)
     {
         _running[key] = new Running(key, persona, horizon, lane);
         _lanes.Post(lane, () =>
@@ -266,23 +266,23 @@ public sealed class SimEngine : IAsyncDisposable
     }
 
     /// <summary>Decider を実行し、出力をイベントにする。</summary>
-    private NewEvent Decide(StartDeciderSignal decide, SimState snapshot)
+    private EventDraft Decide(StartDeciderSignal decide, SimState snapshot)
     {
         var persona = snapshot.Personas[decide.Persona];
         var seed = snapshot.Worlds[persona.World].Seed;
         var random = _random.Open(seed, persona.Id.Value, "decide", persona.Rng.GetValueOrDefault("decide"));
         var context = new DecisionContext(snapshot, decide.Persona, decide.Now, decide.Reason, decide.BlockId, _ctx, random);
         var output = _decider.Decide(context);
-        return new NewEvent(decide.Now, EventTypes.ActivityChosen, persona.World, persona.Id, output.Payload, output.Guard, decide.BatchKey);
+        return new EventDraft(decide.Now, EventTypes.ActivityChosen, persona.World, persona.Id, output.Payload, output.Guard, decide.BatchSeq);
     }
 
     /// <summary>Planner の代わりの出力を作り、イベントにする。</summary>
-    private NewEvent Plan(StartPlannerSignal plan, SimState snapshot)
+    private EventDraft Plan(StartPlannerSignal plan, SimState snapshot)
     {
         var persona = snapshot.Personas[plan.Persona];
         var planned = FallbackPlanner.Plan(_ctx.Defs, persona, plan.Now, persona.PlanVersion + 1, _ctx.Holidays);
         var guard = new Guard([new PlanVersionCheck(persona.PlanVersion)], RejectAction.Drop);
-        return new NewEvent(plan.Now, EventTypes.PlanCommitted, persona.World, persona.Id, new PlanCommittedPayload(planned), guard, plan.BatchKey);
+        return new EventDraft(plan.Now, EventTypes.PlanCommitted, persona.World, persona.Id, new PlanCommittedPayload(planned), guard, plan.BatchSeq);
     }
 
     /// <summary>終わった仕事の出力を、ぜんぶ受け取る。</summary>
@@ -297,15 +297,15 @@ public sealed class SimEngine : IAsyncDisposable
     /// <summary>仕事の出力を受け取り、積む時を待つ列に入れる。仕事の例外は外へ投げる。</summary>
     private void Receive(Output output)
     {
-        _running.Remove(output.BatchKey);
-        if (_dropped.Remove(output.BatchKey))
+        _running.Remove(output.BatchSeq);
+        if (_dropped.Remove(output.BatchSeq))
         {
             return;
         }
 
         if (output.Error is { } error)
         {
-            throw new InvalidOperationException($"決める側の仕事が失敗した（決めどき {output.BatchKey}）: {error}");
+            throw new InvalidOperationException($"決める側の仕事が失敗した（決めどき {output.BatchSeq}）: {error}");
         }
 
         _held.Add(output);
@@ -314,13 +314,13 @@ public sealed class SimEngine : IAsyncDisposable
     /// <summary>ホライズンが limit 以下になった出力を、契機の連番の順にキューへ入れる。</summary>
     private void InsertHeld(DateTimeOffset limit)
     {
-        var ready = _held.Where(output => output.Horizon <= limit).OrderBy(output => output.BatchKey).ToList();
+        var ready = _held.Where(output => output.Horizon <= limit).OrderBy(output => output.BatchSeq).ToList();
         foreach (var output in ready)
         {
             _held.Remove(output);
             foreach (var ev in output.Events)
             {
-                Enqueue(ev, output.Origin, output.BatchKey);
+                Enqueue(ev, output.Origin, output.BatchSeq);
             }
         }
     }
@@ -342,5 +342,5 @@ public sealed class SimEngine : IAsyncDisposable
     private sealed record Running(long Key, PersonaId Persona, DateTimeOffset Horizon, string Lane);
 
     /// <summary>決める仕事の結果。</summary>
-    private sealed record Output(long BatchKey, PersonaId Persona, DateTimeOffset Horizon, Origin Origin, ImmutableArray<NewEvent> Events, string? Error);
+    private sealed record Output(long BatchSeq, PersonaId Persona, DateTimeOffset Horizon, Origin Origin, ImmutableArray<EventDraft> Events, string? Error);
 }

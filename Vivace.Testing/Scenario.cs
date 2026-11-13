@@ -3,7 +3,6 @@ using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
 using Vivace.Core;
 using Vivace.Core.Events;
-using Vivace.Core.Ingress;
 using Vivace.Core.Randomness;
 using Vivace.Core.Time;
 
@@ -32,9 +31,9 @@ public static class Scenario
         var loaded = definitions ?? TestWorld.LoadOrThrow();
         var clock = new VirtualClock(Start);
         var engine = SimEngine.Create(loaded, new InMemoryStorage(), new SplitMixRandomSource(), clock, decider, TestHolidays.Instance);
-        engine.Inject(Ingress.WorldCreated(Start, TestWorld.DefId, seed), Origin.Test);
-        engine.Inject(Ingress.PersonaCreated(Start, new PersonaDefId("kaori"), new PlaceId("kaori_room")), Origin.Test);
-        engine.Inject(Ingress.PersonaCreated(Start, new PersonaDefId("shiori"), new PlaceId("home_living")), Origin.Test);
+        engine.Inject(EventDraft.WorldCreated(Start, TestWorld.DefId, seed), Origin.Test);
+        engine.Inject(EventDraft.PersonaCreated(Start, new PersonaDefId("kaori"), new PlaceId("kaori_room")), Origin.Test);
+        engine.Inject(EventDraft.PersonaCreated(Start, new PersonaDefId("shiori"), new PlaceId("home_living")), Origin.Test);
         return engine;
     }
 

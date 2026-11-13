@@ -41,6 +41,6 @@ internal sealed class WorldCreatedRule : EventRule<WorldCreatedPayload>
             1);
         var next = state with { Worlds = state.Worlds.SetItem(id, world) };
         var date = LocalClock.ToLocal(ev.Time, def.UtcOffset).Date;
-        return ApplyResult.Applied(next, [new NewEvent(ev.Time, EventTypes.DayStarted, id, null, new DayStartedPayload(date))]);
+        return ApplyResult.Applied(next, [new EventDraft(ev.Time, EventTypes.DayStarted, id, null, new DayStartedPayload(date))]);
     }
 }

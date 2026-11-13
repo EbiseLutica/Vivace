@@ -21,6 +21,6 @@ internal sealed class DayStartedRule : EventRule<DayStartedPayload>
 
         var next = payload.Date.AddDays(1);
         var time = LocalClock.ToUtc(next, TimeOnly.MinValue, ctx.Defs.Worlds[worldState.DefId].UtcOffset);
-        return ApplyResult.Applied(state, [new NewEvent(time, EventTypes.DayStarted, world, null, new DayStartedPayload(next))]);
+        return ApplyResult.Applied(state, [new EventDraft(time, EventTypes.DayStarted, world, null, new DayStartedPayload(next))]);
     }
 }

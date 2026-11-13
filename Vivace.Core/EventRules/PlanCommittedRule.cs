@@ -21,25 +21,25 @@ internal sealed class PlanCommittedRule : EventRule<PlanCommittedPayload>
 
         var plan = payload.Plan with { Version = persona.PlanVersion + 1 };
         var next = state.WithPersona(persona with { Plan = plan, PlanVersion = plan.Version });
-        var followUps = new List<NewEvent>();
+        var followUps = new List<EventDraft>();
         foreach (var block in plan.Blocks.Where(block => block.End > ev.Time))
         {
             if (block.Start >= ev.Time)
             {
                 if (persona.Plan?.Contains(block) != true)
                 {
-                    followUps.Add(NewEvent.Next(block.Start, EventTypes.BlockStarted, persona, new BlockStartedPayload(block.BlockId, plan.Version)));
+                    followUps.Add(EventDraft.Next(block.Start, EventTypes.BlockStarted, persona, new BlockStartedPayload(block.BlockId, plan.Version)));
                 }
             }
             else if (block.BlockId is null || block.BlockId != persona.LastBlockId)
             {
-                followUps.Add(NewEvent.Next(ev.Time, EventTypes.BlockStarted, persona, new BlockStartedPayload(block.BlockId, plan.Version)));
+                followUps.Add(EventDraft.Next(ev.Time, EventTypes.BlockStarted, persona, new BlockStartedPayload(block.BlockId, plan.Version)));
             }
         }
 
         if (plan.NextRebuildAt > ev.Time)
         {
-            followUps.Add(NewEvent.Next(plan.NextRebuildAt, EventTypes.PlanDue, persona, new PlanDuePayload(plan.Version)));
+            followUps.Add(EventDraft.Next(plan.NextRebuildAt, EventTypes.PlanDue, persona, new PlanDuePayload(plan.Version)));
         }
 
         return ApplyResult.Applied(next, followUps.ToImmutableArray());

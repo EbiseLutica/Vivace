@@ -29,17 +29,17 @@ internal sealed class ActivityChosenRule : EventRule<ActivityChosenPayload>
         var next = state.WithPersona(updated);
         if (payload.Duration <= TimeSpan.Zero)
         {
-            NewEvent? moveOnly = payload.Place == from
+            EventDraft? moveOnly = payload.Place == from
                 ? null
-                : NewEvent.TravelStarted(ev.Time, updated, from, payload.Place, payload.Route, ev.Time.AddMinutes(payload.TravelMinutes), null);
+                : EventDraft.TravelStarted(ev.Time, updated, from, payload.Place, payload.Route, ev.Time.AddMinutes(payload.TravelMinutes), null);
             return moveOnly is null
                 ? ApplyResult.Applied(next)
                 : ApplyResult.Applied(next, [moveOnly]);
         }
 
         var followUp = payload.Place == from
-            ? NewEvent.ActionStarted(ev.Time, updated, payload.ActionId, payload.Place, payload.Duration, ActivityReason.Chosen, null)
-            : NewEvent.TravelStarted(ev.Time, updated, from, payload.Place, payload.Route, ev.Time.AddMinutes(payload.TravelMinutes),
+            ? EventDraft.ActionStarted(ev.Time, updated, payload.ActionId, payload.Place, payload.Duration, ActivityReason.Chosen, null)
+            : EventDraft.TravelStarted(ev.Time, updated, from, payload.Place, payload.Route, ev.Time.AddMinutes(payload.TravelMinutes),
                 new PendingAction(payload.ActionId, payload.Place, payload.Duration, ActivityReason.Chosen, null));
         return ApplyResult.Applied(next, [followUp]);
     }

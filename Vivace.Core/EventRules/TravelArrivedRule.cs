@@ -31,18 +31,18 @@ internal sealed class TravelArrivedRule : EventRule<TravelArrivedPayload>
 
         var arrived = persona with { Location = new AtPlace(payload.Place) };
         var next = VitalRules.Rebalance(ctx, state.WithPersona(arrived), ev.Time, arrived.Id, payload.Place);
-        var followUps = ImmutableArray<NewEvent>.Empty;
+        var followUps = ImmutableArray<EventDraft>.Empty;
         if (travel.Next is { } pending)
         {
-            followUps = ImmutableArray.Create(NewEvent.ActionStarted(ev.Time, arrived, pending.ActionId, pending.Place, pending.Duration, pending.Reason, pending.BlockId));
+            followUps = ImmutableArray.Create(EventDraft.ActionStarted(ev.Time, arrived, pending.ActionId, pending.Place, pending.Duration, pending.Reason, pending.BlockId));
         }
         else if (CoveringFixedBlock(arrived, ev.Time) is { } block)
         {
-            followUps = ImmutableArray.Create(NewEvent.Next(ev.Time, EventTypes.BlockStarted, arrived, new BlockStartedPayload(block.BlockId, arrived.PlanVersion)));
+            followUps = ImmutableArray.Create(EventDraft.Next(ev.Time, EventTypes.BlockStarted, arrived, new BlockStartedPayload(block.BlockId, arrived.PlanVersion)));
         }
         else if (arrived.Plan?.FreeAt(ev.Time) is not null)
         {
-            followUps = ImmutableArray.Create(NewEvent.DecisionRequested(ev.Time, arrived, DecisionReason.Ended, null));
+            followUps = ImmutableArray.Create(EventDraft.DecisionRequested(ev.Time, arrived, DecisionReason.Ended, null));
         }
 
         return ApplyResult.Applied(next, followUps);

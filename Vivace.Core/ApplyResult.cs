@@ -14,12 +14,12 @@ public sealed record ApplyResult(
     SimState State,
     EventStatus Outcome,
     string? Reason,
-    ImmutableArray<NewEvent> FollowUps,
+    ImmutableArray<EventDraft> FollowUps,
     ImmutableArray<EngineSignal> Signals)
 {
     /// <summary>適用した結果を作る。</summary>
-    public static ApplyResult Applied(SimState state, ImmutableArray<NewEvent> followUps = default, ImmutableArray<EngineSignal> signals = default) =>
-        new(state, EventStatus.Applied, null, followUps.IsDefault ? ImmutableArray<NewEvent>.Empty : followUps, signals.IsDefault ? ImmutableArray<EngineSignal>.Empty : signals);
+    public static ApplyResult Applied(SimState state, ImmutableArray<EventDraft> followUps = default, ImmutableArray<EngineSignal> signals = default) =>
+        new(state, EventStatus.Applied, null, followUps.IsDefault ? ImmutableArray<EventDraft>.Empty : followUps, signals.IsDefault ? ImmutableArray<EngineSignal>.Empty : signals);
 
     /// <summary>捨てた結果を作る。状態は変えない。</summary>
     public static ApplyResult Skipped(SimState state, string reason) => new(state, EventStatus.Skipped, reason, [], []);

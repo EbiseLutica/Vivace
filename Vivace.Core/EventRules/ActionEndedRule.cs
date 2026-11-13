@@ -54,16 +54,16 @@ internal sealed class ActionEndedRule : EventRule<ActionEndedPayload>
         }
 
         var next = VitalRules.Rebalance(ctx, state.WithPersona(ended), now, ended.Id);
-        var followUps = ImmutableArray<NewEvent>.Empty;
+        var followUps = ImmutableArray<EventDraft>.Empty;
         if (!ended.Deciding && ended.Plan?.BlockStartsAt(now) != true)
         {
             if (ended.Plan?.FreeAt(now) is not null)
             {
-                followUps = [NewEvent.DecisionRequested(now, ended, DecisionReason.Ended, null)];
+                followUps = [EventDraft.DecisionRequested(now, ended, DecisionReason.Ended, null)];
             }
             else if (ended.Plan?.BlockCoveringAt(now) is { } covering)
             {
-                followUps = [NewEvent.DecisionRequested(now, ended, DecisionReason.Disruption, covering.BlockId)];
+                followUps = [EventDraft.DecisionRequested(now, ended, DecisionReason.Disruption, covering.BlockId)];
             }
         }
 

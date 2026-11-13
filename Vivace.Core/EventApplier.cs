@@ -88,11 +88,11 @@ public sealed class EventApplier
     /// <summary>却下の結果を作り、決め直しが要れば決めどきを積む。</summary>
     private static ApplyResult Rejected(SimState state, SimEvent ev, Guard guard, string reason)
     {
-        var followUps = ImmutableArray<NewEvent>.Empty;
+        var followUps = ImmutableArray<EventDraft>.Empty;
         if (guard.OnReject == RejectAction.Redecide && state.AlivePersona(ev.PersonaId) is { } persona)
         {
             state = state.WithPersona(persona with { Deciding = false });
-            followUps = [NewEvent.DecisionRequested(ev.Time, persona, DecisionReason.Retry, null)];
+            followUps = [EventDraft.DecisionRequested(ev.Time, persona, DecisionReason.Retry, null)];
         }
 
         return new ApplyResult(state, EventStatus.Rejected, reason, followUps, []);

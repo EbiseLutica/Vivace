@@ -56,7 +56,7 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
         }
 
         var next = VitalRules.Rebalance(ctx, state.WithPersona(started), now, started.Id);
-        var followUps = ImmutableArray.Create(NewEvent.Next(now + payload.Duration, EventTypes.ActionEnded, started, new ActionEndedPayload(payload.ActionId, payload.ActivityVersion)));
+        var followUps = ImmutableArray.Create(EventDraft.Next(now + payload.Duration, EventTypes.ActionEnded, started, new ActionEndedPayload(payload.ActionId, payload.ActivityVersion)));
         return ApplyResult.Applied(next, followUps, signals);
     }
 }

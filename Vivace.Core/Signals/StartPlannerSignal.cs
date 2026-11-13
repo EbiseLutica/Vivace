@@ -3,7 +3,7 @@ using Vivace.Core.Domain;
 namespace Vivace.Core.Signals;
 
 /// <summary>プランのハンドラ（Planner の代わり）を、計画のレーンで起動する。</summary>
-/// <param name="BatchKey">出力のまとまりの鍵。</param>
+/// <param name="BatchSeq">出力のまとまりの連番。</param>
 /// <param name="Persona">ペルソナ。</param>
 /// <param name="Now">契機の時刻。</param>
-public sealed record StartPlannerSignal(long BatchKey, PersonaId Persona, DateTimeOffset Now) : EngineSignal;
+public sealed record StartPlannerSignal(long BatchSeq, PersonaId Persona, DateTimeOffset Now) : EngineSignal;

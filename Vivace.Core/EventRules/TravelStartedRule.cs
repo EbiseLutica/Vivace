@@ -35,6 +35,6 @@ internal sealed class TravelStartedRule : EventRule<TravelStartedPayload>
 
         var moving = persona with { Location = new Traveling(payload.From, payload.To, payload.Route, ev.Time, payload.ArrivesAt, payload.Next) };
         var next = VitalRules.Rebalance(ctx, state.WithPersona(moving), ev.Time, moving.Id, payload.From);
-        return ApplyResult.Applied(next, [NewEvent.Next(payload.ArrivesAt, EventTypes.TravelArrived, persona, new TravelArrivedPayload(payload.To, payload.ActivityVersion))]);
+        return ApplyResult.Applied(next, [EventDraft.Next(payload.ArrivesAt, EventTypes.TravelArrived, persona, new TravelArrivedPayload(payload.To, payload.ActivityVersion))]);
     }
 }
