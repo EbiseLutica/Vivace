@@ -157,7 +157,7 @@
   <div class="table-wrap">
     <table>
       <tr><th>イベントタイプ</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
-      <tr><td><code>vital.threshold</code></td><td>Apply（率が変わるたびに予測）</td><td>変数、しきい値、状態変数の版</td><td>版が古ければ捨てる。反射の行動を、Decider を通さずに始める（実行中の行動は打ち切り、版を上げる）。<code>CancelHandlerSignal</code> を出す</td></tr>
+      <tr><td><code>vital.threshold</code></td><td>Apply（率が変わるたびに予測）</td><td>変数、しきい値、状態変数の版</td><td>版が古ければ捨てる。反射の行動を、Decider を通さずに始める（実行中の行動は打ち切り、版を上げる）。<code>CancelHandler</code> を出す</td></tr>
       <tr><td><code>vital.adjusted</code></td><td>窓口</td><td>変数、増減か設定か、値、理由</td><td>値を書き換え、基準時刻を更新し、版を上げて、到達を予測し直す</td></tr>
       <tr><td><code>condition.attached</code> / <code>detached</code></td><td>Apply（出来事）、窓口</td><td>状態 ID、持続時間</td><td>付いている状態を書き換え、率を計算し直す</td></tr>
     </table>
