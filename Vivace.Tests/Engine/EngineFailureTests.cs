@@ -46,6 +46,28 @@ public class EngineFailureTests
         }
     }
 
+    /// <summary>決める側の出力を待っている間にキャンセルすると、待ちをやめて OperationCanceledException で抜ける。</summary>
+    [Fact]
+    public async Task CancelWhileWaitingForOutputStopsRun()
+    {
+        var decider = new BlockingDecider();
+        await using var engine = await Scenario.CreateAsync(Scenario.WorldSeed, decider);
+        using var cts = new CancellationTokenSource();
+        try
+        {
+            var run = engine.RunUntilAsync(Scenario.Start.AddDays(1), cts.Token);
+            await decider.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+            await cts.CancelAsync();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+        }
+        finally
+        {
+            decider.Release.Set();
+        }
+    }
+
     /// <summary>guard が通らない出力は、却下として記録され、決め直しで続く。</summary>
     [Fact]
     public async Task StaleDecisionIsRecordedAsRejectedAndRunContinues()

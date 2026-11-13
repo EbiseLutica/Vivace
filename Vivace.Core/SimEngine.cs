@@ -50,7 +50,9 @@ public sealed class SimEngine : IAsyncDisposable
     private SimState _state;
     /// <summary>RunUntilAsync の中にいるか。錠の下で読み書きする。</summary>
     private bool _looping;
-    /// <summary>投入のコマンドが届くのを待つ仕事。ループが待つ場面で使い回す。</summary>
+    /// <summary>決める側の仕事の出力が届くのを待つ仕事。キャンセルを持たせず、ループが待つ場面で使い回す。</summary>
+    private Task<bool>? _outputWait;
+    /// <summary>投入のコマンドが届くのを待つ仕事。キャンセルを持たせず、ループが待つ場面で使い回す。</summary>
     private Task<bool>? _commandWait;
     /// <summary>購読の一覧を守る錠。</summary>
     private readonly Lock _subscribersGate = new();
@@ -176,6 +178,8 @@ public sealed class SimEngine : IAsyncDisposable
     /// <summary>RunUntilAsync の本体。各周の先頭で、届いたコマンドと仕事の出力を取り込む。</summary>
     private async Task LoopAsync(DateTimeOffset until, CancellationToken ct)
     {
+        var cancelled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var registration = ct.Register(() => cancelled.TrySetResult());
         while (true)
         {
             ct.ThrowIfCancellationRequested();
@@ -186,8 +190,14 @@ public sealed class SimEngine : IAsyncDisposable
             var limit = head?.Time ?? DateTimeOffset.MaxValue;
             if (_running.Values.Any(run => run.Horizon <= limit))
             {
+                _outputWait ??= _outputs.Reader.WaitToReadAsync(CancellationToken.None).AsTask();
                 _commandWait ??= _commands.Reader.WaitToReadAsync(CancellationToken.None).AsTask();
-                await Task.WhenAny(_outputs.Reader.WaitToReadAsync(ct).AsTask(), _commandWait, _lanes.Failure);
+                await Task.WhenAny(_outputWait, _commandWait, _lanes.Failure, cancelled.Task);
+                if (_outputWait.IsCompleted)
+                {
+                    _outputWait = null;
+                }
+
                 if (_commandWait.IsCompleted)
                 {
                     _commandWait = null;
