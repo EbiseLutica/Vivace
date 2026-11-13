@@ -28,7 +28,7 @@ public static class FallbackPlanner
     {
         var personaDef = definitions.Personas[persona.DefId];
         var worldDef = definitions.Worlds[personaDef.World];
-        var today = LocalClock.ToLocal(now, worldDef.UtcOffset).Date;
+        var today = LocalTimeHelper.ToLocal(now, worldDef.UtcOffset).Date;
         var fixedBlocks = ResolveAround(definitions, personaDef, worldDef.UtcOffset, today, holidays ?? NoHolidays.Instance);
 
         var rebuildCandidates = fixedBlocks
@@ -73,7 +73,7 @@ public static class FallbackPlanner
         {
             var date = today.AddDays(shift);
             var day = FixedScheduleResolver.Resolve(definitions, personaDef, date, holidays);
-            var midnight = LocalClock.ToUtc(date, TimeOnly.MinValue, offset);
+            var midnight = LocalTimeHelper.ToUtc(date, TimeOnly.MinValue, offset);
             foreach (var block in day.Blocks)
             {
                 result.Add(new Resolved(block, midnight.AddMinutes(block.StartMinute), midnight.AddMinutes(block.EndMinute)));

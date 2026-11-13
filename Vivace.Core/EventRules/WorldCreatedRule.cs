@@ -40,7 +40,7 @@ internal sealed class WorldCreatedRule : EventRule<WorldCreatedPayload>
             ImmutableDictionary<long, ActiveIncident>.Empty,
             1);
         var next = state with { Worlds = state.Worlds.SetItem(id, world) };
-        var date = LocalClock.ToLocal(ev.Time, def.UtcOffset).Date;
+        var date = LocalTimeHelper.ToLocal(ev.Time, def.UtcOffset).Date;
         return ApplyResult.Applied(next, [new EventDraft(ev.Time, EventTypes.DayStarted, id, null, new DayStartedPayload(date))]);
     }
 }

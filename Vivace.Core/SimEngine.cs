@@ -48,7 +48,7 @@ public sealed class SimEngine : IAsyncDisposable
         _random = random;
         _clock = clock;
         _state = new SimState(
-            new Position(clock.UtcNow, EventStage.DayTurn, 0, 0),
+            new ApplyCursor(clock.UtcNow, EventStage.DayTurn, 0, 0),
             ImmutableDictionary<WorldId, WorldState>.Empty,
             ImmutableDictionary<PersonaId, PersonaState>.Empty);
     }
@@ -159,7 +159,7 @@ public sealed class SimEngine : IAsyncDisposable
         if (result.Outcome == EventStatus.Applied)
         {
             applyNo = ++_applyNo;
-            _state = result.State with { Position = new Position(ev.Time, ev.Stage, ev.Seq, applyNo.Value) };
+            _state = result.State with { Position = new ApplyCursor(ev.Time, ev.Stage, ev.Seq, applyNo.Value) };
         }
         else
         {

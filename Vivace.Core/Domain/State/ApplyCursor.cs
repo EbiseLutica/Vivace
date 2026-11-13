@@ -7,4 +7,4 @@ namespace Vivace.Core.Domain;
 /// <param name="Stage">段。</param>
 /// <param name="Seq">連番。</param>
 /// <param name="ApplyNo">適用番号。</param>
-public readonly record struct Position(DateTimeOffset Time, EventStage Stage, long Seq, long ApplyNo);
+public readonly record struct ApplyCursor(DateTimeOffset Time, EventStage Stage, long Seq, long ApplyNo);

@@ -84,7 +84,7 @@ internal static partial class DefinitionMapper
         var id = ReadId(r, builtin);
         var name = r.RequiredString("name") ?? string.Empty;
         var lore = r.RequiredString("lore") ?? string.Empty;
-        var offset = r.RequiredParsed<TimeSpan>("utc_offset", TimeText.TryParseOffset, "+09:00 の形の時差") ?? TimeSpan.Zero;
+        var offset = r.RequiredParsed<TimeSpan>("utc_offset", TimeTextHelper.TryParseOffset, "+09:00 の形の時差") ?? TimeSpan.Zero;
         var generated = ReadGeneratedPlaces(r);
         var notExist = r.String("not_exist");
 
@@ -101,7 +101,7 @@ internal static partial class DefinitionMapper
                 var er = new TableReader(eventTable, issues);
                 foreach (var (key, node) in eventTable.Entries)
                 {
-                    if (!TimeText.TryParseMonthDay(key, out var monthDay))
+                    if (!TimeTextHelper.TryParseMonthDay(key, out var monthDay))
                     {
                         er.Invalid(node, $"年中行事の日付は \"MM-DD\" で書いてください: {key}");
                         continue;
@@ -978,8 +978,8 @@ internal static partial class DefinitionMapper
     {
         var r = new TableReader(table, issues);
         var id = ReadPlainId(r, "id");
-        var from = r.RequiredParsed<MonthDay>("from", TimeText.TryParseMonthDay, "\"MM-DD\" の形の日付");
-        var to = r.RequiredParsed<MonthDay>("to", TimeText.TryParseMonthDay, "\"MM-DD\" の形の日付");
+        var from = r.RequiredParsed<MonthDay>("from", TimeTextHelper.TryParseMonthDay, "\"MM-DD\" の形の日付");
+        var to = r.RequiredParsed<MonthDay>("to", TimeTextHelper.TryParseMonthDay, "\"MM-DD\" の形の日付");
         r.Done();
         if (from is null || to is null)
         {
@@ -1127,8 +1127,8 @@ internal static partial class DefinitionMapper
 
         if (hasFromTo)
         {
-            var from = r.RequiredParsed<TimeOnly>("from", TimeText.TryParseTimeOfDay, "\"HH:mm\" の形の時刻");
-            var to = r.RequiredParsed<TimeOnly>("to", TimeText.TryParseTimeOfDay, "\"HH:mm\" の形の時刻");
+            var from = r.RequiredParsed<TimeOnly>("from", TimeTextHelper.TryParseTimeOfDay, "\"HH:mm\" の形の時刻");
+            var to = r.RequiredParsed<TimeOnly>("to", TimeTextHelper.TryParseTimeOfDay, "\"HH:mm\" の形の時刻");
             if (from is not null && to is not null)
             {
                 builder.Add(new TimeRange(from.Value, to.Value));
@@ -1146,8 +1146,8 @@ internal static partial class DefinitionMapper
                 if (pair is TomlArray { Items.Count: 2 } array
                     && array.Items[0] is TomlScalar { Value: string fromText }
                     && array.Items[1] is TomlScalar { Value: string toText }
-                    && TimeText.TryParseTimeOfDay(fromText, out var start)
-                    && TimeText.TryParseTimeOfDay(toText, out var end))
+                    && TimeTextHelper.TryParseTimeOfDay(fromText, out var start)
+                    && TimeTextHelper.TryParseTimeOfDay(toText, out var end))
                 {
                     builder.Add(new TimeRange(start, end));
                 }

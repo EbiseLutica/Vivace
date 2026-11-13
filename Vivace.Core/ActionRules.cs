@@ -103,7 +103,7 @@ public static class ActionRules
     public static bool WithinLimits(ActionDef action, ActionUsage? usage, DateTimeOffset now, TimeSpan utcOffset)
     {
         var limits = action.Limits;
-        var local = LocalClock.ToLocal(now, utcOffset);
+        var local = LocalTimeHelper.ToLocal(now, utcOffset);
         if (limits.Cooldown is { } cooldown && usage?.LastStartedAt is { } last && now - last < cooldown)
         {
             return false;

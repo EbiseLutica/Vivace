@@ -37,7 +37,7 @@ public static class Fixture
 
     /// <summary>空の状態。位置は基準の時刻。</summary>
     public static SimState Empty() => new(
-        new Position(Now, Core.Events.EventStage.DayTurn, 0, 0),
+        new ApplyCursor(Now, Core.Events.EventStage.DayTurn, 0, 0),
         ImmutableDictionary<WorldId, WorldState>.Empty,
         ImmutableDictionary<PersonaId, PersonaState>.Empty);
 

@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 namespace Vivace.Core.Time;
 
 /// <summary>時間の文字列の読み書き。長さは "45m"、"1h30m"、"3d" のように単位つきで書く。読めない入力では、例外を出さず false を返す。</summary>
-public static partial class TimeText
+public static partial class TimeTextHelper
 {
     /// <summary>長さの1回の上限（日、時、分の各単位の数字の桁数）。</summary>
     private const int MaxDigits = 9;

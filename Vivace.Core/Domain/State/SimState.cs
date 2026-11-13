@@ -7,7 +7,7 @@ namespace Vivace.Core.Domain;
 /// <param name="Worlds">ワールドの状態。</param>
 /// <param name="Personas">ペルソナの状態。</param>
 public sealed record SimState(
-    Position Position,
+    ApplyCursor Position,
     ImmutableDictionary<WorldId, WorldState> Worlds,
     ImmutableDictionary<PersonaId, PersonaState> Personas)
 {
