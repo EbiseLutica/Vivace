@@ -21,7 +21,7 @@ public class StuckSleepRegressionTests
         var definitions = DefinitionLoader.LoadFiles(files).Definitions ?? throw new InvalidOperationException("定義が読めない");
         var until = Scenario.Start.AddDays(2);
 
-        await using var engine = Scenario.Create(Scenario.WorldSeed, null, definitions);
+        await using var engine = await Scenario.CreateAsync(Scenario.WorldSeed, null, definitions);
         await engine.RunUntilAsync(until, CancellationToken.None);
 
         var applied = engine.Log.Where(entry => entry.Status == EventStatus.Applied).ToList();

@@ -18,7 +18,7 @@
     <span class="chip">2026-11-06 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
     <span class="chip fixed">案はすべて合意（57 件）</span>
-    <span class="chip fixed">枠の外の判断もすべて合意（156 件）</span>
+    <span class="chip fixed">枠の外の判断もすべて合意（157 件）</span>
   </div>
 </header>
 
@@ -173,7 +173,7 @@
 
 <section id="judgments">
   <h2><span class="num">0.5</span>枠の外の判断</h2>
-  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-156）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
+  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-157）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
   <h3>VISION の解釈で決めたもの</h3>
   <p>VISION から導いたつもりで、実際には読み方を1つに決めたもの。いちばん見落としやすいので、先に見てほしい。</p>
   <div class="table-wrap">
@@ -313,6 +313,7 @@
       <tr><td>J-154</td><td>投入の窓口が受け付けるのは、Apply のルールの表にあり、そのルールが投入の検査を持つ型だけ。型ごとの検査は、その型のルール（<code>EventRule</code>）の仮想メソッドに置き、既定は「未対応の型」で拒否する（表にない型も同じ）。いまは <code>world.created</code> と <code>persona.created</code> だけが検査を持つ。ほかの型は、その型のルールを作るときに、適用と投入の検査を同じクラスに並べて足す。guard の評価は型に紐づかないので、<code>EventApplier</code> に置いたままにする <span class="chip fixed">合意</span></td><td><a href="2-events.html#injection">D2 2.8</a></td></tr>
       <tr><td>J-155</td><td><code>persona.created</code> の投入で、生成先のワールドが生きていなくても、要求の時刻以前の <code>world.created</code>（同じ居住ワールドの定義）がキューにあれば、生成済みとみなして受け付ける。要求より後の時刻のものしかなければ拒否する <span class="chip fixed">合意</span></td><td><a href="2-events.html#injection">D2 2.8</a></td></tr>
       <tr><td>J-156</td><td>投入の要求（<code>InjectRequest</code>）は、イベントタイプ、中身、時刻の指定（省略なら受け付けた時点の時計の時刻）、出所だけを持ち、<code>EventDraft</code> に依存しない。要求 → 検査 → 下書きの一方向にし、時刻を決めて下書きを作るのは窓口（<code>InjectionValidator</code>）。ワールドとペルソナの生成の要求は、<code>InjectRequest</code> の static のファクトリで作る <span class="chip fixed">合意</span></td><td><a href="2-events.html#injection">D2 2.8</a>、<a href="4-components.html#api">D4 4.6</a></td></tr>
+      <tr><td>J-157</td><td><code>InjectAsync</code> は、<code>RunUntilAsync</code> の外では錠の下でその場で処理し、中ではコマンドを <code>Channel</code> に入れて、ループが各周の先頭で取り出す。決める側の出力を待っている間も、コマンドが届けば起きる。抜けるときは残りをすべて処理してから外の扱いに戻す。検査は、処理する時点の状態とキューと時計の時刻で行う。同期の <code>Inject</code> は消した <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a>、<a href="1-execution.html#step">D1 1.4</a></td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>

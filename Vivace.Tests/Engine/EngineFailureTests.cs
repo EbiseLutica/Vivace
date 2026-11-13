@@ -4,6 +4,7 @@ using Vivace.Core.Events.Guards;
 using Vivace.Core.Events;
 using Vivace.Core;
 using Vivace.Testing;
+using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Engine;
 
@@ -16,7 +17,7 @@ public class EngineFailureTests
     [Fact]
     public async Task FailingDecisionStopsEngine()
     {
-        await using var engine = Scenario.Create(Scenario.WorldSeed, new ThrowingDecider());
+        await using var engine = await Scenario.CreateAsync(Scenario.WorldSeed, new ThrowingDecider());
 
         var error = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None));
         Assert.Contains("決める側の仕事が失敗", error.Message, StringComparison.Ordinal);
@@ -28,7 +29,7 @@ public class EngineFailureTests
     {
         var decider = new BlockingDecider();
         var failure = new InvalidOperationException("わざと失敗させたレーンの仕事");
-        await using var engine = Scenario.Create(Scenario.WorldSeed, decider);
+        await using var engine = await Scenario.CreateAsync(Scenario.WorldSeed, decider);
         try
         {
             var run = engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None);
@@ -49,7 +50,7 @@ public class EngineFailureTests
     [Fact]
     public async Task StaleDecisionIsRecordedAsRejectedAndRunContinues()
     {
-        await using var engine = Scenario.Create(Scenario.WorldSeed, new RejectOnceDecider());
+        await using var engine = await Scenario.CreateAsync(Scenario.WorldSeed, new RejectOnceDecider());
 
         await engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None);
 
@@ -63,25 +64,6 @@ public class EngineFailureTests
     private sealed class ThrowingDecider : IDecider
     {
         public DeciderOutput Decide(DecisionContext context) => throw new InvalidOperationException("わざと失敗させた決定");
-    }
-
-    /// <summary>最初の決定で、解放されるまで止まる Decider。</summary>
-    private sealed class BlockingDecider : IDecider
-    {
-        private readonly UtilityDecider _inner = new();
-
-        /// <summary>決定に入ったら完了する。</summary>
-        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        /// <summary>決定を先へ進める合図。</summary>
-        public ManualResetEventSlim Release { get; } = new();
-
-        public DeciderOutput Decide(DecisionContext context)
-        {
-            Entered.TrySetResult();
-            Release.Wait();
-            return _inner.Decide(context);
-        }
     }
 
     private sealed class RejectOnceDecider : IDecider
