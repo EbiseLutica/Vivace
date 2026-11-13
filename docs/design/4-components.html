@@ -302,7 +302,7 @@ ValidationReport report = DefinitionLoader.Validate("defs/", plugins);</code></p
     <li><code>View</code> は、いまは <code>SimState</code>（不変の状態）そのものを返す。読み取り用の <code>StateView</code>（4.5）は、ビューアや実行レポートを作るときに、要るものだけを足す（J-158）</li>
     <li>プラグインにも、このエンジンそのものを渡す（4.7）。ホストに使えてプラグインに使えない口は作らない</li>
     <li>DI コンテナには依存しない。ASP.NET Core などから使うときのための <code>services.AddVivace(...)</code> は、API 層を作るときに別のパッケージで足す</li>
-    <li><code>InjectAsync</code> は、要求（<code>InjectRequest</code>）を窓口で検査し、受け付けたら連番を、拒否なら理由を返す（D2 2.8）。<code>RunUntilAsync</code> の外では、錠（<code>System.Threading.Lock</code>）の下でその場で処理する。中では、コマンドを <code>Channel</code> に入れ、ループが各周の先頭で取り出す。ループが決める側の出力を待っている間も、コマンドが届けば起きて処理する。<code>RunUntilAsync</code> を抜けるときは、残ったコマンドをすべて処理してから、外の扱いに戻す。検査は、取り出した時点の状態とキューと時計の時刻で行う。時計の待ちは、いまはコマンドで起きない（<code>SystemClock</code> を作るときに D1 1.4 に合わせる、J-157）</li>
+    <li><code>InjectAsync</code> は、要求（<code>InjectRequest</code>）を窓口で検査し、受け付けたら連番を、拒否なら理由を返す（D2 2.8）。<code>RunUntilAsync</code> の外では、錠（<code>System.Threading.Lock</code>）の下でその場で処理する。中では、コマンドを <code>Channel</code> に入れ、ループが各周の先頭で取り出す。ループが決める側の出力を待っている間も、コマンドが届けば起きて処理する。<code>RunUntilAsync</code> を抜けるときは、残ったコマンドをすべて処理してから、外の扱いに戻す。検査は、処理する時点（ループの中では取り出した時点）の状態とキューと時計の時刻で行う。時計の待ちは、いまはコマンドで起きない（<code>SystemClock</code> を作るときに D1 1.4 に合わせる、J-157）</li>
   </ul>
   <div class="callout">
     <span class="label">決定 P-27　公開 API はビルダーとエンジンの1クラス</span>
