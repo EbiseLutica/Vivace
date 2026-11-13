@@ -1,4 +1,5 @@
 using Vivace.Core.Definitions;
+using Vivace.Core.Domain.State;
 
 namespace Vivace.Tests.Definitions;
 

@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>1日のプラン（ホライズンからの範囲）。</summary>
 /// <param name="Version">プランの版。古いものを捨てる判定に使う。</param>

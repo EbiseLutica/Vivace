@@ -1,4 +1,4 @@
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>4つの状態変数と、その版。</summary>
 /// <param name="Energy">気力。</param>

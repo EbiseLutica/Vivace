@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>シミュレーションの全体の状態（不変）。</summary>
 /// <param name="Cursor">最後に適用した位置。</param>

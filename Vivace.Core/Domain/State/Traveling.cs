@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>移動中。どの場所にもいないものとして扱う。</summary>
 /// <param name="From">出発地。</param>

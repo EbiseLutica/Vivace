@@ -1,5 +1,6 @@
 using Vivace.Core.Definitions.Model;
 using Vivace.Core.Definitions;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
 using Vivace.Testing;
 
@@ -40,10 +41,10 @@ public class DefinitionLoaderTests
         Assert.Equal(-50, shiori.Vitals.SocialFloor);
         Assert.Equal(100, shiori.Vitals.SocialCeiling);
         Assert.Equal(TimeSpan.FromHours(7), shiori.Vitals.SleepTarget);
-        Assert.Equal(0, shiori.Reflexes[Vivace.Core.Domain.VitalName.Energy].Threshold);
-        Assert.Equal("core.faint", shiori.Reflexes[Vivace.Core.Domain.VitalName.Energy].ActionId);
-        Assert.Equal(20, shiori.Reflexes[Vivace.Core.Domain.VitalName.Health].Threshold);
-        Assert.Equal("core.go_home_rest", shiori.Reflexes[Vivace.Core.Domain.VitalName.Health].ActionId);
+        Assert.Equal(0, shiori.Reflexes[Vivace.Core.Domain.State.VitalName.Energy].Threshold);
+        Assert.Equal("core.faint", shiori.Reflexes[Vivace.Core.Domain.State.VitalName.Energy].ActionId);
+        Assert.Equal(20, shiori.Reflexes[Vivace.Core.Domain.State.VitalName.Health].Threshold);
+        Assert.Equal("core.go_home_rest", shiori.Reflexes[Vivace.Core.Domain.State.VitalName.Health].ActionId);
         Assert.Equal(0.3, shiori.Disruption.Absent);
         Assert.Equal(1.0, shiori.MemoryHalfLife);
     }
@@ -56,8 +57,8 @@ public class DefinitionLoaderTests
 
         var sleep = definitions.Actions["core.sleep"];
         Assert.True(sleep.ScheduleOnly);
-        Assert.Equal(0, sleep.Effects.Rates[Vivace.Core.Domain.VitalName.Energy]);
-        Assert.Equal(100, sleep.Effects.Restore[Vivace.Core.Domain.VitalName.Energy]);
+        Assert.Equal(0, sleep.Effects.Rates[Vivace.Core.Domain.State.VitalName.Energy]);
+        Assert.Equal(100, sleep.Effects.Restore[Vivace.Core.Domain.State.VitalName.Energy]);
         Assert.Equal(new SleepEffect(Consolidate: true, Debt: true), sleep.Effects.Sleep);
 
         var faint = definitions.Actions["core.faint"];

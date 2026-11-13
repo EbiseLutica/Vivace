@@ -1,4 +1,3 @@
-using Vivace.Core.Domain;
 
 namespace Vivace.Core.Events.Guards;
 

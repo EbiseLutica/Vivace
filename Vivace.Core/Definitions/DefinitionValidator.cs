@@ -1,4 +1,5 @@
 using Vivace.Core.Definitions.Model;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Routes;
 using System.Collections.Immutable;
 using System.Globalization;

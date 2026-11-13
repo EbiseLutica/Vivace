@@ -1,5 +1,5 @@
 using System.Globalization;
-using Vivace.Core.Domain;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Signals;
 
 namespace Vivace.Core;

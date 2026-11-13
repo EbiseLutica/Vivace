@@ -1,4 +1,4 @@
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>発生中の出来事。解決済みの効果を持つので、解消のときに定義を引き直さなくてよい。</summary>
 /// <param name="Seq">発生のイベントの連番（ID を兼ねる）。</param>

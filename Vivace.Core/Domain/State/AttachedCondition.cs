@@ -1,4 +1,4 @@
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>ペルソナに付いている状態（風邪など）。</summary>
 /// <param name="ConditionId">状態の定義 ID。</param>

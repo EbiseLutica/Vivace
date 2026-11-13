@@ -1,4 +1,4 @@
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>変換の辞書の判定。</summary>
 public enum TermVerdict

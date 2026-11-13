@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Vivace.Core.Definitions.Model;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
 using Vivace.Core.Time;
 

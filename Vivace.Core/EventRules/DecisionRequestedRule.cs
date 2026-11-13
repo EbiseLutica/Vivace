@@ -1,4 +1,4 @@
-using Vivace.Core.Domain;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
 using Vivace.Core.Signals;

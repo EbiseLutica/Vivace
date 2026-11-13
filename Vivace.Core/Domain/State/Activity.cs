@@ -1,4 +1,4 @@
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>実行中の行動。</summary>
 /// <param name="ActionId">行動の定義 ID。</param>

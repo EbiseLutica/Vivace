@@ -1,6 +1,7 @@
 using Vivace.Core.Decision;
 using Vivace.Core.Definitions.Model;
 using Vivace.Core.Definitions;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
 using Vivace.Core.Events.Guards;
 using Vivace.Core.Events.Payloads;

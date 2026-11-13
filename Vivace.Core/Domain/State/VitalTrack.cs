@@ -1,4 +1,4 @@
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>状態変数の1本の変化。基準時刻での値と率から、値 + 率 × 経過時間で読む。</summary>
 /// <param name="BaseTime">基準の時刻。</param>

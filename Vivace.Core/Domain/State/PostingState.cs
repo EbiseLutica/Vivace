@@ -1,4 +1,4 @@
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>投稿の状態。</summary>
 /// <param name="LastPostAt">最後に投稿した時刻。</param>

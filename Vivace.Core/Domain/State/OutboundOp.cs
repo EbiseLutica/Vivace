@@ -1,4 +1,4 @@
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>未送信の外向きの操作。</summary>
 /// <param name="Seq">操作のイベントの連番（ID を兼ねる）。</param>

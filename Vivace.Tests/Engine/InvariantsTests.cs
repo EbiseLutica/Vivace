@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core;
@@ -89,13 +90,13 @@ public class InvariantsTests
     [Fact]
     public void IdleInFreeTimeWithoutDecisionIsDetected()
     {
-        var plan = new Vivace.Core.Domain.DayPlan(
+        var plan = new Vivace.Core.Domain.State.DayPlan(
             1,
             Fixture.Now,
             Fixture.Now.AddHours(3),
             Fixture.Now.AddHours(3),
-            Vivace.Core.Domain.PlanSource.Fallback,
-            [new Vivace.Core.Domain.PlanBlock(null, Vivace.Core.Domain.BlockKind.Free, Fixture.Now, Fixture.Now.AddHours(3), null, null, Vivace.Core.Domain.PhonePolicy.Closed, null, [], Vivace.Core.Domain.PartnerAbsentPolicy.Continue)],
+            Vivace.Core.Domain.State.PlanSource.Fallback,
+            [new Vivace.Core.Domain.State.PlanBlock(null, Vivace.Core.Domain.State.BlockKind.Free, Fixture.Now, Fixture.Now.AddHours(3), null, null, Vivace.Core.Domain.PhonePolicy.Closed, null, [], Vivace.Core.Domain.PartnerAbsentPolicy.Continue)],
             null);
         var state = Fixture.With(Fixture.WithKaori(), Fixture.Get(Fixture.WithKaori(), Fixture.Kaori) with { Plan = plan });
 

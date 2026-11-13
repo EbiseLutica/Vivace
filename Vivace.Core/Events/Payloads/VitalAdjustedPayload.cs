@@ -1,4 +1,5 @@
-using Vivace.Core.Domain;
+using Vivace.Core.Domain.State;
+
 
 namespace Vivace.Core.Events.Payloads;
 

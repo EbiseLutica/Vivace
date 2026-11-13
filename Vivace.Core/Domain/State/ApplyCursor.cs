@@ -1,6 +1,6 @@
 using Vivace.Core.Events;
 
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>適用の位置。最後に適用したイベントの時刻、段、連番と、適用番号。</summary>
 /// <param name="Time">時刻。</param>

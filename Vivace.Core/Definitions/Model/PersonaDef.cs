@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Text.Json;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
 
 namespace Vivace.Core.Definitions.Model;

@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>プランのブロック。開始と終了は UTC の絶対時刻。自由時間は ID を持たない。電話の指定と同行は、プランを作ったときの値を持つので、固定予定を変えても次のプランまで変わらない。</summary>
 /// <param name="BlockId">ブロックの ID（定義 ID@開始日）。自由時間だけ null。</param>

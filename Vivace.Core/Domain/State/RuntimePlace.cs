@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>生えた場所。</summary>
 /// <param name="Id">場所の ID。</param>

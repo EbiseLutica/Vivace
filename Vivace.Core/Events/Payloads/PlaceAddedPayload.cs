@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
 
 namespace Vivace.Core.Events.Payloads;
