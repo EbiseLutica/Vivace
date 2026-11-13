@@ -85,6 +85,40 @@ public class InjectAsyncTests
         Assert.True(engine.View.Personas.ContainsKey(new PersonaId("shiori")));
     }
 
+    /// <summary>
+    /// ループを抜けたあと、最後の時刻までの待ちの間に届いた投入は、待ちの間は処理されず、RunUntilAsync を抜けるときに処理される。
+    /// 最後の時刻（開始の 1 時間 7 秒後）は、どのイベントの時刻とも重ならない。
+    /// </summary>
+    [Fact]
+    public async Task InjectDuringFinalWaitIsHandledOnExit()
+    {
+        var until = Scenario.Start.AddHours(1).AddSeconds(7);
+        var clock = new GatedClock(Scenario.Start, until);
+        await using var engine = await Scenario.CreateAsync(personas: KaoriOnly, clock: clock);
+        Task run;
+        Task<InjectResult> inject;
+        try
+        {
+            run = engine.RunUntilAsync(until, CancellationToken.None);
+            await clock.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+            inject = engine.InjectAsync(InjectRequest.PersonaCreated(ShioriDef, HomeLiving, Origin.Test, until), CancellationToken.None);
+            await Task.Delay(50, TestContext.Current.CancellationToken);
+
+            Assert.False(inject.IsCompleted);
+        }
+        finally
+        {
+            clock.Release.TrySetResult();
+        }
+
+        await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        var result = await inject.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        Assert.True(result.Accepted, result.Reason);
+        Assert.Equal(until, clock.UtcNow);
+    }
+
     /// <summary>走っている間に、もう一度 RunUntilAsync を呼ぶと、例外になる。</summary>
     [Fact]
     public async Task RunUntilWhileRunningThrows()
