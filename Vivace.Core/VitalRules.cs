@@ -31,7 +31,7 @@ public static class VitalRules
     /// <param name="persona">ペルソナ。</param>
     /// <param name="vital">状態変数。</param>
     /// <param name="defs">定義。</param>
-    public static double EffectiveRate(SimState state, PersonaState persona, VitalName vital, Definitions.Definitions defs)
+    public static double EffectiveRate(SimState state, PersonaState persona, VitalName vital, DefinitionPack defs)
     {
         if (persona.Activity is { } activity
             && defs.Actions.TryGetValue(activity.ActionId, out var action)
@@ -92,7 +92,7 @@ public static class VitalRules
     /// <param name="persona">ペルソナ。</param>
     /// <param name="now">時刻。</param>
     /// <param name="defs">定義。</param>
-    public static PersonaState Refresh(SimState state, PersonaState persona, DateTimeOffset now, Definitions.Definitions defs)
+    public static PersonaState Refresh(SimState state, PersonaState persona, DateTimeOffset now, DefinitionPack defs)
     {
         var def = defs.Personas[persona.DefId];
         var vitals = persona.Vitals;
@@ -124,7 +124,7 @@ public static class VitalRules
     /// <param name="defs">定義。</param>
     /// <param name="delta">増減（設定のときは null）。</param>
     /// <param name="set">設定する値（増減のときは null）。</param>
-    public static PersonaState Change(PersonaState persona, VitalName vital, DateTimeOffset now, Definitions.Definitions defs, double? delta, double? set)
+    public static PersonaState Change(PersonaState persona, VitalName vital, DateTimeOffset now, DefinitionPack defs, double? delta, double? set)
     {
         var range = Range(vital, defs.Personas[persona.DefId].Vitals);
         var old = persona.Vitals.Get(vital);
@@ -139,7 +139,7 @@ public static class VitalRules
     /// </summary>
     /// <param name="persona">ペルソナ。</param>
     /// <param name="defs">定義。</param>
-    public static bool InRange(PersonaState persona, Definitions.Definitions defs)
+    public static bool InRange(PersonaState persona, DefinitionPack defs)
     {
         var def = defs.Personas[persona.DefId].Vitals;
         return AllVitals.All(vital =>

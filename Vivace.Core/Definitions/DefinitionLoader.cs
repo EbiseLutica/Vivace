@@ -7,8 +7,8 @@ using Vivace.Core.Domain;
 namespace Vivace.Core.Definitions;
 
 /// <summary>
-/// 定義を読む。TOML の文字列やフォルダから Definitions を作り、定義の検証を通す。
-/// エラーがあれば Definitions は作らない（起動しない、読み直しは古い定義で動き続ける）。
+/// 定義を読む。TOML の文字列やフォルダから DefinitionPack を作り、定義の検証を通す。
+/// エラーがあれば DefinitionPack は作らない（起動しない、読み直しは古い定義で動き続ける）。
 /// </summary>
 public static class DefinitionLoader
 {
@@ -97,7 +97,7 @@ public static class DefinitionLoader
             }
         }
 
-        var definitions = new Definitions(
+        var definitions = new DefinitionPack(
             worlds.ToImmutableDictionary(pair => new WorldDefId(pair.Key), pair => pair.Value),
             personas.ToImmutableDictionary(pair => new PersonaDefId(pair.Key), pair => pair.Value),
             actions.ToImmutableDictionary(),

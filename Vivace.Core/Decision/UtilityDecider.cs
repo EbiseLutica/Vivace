@@ -105,7 +105,7 @@ public sealed class UtilityDecider : IDecider
     }
 
     /// <summary>候補を、行動 ID と場所 ID の順に並べて返す。</summary>
-    private static List<Option> Candidates(Definitions.Definitions defs, PersonaState persona, PersonaDef personaDef, WorldDef worldDef, PlaceId here, DateTimeOffset now, RouteTable routes, PlanBlock? next, DateTimeOffset deadline)
+    private static List<Option> Candidates(DefinitionPack defs, PersonaState persona, PersonaDef personaDef, WorldDef worldDef, PlaceId here, DateTimeOffset now, RouteTable routes, PlanBlock? next, DateTimeOffset deadline)
     {
         var options = new List<Option>();
         var goPlace = next?.Place ?? here;

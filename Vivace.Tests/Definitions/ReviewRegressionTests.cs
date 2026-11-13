@@ -401,7 +401,7 @@ public class ReviewRegressionTests
     {
         var files = DefinitionFixtures.Replaced(Kaori, "follow_back = \"always\"", "follow_back = \"always\"\n\n[channel.misskey]\nreversi = true");
 
-        var definitions = Assert.IsType<Vivace.Core.Definitions.Definitions>(DefinitionLoader.LoadFiles(files).Definitions);
+        var definitions = Assert.IsType<DefinitionPack>(DefinitionLoader.LoadFiles(files).Definitions);
 
         Assert.True(definitions.Personas[new PersonaDefId("kaori")].ChannelSettings["misskey"].GetProperty("reversi").GetBoolean());
     }

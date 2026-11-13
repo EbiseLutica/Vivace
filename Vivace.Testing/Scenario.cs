@@ -26,7 +26,7 @@ public static class Scenario
     /// <param name="seed">ワールドの種。</param>
     /// <param name="decider">決める側。省略すると効用による決定。</param>
     /// <param name="definitions">定義。省略するとテスト用の町。</param>
-    public static SimEngine Create(ulong seed = WorldSeed, IDecider? decider = null, Definitions? definitions = null)
+    public static SimEngine Create(ulong seed = WorldSeed, IDecider? decider = null, DefinitionPack? definitions = null)
     {
         var loaded = definitions ?? TestWorld.LoadOrThrow();
         var clock = new VirtualClock(Start);

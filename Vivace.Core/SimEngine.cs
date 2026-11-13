@@ -60,7 +60,7 @@ public sealed class SimEngine : IAsyncDisposable
     /// <param name="clock">時計。イベントの時刻まで待ってから適用する。</param>
     /// <param name="decider">自由時間の決定。省略すると UtilityDecider。</param>
     /// <param name="holidays">祝日の暦。省略すると祝日のない暦。</param>
-    public static SimEngine Create(Definitions.Definitions definitions, IStorage storage, IRandomSource random, IClock clock, IDecider? decider = null, IHolidayCalendar? holidays = null) =>
+    public static SimEngine Create(DefinitionPack definitions, IStorage storage, IRandomSource random, IClock clock, IDecider? decider = null, IHolidayCalendar? holidays = null) =>
         new(new RuleContext(definitions, RouteCache.Create(definitions), holidays ?? NoHolidays.Instance), decider ?? new UtilityDecider(), storage, random, clock);
 
     /// <summary>いまの状態（不変）。</summary>

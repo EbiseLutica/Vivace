@@ -22,7 +22,7 @@ public static class DefinitionValidator
     /// 定義の全体を検査する。型と範囲は読み込みのときに検査済みで、ここでは参照と組み合わせを見る。
     /// </summary>
     /// <param name="definitions">検査する定義。</param>
-    public static ImmutableArray<DefinitionIssue> Validate(Definitions definitions)
+    public static ImmutableArray<DefinitionIssue> Validate(DefinitionPack definitions)
     {
         var issues = new List<DefinitionIssue>();
         foreach (var world in definitions.Worlds.Values)
@@ -114,7 +114,7 @@ public static class DefinitionValidator
     }
 
     /// <summary>ペルソナの定義の参照と整合性を見る。</summary>
-    private static void ValidatePersona(PersonaDef persona, Definitions definitions, List<DefinitionIssue> issues)
+    private static void ValidatePersona(PersonaDef persona, DefinitionPack definitions, List<DefinitionIssue> issues)
     {
         var hasWorld = definitions.Worlds.TryGetValue(persona.World, out var world);
         if (!hasWorld)
@@ -185,7 +185,7 @@ public static class DefinitionValidator
     }
 
     /// <summary>ペルソナが一度も実行できない行動を警告にする。</summary>
-    private static void CheckRequirements(PersonaDef persona, WorldDef world, Definitions definitions, List<DefinitionIssue> issues)
+    private static void CheckRequirements(PersonaDef persona, WorldDef world, DefinitionPack definitions, List<DefinitionIssue> issues)
     {
         var worldTags = world.Places.SelectMany(place => place.Tags).ToHashSet(StringComparer.Ordinal);
         var items = persona.Items.ToHashSet(StringComparer.Ordinal);
@@ -212,7 +212,7 @@ public static class DefinitionValidator
     }
 
     /// <summary>ペルソナの使う行動の一覧を、ワイルドカードを開いて返す。</summary>
-    private static IEnumerable<ActionDef> ResolveUse(PersonaDef persona, Definitions definitions)
+    private static IEnumerable<ActionDef> ResolveUse(PersonaDef persona, DefinitionPack definitions)
     {
         foreach (var entry in persona.Use)
         {
@@ -235,7 +235,7 @@ public static class DefinitionValidator
     }
 
     /// <summary>出来事の定義の参照を見る。</summary>
-    private static void ValidateIncident(IncidentDef incident, Definitions definitions, List<DefinitionIssue> issues)
+    private static void ValidateIncident(IncidentDef incident, DefinitionPack definitions, List<DefinitionIssue> issues)
     {
         var condition = incident.Effects.Condition;
         if (condition is not null && !definitions.Conditions.ContainsKey(condition))
@@ -256,7 +256,7 @@ public static class DefinitionValidator
     }
 
     /// <summary>どの行動も出来事も要求しない場所のタグを警告にする。</summary>
-    private static void ValidateUnusedPlaceTags(Definitions definitions, List<DefinitionIssue> issues)
+    private static void ValidateUnusedPlaceTags(DefinitionPack definitions, List<DefinitionIssue> issues)
     {
         var usedTags = new HashSet<string>(StringComparer.Ordinal);
         foreach (var action in definitions.Actions.Values)
@@ -292,7 +292,7 @@ public static class DefinitionValidator
     }
 
     /// <summary>固定予定の参照と入れ子を見る。</summary>
-    private static void ValidateSchedule(PersonaDef persona, Definitions definitions, List<DefinitionIssue> issues)
+    private static void ValidateSchedule(PersonaDef persona, DefinitionPack definitions, List<DefinitionIssue> issues)
     {
         var schedule = persona.Schedule;
         var periodIds = new HashSet<string>(StringComparer.Ordinal);
@@ -349,7 +349,7 @@ public static class DefinitionValidator
     }
 
     /// <summary>ブロック1つの参照と組み合わせを見る。</summary>
-    private static void CheckBlock(BlockDef block, ScheduleDef schedule, PersonaDef persona, Definitions definitions, HashSet<string> periodIds, List<DefinitionIssue> issues)
+    private static void CheckBlock(BlockDef block, ScheduleDef schedule, PersonaDef persona, DefinitionPack definitions, HashSet<string> periodIds, List<DefinitionIssue> issues)
     {
         foreach (var period in block.In)
         {
@@ -477,7 +477,7 @@ public static class DefinitionValidator
     }
 
     /// <summary>28 年周期の全日と、例外日の前後の日について、固定予定の重なりと、同行の時刻、場所、行動の一致を見る。</summary>
-    private static void CheckScheduleOverlaps(PersonaDef persona, Definitions definitions, List<DefinitionIssue> issues)
+    private static void CheckScheduleOverlaps(PersonaDef persona, DefinitionPack definitions, List<DefinitionIssue> issues)
     {
         var reported = new HashSet<(string Message, SourceLocation Location)>();
         var table = definitions.Worlds.TryGetValue(persona.World, out var world) ? RouteCache.BuildTable(world) : null;
@@ -548,7 +548,7 @@ public static class DefinitionValidator
     }
 
     /// <summary>ペルソナの日ごとの解決。同じ結果になる日は、一度だけ解決する。</summary>
-    private sealed class DayResolver(Definitions definitions, PersonaDef persona, HashSet<DateOnly> specials)
+    private sealed class DayResolver(DefinitionPack definitions, PersonaDef persona, HashSet<DateOnly> specials)
     {
         private readonly Dictionary<string, ResolvedDay> _byKey = new(StringComparer.Ordinal);
 
@@ -577,7 +577,7 @@ public static class DefinitionValidator
         ResolvedDay day,
         string ownKey,
         PersonaDef persona,
-        Definitions definitions,
+        DefinitionPack definitions,
         Dictionary<string, DayResolver> partnerResolvers,
         HashSet<(string Own, string Partner)> checkedPairs,
         List<DefinitionIssue> issues,

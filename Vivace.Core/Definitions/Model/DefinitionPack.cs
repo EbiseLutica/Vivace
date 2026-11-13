@@ -10,7 +10,7 @@ namespace Vivace.Core.Definitions;
 /// <param name="Incidents">出来事の定義。キーは定義 ID。</param>
 /// <param name="Conditions">状態の定義。キーは定義 ID。</param>
 /// <param name="Hash">定義全体のハッシュ（読み直しの記録に使う）。</param>
-public sealed record Definitions(
+public sealed record DefinitionPack(
     ImmutableDictionary<WorldDefId, WorldDef> Worlds,
     ImmutableDictionary<PersonaDefId, PersonaDef> Personas,
     ImmutableDictionary<string, ActionDef> Actions,

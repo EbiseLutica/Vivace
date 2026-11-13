@@ -381,14 +381,14 @@ sealed record PersonaState(
     bool Deciding, string? LastBlockId, string? PlannedFor);  // 決め中の印、最後に始めたブロック、Planner を起こした期間の鍵（J-133、J-135、J-141）</code></pre>
   <ul>
     <li>ID は <code>readonly record struct</code> で型を分ける（<code>PersonaId</code>、<code>WorldId</code>、<code>PlaceId</code>）。文字列の取り違えをコンパイラで防ぐ</li>
-    <li>ワールドとペルソナは、定義の ID にも型を作る（<code>WorldDefId</code>、<code>PersonaDefId</code>）。<code>Definitions</code> の辞書の鍵と、状態とペイロードが持つ定義の ID は、この型にする。作り直したインスタンス（P-22 の <code>#2</code>）の ID は定義の ID と一致しないので、定義はインスタンスの ID でなく <code>DefId</code> から引く（J-150）</li>
+    <li>ワールドとペルソナは、定義の ID にも型を作る（<code>WorldDefId</code>、<code>PersonaDefId</code>）。<code>DefinitionPack</code> の辞書の鍵と、状態とペイロードが持つ定義の ID は、この型にする。作り直したインスタンス（P-22 の <code>#2</code>）の ID は定義の ID と一致しないので、定義はインスタンスの ID でなく <code>DefId</code> から引く（J-150）</li>
     <li>ワールドやペルソナの状態のような、項目の多いものは <code>sealed record</code>（参照型）にする。参照が同じかどうかだけで「変わったか」がわかり（変わった行だけを SQLite に書くため）、辞書から取り出したり写しを渡したりするたびの丸ごとのコピーも起きない。<code>default</code> で中身の空な状態が作られることもない。ID、イベントの並びの位置、状態変数1本ぶん（値、基準時刻、率）のような小さな値は、<code>readonly record struct</code> にする</li>
     <li>受信箱は、ペルソナインスタンスの状態に持つ（VISION 2章）。アイテムの形は下の「受信箱のアイテム」</li>
     <li>プランのブロック（<code>PlanBlock</code>）は、開始、終了（UTC）、種類（固定、計画、自由）、行動、場所に加えて、電話の指定、間隔、同行、同行者が抜けたときの扱いを、プランを作ったときの固定予定から写して持つ。ID は固定と計画のブロックだけが持ち、自由時間は null（J-124。変更は次のプランから。D1 1.12）</li>
     <li>発生中の出来事（<code>ActiveIncident</code>）は、解決済みの効果（対象の場所を含む。3.8 の <code>incidents</code>）を持つ。解消のときに定義を引き直さない。その場の定義の出来事は、<code>DefId</code> を null にする（J-119）</li>
     <li>受信箱と未送信の操作は、処理が済んだら状態から外し、SQLite の表にだけ残す。状態は、決める側に渡す写しでもあるので、小さく保つ</li>
     <li>居合わせ（誰と同じ場所にいるか）は、状態に持たない。<code>Personas</code> の <code>Location</code> から導く（VISION 2章）</li>
-    <li>定義も同じく不変の <code>Definitions</code> にし、Apply と決める側に引数で渡す（VISION 4章）。最短経路のような導出データは、<code>Definitions</code> と <code>GraphVersion</code> をキーにしたキャッシュに持ち、保存しない</li>
+    <li>定義も同じく不変の <code>DefinitionPack</code> にし、Apply と決める側に引数で渡す（VISION 4章）。最短経路のような導出データは、<code>DefinitionPack</code> と <code>GraphVersion</code> をキーにしたキャッシュに持ち、保存しない</li>
   </ul>
   <div class="callout">
     <span class="label">決定 P-21　状態は不変オブジェクトで持ち、写しは参照を渡す</span>
