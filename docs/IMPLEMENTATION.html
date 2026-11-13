@@ -385,7 +385,7 @@
   <h3>段階5 実時間の運転</h3>
   <p><strong>参照</strong>：<a href="design/1-execution.html#horizon">D1 1.6</a>、<a href="design/1-execution.html#clock">1.10</a>、<a href="design/4-components.html#channel">D4 4.3</a>、<a href="design/4-components.html#api">4.6</a>、<a href="design/4-components.html#plugins">4.7</a>、<a href="design/7-operations.html#errors">D7 7.1</a>、<a href="design/7-operations.html#observability">7.3</a>、<a href="design/7-operations.html#cli">7.5</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" disabled><code>SystemClock</code>、<code>ScaledClock</code>、到着の受付、締め切り</li>
+    <li><input type="checkbox" disabled><code>SystemClock</code>、<code>ScaledClock</code>、到着の受付、締め切り。エンジンの時計の待ち（イベントの時刻までの待ちと、<code>RunUntilAsync</code> の最後の時刻までの待ち）を、コマンドで起きるようにする。いまは起きない（J-157）。D1 1.4 の手順2と4に合わせ、先頭を取り出す前に待ち、コマンドで起きたら手順1に戻る</li>
     <li><input type="checkbox" disabled><code>IChannel</code>、能力の語彙、プラグインの登録。テスト用の偽のチャンネル</li>
     <li><input type="checkbox" disabled><code>Dispatcher</code> と送信の再試行</li>
     <li><input type="checkbox" disabled>失敗の扱い（D7 7.1）、<code>Status</code>、<code>RejectEventAsync</code>、<code>ResumeAsync</code>、ログ、計測、<code>IAdminNotifier</code></li>
