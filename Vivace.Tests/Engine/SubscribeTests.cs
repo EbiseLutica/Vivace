@@ -3,6 +3,7 @@ using Vivace.Core.Events;
 using Vivace.Core.Storage;
 using Vivace.Core;
 using Vivace.Testing;
+using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Engine;
 
@@ -60,6 +61,25 @@ public class SubscribeTests
         Assert.Contains("購読が追いつかず", error.Message, StringComparison.Ordinal);
         Assert.Equal([1L, 4L, 2L, 3L], received.Select(entry => entry.Event.Seq));
         Assert.Equal([1L, 2L, 3L, 4L], received.Select(entry => entry.ApplyNo!.Value));
+    }
+
+    /// <summary>
+    /// 購読に流れるのは、コミットが成功したものだけ。3 回目のコミット（香織の生成、連番 2）が失敗すると、エンジンは止まり、
+    /// 購読が受け取るのは、コミットできたワールドの生成（連番 1）とその日の始まり（連番 4）だけ。
+    /// </summary>
+    [Fact]
+    public async Task OnlyCommittedEventsArePublished()
+    {
+        var storage = new FailingStorage(3);
+        var engine = await Scenario.CreateAsync(storage: storage);
+        var received = Collect(engine.Subscribe(TestContext.Current.CancellationToken));
+
+        await Assert.ThrowsAsync<IOException>(() => engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None));
+        await engine.DisposeAsync();
+
+        var seqs = (await received.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken)).Select(entry => entry.Event.Seq);
+        Assert.Equal([1L, 4L], seqs);
+        Assert.Equal([1L, 4L], storage.Events.Select(entry => entry.Event.Seq));
     }
 
     /// <summary>購読を最後まで読み、受け取ったものを返す。</summary>
