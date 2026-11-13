@@ -34,10 +34,16 @@ public static class Scenario
     /// <param name="decider">決める側。省略すると効用による決定。</param>
     /// <param name="definitions">定義。省略するとテスト用の町。</param>
     /// <param name="personas">生成するペルソナ（定義 ID と家）。省略すると香織と栞。</param>
-    public static async Task<SimEngine> CreateAsync(ulong seed = WorldSeed, IDecider? decider = null, DefinitionPack? definitions = null, IReadOnlyList<(PersonaDefId DefId, PlaceId Home)>? personas = null)
+    /// <param name="clock">時計。開始の時刻を指していること。省略すると開始の時刻の仮想時計。</param>
+    public static async Task<SimEngine> CreateAsync(
+        ulong seed = WorldSeed,
+        IDecider? decider = null,
+        DefinitionPack? definitions = null,
+        IReadOnlyList<(PersonaDefId DefId, PlaceId Home)>? personas = null,
+        IClock? clock = null)
     {
         var loaded = definitions ?? TestWorld.LoadOrThrow();
-        var clock = new VirtualClock(Start);
+        clock ??= new VirtualClock(Start);
         var engine = SimEngine.Create(loaded, new InMemoryStorage(), new SplitMixRandomSource(), clock, decider, TestHolidays.Instance);
         await InjectOrThrowAsync(engine, InjectRequest.WorldCreated(TestWorld.DefId, seed, Origin.Test, Start));
         foreach (var (defId, home) in personas ?? DefaultPersonas)
