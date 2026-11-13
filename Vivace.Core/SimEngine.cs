@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Vivace.Core.Decision;
 using Vivace.Core.Definitions.Model;
@@ -19,6 +20,9 @@ namespace Vivace.Core;
 /// <summary>シミュレーションのエンジン。状態を書く唯一の場所で、イベントを時刻、段、連番の順に適用し、決める側の出力を取り込む。</summary>
 public sealed class SimEngine : IAsyncDisposable
 {
+    /// <summary>購読ごとに、読まれずに溜めておける件数。超えた購読は切断する。</summary>
+    public const int SubscriberCapacity = 1024;
+
     private readonly RuleContext _ctx;
     /// <summary>イベントの適用の入口。</summary>
     private readonly EventApplier _applier;
@@ -48,6 +52,10 @@ public sealed class SimEngine : IAsyncDisposable
     private bool _looping;
     /// <summary>投入のコマンドが届くのを待つ仕事。ループが待つ場面で使い回す。</summary>
     private Task<bool>? _commandWait;
+    /// <summary>購読の一覧を守る錠。</summary>
+    private readonly Lock _subscribersGate = new();
+    /// <summary>購読ごとの、適用したイベントの受け渡しの列。</summary>
+    private readonly List<Channel<LoggedEvent>> _subscribers = [];
 
     /// <summary>初期の状態と部品から、エンジンを作る。</summary>
     private SimEngine(RuleContext ctx, IDecider decider, IStorage storage, IRandomSource random, IClock clock)
@@ -78,6 +86,9 @@ public sealed class SimEngine : IAsyncDisposable
     /// <summary>いまの状態（不変）。</summary>
     public SimState State => _state;
 
+    /// <summary>いまの状態（不変）。読み取り用のビューで、State と同じものを返す。</summary>
+    public SimState View => _state;
+
     /// <summary>適用の記録（適用された順）。</summary>
     public IReadOnlyList<LoggedEvent> Log => _log;
 
@@ -102,6 +113,33 @@ public sealed class SimEngine : IAsyncDisposable
             _commands.Writer.TryWrite(command);
             return command.Completion.Task.WaitAsync(ct);
         }
+    }
+
+    /// <summary>
+    /// 適用したイベントを、保存先へのコミットのあとに、適用した順に流す。登録は呼んだ時点で行う。
+    /// 読むのが遅れて、溜まった件数が容量を超えた購読は、InvalidOperationException で終わらせて切断する（エンジンは止めない）。
+    /// エンジンを破棄すると、購読は正常に終わる。
+    /// </summary>
+    /// <param name="ct">購読をやめるキャンセル。</param>
+    public IAsyncEnumerable<LoggedEvent> Subscribe(CancellationToken ct) => Subscribe(SubscriberCapacity, ct);
+
+    /// <summary>容量を指定して購読する。</summary>
+    /// <param name="capacity">読まれずに溜めておける件数。</param>
+    /// <param name="ct">購読をやめるキャンセル。</param>
+    internal IAsyncEnumerable<LoggedEvent> Subscribe(int capacity, CancellationToken ct)
+    {
+        var channel = Channel.CreateBounded<LoggedEvent>(new BoundedChannelOptions(capacity)
+        {
+            SingleReader = true,
+            SingleWriter = true,
+            FullMode = BoundedChannelFullMode.Wait,
+        });
+        lock (_subscribersGate)
+        {
+            _subscribers.Add(channel);
+        }
+
+        return ReadSubscriptionAsync(channel, ct);
     }
 
     /// <summary>
@@ -187,10 +225,56 @@ public sealed class SimEngine : IAsyncDisposable
     {
         await _lanes.CompleteAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         await _storage.DisposeAsync();
+        lock (_subscribersGate)
+        {
+            foreach (var subscriber in _subscribers)
+            {
+                subscriber.Writer.TryComplete();
+            }
+
+            _subscribers.Clear();
+        }
     }
 
     /// <summary>決める側の仕事の実行の列。</summary>
     internal Lanes Lanes => _lanes;
+
+    /// <summary>購読の列を読み、やめたら購読の一覧から外す。</summary>
+    private async IAsyncEnumerable<LoggedEvent> ReadSubscriptionAsync(Channel<LoggedEvent> channel, [EnumeratorCancellation] CancellationToken ct)
+    {
+        try
+        {
+            await foreach (var logged in channel.Reader.ReadAllAsync(ct))
+            {
+                yield return logged;
+            }
+        }
+        finally
+        {
+            lock (_subscribersGate)
+            {
+                _subscribers.Remove(channel);
+            }
+
+            channel.Writer.TryComplete();
+        }
+    }
+
+    /// <summary>適用したイベントを、すべての購読に流す。容量を超えた購読は、例外で終わらせて外す。</summary>
+    private void Publish(LoggedEvent logged)
+    {
+        lock (_subscribersGate)
+        {
+            for (var i = _subscribers.Count - 1; i >= 0; i--)
+            {
+                if (!_subscribers[i].Writer.TryWrite(logged))
+                {
+                    _subscribers[i].Writer.TryComplete(new InvalidOperationException("購読が追いつかず、溜まった件数が容量を超えたので切断した"));
+                    _subscribers.RemoveAt(i);
+                }
+            }
+        }
+    }
 
     /// <summary>要求を検査し、通ればキューに入れる。</summary>
     private InjectResult Inject(InjectRequest request)
@@ -254,6 +338,11 @@ public sealed class SimEngine : IAsyncDisposable
         }
 
         await _storage.CommitAsync(new StorageBatch([logged], _state), ct);
+        if (logged.Status == EventStatus.Applied)
+        {
+            Publish(logged);
+        }
+
         foreach (var signal in result.Signals)
         {
             Handle(signal, ev.Origin);

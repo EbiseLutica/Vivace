@@ -275,8 +275,8 @@ public sealed record LlmPolicy(
 await engine.StartAsync(ct);                    // 起動と追いつき（D1 1.11）
 
 InjectResult r = await engine.InjectAsync(request, ct);       // 投入の窓口
-StateView view = engine.View;                                // いまの状態（不変）
-IAsyncEnumerable&lt;AppliedEvent&gt; feed = engine.Subscribe(ct);  // 適用済みのイベントの購読
+SimState view = engine.View;                                 // いまの状態（不変）
+IAsyncEnumerable&lt;LoggedEvent&gt; feed = engine.Subscribe(ct);   // 適用済みのイベントの購読
 IEventLog log = engine.Events;                               // ログの検索
 ReloadResult rr = await engine.ReloadDefinitionsAsync(ct);   // 定義の読み直し
 EngineStatus st = engine.Status;                             // 動いている / 止まっている（理由と、止まったイベントの連番）
@@ -297,7 +297,8 @@ TopicProbeResult probe = await engine.ProbeTopicsAsync(personaId, ["代々木公
 ValidationReport report = DefinitionLoader.Validate("defs/", plugins);</code></pre>
   <ul>
     <li><code>DryRun()</code> は、チャンネルをすべて <code>NullChannel</code> に替え、配信役を止める</li>
-    <li><code>Subscribe</code> は、適用済みのイベントを、コミットのあとに流す。遅い購読者は、バッファがあふれたら切断する（エンジンを止めない）</li>
+    <li><code>Subscribe</code> は、適用済みのイベント（適用の記録の1件、<code>LoggedEvent</code> の <code>Status = Applied</code>）を、コミットのあとに適用の順で流す。登録は <code>Subscribe</code> を呼んだ時点で行う。購読ごとに容量つきのバッファ（<code>Channel</code>）を持ち、遅い購読者は、バッファ（いまは 1,024 件、J-160）があふれたら例外で終わらせて切断する（エンジンを止めない）。エンジンを破棄すると、購読は正常に終わる（J-159）</li>
+    <li><code>View</code> は、いまは <code>SimState</code>（不変の状態）そのものを返す。読み取り用の <code>StateView</code>（4.5）は、ビューアや実行レポートを作るときに、要るものだけを足す（J-158）</li>
     <li>プラグインにも、このエンジンそのものを渡す（4.7）。ホストに使えてプラグインに使えない口は作らない</li>
     <li>DI コンテナには依存しない。ASP.NET Core などから使うときのための <code>services.AddVivace(...)</code> は、API 層を作るときに別のパッケージで足す</li>
     <li><code>InjectAsync</code> は、要求（<code>InjectRequest</code>）を窓口で検査し、受け付けたら連番を、拒否なら理由を返す（D2 2.8）。<code>RunUntilAsync</code> の外では、錠（<code>System.Threading.Lock</code>）の下でその場で処理する。中では、コマンドを <code>Channel</code> に入れ、ループが各周の先頭で取り出す。ループが決める側の出力を待っている間も、コマンドが届けば起きて処理する。<code>RunUntilAsync</code> を抜けるときは、残ったコマンドをすべて処理してから、外の扱いに戻す。検査は、取り出した時点の状態とキューと時計の時刻で行う（J-157）</li>

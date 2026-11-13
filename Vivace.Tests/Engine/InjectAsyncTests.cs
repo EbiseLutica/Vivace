@@ -78,7 +78,8 @@ public class InjectAsyncTests
         Assert.Equal(EventTypes.PersonaCreated, logged.Event.EventType);
         Assert.Equal(Origin.Admin, logged.Event.Origin);
         Assert.True(logged.Event.Time >= before, $"投入の前の位置 {before:O} より前に適用された: {logged.Event.Time:O}");
-        Assert.True(engine.State.Personas.ContainsKey(new PersonaId("shiori")));
+        Assert.Same(engine.State, engine.View);
+        Assert.True(engine.View.Personas.ContainsKey(new PersonaId("shiori")));
     }
 
     /// <summary>走っている間に、もう一度 RunUntilAsync を呼ぶと、例外になる。</summary>
