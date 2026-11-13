@@ -20,14 +20,14 @@ public static class Invariants
     /// <exception cref="InvariantViolationException">いずれかが破れた。</exception>
     public static void Check(RuleContext ctx, SimState state, DateTimeOffset previousTime, IReadOnlySet<PersonaId> busy, ILookup<PersonaId, SimEvent> pending, DateTimeOffset? earliestPending)
     {
-        if (state.Position.Time < previousTime)
+        if (state.Cursor.Time < previousTime)
         {
-            throw new InvariantViolationException($"時刻が戻った: {previousTime:o} -> {state.Position.Time:o}");
+            throw new InvariantViolationException($"時刻が戻った: {previousTime:o} -> {state.Cursor.Time:o}");
         }
 
-        if (earliestPending is { } earliest && earliest < state.Position.Time)
+        if (earliestPending is { } earliest && earliest < state.Cursor.Time)
         {
-            throw new InvariantViolationException($"未適用のイベントが現在位置より前にある: {earliest:o} < {state.Position.Time:o}");
+            throw new InvariantViolationException($"未適用のイベントが現在位置より前にある: {earliest:o} < {state.Cursor.Time:o}");
         }
 
         foreach (var persona in state.Personas.Values.Where(p => p.Status == PersonaStatus.Alive))
@@ -73,7 +73,7 @@ public static class Invariants
 
             if (persona.Location is AtPlace
                 && !persona.Deciding
-                && persona.Plan?.FreeAt(state.Position.Time) is not null
+                && persona.Plan?.FreeAt(state.Cursor.Time) is not null
                 && !events.Any(ev => ev.EventType is EventTypes.DecisionRequested
                     or EventTypes.ActivityChosen
                     or EventTypes.ActionStarted

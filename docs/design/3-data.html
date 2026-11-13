@@ -353,7 +353,7 @@ threshold.health = 25</code></pre>
   <h2><span class="num">3.7</span>ドメイン型</h2>
   <p>状態は、<code>record</code> と <code>System.Collections.Immutable</code> の不変オブジェクトで持つ。Apply は、変わったところだけを作り直した新しい状態を返す。</p>
 <pre><code>sealed record SimState(
-    ApplyCursor Position,                               // 最後に適用した（時刻、段、連番）と適用番号
+    ApplyCursor Cursor,                                 // 最後に適用した（時刻、段、連番）と適用番号
     ImmutableDictionary&lt;WorldId, WorldState&gt; Worlds,
     ImmutableDictionary&lt;PersonaId, PersonaState&gt; Personas);
 

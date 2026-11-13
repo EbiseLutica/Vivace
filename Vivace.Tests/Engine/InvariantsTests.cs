@@ -46,7 +46,7 @@ public class InvariantsTests
     {
         var lookup = pending.ToLookup(ev => ev.PersonaId!.Value);
         var busySet = busy ? ImmutableHashSet.Create(Fixture.Kaori) : ImmutableHashSet<PersonaId>.Empty;
-        Invariants.Check(Fixture.Context, state, state.Position.Time, busySet, lookup, null);
+        Invariants.Check(Fixture.Context, state, state.Cursor.Time, busySet, lookup, null);
     }
 
     /// <summary>行動中なのに同じ版の行動の終わりを積まなかった状態は検出される。別の版の終わりでは足りない。</summary>

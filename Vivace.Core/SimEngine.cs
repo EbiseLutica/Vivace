@@ -152,14 +152,14 @@ public sealed class SimEngine : IAsyncDisposable
     /// <summary>1つのイベントを適用する。不変条件を検査してからコミットし、シグナルを実行する。</summary>
     private async Task ApplyAsync(SimEvent ev, CancellationToken ct)
     {
-        var previous = _state.Position.Time;
+        var previous = _state.Cursor.Time;
         await _clock.WaitUntilAsync(ev.Time, ct);
         var result = _applier.Apply(_state, ev);
         long? applyNo = null;
         if (result.Status == EventStatus.Applied)
         {
             applyNo = ++_applyNo;
-            _state = result.State with { Position = new ApplyCursor(ev.Time, ev.Stage, ev.Seq, applyNo.Value) };
+            _state = result.State with { Cursor = new ApplyCursor(ev.Time, ev.Stage, ev.Seq, applyNo.Value) };
         }
         else
         {
