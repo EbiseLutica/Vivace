@@ -14,7 +14,7 @@ public class InjectionValidatorTests
     private static readonly PersonaDefId KaoriDef = new("kaori");
     private static readonly PlaceId KaoriRoom = new("kaori_room");
 
-    /// <summary>受け付けた時点より前の時刻は、拒否する。</summary>
+    /// <summary>処理する時点より前の時刻は、拒否する。</summary>
     [Fact]
     public void PastTimeIsRejected()
     {
@@ -25,7 +25,7 @@ public class InjectionValidatorTests
         Assert.Equal("過去の時刻", reason);
     }
 
-    /// <summary>時刻を省略すると、受け付けた時点の時刻で、要求の出所のまま下書きになる。</summary>
+    /// <summary>時刻を省略すると、処理する時点の時刻で、要求の出所のまま下書きになる。</summary>
     [Fact]
     public void OmittedTimeUsesNow()
     {
@@ -41,7 +41,7 @@ public class InjectionValidatorTests
         Assert.Null(draft.PersonaId);
     }
 
-    /// <summary>受け付けた時点と同じ時刻は、過去ではない。</summary>
+    /// <summary>処理する時点と同じ時刻は、過去ではない。</summary>
     [Fact]
     public void SameTimeAsNowIsAccepted()
     {
