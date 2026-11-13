@@ -165,10 +165,10 @@
 <pre><code>ApplyResult Apply(SimState state, SimEvent ev, DefinitionPack defs);
 
 record ApplyResult(
-    SimState State,                         // 新しい状態（不変オブジェクト）
-    EventStatus Outcome,                   // Applied / Skipped / Rejected と理由
-    ImmutableArray&lt;EventDraft&gt; FollowUps,      // 後続のイベント（決定的）
-    ImmutableArray&lt;Signal&gt; Signals);        // エンジンへの依頼（データ）</code></pre>
+    SimState State,                        // 新しい状態（不変オブジェクト）
+    EventStatus Status,                    // Applied / Skipped / Rejected と理由
+    ImmutableArray&lt;EventDraft&gt; FollowUps,  // 後続のイベント（決定的）
+    ImmutableArray&lt;Signal&gt; Signals);       // エンジンへの依頼（データ）</code></pre>
   <div class="grid two">
     <div class="card">
       <h4>後続のイベント</h4>

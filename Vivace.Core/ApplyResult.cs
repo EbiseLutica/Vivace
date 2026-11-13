@@ -6,13 +6,13 @@ namespace Vivace.Core;
 
 /// <summary>イベントの適用の結果。</summary>
 /// <param name="State">新しい状態。</param>
-/// <param name="Outcome">結果。</param>
+/// <param name="Status">結果。</param>
 /// <param name="Reason">捨てた、または却下した理由（適用のときは null）。</param>
 /// <param name="FollowUps">後続のイベント。</param>
 /// <param name="Signals">エンジンへの依頼。</param>
 public sealed record ApplyResult(
     SimState State,
-    EventStatus Outcome,
+    EventStatus Status,
     string? Reason,
     ImmutableArray<EventDraft> FollowUps,
     ImmutableArray<EngineSignal> Signals)

@@ -156,7 +156,7 @@ public sealed class SimEngine : IAsyncDisposable
         await _clock.WaitUntilAsync(ev.Time, ct);
         var result = _applier.Apply(_state, ev);
         long? applyNo = null;
-        if (result.Outcome == EventStatus.Applied)
+        if (result.Status == EventStatus.Applied)
         {
             applyNo = ++_applyNo;
             _state = result.State with { Position = new ApplyCursor(ev.Time, ev.Stage, ev.Seq, applyNo.Value) };
@@ -166,14 +166,14 @@ public sealed class SimEngine : IAsyncDisposable
             _state = result.State;
         }
 
-        var logged = new LoggedEvent(ev, result.Outcome, applyNo, result.Reason);
+        var logged = new LoggedEvent(ev, result.Status, applyNo, result.Reason);
         _log.Add(logged);
         foreach (var followUp in result.FollowUps)
         {
             Enqueue(followUp, ev.Origin, ev.Seq);
         }
 
-        if (result.Outcome == EventStatus.Applied)
+        if (result.Status == EventStatus.Applied)
         {
             _sameInstantStreak = ev.Time == previous ? _sameInstantStreak + 1 : 0;
             Invariants.CheckProgress(_sameInstantStreak);
