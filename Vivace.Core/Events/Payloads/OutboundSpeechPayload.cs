@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using System.Text.Json;
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>言ったこと（発話）の決定。「言ったこと」として残る。</summary>
 /// <param name="Channel">チャンネルの種類。</param>
@@ -15,10 +15,21 @@ namespace Vivace.Core.Events;
 /// <param name="Draws">話題や文面の抽選に引いた範囲。</param>
 public sealed record OutboundSpeechPayload(
     string Channel,
-    OutboundPostKind Kind,
+    OutboundSpeechPayload.OutboundPostKind Kind,
     string Body,
     string? ReplyTo,
     Audience Audience,
     ImmutableArray<long> BasisSeqs,
     JsonElement ChannelPayload,
-    RngDraws? Draws) : EventPayload(1);
+    RngDraws? Draws) : EventPayload(1)
+{
+    /// <summary>外向きの投稿の種類。</summary>
+    public enum OutboundPostKind
+    {
+        /// <summary>新しい投稿。</summary>
+        Post,
+
+        /// <summary>返信。</summary>
+        Reply,
+    }
+}

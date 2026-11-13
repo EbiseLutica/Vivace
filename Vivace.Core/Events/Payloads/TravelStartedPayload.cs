@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>移動の開始。移動中にする。</summary>
 /// <param name="From">出発地。</param>

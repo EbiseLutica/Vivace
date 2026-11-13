@@ -1,4 +1,4 @@
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>外向きの操作の送信完了。</summary>
 /// <param name="OperationSeq">操作のイベントの連番。</param>

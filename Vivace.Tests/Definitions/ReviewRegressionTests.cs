@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
+using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
 using Vivace.Core.Schedule;
 using Vivace.Core.Time;

@@ -1,4 +1,4 @@
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>スマホを開く機会。</summary>
 /// <param name="BlockId">いまのブロックの ID。</param>

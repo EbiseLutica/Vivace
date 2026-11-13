@@ -1,3 +1,4 @@
+using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
 using Vivace.Core;
 using Vivace.Tests.Support;

@@ -1,6 +1,6 @@
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>移動の到着。</summary>
 /// <param name="Place">着いた場所。</param>

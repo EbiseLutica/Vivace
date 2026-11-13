@@ -1,4 +1,4 @@
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>行動の終わり。</summary>
 /// <param name="ActionId">行動の定義 ID。</param>

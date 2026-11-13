@@ -1,6 +1,6 @@
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Guards;
 
 /// <summary>選んだ行動と場所が、いまの状態でも実行できること。</summary>
 /// <param name="ActionId">行動の定義 ID。</param>

@@ -1,5 +1,7 @@
 using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
+using Vivace.Core.Events.Guards;
+using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
 using Vivace.Core.Routes;
 using Vivace.Core.Signals;

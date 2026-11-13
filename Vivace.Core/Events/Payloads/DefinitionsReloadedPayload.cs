@@ -1,4 +1,4 @@
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>定義の読み直し。どの定義で動いているかの記録。</summary>
 /// <param name="Hash">定義全体のハッシュ。</param>

@@ -1,6 +1,6 @@
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Guards;
 
 /// <summary>乱数の列の位置が、決めたときと同じであること。</summary>
 /// <param name="Owner">持ち主（ペルソナのインスタンス ID）。</param>
