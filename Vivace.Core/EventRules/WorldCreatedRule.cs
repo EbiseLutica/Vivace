@@ -44,4 +44,8 @@ internal sealed class WorldCreatedRule : EventRule<WorldCreatedPayload>
         var date = LocalTimeHelper.ToLocal(ev.Time, def.UtcOffset).Date;
         return ApplyResult.Applied(next, [new EventDraft(ev.Time, EventTypes.DayStarted, id, null, new DayStartedPayload(date))]);
     }
+
+    /// <summary>ワールドの定義があれば、投入を受け付ける。</summary>
+    protected override string? CheckInjection(RuleContext ctx, SimState state, IEnumerable<SimEvent> pending, WorldCreatedPayload payload, DateTimeOffset at) =>
+        ctx.Defs.Worlds.ContainsKey(payload.DefId) ? null : "定義がない";
 }

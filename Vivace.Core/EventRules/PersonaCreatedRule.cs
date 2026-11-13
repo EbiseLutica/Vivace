@@ -71,4 +71,27 @@ internal sealed class PersonaCreatedRule : EventRule<PersonaCreatedPayload>
         var next = VitalRules.Rebalance(ctx, state.WithPersona(persona), t, id, payload.Home);
         return ApplyResult.Applied(next, signals: [new StartPlannerSignal(ev.Seq, id, t)]);
     }
+
+    /// <summary>
+    /// ペルソナの定義があり、居住するワールドが生きているか、その生成が要求の時刻以前にキューにあれば、投入を受け付ける。
+    /// </summary>
+    protected override string? CheckInjection(RuleContext ctx, SimState state, IEnumerable<SimEvent> pending, PersonaCreatedPayload payload, DateTimeOffset at)
+    {
+        if (!ctx.Defs.Personas.TryGetValue(payload.DefId, out var personaDef))
+        {
+            return "定義がない";
+        }
+
+        if (state.AliveWorld(personaDef.World) is not null)
+        {
+            return null;
+        }
+
+        var queued = pending.Any(ev =>
+            ev.EventType == EventTypes.WorldCreated
+            && ev.Time <= at
+            && ev.Payload is WorldCreatedPayload world
+            && world.DefId == personaDef.World);
+        return queued ? null : "ワールドがない";
+    }
 }

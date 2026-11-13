@@ -18,7 +18,7 @@
     <span class="chip">2026-11-06 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
     <span class="chip fixed">案はすべて合意（57 件）</span>
-    <span class="chip fixed">枠の外の判断もすべて合意（153 件）</span>
+    <span class="chip fixed">枠の外の判断もすべて合意（156 件）</span>
   </div>
 </header>
 
@@ -173,7 +173,7 @@
 
 <section id="judgments">
   <h2><span class="num">0.5</span>枠の外の判断</h2>
-  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-153）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
+  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-156）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
   <h3>VISION の解釈で決めたもの</h3>
   <p>VISION から導いたつもりで、実際には読み方を1つに決めたもの。いちばん見落としやすいので、先に見てほしい。</p>
   <div class="table-wrap">
@@ -310,6 +310,9 @@
       <tr><td>J-151</td><td>レーンの仕事が例外を投げたら、記録して続けずに、そのレーンを閉じる（後の仕事は実行せず、次の投入を失敗させる）。エンジンは、出力を待っている途中でもすぐに例外を受けて止まる（ハンドラの包みから漏れた例外はバグなので、Apply の例外と同じく止める）。エンジンを閉じるときは、動いている仕事の終わりを待つが、レーンの例外は投げない（走らせている間に出し済みで、破棄の例外が元の例外を隠すのを避ける）。終わらせた後は、新しいレーンも作らない <span class="chip fixed">合意</span></td><td><a href="1-execution.html#lanes">D1 1.5</a>、<a href="1-execution.html#startup">D1 1.11</a>、<a href="7-operations.html#errors">D7 7.1</a></td></tr>
       <tr><td>J-152</td><td>ID の型（5型）に共通のインターフェース <code>IEntityId</code> を付ける。テスト用の文字列化（<code>EventText</code>）が、型を並べずに ID を見分けて中身の文字列で書くため <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
       <tr><td>J-153</td><td>生成のイベント（<code>world.created</code>、<code>persona.created</code>）は、対象のワールドのインスタンス ID を持たない。インスタンスは Apply が決める。<code>world.created</code> は ID を割り当て、<code>persona.created</code> はペルソナ定義の居住ワールドの、生きているインスタンスを引く。投入から適用までに破棄と生成し直しがあっても、適用のときの生きているインスタンスに入る <span class="chip fixed">合意</span></td><td><a href="1-execution.html#lifecycle">D1 1.13</a></td></tr>
+      <tr><td>J-154</td><td>投入の窓口が受け付けるのは、Apply のルールの表にあり、そのルールが投入の検査を持つ型だけ。型ごとの検査は、その型のルール（<code>EventRule</code>）の仮想メソッドに置き、既定は「未対応の型」で拒否する（表にない型も同じ）。いまは <code>world.created</code> と <code>persona.created</code> だけが検査を持つ。ほかの型は、その型のルールを作るときに、適用と投入の検査を同じクラスに並べて足す。guard の評価は型に紐づかないので、<code>EventApplier</code> に置いたままにする <span class="chip fixed">合意</span></td><td><a href="2-events.html#injection">D2 2.8</a></td></tr>
+      <tr><td>J-155</td><td><code>persona.created</code> の投入で、生成先のワールドが生きていなくても、要求の時刻以前の <code>world.created</code>（同じ居住ワールドの定義）がキューにあれば、生成済みとみなして受け付ける。要求より後の時刻のものしかなければ拒否する <span class="chip fixed">合意</span></td><td><a href="2-events.html#injection">D2 2.8</a></td></tr>
+      <tr><td>J-156</td><td>投入の要求（<code>InjectRequest</code>）は、イベントタイプ、中身、時刻の指定（省略なら受け付けた時点の時計の時刻）、出所だけを持ち、<code>EventDraft</code> に依存しない。要求 → 検査 → 下書きの一方向にし、時刻を決めて下書きを作るのは窓口（<code>InjectionValidator</code>）。ワールドとペルソナの生成の要求は、<code>InjectRequest</code> の static のファクトリで作る <span class="chip fixed">合意</span></td><td><a href="2-events.html#injection">D2 2.8</a>、<a href="4-components.html#api">D4 4.6</a></td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>

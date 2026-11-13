@@ -1,4 +1,5 @@
 using Vivace.Core.Domain.State;
+using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
 
 namespace Vivace.Core.EventRules;
@@ -14,4 +15,12 @@ internal interface IEventRule
     /// <param name="state">適用の前の状態。</param>
     /// <param name="ev">適用するイベント。</param>
     ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev);
+
+    /// <summary>窓口から投入されるイベントを検査する。通らなければ拒否の理由を返す。</summary>
+    /// <param name="ctx">規則の文脈。</param>
+    /// <param name="state">いまの状態。</param>
+    /// <param name="pending">未適用のイベント。</param>
+    /// <param name="payload">投入するイベントの中身。</param>
+    /// <param name="at">投入するイベントの時刻。</param>
+    string? CheckInjection(RuleContext ctx, SimState state, IEnumerable<SimEvent> pending, EventPayload payload, DateTimeOffset at);
 }
