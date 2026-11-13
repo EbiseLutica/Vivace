@@ -2,7 +2,7 @@ using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using Vivace.Core.Routes;
-using Vivace.Core.Rules;
+using Vivace.Core;
 using Vivace.Tests.Definitions;
 using Vivace.Tests.Support;
 using Vivace.Testing;

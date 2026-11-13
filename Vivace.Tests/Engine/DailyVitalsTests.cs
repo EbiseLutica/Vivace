@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
-using Vivace.Core.Rules;
+using Vivace.Core;
 using Vivace.Core.Storage;
 using Vivace.Tests.Support;
 using Vivace.Testing;

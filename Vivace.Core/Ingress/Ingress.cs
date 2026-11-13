@@ -1,6 +1,5 @@
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
-using Vivace.Core.Rules;
 
 namespace Vivace.Core.Ingress;
 

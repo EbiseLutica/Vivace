@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
-using Vivace.Core.Engine;
+using Vivace.Core;
 using Vivace.Core.Events;
 using Vivace.Tests.Support;
 

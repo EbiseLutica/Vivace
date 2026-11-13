@@ -4,7 +4,7 @@ using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using Vivace.Core.Randomness;
-using Vivace.Core.Rules;
+using Vivace.Core;
 using Vivace.Tests.Support;
 using Vivace.Testing;
 
