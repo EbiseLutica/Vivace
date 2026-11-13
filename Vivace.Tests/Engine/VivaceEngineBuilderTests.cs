@@ -1,9 +1,9 @@
-using Vivace.Core.Decision;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using Vivace.Core.Time;
 using Vivace.Core;
 using Vivace.Testing;
+using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Engine;
 
@@ -116,7 +116,7 @@ public class VivaceEngineBuilderTests
 
         var error = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None));
 
-        Assert.Contains("わざと失敗させた決定", error.Message, StringComparison.Ordinal);
+        Assert.Contains(ThrowingDecider.Message, error.Message, StringComparison.Ordinal);
     }
 
     /// <summary>一時フォルダに定義のファイルを書き出し、そのフォルダを返す。</summary>
@@ -131,12 +131,5 @@ public class VivaceEngineBuilderTests
         }
 
         return directory;
-    }
-
-    /// <summary>必ず例外を投げる決定。</summary>
-    private sealed class ThrowingDecider : IDecider
-    {
-        /// <summary>例外を投げる。</summary>
-        public DeciderOutput Decide(DecisionContext context) => throw new InvalidOperationException("わざと失敗させた決定");
     }
 }

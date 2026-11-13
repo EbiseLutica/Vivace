@@ -61,11 +61,6 @@ public class EngineFailureTests
         Assert.Contains(engine.Log, entry => entry.Status == EventStatus.Applied && entry.Event.EventType == EventTypes.ActivityChosen);
     }
 
-    private sealed class ThrowingDecider : IDecider
-    {
-        public DeciderOutput Decide(DecisionContext context) => throw new InvalidOperationException("わざと失敗させた決定");
-    }
-
     private sealed class RejectOnceDecider : IDecider
     {
         private readonly UtilityDecider _inner = new();
