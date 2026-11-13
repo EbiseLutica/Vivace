@@ -82,6 +82,18 @@ public class SubscribeTests
         Assert.Equal([1L, 4L], storage.Events.Select(entry => entry.Event.Seq));
     }
 
+    /// <summary>破棄したあとの購読は、何も流さずにすぐ終わる。</summary>
+    [Fact]
+    public async Task SubscribeAfterDisposeEndsImmediately()
+    {
+        var engine = await Scenario.CreateAsync();
+        await engine.DisposeAsync();
+
+        var received = await Collect(engine.Subscribe(TestContext.Current.CancellationToken)).WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        Assert.Empty(received);
+    }
+
     /// <summary>購読を最後まで読み、受け取ったものを返す。</summary>
     private static Task<List<LoggedEvent>> Collect(IAsyncEnumerable<LoggedEvent> feed) => Task.Run(async () =>
     {

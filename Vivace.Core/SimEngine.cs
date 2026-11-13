@@ -58,6 +58,8 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly Lock _subscribersGate = new();
     /// <summary>購読ごとの、適用したイベントの受け渡しの列。</summary>
     private readonly List<Channel<LoggedEvent>> _subscribers = [];
+    /// <summary>破棄したか。購読の一覧の錠の下で読み書きする。</summary>
+    private bool _disposed;
 
     /// <summary>初期の状態と部品から、エンジンを作る。</summary>
     private SimEngine(RuleContext ctx, IDecider decider, IStorage storage, IRandomSource random, IClock clock)
@@ -120,7 +122,7 @@ public sealed class SimEngine : IAsyncDisposable
     /// <summary>
     /// 適用したイベントを、保存先へのコミットのあとに、適用した順に流す。登録は呼んだ時点で行う。
     /// 読むのが遅れて、溜まった件数が容量を超えた購読は、InvalidOperationException で終わらせて切断する（エンジンは止めない）。
-    /// エンジンを破棄すると、購読は正常に終わる。
+    /// エンジンを破棄すると、購読は正常に終わる。破棄したあとの購読は、何も流さずにすぐ終わる。
     /// </summary>
     /// <param name="ct">購読をやめるキャンセル。</param>
     public IAsyncEnumerable<LoggedEvent> Subscribe(CancellationToken ct) => Subscribe(SubscriberCapacity, ct);
@@ -138,7 +140,14 @@ public sealed class SimEngine : IAsyncDisposable
         });
         lock (_subscribersGate)
         {
-            _subscribers.Add(channel);
+            if (_disposed)
+            {
+                channel.Writer.TryComplete();
+            }
+            else
+            {
+                _subscribers.Add(channel);
+            }
         }
 
         return ReadSubscriptionAsync(channel, ct);
@@ -237,6 +246,7 @@ public sealed class SimEngine : IAsyncDisposable
         await _storage.DisposeAsync();
         lock (_subscribersGate)
         {
+            _disposed = true;
             foreach (var subscriber in _subscribers)
             {
                 subscriber.Writer.TryComplete();
