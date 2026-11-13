@@ -188,7 +188,7 @@ record ApplyResult(
     <table>
       <tr><th>シグナル</th><th>依頼の中身</th><th>再起動したときの復元</th></tr>
       <tr><td><code>StartHandler</code></td><td>決めどきのハンドラを、レーンで起動する</td><td>「処理中」の決めどきを探して、起動し直す</td></tr>
-      <tr><td><code>CancelHandler</code></td><td>割り込みで不要になったハンドラを取り消す</td><td>不要。古い出力は検査で弾かれる（1.7）</td></tr>
+      <tr><td><code>CancelHandlerSignal</code></td><td>割り込みで不要になったハンドラを取り消す</td><td>不要。古い出力は検査で弾かれる（1.7）</td></tr>
       <tr><td><code>Deliver</code></td><td>未送信の外向きの操作を、配信役に渡す</td><td>未送信のものは、送らずに「送信不明」にする（VISION 10章）</td></tr>
       <tr><td><code>Consolidate</code></td><td>記憶の整理を起こす（範囲の上限の適用番号つき）</td><td>起動時に、カーソルから現在までを1回まとめて整理する（VISION UC-1）</td></tr>
       <tr><td><code>ChannelOnline</code></td><td>圏外が明けたことをチャンネルに伝える</td><td>追いつきの終わりに、毎回出す</td></tr>
@@ -196,11 +196,11 @@ record ApplyResult(
   </div>
   <div class="callout">
     <span class="label">決定 P-03　割り込まれた行動のハンドラは取り消す</span>
-    「投稿する」の文面を作っている途中に、反射で行動が打ち切られたら、そのハンドラはもう要らない。Apply が行動の版番号を上げるときに <code>CancelHandler</code> を出し、エンジンはそのハンドラを <code>CancellationToken</code> で止めて、ホライズンの待ちからも外す。止めきれずに出力が返ってきても、版番号の検査（1.7）で弾かれるので、取り消しは最適化にすぎない。
+    「投稿する」の文面を作っている途中に、反射で行動が打ち切られたら、そのハンドラはもう要らない。Apply が行動の版番号を上げるときに <code>CancelHandlerSignal</code> を出し、エンジンはそのハンドラを <code>CancellationToken</code> で止めて、ホライズンの待ちからも外す。止めきれずに出力が返ってきても、版番号の検査（1.7）で弾かれるので、取り消しは最適化にすぎない。
   </div>
 </section>
 
-<p><strong>取り消し</strong>（J-145）：<code>CancelHandler</code> は、決める側のレーンだけを止める。Planner のレーンは止めない。段階2 では、決めどきは出力を待つ間に並列に止まらないので、規則だけを単体で確かめる。</p>
+<p><strong>取り消し</strong>（J-145）：<code>CancelHandlerSignal</code> は、決める側のレーンだけを止める。Planner のレーンは止めない。段階2 では、決めどきは出力を待つ間に並列に止まらないので、規則だけを単体で確かめる。</p>
 <section id="step">
   <h2><span class="num">1.4</span>エンジンの1歩</h2>
   <p>エンジンは、次の手順を繰り返す。</p>
@@ -520,7 +520,7 @@ record ApplyResult(
   <h3>ペルソナの破棄</h3>
   <p><code>persona.destroyed</code> の Apply が、次をすべて1つのトランザクションで行う。</p>
   <ol>
-    <li>実行中の行動と副行動を打ち切り、動いているハンドラを取り消す（<code>CancelHandler</code>）</li>
+    <li>実行中の行動と副行動を打ち切り、動いているハンドラを取り消す（<code>CancelHandlerSignal</code>）</li>
     <li>キューに残っているそのペルソナのイベントを、その場で全部「捨てた」にする（理由は「破棄」）。順番が来るまで残さないので、キューに幽霊が残らない</li>
     <li>未送信の外向きの操作は、送らずに「失敗（破棄）」にする。破棄したペルソナが、あとから喋らないようにする</li>
     <li>受信箱の未処理の通知は、「捌かなかった」として閉じる。以後、そのペルソナへの到着は、投入の窓口で拒否する。チャンネルは、<code>engine.View</code> で破棄済みと分かるので、振り分けない</li>

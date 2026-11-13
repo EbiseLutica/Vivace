@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
+using Vivace.Core.Signals;
 
 namespace Vivace.Core;
 

@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
+using Vivace.Core.Signals;
 using Vivace.Core;
 using Vivace.Tests.Support;
 
@@ -145,7 +146,7 @@ public class PlanRulesTests
         var result = Fixture.Apply(planned, BlockStarted(14, Fixture.Now.AddHours(1), "reading@2026-11-01"));
 
         Assert.Equal(EventOutcome.Applied, result.Outcome);
-        Assert.Equal(new CancelHandler(Fixture.Kaori), Assert.Single(result.Signals));
+        Assert.Equal(new CancelHandlerSignal(Fixture.Kaori), Assert.Single(result.Signals));
         Assert.Equal(1, result.State.Personas[Fixture.Kaori].ActivityVersion);
         Assert.Null(result.State.Personas[Fixture.Kaori].Activity);
         Assert.Equal(1, Assert.IsType<ActionStartedPayload>(Assert.Single(result.FollowUps).Payload).ActivityVersion);
@@ -159,7 +160,7 @@ public class PlanRulesTests
         var due = Fixture.Event(11, Fixture.Now.AddHours(21), EventTypes.PlanDue, new PlanDuePayload(1), Fixture.Kaori);
 
         var first = Fixture.Apply(plan, due);
-        Assert.Equal(new StartPlanner(11, Fixture.Kaori, Fixture.Now.AddHours(21)), Assert.Single(first.Signals));
+        Assert.Equal(new StartPlannerSignal(11, Fixture.Kaori, Fixture.Now.AddHours(21)), Assert.Single(first.Signals));
 
         Assert.Equal(EventOutcome.Skipped, Fixture.Apply(first.State, due).Outcome);
         Assert.Equal(EventOutcome.Skipped, Fixture.Apply(plan, Fixture.Event(12, Fixture.Now.AddHours(21), EventTypes.PlanDue, new PlanDuePayload(0), Fixture.Kaori)).Outcome);
@@ -186,7 +187,7 @@ public class PlanRulesTests
         var first = Fixture.Apply(traveling, start);
 
         Assert.Equal(EventOutcome.Applied, first.Outcome);
-        Assert.Equal(new StartPlanner(12, Fixture.Kaori, Fixture.Now.AddMinutes(30)), Assert.Single(first.Signals));
+        Assert.Equal(new StartPlannerSignal(12, Fixture.Kaori, Fixture.Now.AddMinutes(30)), Assert.Single(first.Signals));
         Assert.Equal(blockId, first.State.Personas[Fixture.Kaori].PlannedFor);
 
         var second = Fixture.Apply(first.State, start);
@@ -215,7 +216,7 @@ public class PlanRulesTests
 
         Assert.Equal(EventOutcome.Applied, result.Outcome);
         Assert.Equal(
-            new EngineSignal[] { new CancelHandler(Fixture.Kaori), new StartPlanner(12, Fixture.Kaori, Fixture.Now) },
+            new EngineSignal[] { new CancelHandlerSignal(Fixture.Kaori), new StartPlannerSignal(12, Fixture.Kaori, Fixture.Now) },
             result.Signals.ToArray());
         Assert.Equal(blockId, result.State.Personas[Fixture.Kaori].PlannedFor);
         Assert.Equal(blockId, result.State.Personas[Fixture.Kaori].LastBlockId);

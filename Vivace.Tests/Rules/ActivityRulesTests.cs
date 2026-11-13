@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
+using Vivace.Core.Signals;
 using Vivace.Core;
 using Vivace.Tests.Support;
 
@@ -93,7 +94,7 @@ public class ActivityRulesTests
 
         var result = Fixture.Apply(Fixture.WithKaori(), later);
 
-        Assert.Equal(new StartPlanner(10, Fixture.Kaori, Fixture.Now.AddHours(1)), Assert.Single(result.Signals));
+        Assert.Equal(new StartPlannerSignal(10, Fixture.Kaori, Fixture.Now.AddHours(1)), Assert.Single(result.Signals));
         var sameTime = Fixture.Event(11, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("core.sleep", KaoriRoom, TimeSpan.FromHours(5), ActivityReason.Chosen, 0, null), Fixture.Kaori);
         Assert.Empty(Fixture.Apply(Fixture.WithKaori(), sameTime).Signals);
     }
@@ -104,7 +105,7 @@ public class ActivityRulesTests
     {
         var first = Fixture.Apply(Fixture.WithKaori(), Request(10));
         Assert.True(first.State.Personas[Fixture.Kaori].Deciding);
-        Assert.Equal(new StartDecider(10, Fixture.Kaori, Fixture.Now, DecisionReason.Free, null), Assert.Single(first.Signals));
+        Assert.Equal(new StartDeciderSignal(10, Fixture.Kaori, Fixture.Now, DecisionReason.Free, null), Assert.Single(first.Signals));
 
         var second = Fixture.Apply(first.State, Fixture.Event(11, Fixture.Now, EventTypes.DecisionRequested, new DecisionRequestedPayload(DecisionReason.Ended, null), Fixture.Kaori));
         Assert.Equal(EventOutcome.Skipped, second.Outcome);

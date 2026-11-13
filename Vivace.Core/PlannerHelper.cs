@@ -1,5 +1,6 @@
 using System.Globalization;
 using Vivace.Core.Domain;
+using Vivace.Core.Signals;
 
 namespace Vivace.Core;
 
@@ -18,13 +19,13 @@ internal static class PlannerHelper
     /// <param name="periodKey">期間の鍵。</param>
     /// <param name="seq">契機のイベントの連番（シグナルの順序に使う）。</param>
     /// <param name="now">契機の時刻。</param>
-    internal static (PersonaState Persona, StartPlanner Signal)? Wake(PersonaState persona, string periodKey, long seq, DateTimeOffset now)
+    internal static (PersonaState Persona, StartPlannerSignal Signal)? Wake(PersonaState persona, string periodKey, long seq, DateTimeOffset now)
     {
         if (persona.PlannedFor == periodKey)
         {
             return null;
         }
 
-        return (persona with { PlannedFor = periodKey }, new StartPlanner(seq, persona.Id, now));
+        return (persona with { PlannedFor = periodKey }, new StartPlannerSignal(seq, persona.Id, now));
     }
 }

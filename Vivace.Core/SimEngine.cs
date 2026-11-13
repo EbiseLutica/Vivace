@@ -7,6 +7,7 @@ using Vivace.Core.Events;
 using Vivace.Core.Planning;
 using Vivace.Core.Randomness;
 using Vivace.Core.Routes;
+using Vivace.Core.Signals;
 using Vivace.Core.Storage;
 using Vivace.Core.Time;
 
@@ -194,8 +195,8 @@ public sealed class SimEngine : IAsyncDisposable
     private ImmutableHashSet<PersonaId> BusyAfter(ImmutableArray<EngineSignal> signals) =>
         Busy().Union(signals.Select(signal => signal switch
         {
-            StartDecider decide => decide.Persona,
-            StartPlanner plan => plan.Persona,
+            StartDeciderSignal decide => decide.Persona,
+            StartPlannerSignal plan => plan.Persona,
             _ => (PersonaId?)null,
         }).Where(persona => persona is not null).Select(persona => persona!.Value));
 
@@ -226,15 +227,15 @@ public sealed class SimEngine : IAsyncDisposable
     {
         switch (signal)
         {
-            case StartDecider decide:
+            case StartDeciderSignal decide:
                 var decideSnapshot = _state;
                 StartHandler(decide.BatchKey, decide.Persona, decide.Now, $"decide:{decide.Persona}", origin, () => Decide(decide, decideSnapshot));
                 break;
-            case StartPlanner plan:
+            case StartPlannerSignal plan:
                 var planSnapshot = _state;
                 StartHandler(plan.BatchKey, plan.Persona, plan.Now, $"plan:{plan.Persona}", origin, () => Plan(plan, planSnapshot));
                 break;
-            case CancelHandler cancel:
+            case CancelHandlerSignal cancel:
                 foreach (var run in _running.Values.Where(run => run.Persona == cancel.Persona && IsCancellable(run.Lane)).ToList())
                 {
                     _running.Remove(run.Key);
@@ -269,7 +270,7 @@ public sealed class SimEngine : IAsyncDisposable
     }
 
     /// <summary>Decider を実行し、出力をイベントにする。</summary>
-    private NewEvent Decide(StartDecider decide, SimState snapshot)
+    private NewEvent Decide(StartDeciderSignal decide, SimState snapshot)
     {
         var persona = snapshot.Personas[decide.Persona];
         var seed = snapshot.Worlds[persona.World].Seed;
@@ -280,7 +281,7 @@ public sealed class SimEngine : IAsyncDisposable
     }
 
     /// <summary>Planner の代わりの出力を作り、イベントにする。</summary>
-    private NewEvent Plan(StartPlanner plan, SimState snapshot)
+    private NewEvent Plan(StartPlannerSignal plan, SimState snapshot)
     {
         var persona = snapshot.Personas[plan.Persona];
         var planned = FallbackPlanner.Plan(_ctx.Defs, persona, plan.Now, persona.PlanVersion + 1, _ctx.Holidays);

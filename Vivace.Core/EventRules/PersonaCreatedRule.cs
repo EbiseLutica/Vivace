@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
+using Vivace.Core.Signals;
 
 namespace Vivace.Core.EventRules;
 
@@ -66,6 +67,6 @@ internal sealed class PersonaCreatedRule : EventRule<PersonaCreatedPayload>
             LastBlockId: null,
             PlannedFor: PlannerHelper.PeriodKeyAt(t));
         var next = VitalRules.Rebalance(ctx, state.WithPersona(persona), t, id, payload.Home);
-        return ApplyResult.Applied(next, signals: [new StartPlanner(ev.Seq, id, t)]);
+        return ApplyResult.Applied(next, signals: [new StartPlannerSignal(ev.Seq, id, t)]);
     }
 }

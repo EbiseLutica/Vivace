@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
+using Vivace.Core.Signals;
 using Vivace.Core.Time;
 
 namespace Vivace.Core.EventRules;

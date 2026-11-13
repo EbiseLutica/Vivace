@@ -1,5 +1,6 @@
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
+using Vivace.Core.Signals;
 
 namespace Vivace.Core.EventRules;
 
@@ -29,6 +30,6 @@ internal sealed class DecisionRequestedRule : EventRule<DecisionRequestedPayload
 
         return ApplyResult.Applied(
             state.WithPersona(persona with { Deciding = true }),
-            signals: [new StartDecider(ev.Seq, persona.Id, ev.Time, payload.Reason, payload.BlockId)]);
+            signals: [new StartDeciderSignal(ev.Seq, persona.Id, ev.Time, payload.Reason, payload.BlockId)]);
     }
 }

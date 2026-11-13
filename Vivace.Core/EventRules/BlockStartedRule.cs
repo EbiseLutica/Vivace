@@ -3,6 +3,7 @@ using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using Vivace.Core.Routes;
+using Vivace.Core.Signals;
 
 namespace Vivace.Core.EventRules;
 
@@ -60,7 +61,7 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
         var current = cut
             ? persona with { Activity = null, Deciding = false, ActivityVersion = persona.ActivityVersion + 1 }
             : persona;
-        var signals = cut ? ImmutableArray.Create<EngineSignal>(new CancelHandler(persona.Id)) : ImmutableArray<EngineSignal>.Empty;
+        var signals = cut ? ImmutableArray.Create<EngineSignal>(new CancelHandlerSignal(persona.Id)) : ImmutableArray<EngineSignal>.Empty;
         var place = block.Place ?? from.Place;
         var worldDefId = state.Worlds[persona.World].DefId;
         var routes = ctx.Routes.For(worldDefId);

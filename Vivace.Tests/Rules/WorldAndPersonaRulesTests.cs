@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
+using Vivace.Core.Signals;
 using Vivace.Core;
 using Vivace.Tests.Support;
 using Vivace.Testing;
@@ -64,7 +65,7 @@ public class WorldAndPersonaRulesTests
         Assert.Equal(0, persona.Vitals.Social.BaseValue);
         Assert.Equal(2.0, persona.Vitals.Social.Rate);
         var signal = Assert.Single(result.Signals);
-        Assert.Equal(new StartPlanner(2, Fixture.Kaori, Fixture.Now), signal);
+        Assert.Equal(new StartPlannerSignal(2, Fixture.Kaori, Fixture.Now), signal);
     }
 
     /// <summary>家の場所がないペルソナは作らない。</summary>
