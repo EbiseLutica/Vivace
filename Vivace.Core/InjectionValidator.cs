@@ -26,7 +26,7 @@ public sealed class InjectionValidator
     /// <param name="state">いまの状態。</param>
     /// <param name="pending">未適用のイベント。</param>
     /// <param name="request">投入の要求。</param>
-    /// <param name="now">受け付けた時点の時計の時刻。</param>
+    /// <param name="now">エンジンが処理する時点の時計の時刻。</param>
     /// <param name="draft">通ったときの下書き。</param>
     /// <param name="reason">通らなかったときの理由。</param>
     /// <returns>通ったかどうか。</returns>
