@@ -95,7 +95,7 @@ public sealed class EventApplier
             followUps = [NewEvent.DecisionRequested(ev.Time, persona, DecisionReason.Retry, null)];
         }
 
-        return new ApplyResult(state, EventOutcome.Rejected, reason, followUps, []);
+        return new ApplyResult(state, EventStatus.Rejected, reason, followUps, []);
     }
 
     /// <summary>全ルールから表を組む。同じイベントタイプのルールがあれば例外になる。</summary>

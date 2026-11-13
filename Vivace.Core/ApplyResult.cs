@@ -12,15 +12,15 @@ namespace Vivace.Core;
 /// <param name="Signals">エンジンへの依頼。</param>
 public sealed record ApplyResult(
     SimState State,
-    EventOutcome Outcome,
+    EventStatus Outcome,
     string? Reason,
     ImmutableArray<NewEvent> FollowUps,
     ImmutableArray<EngineSignal> Signals)
 {
     /// <summary>適用した結果を作る。</summary>
     public static ApplyResult Applied(SimState state, ImmutableArray<NewEvent> followUps = default, ImmutableArray<EngineSignal> signals = default) =>
-        new(state, EventOutcome.Applied, null, followUps.IsDefault ? ImmutableArray<NewEvent>.Empty : followUps, signals.IsDefault ? ImmutableArray<EngineSignal>.Empty : signals);
+        new(state, EventStatus.Applied, null, followUps.IsDefault ? ImmutableArray<NewEvent>.Empty : followUps, signals.IsDefault ? ImmutableArray<EngineSignal>.Empty : signals);
 
     /// <summary>捨てた結果を作る。状態は変えない。</summary>
-    public static ApplyResult Skipped(SimState state, string reason) => new(state, EventOutcome.Skipped, reason, [], []);
+    public static ApplyResult Skipped(SimState state, string reason) => new(state, EventStatus.Skipped, reason, [], []);
 }

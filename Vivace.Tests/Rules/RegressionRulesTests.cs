@@ -60,7 +60,7 @@ public class RegressionRulesTests
         var second = Fixture.Apply(firstEnd, Fixture.Event(12, half, EventTypes.ActionStarted, new ActionStartedPayload("walk_park", KaoriRoom, TimeSpan.FromMinutes(30), ActivityReason.Chosen, 0, null), Fixture.Kaori)).State;
         var secondEnd = Fixture.Apply(second, Fixture.Event(13, end, EventTypes.ActionEnded, new ActionEndedPayload("walk_park", 0), Fixture.Kaori));
 
-        Assert.Equal(EventOutcome.Applied, secondEnd.Outcome);
+        Assert.Equal(EventStatus.Applied, secondEnd.Outcome);
         Assert.Equal(53.0, secondEnd.State.Personas[Fixture.Kaori].Vitals.Boredom.BaseValue, 6);
     }
 
@@ -100,7 +100,7 @@ public class RegressionRulesTests
         var state = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop))).State;
 
         var due = Fixture.Apply(state, Fixture.Event(11, sleepAt, EventTypes.PlanDue, new PlanDuePayload(1), Fixture.Kaori));
-        Assert.Equal(EventOutcome.Skipped, due.Outcome);
+        Assert.Equal(EventStatus.Skipped, due.Outcome);
 
         var sleep = Fixture.Apply(state, Fixture.Event(12, sleepAt, EventTypes.ActionStarted, new ActionStartedPayload("core.sleep", KaoriRoom, TimeSpan.FromHours(6), ActivityReason.Block, 0, "sleep@2026-11-01"), Fixture.Kaori));
         Assert.Equal(new StartPlannerSignal(12, Fixture.Kaori, sleepAt), Assert.Single(sleep.Signals));

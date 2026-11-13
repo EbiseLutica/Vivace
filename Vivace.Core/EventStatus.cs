@@ -1,4 +1,4 @@
-namespace Vivace.Core.Storage;
+namespace Vivace.Core;
 
 /// <summary>イベントの適用の結果の記録。</summary>
 public enum EventStatus

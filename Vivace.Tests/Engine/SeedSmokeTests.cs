@@ -1,4 +1,5 @@
 using Vivace.Core.Storage;
+using Vivace.Core;
 using Vivace.Testing;
 
 namespace Vivace.Tests.Engine;

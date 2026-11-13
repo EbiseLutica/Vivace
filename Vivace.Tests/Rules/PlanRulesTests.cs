@@ -48,7 +48,7 @@ public class PlanRulesTests
 
         var result = Fixture.Apply(Fixture.WithKaori(), committed);
 
-        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(EventStatus.Applied, result.Outcome);
         Assert.Equal(1, result.State.Personas[Fixture.Kaori].PlanVersion);
         Assert.Equal(3, result.FollowUps.Count(e => e.EventType == EventTypes.BlockStarted));
         Assert.Equal(
@@ -66,7 +66,7 @@ public class PlanRulesTests
 
         var result = Fixture.Apply(Fixture.WithKaori(), committed);
 
-        Assert.Equal(EventOutcome.Rejected, result.Outcome);
+        Assert.Equal(EventStatus.Rejected, result.Outcome);
         Assert.Equal(0, result.State.Personas[Fixture.Kaori].PlanVersion);
         Assert.Empty(result.FollowUps);
     }
@@ -86,8 +86,8 @@ public class PlanRulesTests
     {
         var plan = WithPlan();
 
-        Assert.Equal(EventOutcome.Skipped, Fixture.Apply(plan, BlockStarted(11, Fixture.Now.AddHours(1), "nothing@2026-11-01")).Outcome);
-        Assert.Equal(EventOutcome.Skipped, Fixture.Apply(plan, BlockStarted(12, Fixture.Now.AddHours(5), "reading@2026-11-01")).Outcome);
+        Assert.Equal(EventStatus.Skipped, Fixture.Apply(plan, BlockStarted(11, Fixture.Now.AddHours(1), "nothing@2026-11-01")).Outcome);
+        Assert.Equal(EventStatus.Skipped, Fixture.Apply(plan, BlockStarted(12, Fixture.Now.AddHours(5), "reading@2026-11-01")).Outcome);
     }
 
     /// <summary>新しいプランで続くブロックは、積み直さない。プランの確定が積むのは、新しいブロックと、いま続いているブロックだけ。</summary>
@@ -97,7 +97,7 @@ public class PlanRulesTests
         var first = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop)));
         var result = Fixture.Apply(first.State, Fixture.Event(11, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Kaori, new Guard([new PlanVersionCheck(1)], RejectAction.Drop)));
 
-        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(EventStatus.Applied, result.Outcome);
         Assert.Equal(2, result.State.Personas[Fixture.Kaori].PlanVersion);
         Assert.Empty(result.FollowUps.Where(e => e.EventType == EventTypes.BlockStarted));
     }
@@ -113,7 +113,7 @@ public class PlanRulesTests
 
         Assert.Equal(new ActionStartedPayload("read_book", KaoriRoom, TimeSpan.FromHours(1), ActivityReason.Block, 0, "reading@2026-11-01"), Assert.Single(result.FollowUps).Payload);
         Assert.Equal("reading@2026-11-01", result.State.Personas[Fixture.Kaori].LastBlockId);
-        Assert.Equal(EventOutcome.Skipped, Fixture.Apply(result.State, start).Outcome);
+        Assert.Equal(EventStatus.Skipped, Fixture.Apply(result.State, start).Outcome);
     }
 
     /// <summary>ブロックの場所が違えば、移動を先に積み、到着のあとに行動を始める。残りの時間は、移動のあとのブロックの終わりまで。</summary>
@@ -147,7 +147,7 @@ public class PlanRulesTests
 
         var result = Fixture.Apply(planned, BlockStarted(14, Fixture.Now.AddHours(1), "reading@2026-11-01"));
 
-        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(EventStatus.Applied, result.Outcome);
         Assert.Equal(new CancelHandlerSignal(Fixture.Kaori), Assert.Single(result.Signals));
         Assert.Equal(1, result.State.Personas[Fixture.Kaori].ActivityVersion);
         Assert.Null(result.State.Personas[Fixture.Kaori].Activity);
@@ -164,8 +164,8 @@ public class PlanRulesTests
         var first = Fixture.Apply(plan, due);
         Assert.Equal(new StartPlannerSignal(11, Fixture.Kaori, Fixture.Now.AddHours(21)), Assert.Single(first.Signals));
 
-        Assert.Equal(EventOutcome.Skipped, Fixture.Apply(first.State, due).Outcome);
-        Assert.Equal(EventOutcome.Skipped, Fixture.Apply(plan, Fixture.Event(12, Fixture.Now.AddHours(21), EventTypes.PlanDue, new PlanDuePayload(0), Fixture.Kaori)).Outcome);
+        Assert.Equal(EventStatus.Skipped, Fixture.Apply(first.State, due).Outcome);
+        Assert.Equal(EventStatus.Skipped, Fixture.Apply(plan, Fixture.Event(12, Fixture.Now.AddHours(21), EventTypes.PlanDue, new PlanDuePayload(0), Fixture.Kaori)).Outcome);
     }
 
     /// <summary>移動中に記憶の整理のブロック（睡眠）が始まると、Planner を一度だけ起こす。期間の印はブロック ID で、同じブロックでは起こさない。</summary>
@@ -188,13 +188,13 @@ public class PlanRulesTests
 
         var first = Fixture.Apply(traveling, start);
 
-        Assert.Equal(EventOutcome.Applied, first.Outcome);
+        Assert.Equal(EventStatus.Applied, first.Outcome);
         Assert.Equal(new StartPlannerSignal(12, Fixture.Kaori, Fixture.Now.AddMinutes(30)), Assert.Single(first.Signals));
         Assert.Equal(blockId, first.State.Personas[Fixture.Kaori].PlannedFor);
 
         var second = Fixture.Apply(first.State, start);
 
-        Assert.Equal(EventOutcome.Applied, second.Outcome);
+        Assert.Equal(EventStatus.Applied, second.Outcome);
         Assert.Empty(second.Signals);
     }
 
@@ -216,7 +216,7 @@ public class PlanRulesTests
 
         var result = Fixture.Apply(planned, BlockStarted(12, Fixture.Now, blockId));
 
-        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(EventStatus.Applied, result.Outcome);
         Assert.Equal(
             new EngineSignal[] { new CancelHandlerSignal(Fixture.Kaori), new StartPlannerSignal(12, Fixture.Kaori, Fixture.Now) },
             result.Signals.ToArray());
@@ -232,7 +232,7 @@ public class PlanRulesTests
 
         var result = Fixture.Apply(running, Fixture.Event(11, Fixture.Now.AddHours(2), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 0), Fixture.Kaori));
 
-        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(EventStatus.Applied, result.Outcome);
         Assert.Empty(result.FollowUps);
         Assert.Null(result.State.Personas[Fixture.Kaori].Activity);
     }

@@ -89,7 +89,7 @@ public class DefinitionLookupTests
 
         var result = Fixture.Apply(state, Fixture.Event(10, Fixture.Now, EventTypes.ActionStarted, payload, Fixture.Kaori));
 
-        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(EventStatus.Applied, result.Outcome);
         Assert.Equal("read_book", result.State.Personas[Fixture.Kaori].Activity?.ActionId);
     }
 
@@ -110,7 +110,7 @@ public class DefinitionLookupTests
 
         var result = Fixture.Apply(WithRenamedWorldInstance(planned), Fixture.Event(12, Fixture.Now, EventTypes.BlockStarted, new BlockStartedPayload(blockId, 1), Fixture.Kaori));
 
-        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(EventStatus.Applied, result.Outcome);
         Assert.Equal(blockId, result.State.Personas[Fixture.Kaori].LastBlockId);
         Assert.Contains(result.FollowUps, ev => ev.Payload is ActionStartedPayload { ActionId: "read_book" });
     }

@@ -33,7 +33,7 @@ public class ActivityRulesTests
     {
         var result = Fixture.Apply(Fixture.WithKaori(), ActionStarted(10, "read_book", KaoriRoom, TimeSpan.FromMinutes(30), 0));
 
-        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(EventStatus.Applied, result.Outcome);
         var kaori = result.State.Personas[Fixture.Kaori];
         Assert.Equal("read_book", kaori.Activity!.ActionId);
         Assert.Equal(-2.0, kaori.Vitals.Energy.Rate);
@@ -52,7 +52,7 @@ public class ActivityRulesTests
 
         var result = Fixture.Apply(started, ended);
 
-        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(EventStatus.Applied, result.Outcome);
         var kaori = result.State.Personas[Fixture.Kaori];
         Assert.Null(kaori.Activity);
         Assert.Equal(11.5, kaori.Vitals.Boredom.BaseValue, 6);
@@ -68,7 +68,7 @@ public class ActivityRulesTests
         var started = Fixture.Apply(Fixture.WithKaori(), ActionStarted(10, "read_book", KaoriRoom, TimeSpan.FromMinutes(30), 0)).State;
         var stale = Fixture.Event(11, Fixture.Now.AddMinutes(30), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 7), Fixture.Kaori);
 
-        Assert.Equal(EventOutcome.Skipped, Fixture.Apply(started, stale).Outcome);
+        Assert.Equal(EventStatus.Skipped, Fixture.Apply(started, stale).Outcome);
 
         var valid = Fixture.Event(12, Fixture.Now.AddMinutes(30), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 0), Fixture.Kaori);
         Assert.Equal(0, Fixture.Apply(started, valid).State.Personas[Fixture.Kaori].ActivityVersion);
@@ -110,7 +110,7 @@ public class ActivityRulesTests
         Assert.Equal(new StartDeciderSignal(10, Fixture.Kaori, Fixture.Now, DecisionReason.Free, null), Assert.Single(first.Signals));
 
         var second = Fixture.Apply(first.State, Fixture.Event(11, Fixture.Now, EventTypes.DecisionRequested, new DecisionRequestedPayload(DecisionReason.Ended, null), Fixture.Kaori));
-        Assert.Equal(EventOutcome.Skipped, second.Outcome);
+        Assert.Equal(EventStatus.Skipped, second.Outcome);
         Assert.Empty(second.Signals);
     }
 
@@ -123,7 +123,7 @@ public class ActivityRulesTests
 
         var result = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, Choice("read_book", KaoriRoom, 30, 0, 3), Fixture.Kaori, guard, 10));
 
-        Assert.Equal(EventOutcome.Rejected, result.Outcome);
+        Assert.Equal(EventStatus.Rejected, result.Outcome);
         Assert.Equal("行動の版が違う", result.Reason);
         Assert.False(result.State.Personas[Fixture.Kaori].Deciding);
         Assert.Equal(new DecisionRequestedPayload(DecisionReason.Retry, null), Assert.Single(result.FollowUps).Payload);
@@ -138,7 +138,7 @@ public class ActivityRulesTests
 
         var result = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, Choice("read_book", KaoriRoom, 30, 0, 3), Fixture.Kaori, guard, 10));
 
-        Assert.Equal(EventOutcome.Rejected, result.Outcome);
+        Assert.Equal(EventStatus.Rejected, result.Outcome);
         Assert.Equal("乱数の位置が違う", result.Reason);
     }
 
@@ -153,7 +153,7 @@ public class ActivityRulesTests
 
         var result = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, Choice("read_book", KaoriRoom, 30, 0, 3), Fixture.Kaori, guard, 10));
 
-        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(EventStatus.Applied, result.Outcome);
         var kaori = result.State.Personas[Fixture.Kaori];
         Assert.False(kaori.Deciding);
         Assert.Equal(1, kaori.ActivityVersion);
@@ -179,7 +179,7 @@ public class ActivityRulesTests
         Assert.Equal(new PendingAction("watch_tv", HomeLiving, TimeSpan.FromMinutes(35), ActivityReason.Chosen, null), travelPayload.Next);
 
         var onWay = Fixture.Apply(moved.State, Fixture.Event(12, Fixture.Now, EventTypes.TravelStarted, travelPayload, Fixture.Kaori));
-        Assert.Equal(EventOutcome.Applied, onWay.Outcome);
+        Assert.Equal(EventStatus.Applied, onWay.Outcome);
         Assert.IsType<Traveling>(onWay.State.Personas[Fixture.Kaori].Location);
 
         var arrived = Fixture.Apply(onWay.State, Fixture.Event(13, Fixture.Now.AddMinutes(1), EventTypes.TravelArrived, new TravelArrivedPayload(HomeLiving, 1), Fixture.Kaori));
@@ -193,7 +193,7 @@ public class ActivityRulesTests
     {
         var stale = Fixture.Event(10, Fixture.Now, EventTypes.TravelStarted, new TravelStartedPayload(KaoriRoom, HomeLiving, ImmutableArray<RouteStep>.Empty, Fixture.Now.AddMinutes(1), 9), Fixture.Kaori);
 
-        Assert.Equal(EventOutcome.Skipped, Fixture.Apply(Fixture.WithKaori(), stale).Outcome);
+        Assert.Equal(EventStatus.Skipped, Fixture.Apply(Fixture.WithKaori(), stale).Outcome);
     }
 
     /// <summary>夜の決定は、行動の実行の判定（時刻の範囲の制限）で却下する。散歩は 6 時から 21 時まで。基準の時刻は 23 時。</summary>
@@ -206,7 +206,7 @@ public class ActivityRulesTests
 
         var result = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, Choice("walk_park", park, 30, 0, 0), Fixture.Kaori, guard, 10));
 
-        Assert.Equal(EventOutcome.Rejected, result.Outcome);
+        Assert.Equal(EventStatus.Rejected, result.Outcome);
         Assert.Equal("行動が実行できない", result.Reason);
     }
 }

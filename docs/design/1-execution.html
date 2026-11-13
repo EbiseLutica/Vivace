@@ -166,7 +166,7 @@
 
 record ApplyResult(
     SimState State,                         // 新しい状態（不変オブジェクト）
-    EventOutcome Outcome,                   // Applied / Skipped / Rejected と理由
+    EventStatus Outcome,                   // Applied / Skipped / Rejected と理由
     ImmutableArray&lt;NewEvent&gt; FollowUps,      // 後続のイベント（決定的）
     ImmutableArray&lt;Signal&gt; Signals);        // エンジンへの依頼（データ）</code></pre>
   <div class="grid two">

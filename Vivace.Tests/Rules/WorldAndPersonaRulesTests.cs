@@ -18,7 +18,7 @@ public class WorldAndPersonaRulesTests
     {
         var result = Fixture.Apply(Fixture.Empty(), Fixture.Event(1, Fixture.Now, EventTypes.WorldCreated, new WorldCreatedPayload(TestWorld.DefId, 42), null));
 
-        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(EventStatus.Applied, result.Outcome);
         Assert.Equal(WorldStatus.Alive, result.State.Worlds[Fixture.World].Status);
         var followUp = Assert.Single(result.FollowUps);
         Assert.Equal(EventTypes.DayStarted, followUp.EventType);
@@ -32,7 +32,7 @@ public class WorldAndPersonaRulesTests
         var state = Fixture.WithWorld();
         var result = Fixture.Apply(state, Fixture.Event(9, Fixture.Now, EventTypes.WorldCreated, new WorldCreatedPayload(TestWorld.DefId, 42), null));
 
-        Assert.Equal(EventOutcome.Skipped, result.Outcome);
+        Assert.Equal(EventStatus.Skipped, result.Outcome);
         Assert.Same(state, result.State);
     }
 
@@ -75,7 +75,7 @@ public class WorldAndPersonaRulesTests
     {
         var result = Fixture.Apply(Fixture.WithWorld(), Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("kaori"), new PlaceId("nowhere")), null));
 
-        Assert.Equal(EventOutcome.Skipped, result.Outcome);
+        Assert.Equal(EventStatus.Skipped, result.Outcome);
         Assert.Empty(result.State.Personas);
     }
 
@@ -92,7 +92,7 @@ public class WorldAndPersonaRulesTests
 
         var result = Fixture.Apply(state, Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("kaori"), new PlaceId("kaori_room")), null));
 
-        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(EventStatus.Applied, result.Outcome);
         Assert.Equal(new WorldId("testville#2"), result.State.Personas[Fixture.Kaori].World);
     }
 
@@ -106,7 +106,7 @@ public class WorldAndPersonaRulesTests
 
         var result = Fixture.Apply(state, Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("kaori"), new PlaceId("kaori_room")), null));
 
-        Assert.Equal(EventOutcome.Skipped, result.Outcome);
+        Assert.Equal(EventStatus.Skipped, result.Outcome);
         Assert.Empty(result.State.Personas);
     }
 
