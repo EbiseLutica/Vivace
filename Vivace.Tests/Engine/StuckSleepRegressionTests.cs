@@ -1,6 +1,5 @@
 using Vivace.Core.Definitions;
 using Vivace.Core.Events;
-using Vivace.Core.Storage;
 using Vivace.Core;
 using Vivace.Testing;
 using Vivace.Tests.Definitions;

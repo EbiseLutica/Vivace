@@ -3,7 +3,6 @@ using Vivace.Core.Decision;
 using Vivace.Core.Events.Guards;
 using Vivace.Core.Events;
 using Vivace.Core;
-using Vivace.Core.Storage;
 using Vivace.Testing;
 
 namespace Vivace.Tests.Engine;

@@ -3,7 +3,6 @@ using System.Text;
 using Vivace.Core.Domain.State;
 using Vivace.Core.Events;
 using Vivace.Core;
-using Vivace.Core.Storage;
 using Vivace.Tests.Support;
 using Vivace.Testing;
 

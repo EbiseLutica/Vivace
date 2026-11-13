@@ -7,7 +7,6 @@ using Vivace.Core.Events.Guards;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
 using Vivace.Core.Randomness;
-using Vivace.Core;
 using Vivace.Tests.Support;
 using Vivace.Testing;
 
