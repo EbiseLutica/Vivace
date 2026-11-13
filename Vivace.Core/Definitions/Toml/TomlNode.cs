@@ -2,6 +2,7 @@
 #nullable disable
 using System.Text.Json.Nodes;
 using Tomlyn.Syntax;
+using Vivace.Core.Domain.State;
 
 namespace Vivace.Core.Definitions.Toml;
 

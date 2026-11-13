@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>行動の実行の条件。</summary>
 /// <param name="PlaceTags">場所が持つべきタグ。</param>

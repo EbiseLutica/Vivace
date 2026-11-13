@@ -1,6 +1,6 @@
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>ワールドの生成。</summary>
 /// <param name="DefId">ワールドの定義 ID。</param>

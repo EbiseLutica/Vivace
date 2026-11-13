@@ -1,4 +1,4 @@
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>状態変数の設定。省略したものは既定値。</summary>
 /// <param name="EnergyInitial">気力の初期値。</param>

@@ -1,4 +1,4 @@
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>場所にいる。</summary>
 /// <param name="Place">場所の ID。</param>

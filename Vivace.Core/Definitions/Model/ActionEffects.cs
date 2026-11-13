@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
-using Vivace.Core.Domain;
+using Vivace.Core.Domain.State;
 
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>行動の効果。</summary>
 /// <param name="Rates">行動の間の率（置き換え）。</param>

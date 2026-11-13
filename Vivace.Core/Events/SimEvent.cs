@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Vivace.Core.Domain;
+using Vivace.Core.Events.Payloads;
 
 namespace Vivace.Core.Events;
 

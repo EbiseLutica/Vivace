@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>固定予定のブロック。</summary>
 /// <param name="Id">ブロックの定義 ID。</param>

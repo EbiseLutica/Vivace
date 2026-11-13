@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using Vivace.Core.Domain;
 using Vivace.Core.Storage;
+using Vivace.Core;
 
 namespace Vivace.Testing;
 

@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 using System.Globalization;
-using Vivace.Core.Definitions;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Domain;
 using Vivace.Core.Time;
 
@@ -21,7 +21,7 @@ public static class FixedScheduleResolver
     /// <param name="persona">ペルソナの定義。</param>
     /// <param name="date">現地の日付。</param>
     /// <param name="holidays">ワールドの祝日の暦。</param>
-    public static ResolvedDay Resolve(Definitions.Definitions definitions, PersonaDef persona, DateOnly date, IHolidayCalendar holidays)
+    public static ResolvedDay Resolve(DefinitionPack definitions, PersonaDef persona, DateOnly date, IHolidayCalendar holidays)
     {
         var schedule = persona.Schedule;
         var period = PeriodOf(schedule.Periods, date);
@@ -208,7 +208,7 @@ public static class FixedScheduleResolver
     }
 
     /// <summary>展開した区間から、開始の順に並べた1日の結果を作る。</summary>
-    private static ResolvedDay BuildResult(Definitions.Definitions definitions, DayContext context)
+    private static ResolvedDay BuildResult(DefinitionPack definitions, DayContext context)
     {
         var counts = new Dictionary<string, int>();
         var blocks = ImmutableArray.CreateBuilder<ResolvedBlock>();
@@ -346,7 +346,7 @@ public static class FixedScheduleResolver
 
     /// <summary>1日の解決に使う文脈と、途中の結果。</summary>
     private sealed record DayContext(
-        Definitions.Definitions Definitions,
+        DefinitionPack Definitions,
         DateOnly Date,
         string Period,
         bool Holiday,

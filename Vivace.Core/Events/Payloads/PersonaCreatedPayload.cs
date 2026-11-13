@@ -1,6 +1,6 @@
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>ペルソナの生成。</summary>
 /// <param name="DefId">ペルソナの定義 ID。</param>

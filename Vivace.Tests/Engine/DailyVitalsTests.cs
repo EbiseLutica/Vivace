@@ -1,9 +1,8 @@
 using System.Globalization;
 using System.Text;
-using Vivace.Core.Domain;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Events;
-using Vivace.Core.Rules;
-using Vivace.Core.Storage;
+using Vivace.Core;
 using Vivace.Tests.Support;
 using Vivace.Testing;
 

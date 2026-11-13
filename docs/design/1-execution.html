@@ -162,13 +162,13 @@
 <section id="apply">
   <h2><span class="num">1.3</span>Apply の形</h2>
   <p>Apply は、状態とイベントと定義を受け取り、新しい状態を返す。それに加えて、そのイベントから決定的に導ける「後続のイベント」と、エンジンへの「シグナル」を返す。</p>
-<pre><code>ApplyResult Apply(SimState state, SimEvent ev, Definitions defs);
+<pre><code>ApplyResult Apply(SimState state, SimEvent ev, DefinitionPack defs);
 
 record ApplyResult(
-    SimState State,                         // 新しい状態（不変オブジェクト）
-    EventOutcome Outcome,                   // Applied / Skipped / Rejected と理由
-    ImmutableArray&lt;NewEvent&gt; FollowUps,      // 後続のイベント（決定的）
-    ImmutableArray&lt;Signal&gt; Signals);        // エンジンへの依頼（データ）</code></pre>
+    SimState State,                        // 新しい状態（不変オブジェクト）
+    EventStatus Status,                    // Applied / Skipped / Rejected と理由
+    ImmutableArray&lt;EventDraft&gt; FollowUps,  // 後続のイベント（決定的）
+    ImmutableArray&lt;Signal&gt; Signals);       // エンジンへの依頼（データ）</code></pre>
   <div class="grid two">
     <div class="card">
       <h4>後続のイベント</h4>
@@ -497,7 +497,7 @@ record ApplyResult(
   <h2><span class="num">1.12</span>定義の読み直し</h2>
   <ul>
     <li>読み直しは、ホストが公開 API で呼び、コマンドとしてエンジンに入る（いつ呼ぶかは P-09）。エンジンは、TOML をすべて読み直して検証し、エラーがあれば拒否して、古い定義のまま動き続ける</li>
-    <li>通れば、イベントとイベントの間で <code>Definitions</code> を差し替え、<code>definitions.reloaded</code> のイベント（定義のハッシュつき）を記録する。ログを読むときに、どの定義で動いていたかがわかる</li>
+    <li>通れば、イベントとイベントの間で <code>DefinitionPack</code> を差し替え、<code>definitions.reloaded</code> のイベント（定義のハッシュつき）を記録する。ログを読むときに、どの定義で動いていたかがわかる</li>
     <li>場所のグラフが変われば、最短経路のキャッシュ（D5）を作り直す</li>
     <li>固定予定の変更は、次のプランから効く（VISION 5章）</li>
   </ul>

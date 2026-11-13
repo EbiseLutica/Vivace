@@ -1,4 +1,4 @@
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>状態の付与。</summary>
 /// <param name="ConditionId">状態の定義 ID。</param>

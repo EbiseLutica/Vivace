@@ -1,4 +1,4 @@
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>決めどきの要求。</summary>
 /// <param name="Reason">理由。</param>

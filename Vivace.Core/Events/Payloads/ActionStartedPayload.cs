@@ -1,6 +1,7 @@
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>行動の開始。</summary>
 /// <param name="ActionId">行動の定義 ID。</param>

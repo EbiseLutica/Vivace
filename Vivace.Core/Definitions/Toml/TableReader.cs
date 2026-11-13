@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Time;
 
 namespace Vivace.Core.Definitions.Toml;
@@ -270,7 +271,7 @@ internal sealed class TableReader(TomlTable table, List<DefinitionIssue> issues)
             return null;
         }
 
-        if (node is TomlScalar { Value: string text } && TimeText.TryParseDuration(text, out var fixedLength))
+        if (node is TomlScalar { Value: string text } && TimeTextHelper.TryParseDuration(text, out var fixedLength))
         {
             return new ActionDurationReadResult(fixedLength, fixedLength, false);
         }
@@ -278,8 +279,8 @@ internal sealed class TableReader(TomlTable table, List<DefinitionIssue> issues)
         if (node is TomlArray { Items.Count: 2 } range
             && range.Items[0] is TomlScalar { Value: string minText }
             && range.Items[1] is TomlScalar { Value: string maxText }
-            && TimeText.TryParseDuration(minText, out var min)
-            && TimeText.TryParseDuration(maxText, out var max))
+            && TimeTextHelper.TryParseDuration(minText, out var min)
+            && TimeTextHelper.TryParseDuration(maxText, out var max))
         {
             if (min > max)
             {
@@ -305,7 +306,7 @@ internal sealed class TableReader(TomlTable table, List<DefinitionIssue> issues)
             return null;
         }
 
-        if (TimeText.TryParseDuration(text, out var span))
+        if (TimeTextHelper.TryParseDuration(text, out var span))
         {
             return span;
         }
@@ -328,8 +329,8 @@ internal sealed class TableReader(TomlTable table, List<DefinitionIssue> issues)
         if (node is TomlArray { Items.Count: 2 } array
             && array.Items[0] is TomlScalar { Value: string fromText }
             && array.Items[1] is TomlScalar { Value: string toText }
-            && TimeText.TryParseTimeOfDay(fromText, out var from)
-            && TimeText.TryParseTimeOfDay(toText, out var to))
+            && TimeTextHelper.TryParseTimeOfDay(fromText, out var from)
+            && TimeTextHelper.TryParseTimeOfDay(toText, out var to))
         {
             return new TimeRange(from, to);
         }

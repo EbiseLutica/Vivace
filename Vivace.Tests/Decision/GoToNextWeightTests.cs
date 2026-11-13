@@ -1,10 +1,14 @@
 using Vivace.Core.Decision;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Definitions;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
+using Vivace.Core.Events.Guards;
+using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
 using Vivace.Core.Randomness;
 using Vivace.Core.Routes;
-using Vivace.Core.Rules;
+using Vivace.Core;
 using Vivace.Tests.Definitions;
 using Vivace.Tests.Support;
 using Vivace.Testing;
@@ -43,14 +47,14 @@ public class GoToNextWeightTests
     }
 
     /// <summary>テスト用の町の香織の定義の好みを、次の予定の場所へ向かう行動について書き換えた定義。</summary>
-    private static Vivace.Core.Definitions.Definitions WithPreference(string value)
+    private static DefinitionPack WithPreference(string value)
     {
         var files = DefinitionFixtures.Replaced("personas/kaori.toml", "prefs = { read_book", $"prefs = {{ \"core.go_to_next\" = {value}, read_book");
         return DefinitionLoader.LoadFiles(files).Definitions ?? throw new InvalidOperationException("定義が読めない");
     }
 
     /// <summary>定義から規則の文脈を作る。</summary>
-    private static RuleContext ContextFor(Vivace.Core.Definitions.Definitions definitions) => new(definitions, RouteCache.Create(definitions));
+    private static RuleContext ContextFor(DefinitionPack definitions) => new(definitions, RouteCache.Create(definitions));
 
     /// <summary>香織が家にいて、3 時間の自由時間のプランを持つ状態（この文脈の定義で作る）。</summary>
     private static SimState FreeDay(RuleContext context)

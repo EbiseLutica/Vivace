@@ -1,5 +1,5 @@
 using Vivace.Core.Events;
-using Vivace.Core.Storage;
+using Vivace.Core;
 using Vivace.Tests.Support;
 using Vivace.Testing;
 

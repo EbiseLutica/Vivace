@@ -1,9 +1,8 @@
 using Vivace.Core.Decision;
-using Vivace.Core.Definitions;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Domain;
-using Vivace.Core.Engine;
+using Vivace.Core;
 using Vivace.Core.Events;
-using Vivace.Core.Ingress;
 using Vivace.Core.Randomness;
 using Vivace.Core.Time;
 
@@ -27,14 +26,14 @@ public static class Scenario
     /// <param name="seed">ワールドの種。</param>
     /// <param name="decider">決める側。省略すると効用による決定。</param>
     /// <param name="definitions">定義。省略するとテスト用の町。</param>
-    public static SimEngine Create(ulong seed = WorldSeed, IDecider? decider = null, Definitions? definitions = null)
+    public static SimEngine Create(ulong seed = WorldSeed, IDecider? decider = null, DefinitionPack? definitions = null)
     {
         var loaded = definitions ?? TestWorld.LoadOrThrow();
         var clock = new VirtualClock(Start);
         var engine = SimEngine.Create(loaded, new InMemoryStorage(), new SplitMixRandomSource(), clock, decider, TestHolidays.Instance);
-        engine.Inject(Ingress.WorldCreated(Start, TestWorld.DefId, seed), Origin.Test);
-        engine.Inject(Ingress.PersonaCreated(Start, new PersonaDefId("kaori"), new PlaceId("kaori_room")), Origin.Test);
-        engine.Inject(Ingress.PersonaCreated(Start, new PersonaDefId("shiori"), new PlaceId("home_living")), Origin.Test);
+        engine.Inject(EventDraft.WorldCreated(Start, TestWorld.DefId, seed), Origin.Test);
+        engine.Inject(EventDraft.PersonaCreated(Start, new PersonaDefId("kaori"), new PlaceId("kaori_room")), Origin.Test);
+        engine.Inject(EventDraft.PersonaCreated(Start, new PersonaDefId("shiori"), new PlaceId("home_living")), Origin.Test);
         return engine;
     }
 

@@ -1,3 +1,5 @@
+using Vivace.Core.Definitions.Model;
+
 namespace Vivace.Core.Definitions.Toml;
 
 /// <summary>読んだ時間の長さ（固定か範囲か）。</summary>

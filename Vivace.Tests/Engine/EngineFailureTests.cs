@@ -1,9 +1,8 @@
 using System.Collections.Immutable;
 using Vivace.Core.Decision;
-using Vivace.Core.Domain;
+using Vivace.Core.Events.Guards;
 using Vivace.Core.Events;
-using Vivace.Core.Rules;
-using Vivace.Core.Storage;
+using Vivace.Core;
 using Vivace.Testing;
 
 namespace Vivace.Tests.Engine;

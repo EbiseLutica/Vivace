@@ -1,3 +1,4 @@
+
 namespace Vivace.Core.Definitions;
 
 /// <summary>問題1件。位置つき。</summary>

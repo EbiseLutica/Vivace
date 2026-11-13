@@ -1,4 +1,4 @@
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>移動のあとに始める行動。</summary>
 /// <param name="ActionId">行動の定義 ID。</param>

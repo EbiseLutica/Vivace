@@ -1,4 +1,4 @@
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>ペルソナインスタンスの状態。</summary>
 public enum PersonaStatus

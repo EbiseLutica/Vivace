@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
-using Vivace.Core.Domain;
+using Vivace.Core.Domain.State;
 
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>状態（コンディション）の定義。</summary>
 /// <param name="Id">定義 ID。</param>

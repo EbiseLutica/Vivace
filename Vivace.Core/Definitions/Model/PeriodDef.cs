@@ -1,6 +1,6 @@
 using Vivace.Core.Time;
 
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>期間（毎年繰り返す）。</summary>
 /// <param name="Id">期間の ID。</param>

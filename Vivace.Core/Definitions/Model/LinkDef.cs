@@ -1,4 +1,4 @@
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>場所のつながり（片方に書けば逆向きにも張る）。</summary>
 /// <param name="To">つながる場所の ID。</param>

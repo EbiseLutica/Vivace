@@ -1,11 +1,12 @@
 using System.Collections.Immutable;
+using Vivace.Core.Definitions.Model;
 
 namespace Vivace.Core.Definitions;
 
-/// <summary>読み込みの結果。エラーがなければ Definitions がある。</summary>
+/// <summary>読み込みの結果。エラーがなければ DefinitionPack がある。</summary>
 /// <param name="Definitions">定義。エラーがあれば null。</param>
 /// <param name="Issues">エラーと警告の全件。</param>
-public sealed record DefinitionLoadResult(Definitions? Definitions, ImmutableArray<DefinitionIssue> Issues)
+public sealed record DefinitionLoadResult(DefinitionPack? Definitions, ImmutableArray<DefinitionIssue> Issues)
 {
     /// <summary>エラーがあるかどうか。</summary>
     public bool HasErrors => Issues.Any(issue => issue.Severity == IssueSeverity.Error);

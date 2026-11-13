@@ -1,8 +1,10 @@
 using Vivace.Core.Decision;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
+using Vivace.Core.Events.Guards;
+using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
 using Vivace.Core.Randomness;
-using Vivace.Core.Rules;
 using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Decision;

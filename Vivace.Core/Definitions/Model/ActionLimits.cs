@@ -1,4 +1,4 @@
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>行動の制限。</summary>
 /// <param name="Cooldown">前回の開始から、この時間が経つまで候補にしない。</param>

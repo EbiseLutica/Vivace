@@ -1,6 +1,7 @@
-using Vivace.Core.Domain;
+using Vivace.Core.Domain.State;
 
-namespace Vivace.Core.Definitions;
+
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>変換の辞書の初期値の1件。</summary>
 /// <param name="From">語。</param>

@@ -1,5 +1,5 @@
 using System.Collections.Immutable;
-using Vivace.Core.Definitions;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Domain;
 
 namespace Vivace.Core.Routes;
@@ -17,7 +17,7 @@ public sealed class RouteCache
 
     /// <summary>定義から、すべてのワールドの最短経路の表を組む。</summary>
     /// <param name="definitions">読み込んだ定義。</param>
-    public static RouteCache Create(Definitions.Definitions definitions)
+    public static RouteCache Create(DefinitionPack definitions)
     {
         var tables = ImmutableDictionary.CreateBuilder<WorldDefId, RouteTable>();
         foreach (var world in definitions.Worlds.Values.OrderBy(w => w.Id.Value, StringComparer.Ordinal))

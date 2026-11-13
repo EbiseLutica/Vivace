@@ -1,7 +1,8 @@
 using System.Collections.Immutable;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>生えた場所の追加。</summary>
 /// <param name="Place">場所の ID。</param>

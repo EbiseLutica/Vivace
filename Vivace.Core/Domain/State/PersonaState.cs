@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>ペルソナの状態。</summary>
 /// <param name="Id">インスタンスの ID。</param>

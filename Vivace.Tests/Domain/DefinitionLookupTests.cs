@@ -1,9 +1,12 @@
 using Vivace.Core.Decision;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
+using Vivace.Core.Events.Guards;
+using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
 using Vivace.Core.Planning;
 using Vivace.Core.Randomness;
-using Vivace.Core.Rules;
+using Vivace.Core;
 using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Domain;
@@ -87,7 +90,7 @@ public class DefinitionLookupTests
 
         var result = Fixture.Apply(state, Fixture.Event(10, Fixture.Now, EventTypes.ActionStarted, payload, Fixture.Kaori));
 
-        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(EventStatus.Applied, result.Status);
         Assert.Equal("read_book", result.State.Personas[Fixture.Kaori].Activity?.ActionId);
     }
 
@@ -108,7 +111,7 @@ public class DefinitionLookupTests
 
         var result = Fixture.Apply(WithRenamedWorldInstance(planned), Fixture.Event(12, Fixture.Now, EventTypes.BlockStarted, new BlockStartedPayload(blockId, 1), Fixture.Kaori));
 
-        Assert.Equal(EventOutcome.Applied, result.Outcome);
+        Assert.Equal(EventStatus.Applied, result.Status);
         Assert.Equal(blockId, result.State.Personas[Fixture.Kaori].LastBlockId);
         Assert.Contains(result.FollowUps, ev => ev.Payload is ActionStartedPayload { ActionId: "read_book" });
     }

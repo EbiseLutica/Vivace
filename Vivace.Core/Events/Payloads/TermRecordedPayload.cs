@@ -1,6 +1,7 @@
-using Vivace.Core.Domain;
+using Vivace.Core.Domain.State;
 
-namespace Vivace.Core.Events;
+
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>変換の辞書への記録。</summary>
 /// <param name="Term">語。</param>

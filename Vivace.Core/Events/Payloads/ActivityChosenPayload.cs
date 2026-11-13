@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>行動の決定（Decider の出力）。</summary>
 /// <param name="ActionId">行動の定義 ID。</param>

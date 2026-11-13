@@ -61,7 +61,7 @@
 
 ## コード
 
-- 1ファイルに1つの型を置く。レコードが多くても分ける
+- 1ファイルに1つの型を置く。レコードが多くても分ける。ただし入れ子の型は、親のファイルに置く
 - ドキュメントコメントには、その型やメソッドの役割だけを簡潔に書く。設計書の番号（D3 3.8、J-xx など）や、実装が変わるたびに直す事情（「乱数は使わない」など）は書かず、利用者がわかっておくべき内容を書く。private なメンバーにも付ける
 - シンプルな行にコメントを付けない
 - `lock` の錠には、特に理由がなければ `System.Threading.Lock` を使う（`object` を錠にしない）
@@ -81,7 +81,7 @@
 - `docs/IMPLEMENTATION.html`：実装の手順と進み具合（チェックボックス）
 - `docs/design/index.html`：案（P-xx）と枠の外の判断（J-xx）の一覧。次の J-xx の番号はここで確かめる
 - `docs/design/1-execution.html`〜`8-stack.html`：詳細設計の D1〜D8
-- `Vivace.Core/Rules/`：イベントの Apply と guard。`Engine/`：エンジン、レーン、不変条件。`Decision/`：Decider。`Definitions/`：TOML の読み込みと検証
+- `Vivace.Core/`：エンジン（`SimEngine`）、レーン、不変条件、イベントの Apply（`EventApplier`）と guard。`EventRules/`：型ごとのルール。`Decision/`：Decider。`Definitions/`：TOML の読み込みと検証
 - `Vivace.Testing/Defs/`：テスト用の小さな町（ワールド testville、ペルソナ kaori と shiori）。`TestWorld.cs` が読み、`Scenario.cs` が仮想時計で回す
 - `Vivace.Tests/Support/`：`Fixture.cs`（規則のテストの土台）と `Snapshot.cs`
 - `Vivace.Tests/Engine/ScenarioTests.cs`：7日のシナリオのスナップショット。振る舞いを変えたら、ここの `.verified.txt` が変わる

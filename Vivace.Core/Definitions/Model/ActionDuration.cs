@@ -1,4 +1,4 @@
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>行動の所要時間。範囲か固定。</summary>
 /// <param name="Min">最短。</param>

@@ -1,3 +1,4 @@
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
 using Vivace.Core.Planning;
 using Vivace.Tests.Support;

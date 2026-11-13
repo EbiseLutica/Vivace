@@ -1,6 +1,7 @@
-using Vivace.Core.Domain;
+using Vivace.Core.Domain.State;
 
-namespace Vivace.Core.Events;
+
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>体の反応。しきい値を越えた。</summary>
 /// <param name="Vital">状態変数。</param>

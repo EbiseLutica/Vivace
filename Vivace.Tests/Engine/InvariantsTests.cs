@@ -1,6 +1,8 @@
 using System.Collections.Immutable;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
-using Vivace.Core.Engine;
+using Vivace.Core.Events.Payloads;
+using Vivace.Core;
 using Vivace.Core.Events;
 using Vivace.Tests.Support;
 
@@ -45,7 +47,7 @@ public class InvariantsTests
     {
         var lookup = pending.ToLookup(ev => ev.PersonaId!.Value);
         var busySet = busy ? ImmutableHashSet.Create(Fixture.Kaori) : ImmutableHashSet<PersonaId>.Empty;
-        Invariants.Check(Fixture.Context, state, state.Position.Time, busySet, lookup, null);
+        Invariants.Check(Fixture.Context, state, state.Cursor.Time, busySet, lookup, null);
     }
 
     /// <summary>行動中なのに同じ版の行動の終わりを積まなかった状態は検出される。別の版の終わりでは足りない。</summary>
@@ -88,13 +90,13 @@ public class InvariantsTests
     [Fact]
     public void IdleInFreeTimeWithoutDecisionIsDetected()
     {
-        var plan = new Vivace.Core.Domain.DayPlan(
+        var plan = new Vivace.Core.Domain.State.DayPlan(
             1,
             Fixture.Now,
             Fixture.Now.AddHours(3),
             Fixture.Now.AddHours(3),
-            Vivace.Core.Domain.PlanSource.Fallback,
-            [new Vivace.Core.Domain.PlanBlock(null, Vivace.Core.Domain.BlockKind.Free, Fixture.Now, Fixture.Now.AddHours(3), null, null, Vivace.Core.Domain.PhonePolicy.Closed, null, [], Vivace.Core.Domain.PartnerAbsentPolicy.Continue)],
+            Vivace.Core.Domain.State.PlanSource.Fallback,
+            [new Vivace.Core.Domain.State.PlanBlock(null, Vivace.Core.Domain.State.BlockKind.Free, Fixture.Now, Fixture.Now.AddHours(3), null, null, Vivace.Core.Domain.PhonePolicy.Closed, null, [], Vivace.Core.Domain.PartnerAbsentPolicy.Continue)],
             null);
         var state = Fixture.With(Fixture.WithKaori(), Fixture.Get(Fixture.WithKaori(), Fixture.Kaori) with { Plan = plan });
 

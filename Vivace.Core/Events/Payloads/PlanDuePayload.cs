@@ -1,4 +1,4 @@
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>プランの作り直しの時刻。</summary>
 /// <param name="PlanVersion">プランの版。古ければ捨てる。</param>

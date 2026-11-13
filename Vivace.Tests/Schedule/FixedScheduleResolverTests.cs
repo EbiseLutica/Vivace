@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
 using Vivace.Core.Schedule;
@@ -15,7 +16,7 @@ public class FixedScheduleResolverTests
     private static readonly DateOnly SummerMonday = new(2026, 7, 27);
     private static readonly DateOnly WinterFriday = new(2026, 12, 25);
 
-    private static readonly Vivace.Core.Definitions.Definitions Defs = TestWorld.LoadOrThrow();
+    private static readonly DefinitionPack Defs = TestWorld.LoadOrThrow();
 
     /// <summary>ペルソナの定義を、ID で引く。</summary>
     private static PersonaDef Kaori() => Defs.Personas[new PersonaDefId("kaori")];

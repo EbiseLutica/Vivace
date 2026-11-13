@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
-using Vivace.Core.Definitions;
+using Vivace.Core.Definitions.Model;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
 using Vivace.Core.Schedule;
 using Vivace.Core.Time;
@@ -24,11 +25,11 @@ public static class FallbackPlanner
     /// <param name="now">契機の時刻。</param>
     /// <param name="version">新しいプランの版。</param>
     /// <param name="holidays">祝日の暦。省略すると祝日のない暦。</param>
-    public static DayPlan Plan(Definitions.Definitions definitions, PersonaState persona, DateTimeOffset now, long version, IHolidayCalendar? holidays = null)
+    public static DayPlan Plan(DefinitionPack definitions, PersonaState persona, DateTimeOffset now, long version, IHolidayCalendar? holidays = null)
     {
         var personaDef = definitions.Personas[persona.DefId];
         var worldDef = definitions.Worlds[personaDef.World];
-        var today = LocalClock.ToLocal(now, worldDef.UtcOffset).Date;
+        var today = LocalTimeHelper.ToLocal(now, worldDef.UtcOffset).Date;
         var fixedBlocks = ResolveAround(definitions, personaDef, worldDef.UtcOffset, today, holidays ?? NoHolidays.Instance);
 
         var rebuildCandidates = fixedBlocks
@@ -66,14 +67,14 @@ public static class FallbackPlanner
     private sealed record Resolved(ResolvedBlock Block, DateTimeOffset Start, DateTimeOffset End);
 
     /// <summary>前の日から次の日までの固定予定を、絶対時刻に直す。日をまたぐブロックは、開始の日のものとして持つ。</summary>
-    private static List<Resolved> ResolveAround(Definitions.Definitions definitions, PersonaDef personaDef, TimeSpan offset, DateOnly today, IHolidayCalendar holidays)
+    private static List<Resolved> ResolveAround(DefinitionPack definitions, PersonaDef personaDef, TimeSpan offset, DateOnly today, IHolidayCalendar holidays)
     {
         var result = new List<Resolved>();
         for (var shift = -1; shift <= 2; shift++)
         {
             var date = today.AddDays(shift);
             var day = FixedScheduleResolver.Resolve(definitions, personaDef, date, holidays);
-            var midnight = LocalClock.ToUtc(date, TimeOnly.MinValue, offset);
+            var midnight = LocalTimeHelper.ToUtc(date, TimeOnly.MinValue, offset);
             foreach (var block in day.Blocks)
             {
                 result.Add(new Resolved(block, midnight.AddMinutes(block.StartMinute), midnight.AddMinutes(block.EndMinute)));
@@ -84,7 +85,7 @@ public static class FallbackPlanner
     }
 
     /// <summary>記憶の整理を起こす行動か。</summary>
-    private static bool Consolidates(Definitions.Definitions definitions, string actionId) =>
+    private static bool Consolidates(DefinitionPack definitions, string actionId) =>
         definitions.Actions.TryGetValue(actionId, out var action) && action.Effects.Sleep is { Consolidate: true };
 
     /// <summary>固定予定のブロックを、プランのブロックにする。</summary>

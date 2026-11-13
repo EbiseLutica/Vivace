@@ -1,4 +1,4 @@
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>変換の辞書の1件。</summary>
 /// <param name="Term">語。</param>

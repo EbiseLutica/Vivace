@@ -1,4 +1,4 @@
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>反射のしきい値と行動。</summary>
 /// <param name="Threshold">しきい値。越えた瞬間に反射する。</param>

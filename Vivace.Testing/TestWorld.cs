@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
-using System.Reflection;
 using System.Text;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
 
@@ -35,9 +35,9 @@ public static class TestWorld
     public static DefinitionLoadResult Load() => DefinitionLoader.LoadFiles(Files());
 
     /// <summary>テスト用の定義を読む。エラーがあれば例外。</summary>
-    public static Definitions LoadOrThrow() => Shared.Value;
+    public static DefinitionPack LoadOrThrow() => Shared.Value;
 
-    private static readonly Lazy<Definitions> Shared = new(() =>
+    private static readonly Lazy<DefinitionPack> Shared = new(() =>
     {
         var result = Load();
         return result.Definitions ?? throw new InvalidOperationException(

@@ -1,5 +1,5 @@
-using Vivace.Core.Events;
-using Vivace.Core.Rules;
+using Vivace.Core.Events.Payloads;
+using Vivace.Core;
 using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Rules;

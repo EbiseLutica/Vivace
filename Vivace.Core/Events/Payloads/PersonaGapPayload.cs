@@ -1,4 +1,4 @@
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>追いつきの上限で飛ばした空白の区間。</summary>
 /// <param name="From">空白の始まり。</param>

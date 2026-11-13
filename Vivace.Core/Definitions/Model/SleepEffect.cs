@@ -1,4 +1,4 @@
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>睡眠の効果。</summary>
 /// <param name="Consolidate">記憶の整理を起こすか。</param>

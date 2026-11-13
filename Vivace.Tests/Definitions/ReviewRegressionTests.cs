@@ -1,8 +1,10 @@
 using System.Collections.Immutable;
 using System.Globalization;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Definitions;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
-using Vivace.Core.Events;
+using Vivace.Core.Events.Payloads;
 using Vivace.Core.Schedule;
 using Vivace.Core.Time;
 using Vivace.Testing;
@@ -400,7 +402,7 @@ public class ReviewRegressionTests
     {
         var files = DefinitionFixtures.Replaced(Kaori, "follow_back = \"always\"", "follow_back = \"always\"\n\n[channel.misskey]\nreversi = true");
 
-        var definitions = Assert.IsType<Vivace.Core.Definitions.Definitions>(DefinitionLoader.LoadFiles(files).Definitions);
+        var definitions = Assert.IsType<DefinitionPack>(DefinitionLoader.LoadFiles(files).Definitions);
 
         Assert.True(definitions.Personas[new PersonaDefId("kaori")].ChannelSettings["misskey"].GetProperty("reversi").GetBoolean());
     }

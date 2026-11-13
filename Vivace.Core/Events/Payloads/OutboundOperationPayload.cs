@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Vivace.Core.Events;
+namespace Vivace.Core.Events.Payloads;
 
 /// <summary>発話でない外向きの操作の決定。「言ったこと」には入らない。</summary>
 /// <param name="Channel">チャンネルの種類。</param>

@@ -1,4 +1,4 @@
-namespace Vivace.Core.Domain;
+namespace Vivace.Core.Domain.State;
 
 /// <summary>行動ごとの利用の記録（制限の判定に使う）。</summary>
 /// <param name="LastStartedAt">前回の開始の時刻。</param>

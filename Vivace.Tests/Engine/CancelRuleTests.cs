@@ -1,5 +1,4 @@
-using Vivace.Core.Domain;
-using Vivace.Core.Engine;
+using Vivace.Core;
 
 namespace Vivace.Tests.Engine;
 

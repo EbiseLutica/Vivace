@@ -1,8 +1,12 @@
 using Vivace.Core.Definitions;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
+using Vivace.Core.Events.Guards;
+using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
 using Vivace.Core.Routes;
-using Vivace.Core.Rules;
+using Vivace.Core.Signals;
+using Vivace.Core;
 using Vivace.Tests.Definitions;
 using Vivace.Tests.Support;
 using Vivace.Testing;
@@ -31,7 +35,7 @@ public class RegressionRulesTests
         Assert.Equal(0.0, kaori.Vitals.Energy.Rate);
         Assert.Equal(0, kaori.ActivityVersion);
         Assert.Equal("sleep_weekday@2026-11-01", kaori.PlannedFor);
-        Assert.Equal(new StartPlanner(10, Fixture.Kaori, Fixture.Now.AddHours(1)), Assert.Single(result.Signals));
+        Assert.Equal(new StartPlannerSignal(10, Fixture.Kaori, Fixture.Now.AddHours(1)), Assert.Single(result.Signals));
     }
 
     /// <summary>
@@ -57,7 +61,7 @@ public class RegressionRulesTests
         var second = Fixture.Apply(firstEnd, Fixture.Event(12, half, EventTypes.ActionStarted, new ActionStartedPayload("walk_park", KaoriRoom, TimeSpan.FromMinutes(30), ActivityReason.Chosen, 0, null), Fixture.Kaori)).State;
         var secondEnd = Fixture.Apply(second, Fixture.Event(13, end, EventTypes.ActionEnded, new ActionEndedPayload("walk_park", 0), Fixture.Kaori));
 
-        Assert.Equal(EventOutcome.Applied, secondEnd.Outcome);
+        Assert.Equal(EventStatus.Applied, secondEnd.Status);
         Assert.Equal(53.0, secondEnd.State.Personas[Fixture.Kaori].Vitals.Boredom.BaseValue, 6);
     }
 
@@ -97,10 +101,10 @@ public class RegressionRulesTests
         var state = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop))).State;
 
         var due = Fixture.Apply(state, Fixture.Event(11, sleepAt, EventTypes.PlanDue, new PlanDuePayload(1), Fixture.Kaori));
-        Assert.Equal(EventOutcome.Skipped, due.Outcome);
+        Assert.Equal(EventStatus.Skipped, due.Status);
 
         var sleep = Fixture.Apply(state, Fixture.Event(12, sleepAt, EventTypes.ActionStarted, new ActionStartedPayload("core.sleep", KaoriRoom, TimeSpan.FromHours(6), ActivityReason.Block, 0, "sleep@2026-11-01"), Fixture.Kaori));
-        Assert.Equal(new StartPlanner(12, Fixture.Kaori, sleepAt), Assert.Single(sleep.Signals));
+        Assert.Equal(new StartPlannerSignal(12, Fixture.Kaori, sleepAt), Assert.Single(sleep.Signals));
     }
 
     /// <summary>状態変数を急に変えても、版が上がる。古い予測を捨てるため。</summary>
