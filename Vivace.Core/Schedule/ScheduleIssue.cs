@@ -1,4 +1,5 @@
-using Vivace.Core.Definitions;
+using Vivace.Core.Definitions.Model;
+
 
 namespace Vivace.Core.Schedule;
 

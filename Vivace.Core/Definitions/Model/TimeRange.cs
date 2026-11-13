@@ -1,4 +1,4 @@
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>現地の時刻の範囲。End が Start より小さければ日をまたぐ。</summary>
 /// <param name="Start">開始。</param>

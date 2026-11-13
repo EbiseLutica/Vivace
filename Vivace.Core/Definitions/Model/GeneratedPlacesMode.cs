@@ -1,4 +1,4 @@
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>生成する場所の扱い。</summary>
 public enum GeneratedPlacesMode

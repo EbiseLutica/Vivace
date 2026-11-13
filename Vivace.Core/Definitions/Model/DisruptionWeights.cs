@@ -1,4 +1,4 @@
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>予定の乱れへの反応の重み。</summary>
 /// <param name="Late">遅刻の重み。</param>

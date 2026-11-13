@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using System.Text.Json;
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>ペルソナの定義。</summary>
 /// <param name="Id">定義 ID。</param>

@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using Vivace.Core.Domain;
 using Vivace.Core.Time;
 
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>ワールドの定義。</summary>
 /// <param name="Id">定義 ID。</param>

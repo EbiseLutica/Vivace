@@ -1,4 +1,4 @@
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>移動時間を増やす効果。場所 ID か場所のタグで決める。</summary>
 /// <param name="Place">場所の ID。</param>

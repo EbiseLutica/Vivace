@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>行動の定義。</summary>
 /// <param name="Id">定義 ID（組み込みは core.*）。</param>

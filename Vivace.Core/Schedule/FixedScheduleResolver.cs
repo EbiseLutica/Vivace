@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
 using System.Globalization;
-using Vivace.Core.Definitions;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Domain;
 using Vivace.Core.Time;
 

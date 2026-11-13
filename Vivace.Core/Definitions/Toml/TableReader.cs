@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Time;
 
 namespace Vivace.Core.Definitions.Toml;

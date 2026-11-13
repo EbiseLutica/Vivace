@@ -1,5 +1,5 @@
 using System.Collections.Immutable;
-using Vivace.Core.Definitions;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Domain;
 using Vivace.Core.Events.Guards;
 using Vivace.Core.Events.Payloads;

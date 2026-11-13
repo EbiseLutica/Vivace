@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Vivace.Core.Definitions.Model;
 
 namespace Vivace.Core.Definitions;
 

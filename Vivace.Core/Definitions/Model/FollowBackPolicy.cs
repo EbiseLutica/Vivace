@@ -1,4 +1,4 @@
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>フォローバックの方針。</summary>
 public enum FollowBackPolicy

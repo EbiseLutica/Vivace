@@ -1,6 +1,6 @@
 using System.Collections.Immutable;
-using System.Reflection;
 using System.Text;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
 

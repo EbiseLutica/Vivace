@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>出来事の効果。書いたものだけが入る。</summary>
 /// <param name="SlowPlace">辺の移動時間を増やす。</param>

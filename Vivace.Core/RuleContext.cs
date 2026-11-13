@@ -1,4 +1,4 @@
-using Vivace.Core.Definitions;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Routes;
 using Vivace.Core.Time;
 

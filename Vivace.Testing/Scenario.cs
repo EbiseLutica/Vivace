@@ -1,5 +1,5 @@
 using Vivace.Core.Decision;
-using Vivace.Core.Definitions;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Domain;
 using Vivace.Core;
 using Vivace.Core.Events;

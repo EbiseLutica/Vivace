@@ -1,9 +1,8 @@
 using System.Collections.Immutable;
-using Vivace.Core.Definitions;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Domain;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
-using Vivace.Core.Routes;
 using Vivace.Core.Signals;
 
 namespace Vivace.Core.EventRules;

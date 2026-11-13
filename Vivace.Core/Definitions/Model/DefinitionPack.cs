@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Vivace.Core.Domain;
 
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>読み込んだ定義の全体。</summary>
 /// <param name="Worlds">ワールドの定義。キーはワールドの定義 ID。</param>

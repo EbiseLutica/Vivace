@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Definitions.Toml;
 using Vivace.Core.Domain;
 using Vivace.Core.Time;

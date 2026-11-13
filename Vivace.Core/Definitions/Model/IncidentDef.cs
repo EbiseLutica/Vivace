@@ -1,4 +1,4 @@
-namespace Vivace.Core.Definitions;
+namespace Vivace.Core.Definitions.Model;
 
 /// <summary>出来事の定義。</summary>
 /// <param name="Id">定義 ID。</param>

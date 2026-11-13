@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Security.Cryptography;
 using System.Text;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Definitions.Toml;
 using Vivace.Core.Domain;
 

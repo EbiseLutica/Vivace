@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
 using Vivace.Core.Schedule;
