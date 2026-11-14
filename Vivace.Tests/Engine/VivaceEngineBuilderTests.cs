@@ -7,18 +7,16 @@ using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Engine;
 
-/// <summary>公開 API のビルダー。必須のもの（定義、保存先、時計）が欠けると例外になり、そろえば組んだエンジンが動く。</summary>
+/// <summary>公開 API のビルダー。必須のもの（定義、保存先）が欠けると例外になり、そろえば組んだエンジンが動く。時計は省略できる。</summary>
 public class VivaceEngineBuilderTests
 {
-    /// <summary>時計がなければ、例外になる。</summary>
+    /// <summary>時計を省略すると、実時間の SystemClock で組まれ、例外にならない。</summary>
     [Fact]
-    public void BuildWithoutClockThrows()
+    public async Task BuildWithoutClockUsesSystemClock()
     {
-        var builder = VivaceEngine.Create().UseDefinitions(TestWorld.LoadOrThrow()).UseStorage(new InMemoryStorage());
+        await using var engine = VivaceEngine.Create().UseDefinitions(TestWorld.LoadOrThrow()).UseStorage(new InMemoryStorage()).Build();
 
-        var error = Assert.Throws<InvalidOperationException>(builder.Build);
-
-        Assert.Equal("時計のインスタンスが渡されていません。 UseClock で指定してください。", error.Message);
+        Assert.NotNull(engine);
     }
 
     /// <summary>保存先がなければ、例外になる。</summary>
