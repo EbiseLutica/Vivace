@@ -167,7 +167,7 @@
   <p>エンジンを実時間（と倍速）で回し、ペルソナが暮らす様子をコンソールに流す。永続化はしない。起動するたびに、いまの時刻からワールドとペルソナを生成し直す。</p>
   <p><strong>参照</strong>：<a href="design/1-execution.html#clock">D1 1.10</a>、<a href="design/4-components.html#api">D4 4.6</a>、<a href="design/7-operations.html#cli">D7 7.5</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" disabled><code>SystemClock</code>：実時刻を返し、その時刻まで実際に待つ。実時刻は <code>TimeProvider</code> から取り、テストでは差し替える</li>
+    <li><input type="checkbox" disabled checked><code>SystemClock</code>：実時刻を返し、その時刻まで実際に待つ。実時刻は <code>TimeProvider</code> から取り、テストでは差し替える</li>
     <li><input type="checkbox" disabled><code>ScaledClock</code>：開始時刻から N 倍の速さで進む時計。眺める時間を縮めるために使う</li>
     <li><input type="checkbox" disabled><code>vivace run &lt;dir&gt; [--speed N] [--seed S] [--all]</code>：定義を読み、ワールドとペルソナを dry-run と同じ順に、いまの時刻で生成して、Ctrl+C まで回す。止めたら、適用、捨てた、却下の件数を出す</li>
     <li><input type="checkbox" disabled>流れる出力：<code>Subscribe</code> で受けた適用済みのイベントを、ワールドの現地時刻、ペルソナ、内容の1行にする。既定では行動と移動の開始と終了だけを出し、<code>--all</code> ですべてのイベントを出す。書式の組み立ては、テストできるクラスに分ける</li>
