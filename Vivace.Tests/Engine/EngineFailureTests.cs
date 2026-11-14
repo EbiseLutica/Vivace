@@ -4,6 +4,7 @@ using Vivace.Core.Events.Guards;
 using Vivace.Core.Events;
 using Vivace.Core;
 using Vivace.Testing;
+using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Engine;
 
@@ -16,7 +17,7 @@ public class EngineFailureTests
     [Fact]
     public async Task FailingDecisionStopsEngine()
     {
-        await using var engine = Scenario.Create(Scenario.WorldSeed, new ThrowingDecider());
+        await using var engine = await Scenario.CreateAsync(Scenario.WorldSeed, new ThrowingDecider());
 
         var error = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None));
         Assert.Contains("決める側の仕事が失敗", error.Message, StringComparison.Ordinal);
@@ -28,7 +29,7 @@ public class EngineFailureTests
     {
         var decider = new BlockingDecider();
         var failure = new InvalidOperationException("わざと失敗させたレーンの仕事");
-        await using var engine = Scenario.Create(Scenario.WorldSeed, decider);
+        await using var engine = await Scenario.CreateAsync(Scenario.WorldSeed, decider);
         try
         {
             var run = engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None);
@@ -45,11 +46,33 @@ public class EngineFailureTests
         }
     }
 
+    /// <summary>決める側の出力を待っている間にキャンセルすると、待ちをやめて OperationCanceledException で抜ける。</summary>
+    [Fact]
+    public async Task CancelWhileWaitingForOutputStopsRun()
+    {
+        var decider = new BlockingDecider();
+        await using var engine = await Scenario.CreateAsync(Scenario.WorldSeed, decider);
+        using var cts = new CancellationTokenSource();
+        try
+        {
+            var run = engine.RunUntilAsync(Scenario.Start.AddDays(1), cts.Token);
+            await decider.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+            await cts.CancelAsync();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken));
+        }
+        finally
+        {
+            decider.Release.Set();
+        }
+    }
+
     /// <summary>guard が通らない出力は、却下として記録され、決め直しで続く。</summary>
     [Fact]
     public async Task StaleDecisionIsRecordedAsRejectedAndRunContinues()
     {
-        await using var engine = Scenario.Create(Scenario.WorldSeed, new RejectOnceDecider());
+        await using var engine = await Scenario.CreateAsync(Scenario.WorldSeed, new RejectOnceDecider());
 
         await engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None);
 
@@ -58,30 +81,6 @@ public class EngineFailureTests
         Assert.Equal(EventTypes.ActivityChosen, single.Event.EventType);
         Assert.Equal("行動の版が違う", single.Reason);
         Assert.Contains(engine.Log, entry => entry.Status == EventStatus.Applied && entry.Event.EventType == EventTypes.ActivityChosen);
-    }
-
-    private sealed class ThrowingDecider : IDecider
-    {
-        public DeciderOutput Decide(DecisionContext context) => throw new InvalidOperationException("わざと失敗させた決定");
-    }
-
-    /// <summary>最初の決定で、解放されるまで止まる Decider。</summary>
-    private sealed class BlockingDecider : IDecider
-    {
-        private readonly UtilityDecider _inner = new();
-
-        /// <summary>決定に入ったら完了する。</summary>
-        public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        /// <summary>決定を先へ進める合図。</summary>
-        public ManualResetEventSlim Release { get; } = new();
-
-        public DeciderOutput Decide(DecisionContext context)
-        {
-            Entered.TrySetResult();
-            Release.Wait();
-            return _inner.Decide(context);
-        }
     }
 
     private sealed class RejectOnceDecider : IDecider

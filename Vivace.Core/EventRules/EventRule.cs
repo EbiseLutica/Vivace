@@ -21,4 +21,18 @@ internal abstract class EventRule<TPayload> : IEventRule
     /// <param name="ev">適用するイベント。</param>
     /// <param name="payload">イベントのペイロード。</param>
     protected abstract ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, TPayload payload);
+
+    /// <summary>ペイロードの型を確かめてから、型つきの投入の検査に渡す。</summary>
+    public string? CheckInjection(RuleContext ctx, SimState state, IEnumerable<SimEvent> pending, EventPayload payload, DateTimeOffset at) =>
+        payload is TPayload typed ? CheckInjection(ctx, state, pending, typed, at) : "中身の型が違う";
+
+    /// <summary>窓口から投入されるイベントを、ペイロードを型つきで受け取って検査する。既定は投入を受け付けない。</summary>
+    /// <param name="ctx">規則の文脈。</param>
+    /// <param name="state">いまの状態。</param>
+    /// <param name="pending">未適用のイベント。</param>
+    /// <param name="payload">投入するイベントの中身。</param>
+    /// <param name="at">投入するイベントの時刻。</param>
+    /// <returns>拒否の理由。通れば null。</returns>
+    protected virtual string? CheckInjection(RuleContext ctx, SimState state, IEnumerable<SimEvent> pending, TPayload payload, DateTimeOffset at) =>
+        InjectionValidator.UnsupportedReason;
 }

@@ -25,20 +25,6 @@ public sealed record EventDraft(
     long? BatchSeq = null,
     Origin? Origin = null)
 {
-    /// <summary>ワールドの生成のイベントを作る。インスタンスの ID は適用のときに決める。</summary>
-    /// <param name="at">時刻（UTC）。</param>
-    /// <param name="defId">ワールドの定義 ID。</param>
-    /// <param name="seed">乱数のワールドの種。</param>
-    public static EventDraft WorldCreated(DateTimeOffset at, WorldDefId defId, ulong seed) =>
-        new(at, EventTypes.WorldCreated, null, null, new WorldCreatedPayload(defId, seed));
-
-    /// <summary>ペルソナの生成のイベントを作る。居住するワールドのインスタンスは適用のときに引く。</summary>
-    /// <param name="at">時刻（UTC）。</param>
-    /// <param name="personaDefId">ペルソナの定義 ID。</param>
-    /// <param name="home">最初の居場所（家）。</param>
-    public static EventDraft PersonaCreated(DateTimeOffset at, PersonaDefId personaDefId, PlaceId home) =>
-        new(at, EventTypes.PersonaCreated, null, null, new PersonaCreatedPayload(personaDefId, home));
-
     /// <summary>ペルソナの後続のイベントを作る。</summary>
     /// <param name="time">時刻。</param>
     /// <param name="eventType">イベントタイプの名前。</param>

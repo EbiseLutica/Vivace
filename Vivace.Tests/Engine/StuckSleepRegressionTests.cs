@@ -18,10 +18,10 @@ public class StuckSleepRegressionTests
     {
         var files = DefinitionFixtures.Replaced("personas/kaori.toml", "action = \"core.sleep\"", "action = \"nap_club\"");
         files.Add(new DefinitionFile("actions/nap.toml", "[[action]]\nid = \"nap_club\"\ndisplay = \"仮眠\"\ndescription = \"クラブ室でだけ眠る。\"\nduration = \"2h\"\nphone = \"closed\"\nschedule_only = true\nrequires.place_tags = [\"club\"]\neffects.restore.energy = 50\neffects.sleep = { consolidate = true, debt = false }\n"));
-        var definitions = DefinitionLoader.LoadFiles(files).Definitions ?? throw new InvalidOperationException("定義が読めない");
+        var definitions = DefinitionLoader.LoadFiles(files).Definitions ?? throw new InvalidOperationException("定義が読めません。");
         var until = Scenario.Start.AddDays(2);
 
-        await using var engine = Scenario.Create(Scenario.WorldSeed, null, definitions);
+        await using var engine = await Scenario.CreateAsync(Scenario.WorldSeed, null, definitions);
         await engine.RunUntilAsync(until, CancellationToken.None);
 
         var applied = engine.Log.Where(entry => entry.Status == EventStatus.Applied).ToList();

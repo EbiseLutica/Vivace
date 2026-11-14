@@ -279,14 +279,14 @@
   <p>外から投入し、適用の記録を購読し、ビルダーで組めるようにする。投入の窓口は、ルールの表にある型（<code>world.created</code>、<code>persona.created</code>）だけを検査して受け付け、ほかの型は「未対応」で拒否する。型ごとの検査は、その型のルールを作る PR（3-3〜3-8）で足す。</p>
   <p><strong>参照</strong>：<a href="design/4-components.html#api">D4 4.6</a>、<a href="design/2-events.html#injection">D2 2.8</a>、<a href="design/1-execution.html#clock">D1 1.10</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" disabled><code>InjectRequest</code>（投入するイベントと時刻の指定。指定がなければ、受け付けた時点の時計の時刻）と <code>InjectResult</code>（受け付けたら連番、拒否なら理由。<code>Accepted</code> を持つ）</li>
-    <li><input type="checkbox" disabled><code>InjectionValidator</code>（<code>Ingress</code> を置き換える）：過去の時刻を拒否する。未対応の型を拒否する。<code>world.created</code> は定義があること。<code>persona.created</code> は定義があり、生成先のワールドが生きているか、同じ時刻以前の <code>world.created</code> がキューにあること。型ごとの検査は <code>EventRule</code> のメソッドに持たせ、既定は「投入できない」で、2つの規則だけが上書きする。guard の評価は <code>EventApplier.CheckGuard</code> に残す</li>
-    <li><input type="checkbox" disabled><code>SimEngine.InjectAsync</code>：コマンドを <code>Channel</code> に入れる。<code>RunUntilAsync</code> の外では <code>System.Threading.Lock</code> の下でその場で処理し、中では各周の先頭で取り出す。<code>RunUntilAsync</code> を抜けるときは、残りをすべて処理する。同期の <code>Inject</code> は消す</li>
-    <li><input type="checkbox" disabled><code>Subscribe</code>：購読ごとに容量つきの <code>Channel</code> を持ち、適用したイベント（<code>Status = Applied</code>）だけを <code>CommitAsync</code> のあとに流す。容量があふれた購読は切断し、エンジンは止めない</li>
-    <li><input type="checkbox" disabled><code>View</code>（いまの <code>SimState</code> を返す）</li>
-    <li><input type="checkbox" disabled><code>VivaceEngine.Create()</code> とビルダー（<code>VivaceEngineBuilder</code>）：<code>UseDefinitions</code>、<code>UseStorage</code>、<code>UseClock</code>、<code>UseDecider</code>、<code>UseHolidays</code>、<code>UseRandom</code>、<code>DryRun()</code>。<code>Build()</code> は、定義のエラー、保存先なし、時計なしを例外にする</li>
-    <li><input type="checkbox" disabled><code>Scenario.CreateAsync</code> にして <code>InjectAsync</code> を使い、テストの呼び出し側を合わせる</li>
-    <li><input type="checkbox" disabled>設計書：窓口の受け付ける型、キューにある生成の扱い、<code>View</code> の形、購読の容量、ビルダーの必須項目を、D2 2.8 と D4 4.6 の本文に書き、<code>index.html</code> に J-154 から番号を振って載せる（合意の印）</li>
+    <li><input type="checkbox" checked disabled><code>InjectRequest</code>（投入するイベントと時刻の指定。指定がなければ、エンジンが処理した時点の時計の時刻）と <code>InjectResult</code>（受け付けたら連番、拒否なら理由。<code>Accepted</code> を持つ）</li>
+    <li><input type="checkbox" checked disabled><code>InjectionValidator</code>（<code>Ingress</code> を置き換える）：過去の時刻を拒否する。未対応の型を拒否する。<code>world.created</code> は定義があること。<code>persona.created</code> は定義があり、生成先のワールドが生きているか、同じ時刻以前の <code>world.created</code> がキューにあること。型ごとの検査は <code>EventRule</code> のメソッドに持たせ、既定は「投入できない」で、2つの規則だけが上書きする。guard の評価は <code>EventApplier.CheckGuard</code> に残す</li>
+    <li><input type="checkbox" checked disabled><code>SimEngine.InjectAsync</code>：コマンドを <code>Channel</code> に入れる。<code>RunUntilAsync</code> の外では <code>System.Threading.Lock</code> の下でその場で処理し、中では各周の先頭で取り出す。<code>RunUntilAsync</code> を抜けるときは、残りをすべて処理する。同期の <code>Inject</code> は消す</li>
+    <li><input type="checkbox" checked disabled><code>Subscribe</code>：購読ごとに容量つきの <code>Channel</code> を持ち、適用したイベント（<code>Status = Applied</code>）だけを <code>CommitAsync</code> のあとに流す。容量があふれた購読は切断し、エンジンは止めない</li>
+    <li><input type="checkbox" checked disabled><code>View</code>（いまの <code>SimState</code> を返す）</li>
+    <li><input type="checkbox" checked disabled><code>VivaceEngine.Create()</code> とビルダー（<code>VivaceEngineBuilder</code>）：<code>UseDefinitions</code>、<code>UseStorage</code>、<code>UseClock</code>、<code>UseDecider</code>、<code>UseHolidays</code>、<code>UseRandom</code>、<code>DryRun()</code>。<code>Build()</code> は、定義のエラー、保存先なし、時計なしを例外にする</li>
+    <li><input type="checkbox" checked disabled><code>Scenario.CreateAsync</code> にして <code>InjectAsync</code> を使い、テストの呼び出し側を合わせる</li>
+    <li><input type="checkbox" checked disabled>設計書：窓口の受け付ける型、キューにある生成の扱い、<code>View</code> の形、購読の容量、ビルダーの必須項目を、D2 2.8 と D4 4.6 の本文に書き、<code>index.html</code> に J-154 から番号を振って載せる（合意の印）</li>
   </ul>
   <p><strong>範囲外</strong>：ルールのない型の検査、<code>SystemClock</code>（段階5）、デーモン、LLM、プラグイン、チャンネル。</p>
   <p><strong>完了条件</strong>：窓口の検査（過去の時刻、未対応の型、定義がない、ワールドがない、キューの <code>world.created</code> で通る、要求より後のキューの <code>world.created</code> は拒否）のテストがある。実行中の <code>InjectAsync</code> で、投入した <code>persona.created</code> が投入した時刻以降に適用されるテストがある。<code>Subscribe</code> の順と適用の記録（連番と ApplyNo）が一致する。遅い購読者が切断され、エンジンは最後まで回る。ビルダーが例外を投げる。既存のテストと <code>.verified.txt</code> の差分がない。</p>
@@ -385,7 +385,7 @@
   <h3>段階5 実時間の運転</h3>
   <p><strong>参照</strong>：<a href="design/1-execution.html#horizon">D1 1.6</a>、<a href="design/1-execution.html#clock">1.10</a>、<a href="design/4-components.html#channel">D4 4.3</a>、<a href="design/4-components.html#api">4.6</a>、<a href="design/4-components.html#plugins">4.7</a>、<a href="design/7-operations.html#errors">D7 7.1</a>、<a href="design/7-operations.html#observability">7.3</a>、<a href="design/7-operations.html#cli">7.5</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" disabled><code>SystemClock</code>、<code>ScaledClock</code>、到着の受付、締め切り</li>
+    <li><input type="checkbox" disabled><code>SystemClock</code>、<code>ScaledClock</code>、到着の受付、締め切り。エンジンの時計の待ち（イベントの時刻までの待ちと、<code>RunUntilAsync</code> の最後の時刻までの待ち）を、コマンドで起きるようにする。いまは起きない（J-157）。D1 1.4 の手順2と4に合わせ、先頭を取り出す前に待ち、コマンドで起きたら手順1に戻る</li>
     <li><input type="checkbox" disabled><code>IChannel</code>、能力の語彙、プラグインの登録。テスト用の偽のチャンネル</li>
     <li><input type="checkbox" disabled><code>Dispatcher</code> と送信の再試行</li>
     <li><input type="checkbox" disabled>失敗の扱い（D7 7.1）、<code>Status</code>、<code>RejectEventAsync</code>、<code>ResumeAsync</code>、ログ、計測、<code>IAdminNotifier</code></li>

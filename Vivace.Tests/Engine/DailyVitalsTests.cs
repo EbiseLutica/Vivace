@@ -18,7 +18,7 @@ public class DailyVitalsTests
     [Fact]
     public async Task DailyVitalsMatchSnapshot()
     {
-        await using var engine = Scenario.Create();
+        await using var engine = await Scenario.CreateAsync();
         var definitions = TestWorld.LoadOrThrow();
         var text = new StringBuilder();
         for (var day = 1; day <= 7; day++)

@@ -50,7 +50,7 @@ public class GoToNextWeightTests
     private static DefinitionPack WithPreference(string value)
     {
         var files = DefinitionFixtures.Replaced("personas/kaori.toml", "prefs = { read_book", $"prefs = {{ \"core.go_to_next\" = {value}, read_book");
-        return DefinitionLoader.LoadFiles(files).Definitions ?? throw new InvalidOperationException("定義が読めない");
+        return DefinitionLoader.LoadFiles(files).Definitions ?? throw new InvalidOperationException("定義が読めません。");
     }
 
     /// <summary>定義から規則の文脈を作る。</summary>
