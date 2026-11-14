@@ -39,7 +39,7 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly List<Output> _held = [];
     private readonly HashSet<long> _dropped = [];
     private readonly Channel<Output> _outputs = Channel.CreateUnbounded<Output>();
-    /// <summary>実行中に届いた投入のコマンド。各周の先頭で取り出す。</summary>
+    /// <summary>実行中に届いた投入のコマンド。ループの各回の先頭で取り出す。</summary>
     private readonly Channel<InjectCommand> _commands = Channel.CreateUnbounded<InjectCommand>();
     /// <summary>実行中かどうかのフラグと、投入のコマンドの受け付けを守るロック。</summary>
     private readonly Lock _gate = new();
@@ -98,7 +98,7 @@ public sealed class SimEngine : IAsyncDisposable
 
     /// <summary>
     /// 投入の窓口。要求を検査し、通ればキューに入れて連番を、通らなければ拒否の理由を返す。
-    /// 実行中でなければその場で処理し、実行中は、ループが次の周の先頭で処理する。
+    /// 実行中でなければその場で処理し、実行中は、ループが次の回の先頭で処理する。
     /// 検査は、処理する時点の状態とキューと時計の時刻で行う。
     /// </summary>
     /// <param name="request">投入の要求。</param>
@@ -184,7 +184,7 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>RunUntilAsync の本体。各周の先頭で、届いたコマンドと仕事の出力を取り込む。</summary>
+    /// <summary>RunUntilAsync の本体。ループの各回の先頭で、届いたコマンドと仕事の出力を取り込む。</summary>
     private async Task LoopAsync(DateTimeOffset until, CancellationToken ct)
     {
         var cancelled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
