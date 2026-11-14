@@ -281,7 +281,7 @@ follow_back = "always"           # always | never</code></pre>
     <li>入力が大きいとき（追いつきのあとなど）は、1回の LLM 呼び出しに入る量（目安 3 万トークン）ごとに区切って、古い順に処理する。区切りごとに反映し、カーソルを進める</li>
   </ul>
   <h3>アイテムと揮発スコア</h3>
-  <p>アイテムの形は ebise を引き継ぐ（種類 fact / episode、主題、本文、gist、audience、shareable、importance 1〜5、タグ、強化の回数、置き換え先、出所）。出所は、イベントの連番の列で持つ（D3）。</p>
+  <p>アイテムの形は ebise を引き継ぐ（種類 fact / episode、主題、本文、gist、audience、shareable、importance 1〜5、タグ、強化の回数、置き換え先、発生元）。発生元は、イベントの連番の列で持つ（D3）。</p>
 <pre><code>揮発スコア = importance × 0.5 ^ (最後の強化からの経過日数 / 実効半減期)
 実効半減期 = 基準半減期(種類) × ペルソナの half_life × min(1 + 0.5 × 強化の回数, 4)
 基準半減期 = fact 180 日、episode 14 日（threads は 7 日）</code></pre>

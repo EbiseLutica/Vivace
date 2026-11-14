@@ -456,7 +456,7 @@ internal static partial class DefinitionMapper
             Src(table));
     }
 
-    /// <summary>テーブルの位置とキーの位置から、定義の出どころを作る。</summary>
+    /// <summary>テーブルの位置とキーの位置から、定義元を作る。</summary>
     private static DefinitionSource Src(TomlTable table)
     {
         var keys = ImmutableDictionary.CreateBuilder<string, SourceLocation>();

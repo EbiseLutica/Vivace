@@ -9,7 +9,7 @@ namespace Vivace.Core.Definitions.Model;
 /// <param name="Duration">持続時間。</param>
 /// <param name="Cooldown">再発までの間隔。</param>
 /// <param name="Effects">効果。</param>
-/// <param name="Source">出どころ。</param>
+/// <param name="Source">定義元。</param>
 public sealed record IncidentDef(
     string Id,
     string Display,

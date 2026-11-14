@@ -15,7 +15,7 @@ namespace Vivace.Core.Definitions.Model;
 /// <param name="Requires">実行の条件。</param>
 /// <param name="Limits">制限。</param>
 /// <param name="Effects">効果。</param>
-/// <param name="Source">出どころ。</param>
+/// <param name="Source">定義元。</param>
 public sealed record ActionDef(
     string Id,
     string Display,

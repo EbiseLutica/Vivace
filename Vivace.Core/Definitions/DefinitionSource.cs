@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 namespace Vivace.Core.Definitions;
 
 /// <summary>
-/// 定義の出どころ。テーブルの位置と、テーブルの中の各キーの位置を持つ。参照のエラーは、そのキーの位置に出す。
+/// 定義元。テーブルの位置と、テーブルの中の各キーの位置を持つ。参照のエラーは、そのキーの位置に出す。
 /// </summary>
 /// <param name="Location">テーブルの位置（見出しの位置）。</param>
 /// <param name="Keys">キーごとの位置。</param>

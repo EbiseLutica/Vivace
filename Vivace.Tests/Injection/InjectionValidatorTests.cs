@@ -25,7 +25,7 @@ public class InjectionValidatorTests
         Assert.Equal("過去の時刻", reason);
     }
 
-    /// <summary>時刻を省略すると、処理する時点の時刻で、要求の出所のままドラフトになる。</summary>
+    /// <summary>時刻を省略すると、処理する時点の時刻で、要求の発生元のままドラフトになる。</summary>
     [Fact]
     public void OmittedTimeUsesNow()
     {

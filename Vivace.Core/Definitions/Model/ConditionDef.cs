@@ -10,7 +10,7 @@ namespace Vivace.Core.Definitions.Model;
 /// <param name="Weights">Decider の重みに掛ける係数。キーは行動 ID か "tag:行動タグ"。</param>
 /// <param name="Forbid">候補から外す行動 ID か行動タグ。</param>
 /// <param name="Thresholds">反射のしきい値のずれ。</param>
-/// <param name="Source">出どころ。</param>
+/// <param name="Source">定義元。</param>
 public sealed record ConditionDef(
     string Id,
     string Display,

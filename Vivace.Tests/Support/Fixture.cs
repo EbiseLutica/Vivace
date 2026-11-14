@@ -57,7 +57,7 @@ public static class Fixture
     /// <summary>規則を1つ適用する。</summary>
     public static ApplyResult Apply(SimState state, SimEvent ev) => new EventApplier(Context).Apply(state, ev);
 
-    /// <summary>適用に使うイベントを作る（テストの出所）。</summary>
+    /// <summary>適用に使うイベントを作る（テストの発生元）。</summary>
     public static SimEvent Event(long seq, DateTimeOffset time, string type, EventPayload payload, PersonaId? persona, Guard? guard = null, long? batch = null) =>
         new(seq, time, type, World, persona, payload, guard, batch, null, Origin.Test, null, null);
 

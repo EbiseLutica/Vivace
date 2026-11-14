@@ -8,7 +8,7 @@ namespace Vivace.Core.Definitions.Model;
 /// <param name="Tags">タグ。</param>
 /// <param name="Group">所属のまとまり（家など）。</param>
 /// <param name="Links">つながる場所。</param>
-/// <param name="Source">出どころ。</param>
+/// <param name="Source">定義元。</param>
 public sealed record PlaceDef(
     string Id,
     string Name,

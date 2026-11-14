@@ -15,7 +15,7 @@ namespace Vivace.Core.Definitions.Model;
 /// <param name="Events">年中行事（月日 → 名前）。</param>
 /// <param name="Terms">変換の辞書の初期値。</param>
 /// <param name="Places">定義の場所。</param>
-/// <param name="Source">出どころ。</param>
+/// <param name="Source">定義元。</param>
 public sealed record WorldDef(
     WorldDefId Id,
     string Name,

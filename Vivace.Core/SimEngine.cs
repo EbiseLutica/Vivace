@@ -378,7 +378,7 @@ public sealed class SimEngine : IAsyncDisposable
             _ => (PersonaId?)null,
         }).Where(persona => persona is not null).Select(persona => persona!.Value));
 
-    /// <summary>後続のイベントに連番と出所を付けて、キューに入れる。</summary>
+    /// <summary>後続のイベントに連番と発生元を付けて、キューに入れる。</summary>
     private long Enqueue(EventDraft ev, Origin origin, long? cause)
     {
         var seq = ++_nextSeq;
