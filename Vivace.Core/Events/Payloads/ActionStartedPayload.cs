@@ -8,7 +8,7 @@ namespace Vivace.Core.Events.Payloads;
 /// <param name="Place">場所。</param>
 /// <param name="Duration">所要時間。</param>
 /// <param name="Reason">理由（chosen / block / reflex / late）。</param>
-/// <param name="ActivityVersion">行動の版。</param>
+/// <param name="ActivityVersion">行動のバージョン。</param>
 /// <param name="BlockId">ブロックの行動のときのブロック ID。</param>
 public sealed record ActionStartedPayload(
     string ActionId,

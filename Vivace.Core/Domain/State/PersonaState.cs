@@ -9,21 +9,21 @@ namespace Vivace.Core.Domain.State;
 /// <param name="Status">状態。</param>
 /// <param name="Location">居場所。</param>
 /// <param name="Activity">実行中の行動。</param>
-/// <param name="ActivityVersion">行動の版。古い決定を捨てる判定に使う。</param>
+/// <param name="ActivityVersion">行動のバージョン。古い決定を捨てる判定に使う。</param>
 /// <param name="Overlay">固定ブロック中にスマホを使っている間の副行動。</param>
 /// <param name="Vitals">状態変数。</param>
 /// <param name="Conditions">付いている状態。</param>
 /// <param name="Plan">いまのプラン。</param>
-/// <param name="PlanVersion">プランの版。</param>
+/// <param name="PlanVersion">プランのバージョン。</param>
 /// <param name="Usage">行動ごとの利用の記録。キーは行動の定義 ID。</param>
 /// <param name="Rng">用途ごとの乱数の位置。キーは用途。</param>
 /// <param name="Posting">投稿の状態。</param>
 /// <param name="Inbox">未処理の通知。</param>
 /// <param name="Outbound">未送信の操作。</param>
 /// <param name="LastWake">日誌の範囲の起点（最後に起きた時刻）。</param>
-/// <param name="Deciding">決めどきの処理中かどうか。決めどきの二重の積みを防ぐ。</param>
+/// <param name="Deciding">決定タイミングの処理中かどうか。決定タイミングの二重の積みを防ぐ。</param>
 /// <param name="LastBlockId">最後に始めたブロックの ID。同じブロックは一度だけ始める。</param>
-/// <param name="PlannedFor">Planner を起こした期間の鍵（記憶の整理の行動のブロック ID、または時刻）。同じ期間では一度だけ動く。</param>
+/// <param name="PlannedFor">Planner を起こした期間のキー（記憶の整理の行動のブロック ID、または時刻）。同じ期間では一度だけ動く。</param>
 public sealed record PersonaState(
     PersonaId Id,
     PersonaDefId DefId,

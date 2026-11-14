@@ -1,7 +1,7 @@
 namespace Vivace.Core.Events.Payloads;
 
 /// <summary>
-/// イベントのペイロードの基底。版（"v"）を持つ。項目を足すときは版を上げず、省略可能な項目として足す。
+/// イベントのペイロードの基底。バージョン（"v"）を持つ。項目を足すときはバージョンを上げず、省略可能な項目として足す。
 /// </summary>
-/// <param name="V">イベントタイプごとの版。</param>
+/// <param name="V">イベントタイプごとのバージョン。</param>
 public abstract record EventPayload(int V);

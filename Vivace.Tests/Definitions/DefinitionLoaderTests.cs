@@ -9,7 +9,7 @@ namespace Vivace.Tests.Definitions;
 /// <summary>テスト用の定義が、型の形で正しく読めることを確かめる。</summary>
 public class DefinitionLoaderTests
 {
-    /// <summary>テスト用の世界とペルソナが、ワールド、場所、ペルソナの型に写る。</summary>
+    /// <summary>テスト用の世界とペルソナが、ワールド、場所、ペルソナの型に変換される。</summary>
     [Fact]
     public void ReadsWorldPlacesAndPersonas()
     {
@@ -83,7 +83,7 @@ public class DefinitionLoaderTests
         Assert.Equal(first.Hash, second.Hash);
     }
 
-    /// <summary>フォルダを読む入口（LoadDirectory）も、埋め込みと同じ結果になる。</summary>
+    /// <summary>フォルダを読むメソッド（LoadDirectory）も、埋め込みと同じ結果になる。</summary>
     [Fact]
     public void LoadsFromDirectoryWithTheSameResult()
     {

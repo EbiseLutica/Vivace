@@ -1,7 +1,7 @@
 namespace Vivace.Core.Domain;
 
 /// <summary>
-/// ワールドの定義の ID（例: "tokyo"）。定義を引く鍵で、インスタンスの ID（<see cref="WorldId"/>）とは型を分ける。
+/// ワールドの定義の ID（例: "tokyo"）。定義を引くキーで、インスタンスの ID（<see cref="WorldId"/>）とは型を分ける。
 /// </summary>
 public readonly record struct WorldDefId(string Value) : IEntityId
 {

@@ -33,7 +33,7 @@ public static class Fixture
         return new RuleContext(definitions, RouteCache.Create(definitions));
     });
 
-    /// <summary>テストの規則の文脈（定義と最短経路の表）。</summary>
+    /// <summary>テストの規則のコンテキスト（定義と最短経路のテーブル）。</summary>
     public static RuleContext Context => Shared.Value;
 
     /// <summary>空の状態。位置は基準の時刻。</summary>
@@ -57,7 +57,7 @@ public static class Fixture
     /// <summary>規則を1つ適用する。</summary>
     public static ApplyResult Apply(SimState state, SimEvent ev) => new EventApplier(Context).Apply(state, ev);
 
-    /// <summary>適用に使うイベントを作る（テストの出所）。</summary>
+    /// <summary>適用に使うイベントを作る（テストの発生元）。</summary>
     public static SimEvent Event(long seq, DateTimeOffset time, string type, EventPayload payload, PersonaId? persona, Guard? guard = null, long? batch = null) =>
         new(seq, time, type, World, persona, payload, guard, batch, null, Origin.Test, null, null);
 

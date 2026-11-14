@@ -25,10 +25,10 @@ public sealed class VivaceEngineBuilder
     /// <summary>自由時間の決定。省略すると効用による決定。</summary>
     private IDecider? _decider;
 
-    /// <summary>祝日の暦。省略すると祝日のない暦。</summary>
+    /// <summary>祝日のカレンダー。省略すると祝日のないカレンダー。</summary>
     private IHolidayCalendar? _holidays;
 
-    /// <summary>乱数の列を開く口。省略すると SplitMix。</summary>
+    /// <summary>乱数の列を開く実装。省略すると SplitMix。</summary>
     private IRandomSource? _random;
 
     /// <summary>空のビルダーを作る。VivaceEngine.Create から使う。</summary>
@@ -81,16 +81,16 @@ public sealed class VivaceEngineBuilder
         return this;
     }
 
-    /// <summary>祝日の暦を使う。</summary>
-    /// <param name="holidays">祝日の暦。</param>
+    /// <summary>祝日のカレンダーを使う。</summary>
+    /// <param name="holidays">祝日のカレンダー。</param>
     public VivaceEngineBuilder UseHolidays(IHolidayCalendar holidays)
     {
         _holidays = holidays;
         return this;
     }
 
-    /// <summary>乱数の列を開く口を使う。</summary>
-    /// <param name="random">乱数の列を開く口。</param>
+    /// <summary>乱数の列を開く実装を使う。</summary>
+    /// <param name="random">乱数の列を開く実装。</param>
     public VivaceEngineBuilder UseRandom(IRandomSource random)
     {
         _random = random;

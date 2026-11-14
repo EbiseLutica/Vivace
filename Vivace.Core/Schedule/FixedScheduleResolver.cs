@@ -20,7 +20,7 @@ public static class FixedScheduleResolver
     /// <param name="definitions">行動の定義（スマホの既定値を引くため）。</param>
     /// <param name="persona">ペルソナの定義。</param>
     /// <param name="date">現地の日付。</param>
-    /// <param name="holidays">ワールドの祝日の暦。</param>
+    /// <param name="holidays">ワールドの祝日のカレンダー。</param>
     public static ResolvedDay Resolve(DefinitionPack definitions, PersonaDef persona, DateOnly date, IHolidayCalendar holidays)
     {
         var schedule = persona.Schedule;
@@ -344,7 +344,7 @@ public static class FixedScheduleResolver
     /// <summary>展開したブロックの1区間。</summary>
     private readonly record struct Piece(BlockDef Block, int Start, int End, Inherited Inherited);
 
-    /// <summary>1日の解決に使う文脈と、途中の結果。</summary>
+    /// <summary>1日の解決に使うコンテキストと、途中の結果。</summary>
     private sealed record DayContext(
         DefinitionPack Definitions,
         DateOnly Date,

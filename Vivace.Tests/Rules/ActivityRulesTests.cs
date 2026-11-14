@@ -10,7 +10,7 @@ using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Rules;
 
-/// <summary>行動の開始と終了、移動、決めどき、行動の決定の Apply を、手で計算した小さな例で確かめる。</summary>
+/// <summary>行動の開始と終了、移動、決定タイミング、行動の決定の Apply を、手で計算した小さな例で確かめる。</summary>
 public class ActivityRulesTests
 {
     private static readonly PlaceId KaoriRoom = new("kaori_room");
@@ -20,11 +20,11 @@ public class ActivityRulesTests
     private static SimEvent ActionStarted(long seq, string action, PlaceId place, TimeSpan duration, long version) =>
         Fixture.Event(seq, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload(action, place, duration, ActivityReason.Chosen, version, null), Fixture.Kaori);
 
-    /// <summary>決めどきのイベントを作る。</summary>
+    /// <summary>決定タイミングのイベントを作る。</summary>
     private static SimEvent Request(long seq) =>
         Fixture.Event(seq, Fixture.Now, EventTypes.DecisionRequested, new DecisionRequestedPayload(DecisionReason.Free, null), Fixture.Kaori);
 
-    /// <summary>決めどきの決定の中身（行動、場所、所要時間、乱数の範囲）を作る。移動は 0 分。</summary>
+    /// <summary>決定タイミングの決定の中身（行動、場所、所要時間、乱数の範囲）を作る。移動は 0 分。</summary>
     private static ActivityChosenPayload Choice(string action, PlaceId place, int minutes, ulong from, ulong to) =>
         new(action, place, ImmutableArray<RouteStep>.Empty, 0, TimeSpan.FromMinutes(minutes), false, new RngDraws(Fixture.Kaori.Value, "decide", from, to));
 
@@ -62,7 +62,7 @@ public class ActivityRulesTests
         Assert.Empty(result.FollowUps);
     }
 
-    /// <summary>版が古い行動の終わりは捨てる。行動の終わりでは版は上がらない。</summary>
+    /// <summary>バージョンが古い行動の終わりは捨てる。行動の終わりではバージョンは上がらない。</summary>
     [Fact]
     public void StaleActionEndedIsSkippedAndEndDoesNotBumpVersion()
     {
@@ -102,7 +102,7 @@ public class ActivityRulesTests
         Assert.Empty(Fixture.Apply(Fixture.WithKaori(), sameTime).Signals);
     }
 
-    /// <summary>決めどきの要求は、決めどきの印を立て、Decider の起動を依頼する。決め中にもう一度要求すると捨てる。</summary>
+    /// <summary>決定タイミングの要求は、決定中のフラグを立て、Decider の起動を依頼する。決定中にもう一度要求すると捨てる。</summary>
     [Fact]
     public void DecisionRequestIsRecordedOnceAndStartsDecider()
     {
@@ -115,7 +115,7 @@ public class ActivityRulesTests
         Assert.Empty(second.Signals);
     }
 
-    /// <summary>決め直しの出力が guard で却下されると、決め中の印を下ろし、決め直しを積む。</summary>
+    /// <summary>再決定の出力が guard で却下されると、決定中のフラグを下ろし、再決定を積む。</summary>
     [Fact]
     public void StaleDecisionIsRejectedAndRequestedAgain()
     {
@@ -125,7 +125,7 @@ public class ActivityRulesTests
         var result = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, Choice("read_book", KaoriRoom, 30, 0, 3), Fixture.Kaori, guard, 10));
 
         Assert.Equal(EventStatus.Rejected, result.Status);
-        Assert.Equal("行動の版が違う", result.Reason);
+        Assert.Equal("行動のバージョンが違う", result.Reason);
         Assert.False(result.State.Personas[Fixture.Kaori].Deciding);
         Assert.Equal(new DecisionRequestedPayload(DecisionReason.Retry, null), Assert.Single(result.FollowUps).Payload);
     }
@@ -143,7 +143,7 @@ public class ActivityRulesTests
         Assert.Equal("乱数の位置が違う", result.Reason);
     }
 
-    /// <summary>行動の決定の適用。同じ場所なら、行動の開始を同じ時刻に積み、版と乱数の位置を進める。</summary>
+    /// <summary>行動の決定の適用。同じ場所なら、行動の開始を同じ時刻に積み、バージョンと乱数の位置を進める。</summary>
     [Fact]
     public void ChosenActivityInPlaceStartsActionAndAdvancesRng()
     {
@@ -188,7 +188,7 @@ public class ActivityRulesTests
         Assert.Equal(new ActionStartedPayload("watch_tv", HomeLiving, TimeSpan.FromMinutes(35), ActivityReason.Chosen, 1, null), Assert.Single(arrived.FollowUps).Payload);
     }
 
-    /// <summary>移動の開始は、版が古ければ捨てる。</summary>
+    /// <summary>移動の開始は、バージョンが古ければ捨てる。</summary>
     [Fact]
     public void StaleTravelIsSkipped()
     {

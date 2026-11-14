@@ -20,7 +20,7 @@ internal sealed class ActivityChosenRule : EventRule<ActivityChosenPayload>
 
         if (!persona.Deciding)
         {
-            return ApplyResult.Skipped(state, "決めどきでない");
+            return ApplyResult.Skipped(state, "決定タイミングでない");
         }
 
         var from = ((AtPlace)persona.Location).Place;

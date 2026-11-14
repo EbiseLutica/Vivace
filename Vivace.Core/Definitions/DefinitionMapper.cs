@@ -10,7 +10,7 @@ using Vivace.Core.Time;
 
 namespace Vivace.Core.Definitions;
 
-/// <summary>TOML の表を定義の型に写す。問題があっても既定値で続け、エラーを全件集める。</summary>
+/// <summary>TOML のテーブルを定義の型に変換する。問題があっても既定値で続け、エラーを全件集める。</summary>
 internal static partial class DefinitionMapper
 {
     private static readonly Dictionary<string, VitalName> VitalKeys = new()
@@ -41,7 +41,7 @@ internal static partial class DefinitionMapper
     private static partial Regex CoreIdPattern();
 
     /// <summary>ID を読み、名前空間と形式を検査する。</summary>
-    /// <param name="r">読む表。</param>
+    /// <param name="r">読むテーブル。</param>
     /// <param name="builtin">組み込みのファイルかどうか。</param>
     public static string ReadId(TableReader r, bool builtin)
     {
@@ -77,7 +77,7 @@ internal static partial class DefinitionMapper
     }
 
     /// <summary>ワールドの定義を読む。</summary>
-    /// <param name="table">ファイルのルートの表。</param>
+    /// <param name="table">ファイルのルートのテーブル。</param>
     /// <param name="issues">問題の集め先。</param>
     /// <param name="builtin">組み込みかどうか。</param>
     public static WorldDef MapWorld(TomlTable table, List<DefinitionIssue> issues, bool builtin)
@@ -151,7 +151,7 @@ internal static partial class DefinitionMapper
     }
 
     /// <summary>ペルソナの定義を読む。</summary>
-    /// <param name="table">ファイルのルートの表。</param>
+    /// <param name="table">ファイルのルートのテーブル。</param>
     /// <param name="issues">問題の集め先。</param>
     public static PersonaDef MapPersona(TomlTable table, List<DefinitionIssue> issues)
     {
@@ -240,7 +240,7 @@ internal static partial class DefinitionMapper
                 }
                 else
                 {
-                    cr.Invalid(node, $"チャンネルの設定は表で書いてください: {key}");
+                    cr.Invalid(node, $"チャンネルの設定はテーブルで書いてください: {key}");
                 }
             }
         }
@@ -274,7 +274,7 @@ internal static partial class DefinitionMapper
     }
 
     /// <summary>行動の定義を読む（[[action]] の1件）。</summary>
-    /// <param name="table">行動の表。</param>
+    /// <param name="table">行動のテーブル。</param>
     /// <param name="issues">問題の集め先。</param>
     /// <param name="builtin">組み込みかどうか。</param>
     public static ActionDef MapAction(TomlTable table, List<DefinitionIssue> issues, bool builtin)
@@ -344,7 +344,7 @@ internal static partial class DefinitionMapper
     }
 
     /// <summary>出来事の定義を読む（[[incident]] の1件）。</summary>
-    /// <param name="table">出来事の表。</param>
+    /// <param name="table">出来事のテーブル。</param>
     /// <param name="issues">問題の集め先。</param>
     public static IncidentDef MapIncident(TomlTable table, List<DefinitionIssue> issues)
     {
@@ -406,7 +406,7 @@ internal static partial class DefinitionMapper
     }
 
     /// <summary>状態の定義を読む（[[condition]] の1件）。</summary>
-    /// <param name="table">状態の表。</param>
+    /// <param name="table">状態のテーブル。</param>
     /// <param name="issues">問題の集め先。</param>
     public static ConditionDef MapCondition(TomlTable table, List<DefinitionIssue> issues)
     {
@@ -456,7 +456,7 @@ internal static partial class DefinitionMapper
             Src(table));
     }
 
-    /// <summary>表の位置とキーの位置から、定義の出どころを作る。</summary>
+    /// <summary>テーブルの位置とキーの位置から、定義元を作る。</summary>
     private static DefinitionSource Src(TomlTable table)
     {
         var keys = ImmutableDictionary.CreateBuilder<string, SourceLocation>();
@@ -464,7 +464,7 @@ internal static partial class DefinitionMapper
         return new DefinitionSource(table.Location, keys.ToImmutable());
     }
 
-    /// <summary>表の中の各キーの位置を、入れ子は「親.子」の形で集める（配列の表の中には入らない）。</summary>
+    /// <summary>テーブルの中の各キーの位置を、入れ子は「親.子」の形で集める（配列のテーブルの中には入らない）。</summary>
     private static void AddKeys(TomlTable table, string prefix, ImmutableDictionary<string, SourceLocation>.Builder keys)
     {
         foreach (var (key, node) in table.Entries)
@@ -664,7 +664,7 @@ internal static partial class DefinitionMapper
             {
                 if (!VitalKeys.TryGetValue(key, out var vital) || node is not TomlTable reflex)
                 {
-                    rr.Invalid(node, $"反射は状態変数の表で書いてください: {key}");
+                    rr.Invalid(node, $"反射は状態変数のテーブルで書いてください: {key}");
                     continue;
                 }
 
@@ -869,7 +869,7 @@ internal static partial class DefinitionMapper
         }
     }
 
-    /// <summary>状態変数ごとの数の表を、共通の範囲で読む。</summary>
+    /// <summary>状態変数ごとの数のテーブルを、共通の範囲で読む。</summary>
     private static ImmutableDictionary<VitalName, double> ReadVitalTable(TableReader parent, string key, double min, double max) =>
         ReadVitalTable(parent, key, _ => (min, max));
 
@@ -880,7 +880,7 @@ internal static partial class DefinitionMapper
     /// <summary>範囲の端の数を、エラーの文面の形にする。</summary>
     private static string FormatBound(double value) => value.ToString(CultureInfo.InvariantCulture);
 
-    /// <summary>状態変数ごとの数の表を、状態変数ごとの範囲で読む。</summary>
+    /// <summary>状態変数ごとの数のテーブルを、状態変数ごとの範囲で読む。</summary>
     private static ImmutableDictionary<VitalName, double> ReadVitalTable(TableReader parent, string key, Func<VitalName, (double Min, double Max)> range)
     {
         var builder = ImmutableDictionary.CreateBuilder<VitalName, double>();
@@ -994,7 +994,7 @@ internal static partial class DefinitionMapper
     /// <summary>
     /// 場所、ブロック、期間の ID を読む。英小文字、数字、_ だけで、空にはできない（名前空間は使えない）。
     /// </summary>
-    /// <param name="r">読む表。</param>
+    /// <param name="r">読むテーブル。</param>
     /// <param name="key">キー。</param>
     public static string ReadPlainId(TableReader r, string key)
     {

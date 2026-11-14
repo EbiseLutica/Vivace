@@ -4,7 +4,7 @@ using Vivace.Core.Events.Payloads;
 namespace Vivace.Core.Events;
 
 /// <summary>
-/// イベントタイプの名前と、段と、ペイロードの型の表。
+/// イベントタイプの名前と、ステージと、ペイロードの型のテーブル。
 /// </summary>
 public static class EventTypes
 {
@@ -35,7 +35,7 @@ public static class EventTypes
     /// <summary>変換の辞書への記録。</summary>
     public const string TermRecorded = "term.recorded";
 
-    /// <summary>状態変数の調整（窓口から）。</summary>
+    /// <summary>状態変数の調整（外からの投入）。</summary>
     public const string VitalAdjusted = "vital.adjusted";
 
     /// <summary>状態の付与。</summary>
@@ -89,7 +89,7 @@ public static class EventTypes
     /// <summary>スマホを開く機会。</summary>
     public const string PhoneOpportunity = "phone.opportunity";
 
-    /// <summary>決めどきの要求。</summary>
+    /// <summary>決定タイミングの要求。</summary>
     public const string DecisionRequested = "decision.requested";
 
     /// <summary>行動の決定（Decider の出力）。</summary>
@@ -110,10 +110,10 @@ public static class EventTypes
     /// <summary>発話でない外向きの操作の決定。</summary>
     public const string OutboundOperation = "outbound.operation";
 
-    /// <summary>受信箱の捌きの結果。</summary>
+    /// <summary>受信箱の処理の結果。</summary>
     public const string InboxHandled = "inbox.handled";
 
-    /// <summary>投稿の空振り。</summary>
+    /// <summary>投稿のスキップ。</summary>
     public const string PostSkipped = "post.skipped";
 
     private static readonly ImmutableArray<EventTypeInfo> Table = ImmutableArray.Create(
@@ -157,15 +157,15 @@ public static class EventTypes
     private static readonly ImmutableDictionary<string, EventTypeInfo> ByName =
         Table.ToImmutableDictionary(info => info.Name);
 
-    /// <summary>すべてのイベントタイプの表。</summary>
+    /// <summary>すべてのイベントタイプのテーブル。</summary>
     public static ImmutableArray<EventTypeInfo> All => Table;
 
-    /// <summary>イベントタイプの名前から、表の1件を引く。知らない名前なら false。</summary>
+    /// <summary>イベントタイプの名前から、テーブルの1件を引く。知らない名前なら false。</summary>
     /// <param name="name">イベントタイプの名前。</param>
     /// <param name="info">見つかった1件。</param>
     public static bool TryGet(string name, out EventTypeInfo info) => ByName.TryGetValue(name, out info!);
 
-    /// <summary>イベントタイプの名前から段を引く。知らない名前なら例外。</summary>
+    /// <summary>イベントタイプの名前からステージを引く。知らない名前なら例外。</summary>
     /// <param name="name">イベントタイプの名前。</param>
     public static EventStage StageOf(string name)
     {

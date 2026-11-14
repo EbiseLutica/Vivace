@@ -91,7 +91,7 @@ public static class DefinitionValidator
             if (reverse.Minutes != link.Minutes)
             {
                 Add(issues, DefinitionIssueCode.EdgeMismatch, reverse.Source,
-                    $"両側に書いた辺の移動時間が食い違っています: {from} と {to}（{link.Minutes} 分と {reverse.Minutes} 分）");
+                    $"両側に書いた区間の移動時間が食い違っています: {from} と {to}（{link.Minutes} 分と {reverse.Minutes} 分）");
             }
         }
 
@@ -554,7 +554,7 @@ public static class DefinitionValidator
     {
         private readonly Dictionary<string, ResolvedDay> _byKey = new(StringComparer.Ordinal);
 
-        /// <summary>日付の区分の鍵。例外日の前後は日付そのもの、それ以外は（期間、曜日）。</summary>
+        /// <summary>日付の区分のキー。例外日の前後は日付そのもの、それ以外は（期間、曜日）。</summary>
         public string KeyOf(DateOnly date) => specials.Contains(date)
             ? "date:" + date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
             : FixedScheduleResolver.PeriodOf(persona.Schedule.Periods, date) + "|" + ((int)date.DayOfWeek).ToString(CultureInfo.InvariantCulture);
@@ -728,11 +728,11 @@ public static class DefinitionValidator
     /// <summary>ワイルドカードの前の部分を返す（末尾の "." を含む）。</summary>
     private static string WildcardPrefix(string entry) => entry[..^1];
 
-    /// <summary>問題を一覧に足す。重さはコードから決める。</summary>
+    /// <summary>問題を一覧に足す。重大度はコードから決める。</summary>
     private static void Add(List<DefinitionIssue> issues, DefinitionIssueCode code, SourceLocation location, string message) =>
         issues.Add(new DefinitionIssue(SeverityOf(code), code, location, message));
 
-    /// <summary>問題のコードの重さを返す。</summary>
+    /// <summary>問題のコードの重大度を返す。</summary>
     private static IssueSeverity SeverityOf(DefinitionIssueCode code) => code switch
     {
         DefinitionIssueCode.UnknownKey

@@ -12,7 +12,7 @@ namespace Vivace.Core.Domain;
 /// <param name="ChannelType">チャンネル独自の種類（"mention"、"reply" など）。</param>
 /// <param name="Sender">送り主。</param>
 /// <param name="Audience">公開範囲。</param>
-/// <param name="ConversationKey">同じ会話を見分ける鍵。</param>
+/// <param name="ConversationKey">同じ会話を見分けるキー。</param>
 /// <param name="Text">本文（Message）。</param>
 /// <param name="Attachments">添付（Message）。</param>
 /// <param name="Thread">それまでの会話（古い順、直近 20 件まで）。</param>

@@ -5,7 +5,7 @@ namespace Vivace.Core.Events;
 /// </summary>
 public enum RejectAction
 {
-    /// <summary>同じ時刻（いま）に決めどきを積み直す。</summary>
+    /// <summary>同じ時刻（いま）に決定タイミングを積み直す。</summary>
     Redecide,
 
     /// <summary>文面の作り直しを積む（辞書の食い違い）。</summary>

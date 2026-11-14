@@ -29,7 +29,7 @@ public class UtilityDeciderTests
         null,
         null);
 
-    /// <summary>状態変数ごとの数の表を作る。</summary>
+    /// <summary>状態変数ごとの数のテーブルを作る。</summary>
     private static ImmutableDictionary<VitalName, double> Map(params (VitalName Vital, double Value)[] entries) =>
         entries.ToImmutableDictionary(entry => entry.Vital, entry => entry.Value);
 
@@ -90,7 +90,7 @@ public class UtilityDeciderTests
         Assert.Equal(2.1, UtilityDecider.Weight(2.0, 1.0, 1.5, 1, 0), 9);
     }
 
-    /// <summary>自由時間の決定。候補は行動 ID と場所 ID の順で並び、同じ写しと同じ乱数の位置なら、結果は毎回同じ。</summary>
+    /// <summary>自由時間の決定。候補は行動 ID と場所 ID の順で並び、同じスナップショットと同じ乱数の位置なら、結果は毎回同じ。</summary>
     [Fact]
     public void DecisionIsDeterministicForSameStateAndSeed()
     {
@@ -140,7 +140,7 @@ public class UtilityDeciderTests
         Assert.Equal(new PlaceId("kaori_room"), result.Payload.Place);
     }
 
-    /// <summary>出力の guard は、決めたときの行動の版、行動の実行の可否、乱数の位置を確かめる。却下されたら決め直す。</summary>
+    /// <summary>出力の guard は、決めたときの行動のバージョン、行動の実行の可否、乱数の位置を確かめる。却下されたら再決定する。</summary>
     [Fact]
     public void OutputGuardChecksVersionFeasibilityAndRng()
     {

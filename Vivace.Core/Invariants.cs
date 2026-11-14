@@ -12,10 +12,10 @@ public static class Invariants
     public const int MaxAppliedAtOneInstant = 10_000;
 
     /// <summary>1回の適用の後に、状態を検査する。</summary>
-    /// <param name="ctx">規則の文脈。</param>
+    /// <param name="ctx">規則のコンテキスト。</param>
     /// <param name="state">適用の後の状態。</param>
     /// <param name="previousTime">適用の前の位置の時刻。</param>
-    /// <param name="busy">決める側の仕事が動いている（走っている、または出力を待っている）ペルソナ。</param>
+    /// <param name="busy">決める側のジョブが動いている（実行中、または出力を待っている）ペルソナ。</param>
     /// <param name="pending">未適用のイベントを、ペルソナごとに引けるもの。</param>
     /// <param name="earliestPending">未適用のイベントの最小の時刻（なければ null）。</param>
     /// <exception cref="InvariantViolationException">いずれかが破れた。</exception>
@@ -46,7 +46,7 @@ public static class Invariants
             var events = pending[persona.Id].ToList();
             if (persona.Deciding && !events.Any(ev => ev.EventType == EventTypes.ActivityChosen))
             {
-                throw new InvariantViolationException($"決め中なのに、決める仕事が動いていません: {persona.Id}");
+                throw new InvariantViolationException($"決定中なのに、決めるジョブが動いていません: {persona.Id}");
             }
 
             if (persona.Activity is { } activity)
@@ -56,7 +56,7 @@ public static class Invariants
                     && end.ActivityVersion == persona.ActivityVersion);
                 if (!ended)
                 {
-                    throw new InvariantViolationException($"行動中なのに、同じ版の行動の終わりが予定されていません: {persona.Id}");
+                    throw new InvariantViolationException($"行動中なのに、同じバージョンの行動の終わりが予定されていません: {persona.Id}");
                 }
 
                 continue;
@@ -81,7 +81,7 @@ public static class Invariants
                     or EventTypes.TravelStarted
                     || ev.Payload is BlockStartedPayload { BlockId: null }))
             {
-                throw new InvariantViolationException($"自由時間なのに、決めどきが予定されていません（手空き）: {persona.Id}");
+                throw new InvariantViolationException($"自由時間なのに、決定タイミングが予定されていません（アイドル）: {persona.Id}");
             }
         }
     }

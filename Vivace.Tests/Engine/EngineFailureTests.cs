@@ -9,26 +9,26 @@ using Vivace.Tests.Support;
 namespace Vivace.Tests.Engine;
 
 /// <summary>
-/// エンジンを通した却下と、決める側の仕事の例外。どちらも黙って捨てず、記録に残るか、例外で止まる。
+/// エンジンを通した却下と、決める側のジョブの例外。どちらも握りつぶさず、記録に残るか、例外で止まる。
 /// </summary>
 public class EngineFailureTests
 {
-    /// <summary>決める側の仕事が例外を投げたら、エンジンは例外で止まる（黙って続けない）。</summary>
+    /// <summary>決める側のジョブが例外を投げたら、エンジンは例外で止まる（握りつぶして続けない）。</summary>
     [Fact]
     public async Task FailingDecisionStopsEngine()
     {
         await using var engine = await Scenario.CreateAsync(Scenario.WorldSeed, new ThrowingDecider());
 
         var error = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None));
-        Assert.Contains("決める側の仕事が失敗", error.Message, StringComparison.Ordinal);
+        Assert.Contains("決める側のジョブが失敗", error.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>レーンの仕事が包みを抜けて例外を投げたら、出力を待っているエンジンも、待ちをやめて例外で止まる。破棄は投げずに終わる。</summary>
+    /// <summary>レーンのジョブが包みを抜けて例外を投げたら、出力を待っているエンジンも、待ちをやめて例外で止まる。破棄は投げずに終わる。</summary>
     [Fact]
     public async Task LaneFailureStopsWaitingEngine()
     {
         var decider = new BlockingDecider();
-        var failure = new InvalidOperationException("わざと失敗させたレーンの仕事");
+        var failure = new InvalidOperationException("わざと失敗させたレーンのジョブ");
         await using var engine = await Scenario.CreateAsync(Scenario.WorldSeed, decider);
         try
         {
@@ -68,7 +68,7 @@ public class EngineFailureTests
         }
     }
 
-    /// <summary>guard が通らない出力は、却下として記録され、決め直しで続く。</summary>
+    /// <summary>guard が通らない出力は、却下として記録され、再決定で続く。</summary>
     [Fact]
     public async Task StaleDecisionIsRecordedAsRejectedAndRunContinues()
     {
@@ -79,7 +79,7 @@ public class EngineFailureTests
         var rejected = engine.Log.Where(entry => entry.Status == EventStatus.Rejected).ToList();
         var single = Assert.Single(rejected);
         Assert.Equal(EventTypes.ActivityChosen, single.Event.EventType);
-        Assert.Equal("行動の版が違う", single.Reason);
+        Assert.Equal("行動のバージョンが違う", single.Reason);
         Assert.Contains(engine.Log, entry => entry.Status == EventStatus.Applied && entry.Event.EventType == EventTypes.ActivityChosen);
     }
 

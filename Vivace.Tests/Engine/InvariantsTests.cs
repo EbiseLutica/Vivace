@@ -10,7 +10,7 @@ namespace Vivace.Tests.Engine;
 
 /// <summary>
 /// 「各ペルソナに次の自分のイベントがある」の検査を、わざと壊した状態で確かめる。
-/// 行動中は同じ版の行動の終わり、移動中は到着、決め中は決める仕事、自由時間の手空きは決めどきが、それぞれ予定されていなければならない。
+/// 行動中は同じバージョンの行動の終わり、移動中は到着、決定中は決めるジョブ、自由時間のアイドルは決定タイミングが、それぞれ予定されていなければならない。
 /// </summary>
 public class InvariantsTests
 {
@@ -33,7 +33,7 @@ public class InvariantsTests
             Location = new Traveling(KaoriRoom, new PlaceId("home_living"), ImmutableArray<RouteStep>.Empty, Fixture.Now, Fixture.Now.AddMinutes(1)),
         });
 
-    /// <summary>決め中の状態を作る。</summary>
+    /// <summary>決定中の状態を作る。</summary>
     private static SimState Deciding() => Fixture.With(
         Fixture.WithKaori(),
         Fixture.Get(Fixture.WithKaori(), Fixture.Kaori) with { Deciding = true });
@@ -50,7 +50,7 @@ public class InvariantsTests
         Invariants.Check(Fixture.Context, state, state.Cursor.Time, busySet, lookup, null);
     }
 
-    /// <summary>行動中なのに同じ版の行動の終わりを積まなかった状態は検出される。別の版の終わりでは足りない。</summary>
+    /// <summary>行動中なのに同じバージョンの行動の終わりを積まなかった状態は検出される。別のバージョンの終わりでは足りない。</summary>
     [Fact]
     public void MissingActionEndOfSameVersionIsDetected()
     {
@@ -68,7 +68,7 @@ public class InvariantsTests
         Check(Traveling(), [Pending(10, EventTypes.TravelArrived, new TravelArrivedPayload(new PlaceId("home_living"), 0))]);
     }
 
-    /// <summary>決め中なのに、決める仕事を起動しなかった状態は検出される。仕事が動いていれば通る。</summary>
+    /// <summary>決定中なのに、決めるジョブを起動しなかった状態は検出される。ジョブが動いていれば通る。</summary>
     [Fact]
     public void MissingDecisionIsDetected()
     {
@@ -84,8 +84,8 @@ public class InvariantsTests
     }
 
     /// <summary>
-    /// 自由時間に手空きのままで、決めどきも予定されていない状態は検出される（B5 の止まり方）。
-    /// 次の予定のブロックがあっても、今の決めどきがなければ検出する。
+    /// 自由時間にアイドルのままで、決定タイミングも予定されていない状態は検出される（B5 の止まり方）。
+    /// 次の予定のブロックがあっても、今の決定タイミングがなければ検出する。
     /// </summary>
     [Fact]
     public void IdleInFreeTimeWithoutDecisionIsDetected()

@@ -21,7 +21,7 @@ public class FixedScheduleResolverTests
     /// <summary>ペルソナの定義を、ID で引く。</summary>
     private static PersonaDef Kaori() => Defs.Personas[new PersonaDefId("kaori")];
 
-    /// <summary>テスト用の祝日の暦。指定した日だけが祝日。</summary>
+    /// <summary>テスト用の祝日のカレンダー。指定した日だけが祝日。</summary>
     private sealed class FixedHolidays(params DateOnly[] holidays) : IHolidayCalendar
     {
         public bool IsHoliday(DateOnly date) => holidays.Contains(date);

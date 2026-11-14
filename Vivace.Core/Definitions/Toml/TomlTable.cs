@@ -6,13 +6,13 @@ using Tomlyn.Syntax;
 
 namespace Vivace.Core.Definitions.Toml;
 
-/// <summary>TOML の表。キーの書かれた順を保つ。</summary>
+/// <summary>TOML のテーブル。キーの書かれた順を保つ。</summary>
 internal sealed class TomlTable(SourceLocation location) : TomlNode(location)
 {
     private readonly List<KeyValuePair<string, TomlNode>> _entries = [];
     private readonly Dictionary<string, TomlNode> _index = [];
 
-    /// <summary>見出し（[name]）で書かれた表かどうか。二度書けば重複になる。</summary>
+    /// <summary>見出し（[name]）で書かれたテーブルかどうか。二度書けば重複になる。</summary>
     public bool HeaderDefined { get; set; }
 
     /// <summary>キーと値の組を、書かれた順に返す。</summary>
@@ -57,7 +57,7 @@ internal sealed class TomlTable(SourceLocation location) : TomlNode(location)
         _ => null,
     };
 
-    /// <summary>TOML の表を JSON のオブジェクトに直す。</summary>
+    /// <summary>TOML のテーブルを JSON のオブジェクトに直す。</summary>
     private static JsonObject ToObject(TomlTable table)
     {
         var json = new JsonObject();

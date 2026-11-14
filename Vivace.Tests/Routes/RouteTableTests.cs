@@ -3,7 +3,7 @@ using Vivace.Core.Routes;
 
 namespace Vivace.Tests.Routes;
 
-/// <summary>最短経路の表（Floyd–Warshall）を、テスト用の小さな町で確かめる。</summary>
+/// <summary>最短経路のテーブル（Floyd–Warshall）を、テスト用の小さな町で確かめる。</summary>
 public class RouteTableTests
 {
     private static readonly PlaceId KaoriRoom = new("kaori_room");
@@ -35,7 +35,7 @@ public class RouteTableTests
         Assert.Equal(new[] { KaoriRoom, HomeLiving, Street, School }, path.Value);
     }
 
-    /// <summary>同じ組の辺が複数あれば、いちばん短いものを使う。</summary>
+    /// <summary>同じ組の区間が複数あれば、いちばん短いものを使う。</summary>
     [Fact]
     public void ParallelEdgesUseTheShortest()
     {
@@ -57,7 +57,7 @@ public class RouteTableTests
         Assert.Null(table.Minutes(KaoriRoom, Cafe));
     }
 
-    /// <summary>道路の工事などで辺の時間を変えた表では、その辺を通る経路の時間が変わる。</summary>
+    /// <summary>道路の工事などで区間の時間を変えたテーブルでは、その区間を通る経路の時間が変わる。</summary>
     [Fact]
     public void SlowedEdgeChangesTheRouteTime()
     {
@@ -78,7 +78,7 @@ public class RouteTableTests
         Assert.Null(table.Path(KaoriRoom, Park));
     }
 
-    /// <summary>移動時間が正でない辺は、作れない。</summary>
+    /// <summary>移動時間が正でない区間は、作れない。</summary>
     [Fact]
     public void NonPositiveEdgeIsRejected()
     {
@@ -86,7 +86,7 @@ public class RouteTableTests
             RouteTable.Create([KaoriRoom, HomeLiving], [new RouteEdge(KaoriRoom, HomeLiving, 0)]));
     }
 
-    /// <summary>経路は、移動時間つきの辺の列として取れる。</summary>
+    /// <summary>経路は、移動時間つきの区間の列として取れる。</summary>
     [Fact]
     public void StepsGiveEdgesWithMinutes()
     {

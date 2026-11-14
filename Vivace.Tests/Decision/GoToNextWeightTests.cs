@@ -53,10 +53,10 @@ public class GoToNextWeightTests
         return DefinitionLoader.LoadFiles(files).Definitions ?? throw new InvalidOperationException("定義が読めません。");
     }
 
-    /// <summary>定義から規則の文脈を作る。</summary>
+    /// <summary>定義から規則のコンテキストを作る。</summary>
     private static RuleContext ContextFor(DefinitionPack definitions) => new(definitions, RouteCache.Create(definitions));
 
-    /// <summary>香織が家にいて、3 時間の自由時間のプランを持つ状態（この文脈の定義で作る）。</summary>
+    /// <summary>香織が家にいて、3 時間の自由時間のプランを持つ状態（このコンテキストの定義で作る）。</summary>
     private static SimState FreeDay(RuleContext context)
     {
         var state = new EventApplier(context).Apply(Fixture.Empty(), Fixture.Event(1, Fixture.Now, EventTypes.WorldCreated, new WorldCreatedPayload(TestWorld.DefId, 42), null)).State;

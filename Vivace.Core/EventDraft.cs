@@ -6,7 +6,7 @@ using Vivace.Core.Events.Payloads;
 
 namespace Vivace.Core;
 
-/// <summary>キューに入る前のイベントの下書き。Apply の後続、決める側の出力、投入のいずれにも使う。</summary>
+/// <summary>キューに入る前のイベントのドラフト。Apply の後続、決める側の出力、投入のいずれにも使う。</summary>
 /// <param name="Time">時刻。</param>
 /// <param name="EventType">イベントタイプの名前。</param>
 /// <param name="WorldId">ワールド。</param>
@@ -14,7 +14,7 @@ namespace Vivace.Core;
 /// <param name="Payload">中身。</param>
 /// <param name="Guard">適用前の検査（決める側の出力のとき）。</param>
 /// <param name="BatchSeq">同じハンドラの出力のまとまり（決める側の出力のとき）。</param>
-/// <param name="Origin">出所。null なら契機の出所を引き継ぐ。</param>
+/// <param name="Origin">発生元。null ならトリガーの発生元を引き継ぐ。</param>
 public sealed record EventDraft(
     DateTimeOffset Time,
     string EventType,
@@ -33,10 +33,10 @@ public sealed record EventDraft(
     internal static EventDraft Next(DateTimeOffset time, string eventType, PersonaState persona, EventPayload payload) =>
         new(time, eventType, persona.World, persona.Id, payload);
 
-    /// <summary>決めどきのイベントを作る。</summary>
+    /// <summary>決定タイミングのイベントを作る。</summary>
     /// <param name="now">時刻。</param>
     /// <param name="persona">ペルソナ。</param>
-    /// <param name="reason">決めどきの理由。</param>
+    /// <param name="reason">決定タイミングの理由。</param>
     /// <param name="blockId">関わるブロックの ID。なければ null。</param>
     internal static EventDraft DecisionRequested(DateTimeOffset now, PersonaState persona, DecisionReason reason, string? blockId) =>
         Next(now, EventTypes.DecisionRequested, persona, new DecisionRequestedPayload(reason, blockId));

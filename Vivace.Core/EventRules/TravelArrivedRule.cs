@@ -5,13 +5,13 @@ using Vivace.Core.Events;
 
 namespace Vivace.Core.EventRules;
 
-/// <summary>場所に着いた状態にし、次の行動かブロックか決めどきを積む。</summary>
+/// <summary>場所に着いた状態にし、次の行動かブロックか決定タイミングを積む。</summary>
 internal sealed class TravelArrivedRule : EventRule<TravelArrivedPayload>
 {
     /// <summary>扱うイベントタイプ。</summary>
     public override string EventType => EventTypes.TravelArrived;
 
-    /// <summary>場所に着いた状態にし、次の行動かブロックか決めどきを積む。</summary>
+    /// <summary>場所に着いた状態にし、次の行動かブロックか決定タイミングを積む。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, TravelArrivedPayload payload)
     {
         if (state.AlivePersona(ev.PersonaId) is not { } persona)

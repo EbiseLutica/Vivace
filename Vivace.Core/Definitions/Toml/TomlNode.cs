@@ -9,6 +9,6 @@ namespace Vivace.Core.Definitions.Toml;
 /// <summary>位置を持つ TOML の値の基底。</summary>
 internal abstract class TomlNode(SourceLocation location)
 {
-    /// <summary>値の位置（キーの位置、表の見出しの位置）。</summary>
+    /// <summary>値の位置（キーの位置、テーブルの見出しの位置）。</summary>
     public SourceLocation Location { get; } = location;
 }

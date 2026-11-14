@@ -5,13 +5,13 @@ using Vivace.Core.Signals;
 
 namespace Vivace.Core.EventRules;
 
-/// <summary>決めどきの印を立て、Decider の起動を依頼する。決め中なら捨てる。</summary>
+/// <summary>決定中のフラグを立て、Decider の起動を依頼する。決定中なら捨てる。</summary>
 internal sealed class DecisionRequestedRule : EventRule<DecisionRequestedPayload>
 {
     /// <summary>扱うイベントタイプ。</summary>
     public override string EventType => EventTypes.DecisionRequested;
 
-    /// <summary>決めどきの印を立て、Decider の起動を依頼する。決め中なら捨てる。</summary>
+    /// <summary>決定中のフラグを立て、Decider の起動を依頼する。決定中なら捨てる。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, DecisionRequestedPayload payload)
     {
         if (state.AlivePersona(ev.PersonaId) is not { } persona)
@@ -21,7 +21,7 @@ internal sealed class DecisionRequestedRule : EventRule<DecisionRequestedPayload
 
         if (persona.Deciding)
         {
-            return ApplyResult.Skipped(state, "決め中");
+            return ApplyResult.Skipped(state, "決定中");
         }
 
         if (persona.Activity is not null || persona.Location is not AtPlace)

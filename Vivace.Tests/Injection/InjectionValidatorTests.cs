@@ -8,7 +8,7 @@ using Vivace.Testing;
 
 namespace Vivace.Tests.Injection;
 
-/// <summary>投入の窓口の検査。共通の検査（時刻、型）と、ワールドとペルソナの生成の検査を確かめる。</summary>
+/// <summary>投入 API の検査。共通の検査（時刻、型）と、ワールドとペルソナの生成の検査を確かめる。</summary>
 public class InjectionValidatorTests
 {
     private static readonly PersonaDefId KaoriDef = new("kaori");
@@ -25,7 +25,7 @@ public class InjectionValidatorTests
         Assert.Equal("過去の時刻", reason);
     }
 
-    /// <summary>時刻を省略すると、処理する時点の時刻で、要求の出所のまま下書きになる。</summary>
+    /// <summary>時刻を省略すると、処理する時点の時刻で、要求の発生元のままドラフトになる。</summary>
     [Fact]
     public void OmittedTimeUsesNow()
     {
@@ -50,7 +50,7 @@ public class InjectionValidatorTests
         Assert.Equal(Fixture.Now, draft.Time);
     }
 
-    /// <summary>ルールの表にない型は、未対応で拒否する。</summary>
+    /// <summary>ルールのテーブルにない型は、未対応で拒否する。</summary>
     [Fact]
     public void TypeWithoutRuleIsRejected()
     {
@@ -59,7 +59,7 @@ public class InjectionValidatorTests
         Assert.Equal("未対応の型", Reject(Fixture.WithKaori(), [], request));
     }
 
-    /// <summary>ルールの表にあっても、投入の検査を持たない型（日の始まり）は、未対応で拒否する。</summary>
+    /// <summary>ルールのテーブルにあっても、投入の検査を持たない型（日の始まり）は、未対応で拒否する。</summary>
     [Fact]
     public void RuleWithoutInjectionCheckIsRejected()
     {
@@ -149,7 +149,7 @@ public class InjectionValidatorTests
     private static SimEvent QueuedWorld(DateTimeOffset time, WorldDefId defId) =>
         new(1, time, EventTypes.WorldCreated, null, null, new WorldCreatedPayload(defId, 42), null, null, null, Origin.Test, null, null);
 
-    /// <summary>基準の時刻で検査し、通ることを確かめて下書きを返す。</summary>
+    /// <summary>基準の時刻で検査し、通ることを確かめてドラフトを返す。</summary>
     private static EventDraft Accept(SimState state, SimEvent[] pending, InjectRequest request)
     {
         var accepted = new InjectionValidator(Fixture.Context).TryValidate(state, pending, request, Fixture.Now, out var draft, out var reason);

@@ -1,6 +1,6 @@
 namespace Vivace.Core.Time;
 
-/// <summary>時刻と待ちの口。</summary>
+/// <summary>時刻と待ちのインターフェース。</summary>
 public interface IClock
 {
     /// <summary>いまの UTC の時刻。</summary>

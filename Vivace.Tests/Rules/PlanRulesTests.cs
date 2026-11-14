@@ -41,7 +41,7 @@ public class PlanRulesTests
     private static SimEvent BlockStarted(long seq, DateTimeOffset time, string? block, long version = 1) =>
         Fixture.Event(seq, time, EventTypes.BlockStarted, new BlockStartedPayload(block, version), Fixture.Kaori);
 
-    /// <summary>プランの確定は、版を上げ、これから始まるブロックと、次の作り直しの時刻を積む。</summary>
+    /// <summary>プランの確定は、バージョンを上げ、これから始まるブロックと、次の作り直しの時刻を積む。</summary>
     [Fact]
     public void PlanCommittedSchedulesBlockStartsAndNextRebuild()
     {
@@ -72,7 +72,7 @@ public class PlanRulesTests
         Assert.Empty(result.FollowUps);
     }
 
-    /// <summary>自由時間のブロックの開始は、いま行動がなければ決めどき（自由時間）を積む。</summary>
+    /// <summary>自由時間のブロックの開始は、いま行動がなければ決定タイミング（自由時間）を積む。</summary>
     [Fact]
     public void FreeBlockStartRequestsDecisionWhenIdle()
     {
@@ -81,7 +81,7 @@ public class PlanRulesTests
         Assert.Equal(new DecisionRequestedPayload(DecisionReason.Free, null), Assert.Single(result.FollowUps).Payload);
     }
 
-    /// <summary>プランにないブロックの開始（ID がない、または時刻がずれている）は捨てる。版ではなく、いまのプランに入っているかで見る。</summary>
+    /// <summary>プランにないブロックの開始（ID がない、または時刻がずれている）は捨てる。バージョンではなく、いまのプランに入っているかで見る。</summary>
     [Fact]
     public void UnknownOrMovedBlockStartIsSkipped()
     {
@@ -139,7 +139,7 @@ public class PlanRulesTests
         Assert.Equal(new PendingAction("watch_tv", HomeLiving, TimeSpan.FromHours(1).Subtract(TimeSpan.FromMinutes(1)), ActivityReason.Block, "tv@2026-11-01"), travel.Next);
     }
 
-    /// <summary>固定ブロックの開始は、いまの行動を打ち切る。行動の版が上がり、ハンドラの取り消しを依頼する。</summary>
+    /// <summary>固定ブロックの開始は、いまの行動を打ち切る。行動のバージョンが上がり、ハンドラの取り消しを依頼する。</summary>
     [Fact]
     public void BlockStartCutsRunningActivity()
     {
@@ -169,7 +169,7 @@ public class PlanRulesTests
         Assert.Equal(EventStatus.Skipped, Fixture.Apply(plan, Fixture.Event(12, Fixture.Now.AddHours(21), EventTypes.PlanDue, new PlanDuePayload(0), Fixture.Kaori)).Status);
     }
 
-    /// <summary>移動中に記憶の整理のブロック（睡眠）が始まると、Planner を一度だけ起こす。期間の印はブロック ID で、同じブロックでは起こさない。</summary>
+    /// <summary>移動中に記憶の整理のブロック（睡眠）が始まると、Planner を一度だけ起こす。期間のキーはブロック ID で、同じブロックでは起こさない。</summary>
     [Fact]
     public void ConsolidatingBlockWhileTravelingWakesPlannerOnce()
     {
@@ -199,7 +199,7 @@ public class PlanRulesTests
         Assert.Empty(second.Signals);
     }
 
-    /// <summary>在室で記憶の整理のブロックを満たせないとき、いまの行動を打ち切り、Planner を起こす。期間の印と、最後に始めたブロックは、そのブロック ID になる。</summary>
+    /// <summary>在室で記憶の整理のブロックを満たせないとき、いまの行動を打ち切り、Planner を起こす。期間のキーと、最後に始めたブロックは、そのブロック ID になる。</summary>
     [Fact]
     public void InfeasibleConsolidatingBlockCutsActivityAndWakesPlanner()
     {
@@ -225,7 +225,7 @@ public class PlanRulesTests
         Assert.Equal(blockId, result.State.Personas[Fixture.Kaori].LastBlockId);
     }
 
-    /// <summary>プランがないペルソナは、行動の終わりで決めどきを積まない（自由時間でも、ブロックの途中でもないため）。</summary>
+    /// <summary>プランがないペルソナは、行動の終わりで決定タイミングを積まない（自由時間でも、ブロックの途中でもないため）。</summary>
     [Fact]
     public void ActionEndWithoutPlanRequestsNoDecision()
     {
@@ -238,7 +238,7 @@ public class PlanRulesTests
         Assert.Null(result.State.Personas[Fixture.Kaori].Activity);
     }
 
-    /// <summary>規則にない型は、黙って捨てず、例外で止める。</summary>
+    /// <summary>規則にない型は、握りつぶさず、例外で止める。</summary>
     [Fact]
     public void UnsupportedEventTypeThrows()
     {

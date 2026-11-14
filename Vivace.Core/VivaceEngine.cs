@@ -22,7 +22,7 @@ public sealed class VivaceEngine : IAsyncDisposable
     /// <summary>いまの状態（不変）。</summary>
     public SimState View => _engine.View;
 
-    /// <summary>投入の窓口。受け付けたら連番を、拒否したら理由を返す。</summary>
+    /// <summary>投入 API。受け付けたら連番を、拒否したら理由を返す。</summary>
     /// <param name="request">投入の要求。</param>
     /// <param name="ct">結果を待つのをやめるキャンセル。</param>
     public Task<InjectResult> InjectAsync(InjectRequest request, CancellationToken ct) => _engine.InjectAsync(request, ct);

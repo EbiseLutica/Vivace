@@ -18,7 +18,7 @@
 <header class="hero">
   <div class="kicker">VIVACE / DESIGN / D4</div>
   <h1>コンポーネント</h1>
-  <p>アセンブリの分け方、コアが外に求める口（ポート）、コアの中の部品、ホストから使う公開 API、プラグインの仕組み。</p>
+  <p>アセンブリの分け方、コアが外に求めるインターフェース（ポート）、コアの中の部品、ホストから使う公開 API、プラグインの仕組み。</p>
   <div class="meta">
     <span class="chip">2026-11-03 時点</span>
     <span class="chip draft">案を含む</span>
@@ -94,7 +94,7 @@
     <figcaption>矢印は参照の向き。コアは、ほかのどれも参照しない。ホスト（CLI）が全部を組み立てる</figcaption>
   </figure>
   <ul>
-    <li><strong>Vivace.Core</strong>：ドメイン型、定義の読み込みと検証、Apply、エンジン、Decider、Planner の手順、効果のハンドラ（受信箱、投稿）、文脈の組み立て、記憶の整理、ポート。依存は TOML のライブラリとログの抽象だけ</li>
+    <li><strong>Vivace.Core</strong>：ドメイン型、定義の読み込みと検証、Apply、エンジン、Decider、Planner の手順、効果のハンドラ（受信箱、投稿）、コンテキストの組み立て、記憶の整理、ポート。依存は TOML のライブラリとログの抽象だけ</li>
     <li><strong>Vivace.Storage.Sqlite</strong>：SQLite の実装を分けて、コアから SQL を追い出す。モバイルで別のストレージを使うときも、コアは変えない（VISION 1章）</li>
     <li><strong>Vivace.Llm.*</strong>：LLM の実装。どの SDK を使うかは、PoC で決める（D8）</li>
     <li><strong>Vivace.Testing</strong>：テストとドライランの部品。台本どおりに返す LLM、何も送らないチャンネル、仮想時計、シナリオを書くための補助</li>
@@ -108,7 +108,7 @@
 
 <section id="ports">
   <h2><span class="num">4.2</span>ポート</h2>
-  <p>コアが外に求める口。実装はホストが渡す。</p>
+  <p>コアが外に求めるインターフェース。実装はホストが渡す。</p>
   <div class="table-wrap">
     <table>
       <tr><th>ポート</th><th>役目</th><th>コアに同梱する実装</th></tr>
@@ -140,7 +140,7 @@ public interface IStorage : IAsyncDisposable
     Task&lt;LoadedState&gt; LoadAsync(CancellationToken ct);          // 状態、未適用と処理中のイベント、未送信
     Task CommitAsync(StorageBatch batch, CancellationToken ct);  // エンジンの1トランザクション（D1 1.9）
     IEventLog Events { get; }                                    // ログの読み取り
-    IMemoryStore Memory { get; }                                 // 記憶（整理ジョブと文脈）
+    IMemoryStore Memory { get; }                                 // 記憶（整理ジョブとコンテキスト）
 }
 
 public interface IDecider
@@ -223,16 +223,16 @@ public sealed record LlmPolicy(
     <li>モデル名はコアに書かない。<code>Tier</code> から実際のモデルへの対応は、LLM の実装の設定に持つ</li>
     <li>ツールの呼び出しの往復は、実装の側で回す。<code>ToolContext</code> には、呼び出し元のペルソナと audience を入れ、記憶の検索が dm の記憶を返さないようにする（VISION 13章）</li>
     <li>再試行（指数バックオフ）は、コアの側で、目的ごとの方針で包む（D7）。実装は1回の呼び出しだけを担う</li>
-    <li>コアの中の処理とプラグインは、<code>ILlmClient</code> を直接呼ばず、エンジンの LLM の口（<code>engine.Llm</code>）を通して、目的の名前で呼ぶ。エンジンが段を決め、再試行で包み、痕跡と計測を残してから、<code>ILlmClient</code> を呼ぶ</li>
+    <li>コアの中の処理とプラグインは、<code>ILlmClient</code> を直接呼ばず、エンジンの LLM のインターフェース（<code>engine.Llm</code>）を通して、目的の名前で呼ぶ。エンジンが段を決め、再試行で包み、痕跡と計測を残してから、<code>ILlmClient</code> を呼ぶ</li>
   </ul>
   <div class="callout">
-    <span class="label">決定 P-26　LLM クライアントは、コア独自の薄い口にする</span>
-    VISION 付録「LLM クライアントの抽象」への案。コアは Microsoft.Extensions.AI の <code>IChatClient</code> に直接依存せず、上の小さな口だけを持つ。理由は2つ。コアが求めるのは「目的」と「段」で、モデル名やプロバイダの設定ではないこと。テストの台本の LLM（目的ごとに決まった応答を返す）が書きやすいこと。実装の側で <code>IChatClient</code> を使うのは自由で、Anthropic の公式 SDK は <code>IChatClient</code> を実装している（D8）。
+    <span class="label">決定 P-26　LLM クライアントは、コア独自の薄いインターフェースにする</span>
+    VISION 付録「LLM クライアントの抽象」への案。コアは Microsoft.Extensions.AI の <code>IChatClient</code> に直接依存せず、上の小さなインターフェースだけを持つ。理由は2つ。コアが求めるのは「目的」と「段」で、モデル名やプロバイダの設定ではないこと。テストの台本の LLM（目的ごとに決まった応答を返す）が書きやすいこと。実装の側で <code>IChatClient</code> を使うのは自由で、Anthropic の公式 SDK は <code>IChatClient</code> を実装している（D8）。
   </div>
   <div class="callout">
-    <span class="label">決定 P-53　目的は登録制にし、目的ごとの取り決めはコアの表に集める</span>
-    <p>目的ごとの取り決め（段の上書き、再試行の方針）は、すべてコアの <code>LlmPolicy</code> の表に持つ。LLM の実装が持つのは「段 → モデル名」の対応だけ。</p>
-    <p>目的は登録制にする。コアの目的（D6 6.2 の表）は、最初から既定の段つきで登録しておく。プラグインは、登録のときに <code>AddLlmPurpose</code> で申告する（名前はプラグインの名前で始める。4.7）。起動時に、<code>LlmPolicy</code> の表にある目的が登録されていなければ、警告を出す（書き間違えると、設定が黙って効かないため）。登録されていない目的で呼ばれたら、既定の方針で呼んだうえで、ログに警告を出す（止めはしない）。</p>
+    <span class="label">決定 P-53　目的は登録制にし、目的ごとの取り決めはコアのテーブルに集める</span>
+    <p>目的ごとの取り決め（段の上書き、再試行の方針）は、すべてコアの <code>LlmPolicy</code> のテーブルに持つ。LLM の実装が持つのは「段 → モデル名」の対応だけ。</p>
+    <p>目的は登録制にする。コアの目的（D6 6.2 の表）は、最初から既定の段つきで登録しておく。プラグインは、登録のときに <code>AddLlmPurpose</code> で申告する（名前はプラグインの名前で始める。4.7）。起動時に、<code>LlmPolicy</code> のテーブルにある目的が登録されていなければ、警告を出す（書き間違えると、設定が黙って効かないため）。登録されていない目的で呼ばれたら、既定の方針で呼んだうえで、ログに警告を出す（止めはしない）。</p>
     <p class="alt">レビューで足した。目的を足す場所が「登録」の1か所に決まり、書き間違いが起動時に見つかる。</p>
   </div>
 </section>
@@ -243,19 +243,19 @@ public sealed record LlmPolicy(
     <table>
       <tr><th>部品</th><th>役目</th><th>詳細</th></tr>
       <tr><td><code>SimEngine</code></td><td>コマンドの処理、キュー、ホライズンの壁、締め切り、適用、シグナルの実行</td><td>D1</td></tr>
-      <tr><td><code>EventApplier</code> / <code>IEventRule</code></td><td>Apply の入口と、イベントタイプごとのルール。入口は適用前の検査（guard）を評価してから、ルールを引いて呼ぶ。入口はインスタンスで、不変の規則の文脈とルールの表だけを持つ。副作用を持たない</td><td>D2</td></tr>
+      <tr><td><code>EventApplier</code> / <code>IEventRule</code></td><td>Apply のエントリポイントと、イベントタイプごとのルール。エントリポイントは適用前の検査（guard）を評価してから、ルールを引いて呼ぶ。エントリポイントはインスタンスで、不変の規則のコンテキストとルールのテーブルだけを持つ。副作用を持たない</td><td>D2</td></tr>
       <tr><td><code>Lanes</code></td><td>レーンごとの直列の実行と、LLM の同時実行数の制限</td><td>D1 1.5</td></tr>
       <tr><td><code>Dispatcher</code></td><td>配信役。未送信の操作を送り、結果をコマンドで返す</td><td>VISION 10章</td></tr>
-      <tr><td><code>InjectionValidator</code></td><td>投入の窓口。要求を検査し、キューに入れる下書きにする</td><td>D2 2.8</td></tr>
+      <tr><td><code>InjectionValidator</code></td><td>投入 API。要求を検査し、キューに入れるドラフトにする</td><td>D2 2.8</td></tr>
       <tr><td><code>DefinitionLoader</code> / <code>DefinitionValidator</code></td><td>TOML の読み込みと検証。エディタからも呼べる</td><td>D3、D7</td></tr>
-      <tr><td><code>RouteTable</code></td><td>最短経路の表（グラフの版ごとにキャッシュ）</td><td>D5</td></tr>
+      <tr><td><code>RouteTable</code></td><td>最短経路のテーブル（グラフのバージョンごとにキャッシュ）</td><td>D5</td></tr>
       <tr><td><code>UtilityDecider</code></td><td>候補の絞り込み、スコア、抽選</td><td>D5</td></tr>
       <tr><td><code>DayPlanner</code> / <code>PlanValidator</code></td><td>Planner の手順と、出力の検査・補正</td><td>D5、D6</td></tr>
       <tr><td><code>IncidentLottery</code></td><td>日の始まりの出来事の抽選</td><td>D5</td></tr>
-      <tr><td><code>InboxHandler</code> / <code>PostHandler</code></td><td>効果のハンドラ（受信箱を捌く、投稿する）</td><td>D6</td></tr>
+      <tr><td><code>InboxHandler</code> / <code>PostHandler</code></td><td>効果のハンドラ（受信箱を処理する、投稿する）</td><td>D6</td></tr>
       <tr><td><code>TopicPipeline</code></td><td>話題の抽出、辞書、判定、場所の生成</td><td>D6</td></tr>
-      <tr><td><code>ContextBuilder</code> / <code>Diary</code></td><td>LLM に渡す文脈の組み立てと、日誌の整形</td><td>D6</td></tr>
-      <tr><td><code>MemoryConsolidator</code> / <code>MemoryRetriever</code></td><td>記憶の整理ジョブと、文脈に入れる記憶の選び方</td><td>D6</td></tr>
+      <tr><td><code>ContextBuilder</code> / <code>Diary</code></td><td>LLM に渡すコンテキストの組み立てと、日誌の整形</td><td>D6</td></tr>
+      <tr><td><code>MemoryConsolidator</code> / <code>MemoryRetriever</code></td><td>記憶の整理ジョブと、コンテキストに入れる記憶の選び方</td><td>D6</td></tr>
       <tr><td><code>StateView</code> / <code>RunReport</code></td><td>読み取り用のビューと、実行レポート</td><td>D7</td></tr>
     </table>
   </div>
@@ -274,7 +274,7 @@ public sealed record LlmPolicy(
 
 await engine.StartAsync(ct);                    // 起動と追いつき（D1 1.11）
 
-InjectResult r = await engine.InjectAsync(request, ct);       // 投入の窓口
+InjectResult r = await engine.InjectAsync(request, ct);       // 投入 API
 SimState view = engine.View;                                 // いまの状態（不変）
 IAsyncEnumerable&lt;LoggedEvent&gt; feed = engine.Subscribe(ct);   // 適用済みのイベントの購読
 IEventLog log = engine.Events;                               // ログの検索
@@ -298,11 +298,11 @@ ValidationReport report = DefinitionLoader.Validate("defs/", plugins);</code></p
   <ul>
     <li><code>DryRun()</code> は、チャンネルをすべて <code>NullChannel</code> に替え、配信役を止める</li>
     <li><code>Subscribe</code> は、適用済みのイベント（適用の記録の1件、<code>LoggedEvent</code> の <code>Status = Applied</code>）を、コミットのあとに適用の順で流す。登録は <code>Subscribe</code> を呼んだ時点で行う。購読ごとに容量つきのバッファ（<code>Channel</code>）を持ち、遅い購読者は、バッファ（いまは 1,024 件、J-160）があふれたら例外で終わらせて切断する（エンジンを止めない）。エンジンを破棄すると、購読は正常に終わり、破棄したあとの購読は何も流さずにすぐ終わる（J-159）</li>
-    <li>ビルダーの口は、いまは <code>UseDefinitions</code>（フォルダか、読み込み済みの <code>DefinitionPack</code>）、<code>UseStorage</code>、<code>UseClock</code>、<code>UseDecider</code>、<code>UseHolidays</code>、<code>UseRandom</code>、<code>DryRun()</code>。定義、保存先、時計は必須で、欠けていれば <code>Build()</code> が例外を投げる。定義のフォルダにエラーがあるときも例外にする。<code>DryRun()</code> は、チャンネルと配信役ができるまでは印だけを持つ。エンジンの口は <code>InjectAsync</code>、<code>View</code>、<code>Subscribe</code>、<code>RunUntilAsync</code>、<code>DisposeAsync</code> で、中の <code>SimEngine</code> に任せる（J-161）</li>
+    <li>ビルダーの API は、いまは <code>UseDefinitions</code>（フォルダか、読み込み済みの <code>DefinitionPack</code>）、<code>UseStorage</code>、<code>UseClock</code>、<code>UseDecider</code>、<code>UseHolidays</code>、<code>UseRandom</code>、<code>DryRun()</code>。定義、保存先、時計は必須で、欠けていれば <code>Build()</code> が例外を投げる。定義のフォルダにエラーがあるときも例外にする。<code>DryRun()</code> は、チャンネルと配信役ができるまではフラグだけを持つ。エンジンの API は <code>InjectAsync</code>、<code>View</code>、<code>Subscribe</code>、<code>RunUntilAsync</code>、<code>DisposeAsync</code> で、中の <code>SimEngine</code> に任せる（J-161）</li>
     <li><code>View</code> は、いまは <code>SimState</code>（不変の状態）そのものを返す。読み取り用の <code>StateView</code>（4.5）は、ビューアや実行レポートを作るときに、要るものだけを足す（J-158）</li>
-    <li>プラグインにも、このエンジンそのものを渡す（4.7）。ホストに使えてプラグインに使えない口は作らない</li>
+    <li>プラグインにも、このエンジンそのものを渡す（4.7）。ホストに使えてプラグインに使えない API は作らない</li>
     <li>DI コンテナには依存しない。ASP.NET Core などから使うときのための <code>services.AddVivace(...)</code> は、API 層を作るときに別のパッケージで足す</li>
-    <li><code>InjectAsync</code> は、要求（<code>InjectRequest</code>）を窓口で検査し、受け付けたら連番を、拒否なら理由を返す（D2 2.8）。<code>RunUntilAsync</code> の外では、錠（<code>System.Threading.Lock</code>）の下でその場で処理する。中では、コマンドを <code>Channel</code> に入れ、ループが各周の先頭で取り出す。ループが決める側の出力を待っている間も、コマンドが届けば起きて処理する。<code>RunUntilAsync</code> を抜けるときは、残ったコマンドをすべて処理してから、外の扱いに戻す。検査は、処理する時点（ループの中では取り出した時点）の状態とキューと時計の時刻で行う。時計の待ちは、いまはコマンドで起きない（<code>SystemClock</code> を作るときに D1 1.4 に合わせる、J-157）</li>
+    <li><code>InjectAsync</code> は、要求（<code>InjectRequest</code>）を投入 API で検査し、受け付けたら連番を、拒否なら理由を返す（D2 2.8）。<code>RunUntilAsync</code> の外では、ロック（<code>System.Threading.Lock</code>）を取ってその場で処理する。中では、コマンドを <code>Channel</code> に入れ、ループが各回の先頭で取り出す。ループが決める側の出力を待っている間も、コマンドが届けば起きて処理する。<code>RunUntilAsync</code> を抜けるときは、残ったコマンドをすべて処理してから、外の扱いに戻す。検査は、処理する時点（ループの中では取り出した時点）の状態とキューと時計の時刻で行う。時計の待ちは、いまはコマンドで起きない（<code>SystemClock</code> を作るときに D1 1.4 に合わせる、J-157）</li>
   </ul>
   <div class="callout">
     <span class="label">決定 P-27　公開 API はビルダーとエンジンの1クラス</span>
@@ -322,7 +322,7 @@ public interface IPluginRegistry
 {
     void AddChannel(IChannel channel);
     void AddEffectHandler(IEffectHandler handler);             // handler = "misskey.xxx"
-    void AddNotificationRule(INotificationRule rule);          // 大分類が Other の通知を規則で捌く
+    void AddNotificationRule(INotificationRule rule);          // 大分類が Other の通知を規則で処理する
     void AddTool(ITool tool);
     void AddDefinitions(string resourceName, Func&lt;Stream&gt; open); // 同梱の行動の TOML
     void AddHolidayCalendar(string name, IHolidayCalendar calendar);
@@ -339,19 +339,19 @@ public interface IEffectHandler
 public interface INotificationRule
 {
     string Channel { get; }                                    // "misskey"
-    IReadOnlySet&lt;string&gt; ChannelTypes { get; }                 // 捌く種類（"renote"、"pollEnded" など）
+    IReadOnlySet&lt;string&gt; ChannelTypes { get; }                 // 処理する種類（"renote"、"pollEnded" など）
     RuleOutcome Handle(InboxItem item, RuleContext context);   // LLM は使わない
 }
 
 // 規則が出せるのは、発話ではない外向きの操作だけ
 public sealed record RuleOutcome(ImmutableArray&lt;OutboundOperation&gt; Operations);</code></pre>
   <ul>
-    <li>プラグインが足せるのは、ハンドラ、規則、ツール、行動の定義、チャンネル、暦だけ。イベントタイプと、決定的な効果の語彙は足せない。外に出すものは、コアの <code>outbound.*</code> の中身（チャンネルが解釈する JSON）として表す（VISION 10章）</li>
+    <li>プラグインが足せるのは、ハンドラ、規則、ツール、行動の定義、チャンネル、カレンダーだけ。イベントタイプと、決定的な効果の語彙は足せない。外に出すものは、コアの <code>outbound.*</code> の中身（チャンネルが解釈する JSON）として表す（VISION 10章）</li>
     <li>プラグインには、エンジンそのもの（<code>VivaceEngine</code>）を渡す。チャンネルは <code>StartAsync</code> の引数から、ほかの部品は <code>IPluginRegistry.Engine</code> から受け取る（エンジンが動き出してから使える）。読み取り、投入、読み直し、話題の注入まで、ホストと同じものが使える。投入の origin は、チャンネルの到着なら <code>channel:&lt;種類&gt;</code>、それ以外は <code>plugin:&lt;名前&gt;</code> を、プラグインが付ける（D2 2.9）</li>
-    <li>プラグインが守ること：エンジンの起動、停止、破棄、ドライランの時計（<code>RunUntilAsync</code>）には触らない。これらはホストの持ち物で、特にチャンネルの中から <code>StopAsync</code> を呼ぶと、エンジンがそのチャンネルの停止を待つので終わらなくなる。また、決める側のハンドラ（効果、規則、ツール）が判断に使うのは、文脈で渡される写しにする。生きている状態を読むと、決めた時点の前提とずれるから（D1 1.7）</li>
+    <li>プラグインが守ること：エンジンの起動、停止、破棄、ドライランの時計（<code>RunUntilAsync</code>）には触らない。これらはホストの持ち物で、特にチャンネルの中から <code>StopAsync</code> を呼ぶと、エンジンがそのチャンネルの停止を待つので終わらなくなる。また、決める側のハンドラ（効果、規則、ツール）が判断に使うのは、コンテキストで渡されるスナップショットにする。生きている状態を読むと、決めた時点の前提とずれるから（D1 1.7）</li>
     <li><strong>通知の規則</strong>：受信箱のうち大分類が <code>Other</code> のアイテム（D3 3.7.1）だけが、規則に回る。コアが、チャンネルと種類（<code>ChannelType</code>）で引いて、該当する規則に渡す。同じチャンネルの同じ種類に規則が2つ登録されたら、起動時のエラーにする（どちらが動くかを登録順で決めないため）。当たる規則がなければ、何もせずに処理済みにする</li>
     <li>規則が出せるのは、リアクションやチャンネル固有の操作のような、発話ではない外向きの操作だけ。本文つきの返信は、LLM がペルソナの声で書く道（<code>Message</code>）に限る。規則が定型文を返せると、ペルソナが言っていないことが「言ったこと」に混ざるから</li>
-    <li>チャンネル自身が片付ける通知（リバーシの対局の申し込みなど）は、受信箱に積まなくていい。受信箱に入れるのは、ペルソナがスマホを開いたときに捌くべきものだけ</li>
+    <li>チャンネル自身が片付ける通知（リバーシの対局の申し込みなど）は、受信箱に積まなくていい。受信箱に入れるのは、ペルソナがスマホを開いたときに処理すべきものだけ</li>
     <li>プラグインが同梱する行動の ID は、プラグインの名前で始める（<code>misskey.open_phone</code>）</li>
     <li><strong>ペルソナと独立した機能</strong>：チャンネルのプラグインは、ペルソナのシミュレーションを通さない機能を、<code>IChannel.StartAsync</code> の中で動かしてよい（VISION 10章）。Misskey のリバーシは、ebise ではペルソナの機能だったが、Vivace では Misskey プラグインの中のゲーム機能として作る。対局はペルソナのアカウントで行ってよいが、ペルソナの行動、状態変数、イベント、記憶には関わらない（寝ている時間でも対局する）。シミュレーションに組み込むと複雑になりすぎるため。ただし、いまの状態はエンジン（<code>engine.View</code>）から読めるので、「睡眠中は対局を受けない」のような振る舞いは、プラグインの中で書ける（状態は読むだけで、変えない）</li>
   </ul>

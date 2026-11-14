@@ -77,7 +77,7 @@
 
       <rect class="box good" x="540" y="40" width="200" height="120" rx="10"/>
       <text class="title" x="640" y="66" text-anchor="middle">SQLite</text>
-      <text class="sub" x="640" y="92" text-anchor="middle">状態の表 / イベント</text>
+      <text class="sub" x="640" y="92" text-anchor="middle">状態のテーブル / イベント</text>
       <text class="sub" x="640" y="112" text-anchor="middle">受信箱 / 送信 / 記憶</text>
       <text class="sub" x="640" y="140" text-anchor="middle">変わった行だけ書く</text>
 
@@ -88,7 +88,7 @@
       <path class="arrow dash" d="M538 120 H482"/>
       <text class="sub" x="509" y="140" text-anchor="middle">起動時</text>
     </svg>
-    <figcaption>定義は TOML が正、実行時のデータは SQLite が正。メモリの上の型は、その写し</figcaption>
+    <figcaption>定義は TOML が正、実行時のデータは SQLite が正。メモリの上の型は、そのスナップショット</figcaption>
   </figure>
   <p>ホストの設定（SQLite のファイルの場所、LLM の API キー、チャンネルのアカウントとトークン）は、定義に含めない。ホストのアプリが持ち、コアには構築時に渡す（D4）。</p>
 </section>
@@ -125,7 +125,7 @@ generated_places = "auto"        # auto | review（VISION 11章）
 not_exist = "魔法や超常現象は存在しない。"   # 存在しないものの一覧（任意）
 
 [calendar]
-holidays = "jp"                  # 祝日の暦の提供元（P-18）。省略時は祝日なし
+holidays = "jp"                  # 祝日のカレンダーの提供元（P-18）。省略時は祝日なし
 events = { "12-24" = "クリスマスイブ", "10-31" = "ハロウィン" }   # 年中行事（Planner への手がかり）
 
 [[term]]                         # 変換の辞書の初期値
@@ -146,16 +146,16 @@ tags = ["sofa", "tv", "kitchen"]
 group = "家"
 links = { street_home = 1 }</code></pre>
   <ul>
-    <li>辺は、片方に書けば逆向きにも張る。両方に書いて時間が食い違えば、読み込みのエラー（VISION 8章）</li>
+    <li>区間は、片方に書けば逆向きにも張る。両方に書いて時間が食い違えば、読み込みのエラー（VISION 8章）</li>
     <li>場所のタグのうち、どの行動の requires にも出てこないものは、読み込み時に警告する（効果がないので）。出来事の <code>slow_place</code>、<code>close_place</code> の <code>place_tag</code> も要求とみなす（J-107）</li>
   </ul>
   <div class="callout">
-    <span class="label">決定 P-18　祝日と年中行事は、ワールドの暦に持つ</span>
-    ebise は、内閣府の祝日 CSV を取得して、学校の休みを判定していた。魔界に日本の祝日はないので、祝日はワールドが決めるものにする。<code>calendar.holidays</code> は提供元の名前で、コアは <code>IHolidayCalendar</code> の口だけを持ち、日本の祝日は別のパッケージ（または同梱のデータ）で提供する。年中行事は、ワールド定義に直接書く。
+    <span class="label">決定 P-18　祝日と年中行事は、ワールドのカレンダーに持つ</span>
+    ebise は、内閣府の祝日 CSV を取得して、学校の休みを判定していた。魔界に日本の祝日はないので、祝日はワールドが決めるものにする。<code>calendar.holidays</code> は提供元の名前で、コアは <code>IHolidayCalendar</code> のインターフェースだけを持ち、日本の祝日は別のパッケージ（または同梱のデータ）で提供する。年中行事は、ワールド定義に直接書く。
   </div>
 </section>
 
-<p><strong>暦</strong>（J-140）：祝日の暦は、エンジンの作成時に渡す（<code>IHolidayCalendar</code>、P-18）。段階2 のテストの暦は、2026-11-03 だけを祝日にする。日本の暦は段階8。</p>
+<p><strong>カレンダー</strong>（J-140）：祝日のカレンダーは、エンジンの作成時に渡す（<code>IHolidayCalendar</code>、P-18）。段階2 のテストのカレンダーは、2026-11-03 だけを祝日にする。日本のカレンダーは段階8。</p>
 <section id="persona-def">
   <h2><span class="num">3.4</span>ペルソナ定義</h2>
 <pre><code>id = "kaori"
@@ -296,7 +296,7 @@ place = "home_living"</code></pre>
   </div>
 </section>
 
-<p><strong>暦</strong>（J-140）：固定予定の解決（プラン、学校の休み）は、エンジンに渡した暦を使う。隙間の警告（検証）は、祝日を考えずに全日を見る。</p>
+<p><strong>カレンダー</strong>（J-140）：固定予定の解決（プラン、学校の休み）は、エンジンに渡したカレンダーを使う。隙間の警告（検証）は、祝日を考えずに全日を見る。</p>
 <section id="action-def">
   <h2><span class="num">3.6</span>行動と出来事の定義</h2>
 <pre><code>[[action]]
@@ -353,7 +353,7 @@ threshold.health = 25</code></pre>
   <h2><span class="num">3.7</span>ドメイン型</h2>
   <p>状態は、<code>record</code> と <code>System.Collections.Immutable</code> の不変オブジェクトで持つ。Apply は、変わったところだけを作り直した新しい状態を返す。</p>
 <pre><code>sealed record SimState(
-    ApplyCursor Cursor,                                 // 最後に適用した（時刻、段、連番）と適用番号
+    ApplyCursor Cursor,                                 // 最後に適用した（時刻、ステージ、連番）と適用番号
     ImmutableDictionary&lt;WorldId, WorldState&gt; Worlds,
     ImmutableDictionary&lt;PersonaId, PersonaState&gt; Personas);
 
@@ -369,40 +369,40 @@ sealed record PersonaState(
     Location Location,                                  // 場所 ID、または移動中（経路と出発時刻）
     Activity? Activity, long ActivityVersion,           // 実行中の行動（D1 1.8）
     Activity? Overlay,                                  // 固定ブロック中にスマホを使っている間だけ（開く、投稿する）
-    Vitals Vitals,                                      // 4変数の基準時刻・値・率と、状態変数の版
+    Vitals Vitals,                                      // 4変数の基準時刻・値・率と、状態変数のバージョン
     ImmutableArray&lt;AttachedCondition&gt; Conditions,
     DayPlan? Plan, long PlanVersion,
     ImmutableDictionary&lt;string, ActionUsage&gt; Usage,    // 行動ごとの前回の開始、今日の回数、連続回数
     ImmutableDictionary&lt;string, ulong&gt; Rng,            // 用途ごとの乱数の位置（D5）
-    PostingState Posting,                               // 最後の投稿、空振り、サーバーの制限
+    PostingState Posting,                               // 最後の投稿、スキップ、サーバーの制限
     ImmutableList&lt;InboxItem&gt; Inbox,                    // 未処理の通知だけ
     ImmutableList&lt;OutboundOp&gt; Outbound,                // 未送信の操作だけ
     DateTimeOffset? LastWake,                           // 日誌の範囲の起点（VISION 13章）。睡眠の終わりで設定する（J-145）
-    bool Deciding, string? LastBlockId, string? PlannedFor);  // 決め中の印、最後に始めたブロック、Planner を起こした期間の鍵（J-133、J-135、J-141）</code></pre>
+    bool Deciding, string? LastBlockId, string? PlannedFor);  // 決定中のフラグ、最後に始めたブロック、Planner を起こした期間のキー（J-133、J-135、J-141）</code></pre>
   <ul>
     <li>ID は <code>readonly record struct</code> で型を分ける（<code>PersonaId</code>、<code>WorldId</code>、<code>PlaceId</code>）。文字列の取り違えをコンパイラで防ぐ</li>
-    <li>ワールドとペルソナは、定義の ID にも型を作る（<code>WorldDefId</code>、<code>PersonaDefId</code>）。<code>DefinitionPack</code> の辞書の鍵と、状態とペイロードが持つ定義の ID は、この型にする。作り直したインスタンス（P-22 の <code>#2</code>）の ID は定義の ID と一致しないので、定義はインスタンスの ID でなく <code>DefId</code> から引く（J-150）</li>
-    <li>ワールドやペルソナの状態のような、項目の多いものは <code>sealed record</code>（参照型）にする。参照が同じかどうかだけで「変わったか」がわかり（変わった行だけを SQLite に書くため）、辞書から取り出したり写しを渡したりするたびの丸ごとのコピーも起きない。<code>default</code> で中身の空な状態が作られることもない。ID、イベントの並びの位置、状態変数1本ぶん（値、基準時刻、率）のような小さな値は、<code>readonly record struct</code> にする</li>
+    <li>ワールドとペルソナは、定義の ID にも型を作る（<code>WorldDefId</code>、<code>PersonaDefId</code>）。<code>DefinitionPack</code> の辞書のキーと、状態とペイロードが持つ定義の ID は、この型にする。作り直したインスタンス（P-22 の <code>#2</code>）の ID は定義の ID と一致しないので、定義はインスタンスの ID でなく <code>DefId</code> から引く（J-150）</li>
+    <li>ワールドやペルソナの状態のような、項目の多いものは <code>sealed record</code>（参照型）にする。参照が同じかどうかだけで「変わったか」がわかり（変わった行だけを SQLite に書くため）、辞書から取り出したりスナップショットを渡したりするたびの丸ごとのコピーも起きない。<code>default</code> で中身の空な状態が作られることもない。ID、イベントの並びの位置、状態変数1本ぶん（値、基準時刻、率）のような小さな値は、<code>readonly record struct</code> にする</li>
     <li>受信箱は、ペルソナインスタンスの状態に持つ（VISION 2章）。アイテムの形は下の「受信箱のアイテム」</li>
-    <li>プランのブロック（<code>PlanBlock</code>）は、開始、終了（UTC）、種類（固定、計画、自由）、行動、場所に加えて、電話の指定、間隔、同行、同行者が抜けたときの扱いを、プランを作ったときの固定予定から写して持つ。ID は固定と計画のブロックだけが持ち、自由時間は null（J-124。変更は次のプランから。D1 1.12）</li>
+    <li>プランのブロック（<code>PlanBlock</code>）は、開始、終了（UTC）、種類（固定、計画、自由）、行動、場所に加えて、電話の指定、間隔、同行、同行者が抜けたときの扱いを、プランを作ったときの固定予定からコピーして持つ。ID は固定と計画のブロックだけが持ち、自由時間は null（J-124。変更は次のプランから。D1 1.12）</li>
     <li>発生中の出来事（<code>ActiveIncident</code>）は、解決済みの効果（対象の場所を含む。3.8 の <code>incidents</code>）を持つ。解消のときに定義を引き直さない。その場の定義の出来事は、<code>DefId</code> を null にする（J-119）</li>
-    <li>受信箱と未送信の操作は、処理が済んだら状態から外し、SQLite の表にだけ残す。状態は、決める側に渡す写しでもあるので、小さく保つ</li>
+    <li>受信箱と未送信の操作は、処理が済んだら状態から外し、SQLite のテーブルにだけ残す。状態は、決める側に渡すスナップショットでもあるので、小さく保つ</li>
     <li>居合わせ（誰と同じ場所にいるか）は、状態に持たない。<code>Personas</code> の <code>Location</code> から導く（VISION 2章）</li>
     <li>定義も同じく不変の <code>DefinitionPack</code> にし、Apply と決める側に引数で渡す（VISION 4章）。最短経路のような導出データは、<code>DefinitionPack</code> と <code>GraphVersion</code> をキーにしたキャッシュに持ち、保存しない</li>
   </ul>
   <div class="callout">
-    <span class="label">決定 P-21　状態は不変オブジェクトで持ち、写しは参照を渡す</span>
-    VISION 付録「決める側に渡す状態の写しの作り方」への案。状態が不変なら、写しは参照を渡すだけでよく、コピーもロックも要らない。前提の規模（最大 10 人）なら、Apply のたびに数個の record を作り直すコストは無視できる。
+    <span class="label">決定 P-21　状態は不変オブジェクトで持ち、スナップショットは参照を渡す</span>
+    VISION 付録「決める側に渡す状態のスナップショットの作り方」への案。状態が不変なら、スナップショットは参照を渡すだけでよく、コピーもロックも要らない。前提の規模（最大 10 人）なら、Apply のたびに数個の record を作り直すコストは無視できる。
   </div>
   <div class="callout">
     <span class="label">決定 P-22　インスタンス ID は定義 ID</span>
-    <code>kaori</code>、<code>tokyo</code>。1つの定義から生成するインスタンスは1つだけ（VISION 2章）なので、ワールド ID を含めなくても決まる。破棄したあとに同じ定義から生成し直したら、<code>kaori#2</code> のように番号を付け、前のインスタンスと見分ける。ログと記憶の表で、人が読んで誰かわかる形にする。（当初は「定義 ID@ワールド ID」としていたが、ペルソナはワールドを跨いでも1人なので改めた）
+    <code>kaori</code>、<code>tokyo</code>。1つの定義から生成するインスタンスは1つだけ（VISION 2章）なので、ワールド ID を含めなくても決まる。破棄したあとに同じ定義から生成し直したら、<code>kaori#2</code> のように番号を付け、前のインスタンスと見分ける。ログと記憶のテーブルで、人が読んで誰かわかる形にする。（当初は「定義 ID@ワールド ID」としていたが、ペルソナはワールドを跨いでも1人なので改めた）
   </div>
 </section>
 
 <section id="inbox-item">
   <h2><span class="num">3.7.1</span>受信箱のアイテム</h2>
-  <p>チャンネルは、届いた通知を、コアが読める形に訳して積む（<code>notification.arrived</code>）。コアは、この形だけを見て捌き方を決める（D6 6.5）。外のサービスの形（Misskey の JSON など）は、コアに持ち込まない。</p>
+  <p>チャンネルは、届いた通知を、コアが読める形に訳して積む（<code>notification.arrived</code>）。コアは、この形だけを見て扱い方を決める（D6 6.5）。外のサービスの形（Misskey の JSON など）は、コアに持ち込まない。</p>
 <pre><code>sealed record InboxItem(
     long Seq,                               // 到着のイベントの連番（ID を兼ねる）
     string Channel,                         // "misskey"
@@ -410,7 +410,7 @@ sealed record PersonaState(
     string ChannelType,                     // チャンネル独自の種類（"mention"、"reply"、"quote"、"chat" など）
     Sender Sender,                          // 送り主
     Audience Audience,                      // public / dm / 記憶にしない（VISION 13章）
-    string? ConversationKey,                // 同じ会話を見分ける鍵（スレッドの根元、DM の相手など）
+    string? ConversationKey,                // 同じ会話を見分けるキー（スレッドの根元、DM の相手など）
     string? Text,                           // 本文（Message）
     ImmutableArray&lt;Attachment&gt; Attachments, // 添付（画像の URL など。Message）
     ImmutableArray&lt;ThreadMessage&gt; Thread,  // それまでの会話（古い順。Message）
@@ -425,7 +425,7 @@ sealed record ThreadMessage(Sender Sender, bool IsSelf, string? Text, DateTimeOf
 sealed record Attachment(string Kind, string Url, string? Description);   // Kind は "image" など</code></pre>
   <div class="table-wrap">
     <table>
-      <tr><th>大分類</th><th>中身</th><th>コアの捌き方（D6 6.5）</th></tr>
+      <tr><th>大分類</th><th>中身</th><th>コアの扱い方（D6 6.5）</th></tr>
       <tr><td><code>Message</code></td><td>言葉で話しかけられたもの（メンション、返信、引用、DM）。本文、添付、それまでの会話を持つ</td><td>LLM が、返信 / リアクション / 何もしない を決める</td></tr>
       <tr><td><code>Reaction</code></td><td>自分の発言へのリアクション。絵文字と、どの発言へのものかを持つ</td><td>LLM を使わない</td></tr>
       <tr><td><code>Follow</code></td><td>フォローされた</td><td>LLM を使わず、フォローバックの方針で決める</td></tr>
@@ -435,8 +435,8 @@ sealed record Attachment(string Kind, string Url, string? Description);   // Kin
   <ul>
     <li>それまでの会話（<code>Thread</code>）は、チャンネルが到着のときに取って入れる。ノートへの返信なら返信チェーン、DM なら直近のメッセージ（ebise と同じ）。到着のイベントに記録されるので、決める側は外を取り直さずに読める。長い会話でも、直近 20 件までにする</li>
     <li>自分の発言かどうか（<code>IsSelf</code>）は、チャンネルが付ける。LLM には、自分の発言と相手の発言を分けて見せる</li>
-    <li><code>ConversationKey</code> が同じアイテムは、同じ会話として、まとめて捌く（D6 6.5）</li>
-    <li><code>notification.arrived</code> の適用で入り、<code>inbox.handled</code> の適用で外れる（D2 2.3）。到着の連番は、チャンネルの受け付けでは 0 で積み、適用のときに入れる（J-111）。外れたあとは、<code>inbox</code> の表に、結果と一緒に残る（3.8）</li>
+    <li><code>ConversationKey</code> が同じアイテムは、同じ会話として、まとめて処理する（D6 6.5）</li>
+    <li><code>notification.arrived</code> の適用で入り、<code>inbox.handled</code> の適用で外れる（D2 2.3）。到着の連番は、チャンネルの受け付けでは 0 で積み、適用のときに入れる（J-111）。外れたあとは、<code>inbox</code> のテーブルに、結果と一緒に残る（3.8）</li>
   </ul>
 </section>
 
@@ -444,7 +444,7 @@ sealed record Attachment(string Kind, string Url, string? Description);   // Kin
   <h2><span class="num">3.8</span>SQLite のスキーマ</h2>
   <p>よく絞り込む項目は列にし、構造が深いものは JSON の列にする。同梱の SQLite には JSON 関数が入っているので、JSON の中身でも絞り込める。</p>
   <figure class="diagram">
-    <svg viewBox="0 0 760 270" role="img" aria-label="表の関係">
+    <svg viewBox="0 0 760 270" role="img" aria-label="テーブルの関係">
       <rect class="box accent" x="290" y="20" width="180" height="56" rx="8"/>
       <text class="title" x="380" y="44" text-anchor="middle">events</text>
       <text class="sub" x="380" y="63" text-anchor="middle">キューとログ</text>
@@ -481,13 +481,13 @@ sealed record Attachment(string Kind, string Url, string? Description);   // Kin
       <text class="sub" x="300" y="110" text-anchor="end">適用で書く</text>
       <text class="sub" x="460" y="110">整理ジョブが読む</text>
     </svg>
-    <figcaption>緑はエンジンが書く状態の表。記憶の表は整理ジョブが書く</figcaption>
+    <figcaption>緑はエンジンが書く状態のテーブル。記憶のテーブルは整理ジョブが書く</figcaption>
   </figure>
 <pre><code>-- キューとログ（VISION 2章「イベント」）
 CREATE TABLE events (
   seq            INTEGER PRIMARY KEY,      -- 連番 = ID
   time_utc       INTEGER NOT NULL,         -- 絶対時刻（Unix ミリ秒）
-  event_type     TEXT    NOT NULL,         -- イベントタイプ（段は保存せず、ここから引く）
+  event_type     TEXT    NOT NULL,         -- イベントタイプ（ステージは保存せず、ここから引く）
   world_id       TEXT,
   persona_id     TEXT,
   status         TEXT    NOT NULL,         -- pending / processing / applied / skipped / rejected
@@ -507,7 +507,7 @@ CREATE INDEX ix_events_open    ON events(status) WHERE status IN ('pending', 'pr
 CREATE INDEX ix_events_persona ON events(persona_id, apply_no);
 CREATE INDEX ix_events_type    ON events(persona_id, event_type, time_utc);
 
--- 状態の表
+-- 状態のテーブル
 CREATE TABLE worlds (
   id TEXT PRIMARY KEY, def_id TEXT NOT NULL, seed INTEGER NOT NULL,
   status TEXT NOT NULL, graph_version INTEGER NOT NULL, created_seq INTEGER NOT NULL
@@ -577,14 +577,14 @@ CREATE TABLE memory_cursors (
 );</code></pre>
   <ul>
     <li>ペルソナの行は、変わるたびに行ごと書き直す。1行は数 KB で、前提の規模なら十分に軽い</li>
-    <li>キューの順序（時刻、段、連番）は、メモリの上で並べる（D1 1.4）。段は列に持たないので、SQL では並べない</li>
+    <li>キューの順序（時刻、ステージ、連番）は、メモリの上で並べる（D1 1.4）。ステージは列に持たないので、SQL では並べない</li>
     <li>イベントは消さない。1人あたり1日 150 件ほどとして、10 人で年 55 万件。SQLite で問題のない量</li>
-    <li>スキーマの版は <code>PRAGMA user_version</code> で持つ。マイグレーションは、アセンブリに埋め込んだ番号つきの SQL で、起動時に足りない分を1つのトランザクションで当てる</li>
+    <li>スキーマのバージョンは <code>PRAGMA user_version</code> で持つ。マイグレーションは、アセンブリに埋め込んだ番号つきの SQL で、起動時に足りない分を1つのトランザクションで当てる</li>
     <li>接続の設定は <code>journal_mode=WAL</code>、<code>synchronous=NORMAL</code>、<code>busy_timeout=5000</code>、<code>foreign_keys=ON</code></li>
   </ul>
   <div class="callout">
-    <span class="label">決定 P-23　表の構成は「よく使う列 + JSON」</span>
-    完全に正規化すると、ペルソナの状態だけで 10 表近くになり、Apply のたびの書き込みが煩雑になる。状態の表は、絞り込みに使う列（ID、所属、状態）だけを列にし、残りを JSON にする。生えた場所、辞書、受信箱、送信、記憶のように、ビューアや実行レポートで一覧にするものは、別の表にする。
+    <span class="label">決定 P-23　テーブルの構成は「よく使う列 + JSON」</span>
+    完全に正規化すると、ペルソナの状態だけで 10 テーブル近くになり、Apply のたびの書き込みが煩雑になる。状態のテーブルは、絞り込みに使う列（ID、所属、状態）だけを列にし、残りを JSON にする。生えた場所、辞書、受信箱、送信、記憶のように、ビューアや実行レポートで一覧にするものは、別のテーブルにする。
   </div>
   <div class="callout">
     <span class="label">決定 P-24　時刻は UTC の Unix ミリ秒で保存する</span>
@@ -596,8 +596,8 @@ CREATE TABLE memory_cursors (
   <h2><span class="num">3.9</span>JSON とバージョン</h2>
   <ul>
     <li>イベントのペイロードは、イベントタイプごとの record にし、<code>System.Text.Json</code> で読み書きする。イベントタイプは列（<code>event_type</code>）で持つので、JSON の中には型の印を入れない</li>
-    <li>ペイロードには <code>"v": 1</code> のように、イベントタイプごとの版を入れる。項目の名前は PascalCase で持ち、JSON の名前の付け方は、シリアライザの段階で決める（J-110）。項目を足すときは、版を上げずに省略可能な項目として足す。意味を変えるときだけ版を上げ、読み込み時に古い版を新しい形に変換する</li>
-    <li>知らないイベントタイプのイベント（新しい版で書かれたもの）を読んだら、起動を止める。黙って捨てると、状態がずれるから</li>
+    <li>ペイロードには <code>"v": 1</code> のように、イベントタイプごとのバージョンを入れる。項目の名前は PascalCase で持ち、JSON の名前の付け方は、シリアライザの段階で決める（J-110）。項目を足すときは、バージョンを上げずに省略可能な項目として足す。意味を変えるときだけバージョンを上げ、読み込み時に古いバージョンを新しい形に変換する</li>
+    <li>知らないイベントタイプのイベント（新しいバージョンで書かれたもの）を読んだら、起動を止める。握りつぶすと、状態がずれるから</li>
     <li>チャンネルが解釈する中身（返信先のノート ID など）は、コアが中を見ない JSON として持つ（VISION 10章）。不変の <code>JsonElement</code> として持ち、可変の JSON を状態に入れない（P-21。J-122）</li>
   </ul>
 </section>

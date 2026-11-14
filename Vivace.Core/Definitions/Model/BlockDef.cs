@@ -16,7 +16,7 @@ namespace Vivace.Core.Definitions.Model;
 /// <param name="With">同行するペルソナの定義 ID。</param>
 /// <param name="OnPartnerAbsent">同行者が抜けたときの扱い。</param>
 /// <param name="PhoneEvery">長いブロックの途中で、スマホを開く機会を出す間隔。書いたときだけ。</param>
-/// <param name="Source">出どころ。</param>
+/// <param name="Source">定義元。</param>
 public sealed record BlockDef(
     string Id,
     string? Within,

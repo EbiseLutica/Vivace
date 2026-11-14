@@ -24,7 +24,7 @@ namespace Vivace.Core.Definitions.Model;
 /// <param name="FollowBack">フォローバックの方針。</param>
 /// <param name="ChannelSettings">チャンネルごとの設定。中身はプラグインが読む。</param>
 /// <param name="Schedule">固定予定。</param>
-/// <param name="Source">出どころ。</param>
+/// <param name="Source">定義元。</param>
 public sealed record PersonaDef(
     PersonaDefId Id,
     string Name,

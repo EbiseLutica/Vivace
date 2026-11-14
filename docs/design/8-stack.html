@@ -65,10 +65,10 @@
     <table>
       <tr><th>用途</th><th>候補</th><th>選ぶ理由（どの設計から来るか）</th></tr>
       <tr><td>SQLite のドライバ</td><td><code>Microsoft.Data.Sqlite</code>（10.x）</td><td>.NET の標準。既定の同梱 SQLite（<code>e_sqlite3</code>）に JSON 関数が入っていて、JSON の列を絞り込める（D3 3.8）</td></tr>
-      <tr><td>SQL の書き方</td><td>手書きの SQL（ORM なし）</td><td>表は十数個、書き込みはエンジンの <code>StorageBatch</code> だけ（D4 4.2）。リフレクションに頼らないので、モバイル（NativeAOT）でも動く</td></tr>
+      <tr><td>SQL の書き方</td><td>手書きの SQL（ORM なし）</td><td>テーブルは十数個、書き込みはエンジンの <code>StorageBatch</code> だけ（D4 4.2）。リフレクションに頼らないので、モバイル（NativeAOT）でも動く</td></tr>
       <tr><td>TOML</td><td><code>Tomlyn</code>（2.x、TOML 1.1）</td><td>構文木を持ち、未知のキーの警告に行と列を出せる（D7 7.2）。NativeAOT 対応をうたっている</td></tr>
       <tr><td>JSON</td><td><code>System.Text.Json</code> + ソース生成</td><td>BCL。ペイロードの record の読み書き（D3 3.9）。ソース生成で AOT でも動く</td></tr>
-      <tr><td>不変のコレクション</td><td><code>System.Collections.Immutable</code></td><td>BCL。状態を不変にして、写しを参照で渡す（D3 P-21）</td></tr>
+      <tr><td>不変のコレクション</td><td><code>System.Collections.Immutable</code></td><td>BCL。状態を不変にして、スナップショットを参照で渡す（D3 P-21）</td></tr>
       <tr><td>コマンドのキュー</td><td><code>System.Threading.Channels</code></td><td>BCL。エンジンを唯一の書き手にするアクター（D1 P-01）</td></tr>
       <tr><td>ハッシュ</td><td><code>System.Security.Cryptography.SHA256</code></td><td>BCL。乱数のシードの導出（D5 5.9）</td></tr>
       <tr><td>ログ</td><td><code>Microsoft.Extensions.Logging.Abstractions</code></td><td>コアは抽象だけに依存し、出力先はホストが選ぶ</td></tr>
@@ -92,7 +92,7 @@
   <div class="table-wrap">
     <table>
       <tr><th>もの</th><th>使わない理由</th></tr>
-      <tr><td>EF Core</td><td>イベント表は追記と状態の更新だけで、変更追跡もマイグレーションの生成も要らない。トランザクションの境界（D1 1.9）を自分で決めたい</td></tr>
+      <tr><td>EF Core</td><td>イベントテーブルは追記と状態の更新だけで、変更追跡もマイグレーションの生成も要らない。トランザクションの境界（D1 1.9）を自分で決めたい</td></tr>
       <tr><td>NodaTime などのタイムゾーンのライブラリ</td><td>ワールドの時差は固定のずれで、夏時間を扱わない（VISION 4章）。<code>DateTimeOffset</code> と <code>TimeSpan</code> で足りる</td></tr>
       <tr><td><code>System.Random</code></td><td>バージョン間で同じ列になる保証がない（VISION 4章）。自前の SplitMix64（D5 5.9）</td></tr>
       <tr><td>ベクトル検索</td><td>記憶の検索は、タグと主題の一致から始める（D6 P-43）</td></tr>
@@ -117,7 +117,7 @@
   <p>どちらでも、コアから見えるのは <code>ILlmClient</code> だけ（D4 4.4）。PoC では、次を確かめる。</p>
   <ol>
     <li><strong>構造化出力</strong>：Planner と判定の出力スキーマで、形の崩れた出力がどのくらい出るか</li>
-    <li><strong>ツールの往復</strong>：記憶の検索のツールを、ペルソナと audience の文脈つきで呼べるか（D4 4.4）</li>
+    <li><strong>ツールの往復</strong>：記憶の検索のツールを、ペルソナと audience のコンテキストつきで呼べるか（D4 4.4）</li>
     <li><strong>プロンプトキャッシュ</strong>：ペルソナの lore とワールドの lore を固定の前置きにして、キャッシュが効くか。1人1日 30〜100 回の呼び出し（D6 6.9）の費用に直結する</li>
     <li><strong>使用量</strong>：トークン数とモデル名を、呼び出しごとに取れるか（痕跡と実行レポート）</li>
     <li><strong>取り消し</strong>：<code>CancellationToken</code> で、締め切り（D1 1.6）に呼び出しを止められるか</li>

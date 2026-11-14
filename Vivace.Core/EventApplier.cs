@@ -6,17 +6,17 @@ using Vivace.Core.EventRules;
 
 namespace Vivace.Core;
 
-/// <summary>イベントの適用の入口。イベントを適用し、新しい状態と後続のイベントとシグナルを返す。同じ入力なら同じ結果になる。</summary>
+/// <summary>イベントの適用のエントリポイント。イベントを適用し、新しい状態と後続のイベントとシグナルを返す。同じ入力なら同じ結果になる。</summary>
 public sealed class EventApplier
 {
-    /// <summary>扱うイベントタイプとルールの表。起動時に組み、以後は変えない。キーは序数で比べる。</summary>
+    /// <summary>扱うイベントタイプとルールのテーブル。起動時に組み、以後は変えない。キーは序数で比べる。</summary>
     internal static readonly ImmutableDictionary<string, IEventRule> Table = BuildTable();
 
-    /// <summary>規則の文脈。</summary>
+    /// <summary>規則のコンテキスト。</summary>
     private readonly RuleContext _ctx;
 
-    /// <summary>規則の文脈を受け取って作る。</summary>
-    /// <param name="ctx">規則の文脈。</param>
+    /// <summary>規則のコンテキストを受け取って作る。</summary>
+    /// <param name="ctx">規則のコンテキスト。</param>
     public EventApplier(RuleContext ctx)
     {
         _ctx = ctx;
@@ -52,7 +52,7 @@ public sealed class EventApplier
                 case ActivityVersionCheck version:
                     if (persona is null || persona.ActivityVersion != version.Expected)
                     {
-                        return "行動の版が違う";
+                        return "行動のバージョンが違う";
                     }
 
                     break;
@@ -73,7 +73,7 @@ public sealed class EventApplier
                 case PlanVersionCheck plan:
                     if (persona is null || persona.PlanVersion != plan.Expected)
                     {
-                        return "プランの版が違う";
+                        return "プランのバージョンが違う";
                     }
 
                     break;
@@ -85,7 +85,7 @@ public sealed class EventApplier
         return null;
     }
 
-    /// <summary>却下の結果を作り、決め直しが要れば決めどきを積む。</summary>
+    /// <summary>却下の結果を作り、再決定が要れば決定タイミングを積む。</summary>
     private static ApplyResult Rejected(SimState state, SimEvent ev, Guard guard, string reason)
     {
         var followUps = ImmutableArray<EventDraft>.Empty;
@@ -98,7 +98,7 @@ public sealed class EventApplier
         return new ApplyResult(state, EventStatus.Rejected, reason, followUps, []);
     }
 
-    /// <summary>全ルールから表を組む。同じイベントタイプのルールがあれば例外になる。</summary>
+    /// <summary>全ルールからテーブルを組む。同じイベントタイプのルールがあれば例外になる。</summary>
     private static ImmutableDictionary<string, IEventRule> BuildTable() =>
         new IEventRule[]
         {

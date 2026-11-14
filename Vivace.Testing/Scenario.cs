@@ -18,7 +18,7 @@ public static class Scenario
     /// <summary>シナリオの開始。2026-11-01 の 23:00（現地、+09:00）。2人とも、23:30 前後の睡眠の少し前に生まれる。</summary>
     public static readonly DateTimeOffset Start = new(2026, 11, 1, 23, 0, 0, TimeSpan.FromHours(9));
 
-    /// <summary>既定のワールドの種。</summary>
+    /// <summary>既定のワールドのシード。</summary>
     public const ulong WorldSeed = 20261101;
 
     /// <summary>既定で生成するペルソナ。香織（家は kaori_room）と栞（家は home_living）。</summary>
@@ -31,7 +31,7 @@ public static class Scenario
     /// <summary>
     /// シナリオの初期状態を入れたエンジンを作る（まだ回さない）。呼び出し側が破棄する。
     /// </summary>
-    /// <param name="seed">ワールドの種。</param>
+    /// <param name="seed">ワールドのシード。</param>
     /// <param name="decider">決める側。省略すると効用による決定。</param>
     /// <param name="definitions">定義。省略するとテスト用の町。</param>
     /// <param name="personas">生成するペルソナ（定義 ID と家）。省略すると香織と栞。</param>
@@ -61,7 +61,7 @@ public static class Scenario
     /// シナリオを days 日回し、エンジンを返す。呼び出し側が破棄する。
     /// </summary>
     /// <param name="days">回す日数。</param>
-    /// <param name="seed">ワールドの種。</param>
+    /// <param name="seed">ワールドのシード。</param>
     public static async Task<SimEngine> RunAsync(int days, ulong seed = WorldSeed)
     {
         var engine = await CreateAsync(seed);

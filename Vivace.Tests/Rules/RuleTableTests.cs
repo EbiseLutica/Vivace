@@ -4,7 +4,7 @@ using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Rules;
 
-/// <summary>イベントタイプから引くルールの表。段階2 で扱うタイプをすべて持ち、表にないタイプは例外になる。</summary>
+/// <summary>イベントタイプから引くルールのテーブル。段階2 で扱うタイプをすべて持ち、テーブルにないタイプは例外になる。</summary>
 public class RuleTableTests
 {
     /// <summary>段階2 で扱うイベントタイプ。</summary>
@@ -24,7 +24,7 @@ public class RuleTableTests
         "action.ended",
     ];
 
-    /// <summary>表のキーは段階2 の12タイプちょうどで、余りも不足もない。</summary>
+    /// <summary>テーブルのキーは段階2 の12タイプちょうどで、余りも不足もない。</summary>
     [Fact]
     public void TableHasExactlyTheStage2EventTypes()
     {
@@ -33,7 +33,7 @@ public class RuleTableTests
             EventApplier.Table.Keys.Order(StringComparer.Ordinal));
     }
 
-    /// <summary>各ルールの EventType は、表でそのルールを引くキーと一致する。</summary>
+    /// <summary>各ルールの EventType は、テーブルでそのルールを引くキーと一致する。</summary>
     [Fact]
     public void EachRuleReportsTheKeyItIsListedUnder()
     {
@@ -43,7 +43,7 @@ public class RuleTableTests
         }
     }
 
-    /// <summary>表にないイベントタイプは、NotSupportedException になる。</summary>
+    /// <summary>テーブルにないイベントタイプは、NotSupportedException になる。</summary>
     [Fact]
     public void UnlistedEventTypeThrowsNotSupported()
     {

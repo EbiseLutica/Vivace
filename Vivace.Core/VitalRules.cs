@@ -54,7 +54,7 @@ public static class VitalRules
     /// <summary>
     /// 状態変数の率を計算し直す。mover と、places にいる人が対象（居合わせが変わったので、社交欲求の率が変わりうる）。
     /// </summary>
-    /// <param name="ctx">規則の文脈。</param>
+    /// <param name="ctx">規則のコンテキスト。</param>
     /// <param name="state">全体の状態。</param>
     /// <param name="now">時刻。</param>
     /// <param name="mover">動いたペルソナ。</param>
@@ -87,7 +87,7 @@ public static class VitalRules
 
     /// <summary>
     /// ペルソナの状態変数の率を、いまの状態に合わせて計算し直す。率が変わった変数だけ、いまの値を基準にして置き直す。
-    /// 率が1つでも変わったら、状態変数の版を上げる。
+    /// 率が1つでも変わったら、状態変数のバージョンを上げる。
     /// </summary>
     /// <param name="state">全体の状態（ペルソナの居場所や行動は、呼ぶ前に更新しておく）。</param>
     /// <param name="persona">ペルソナ。</param>

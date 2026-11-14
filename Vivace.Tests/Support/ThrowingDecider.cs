@@ -2,7 +2,7 @@ using Vivace.Core.Decision;
 
 namespace Vivace.Tests.Support;
 
-/// <summary>必ず例外を投げる Decider。決める側の仕事の失敗を起こす。</summary>
+/// <summary>必ず例外を投げる Decider。決める側のジョブの失敗を起こす。</summary>
 internal sealed class ThrowingDecider : IDecider
 {
     /// <summary>例外の文言。</summary>

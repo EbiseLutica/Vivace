@@ -6,5 +6,5 @@ namespace Vivace.Core.Definitions.Model;
 /// <param name="Date">日付。</param>
 /// <param name="Skip">この日は外すブロックの定義 ID。</param>
 /// <param name="Blocks">この日だけ足すブロック。</param>
-/// <param name="Source">出どころ。</param>
+/// <param name="Source">定義元。</param>
 public sealed record ExceptionDef(DateOnly Date, ImmutableArray<string> Skip, ImmutableArray<BlockDef> Blocks, DefinitionSource Source);

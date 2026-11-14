@@ -5,13 +5,13 @@ using Vivace.Core.Events;
 
 namespace Vivace.Core.EventRules;
 
-/// <summary>行動を終え、終了時の効果を当て、次の決めどきを積む。</summary>
+/// <summary>行動を終え、終了時の効果を当て、次の決定タイミングを積む。</summary>
 internal sealed class ActionEndedRule : EventRule<ActionEndedPayload>
 {
     /// <summary>扱うイベントタイプ。</summary>
     public override string EventType => EventTypes.ActionEnded;
 
-    /// <summary>行動を終え、終了時の効果を当て、次の決めどきを積む。</summary>
+    /// <summary>行動を終え、終了時の効果を当て、次の決定タイミングを積む。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, ActionEndedPayload payload)
     {
         if (state.AlivePersona(ev.PersonaId) is not { } persona)

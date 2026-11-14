@@ -3,7 +3,7 @@ using Vivace.Core.Domain.State;
 
 namespace Vivace.Core.Events.Payloads;
 
-/// <summary>状態変数の調整（窓口から）。</summary>
+/// <summary>状態変数の調整（外からの投入）。</summary>
 /// <param name="Vital">状態変数。</param>
 /// <param name="Kind">増減か設定か。</param>
 /// <param name="Value">値。</param>

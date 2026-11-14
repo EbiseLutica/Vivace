@@ -20,7 +20,7 @@ public class DefinitionErrorTests
         Assert.Null(result.Definitions);
     }
 
-    /// <summary>必須の項目（ここでは場所の name）がなければ、その表の見出しの位置にエラーが出る。</summary>
+    /// <summary>必須の項目（ここでは場所の name）がなければ、そのテーブルの見出しの位置にエラーが出る。</summary>
     [Fact]
     public void MissingRequiredItemIsReportedAtTableHeader()
     {
@@ -61,7 +61,7 @@ public class DefinitionErrorTests
     }
 
     /// <summary>
-    /// 参照先がなければ、参照しているキーの位置にエラーが出る。辺、居住ワールド、固定予定の行動と場所、home、同行者の各場合。
+    /// 参照先がなければ、参照しているキーの位置にエラーが出る。区間、居住ワールド、固定予定の行動と場所、home、同行者の各場合。
     /// </summary>
     [Theory]
     [InlineData("worlds/testville.toml", "park = 10", "nowhere = 10")]
@@ -81,7 +81,7 @@ public class DefinitionErrorTests
         Assert.Null(result.Definitions);
     }
 
-    /// <summary>両側に書いた辺の移動時間が食い違えば、後から書いたほうの辺の位置にエラーが出る。</summary>
+    /// <summary>両側に書いた区間の移動時間が食い違えば、後から書いたほうの区間の位置にエラーが出る。</summary>
     [Fact]
     public void EdgeMismatchIsReportedAtLaterEdge()
     {

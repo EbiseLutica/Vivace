@@ -269,7 +269,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>行動の ID が空なら、値のエラーになる（黙って捨てない）。</summary>
+    /// <summary>行動の ID が空なら、値のエラーになる（握りつぶさない）。</summary>
     [Fact]
     public void EmptyActionIdIsRejected()
     {
@@ -381,7 +381,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>同じ表の見出しを2回書けば、重複のエラーになる。</summary>
+    /// <summary>同じテーブルの見出しを2回書けば、重複のエラーになる。</summary>
     [Fact]
     public void DuplicateTableHeaderIsReported()
     {

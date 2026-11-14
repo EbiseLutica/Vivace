@@ -134,7 +134,7 @@ public static class ActionRules
     }
 
     /// <summary>行動を決めたときに実行できるか。ペルソナが場所にいて、行動が使えて、場所とつながり、制限を満たすこと。帰還できるかは見ない。</summary>
-    /// <param name="ctx">規則の文脈。</param>
+    /// <param name="ctx">規則のコンテキスト。</param>
     /// <param name="state">全体の状態。</param>
     /// <param name="persona">ペルソナの状態。</param>
     /// <param name="actionId">行動の定義 ID。</param>
