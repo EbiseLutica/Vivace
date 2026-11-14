@@ -58,9 +58,9 @@ public static class DryRunCommand
 
         await engine.RunUntilAsync(start.AddDays(days), ct);
 
-        var offsets = engine.View.Personas.Values.ToDictionary(
-            persona => persona.Id,
-            persona => definitions.Worlds[engine.View.Worlds[persona.World].DefId].UtcOffset);
+        var offsets = engine.View.Worlds.Values.ToDictionary(
+            world => world.Id,
+            world => definitions.Worlds[world.DefId].UtcOffset);
         output.Write(DryRunReport.Render(storage.Events, offsets));
         return 0;
     }

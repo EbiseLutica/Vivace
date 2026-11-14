@@ -22,8 +22,8 @@ public static class DryRunReport
 
     /// <summary>記録から行動表と件数を組み立てる。改行は LF。</summary>
     /// <param name="records">保存先の記録（追加された順）。</param>
-    /// <param name="utcOffsets">人ごとの現地の時差。記録にない人は UTC とみなす。</param>
-    public static string Render(IEnumerable<LoggedEvent> records, IReadOnlyDictionary<PersonaId, TimeSpan> utcOffsets)
+    /// <param name="utcOffsets">ワールドごとの現地の時差。記録にないワールドは UTC とみなす。</param>
+    public static string Render(IEnumerable<LoggedEvent> records, IReadOnlyDictionary<WorldId, TimeSpan> utcOffsets)
     {
         var list = records.ToList();
         var rows = BuildRows(list.Where(entry => entry.Status == EventStatus.Applied));
@@ -42,7 +42,6 @@ public static class DryRunReport
                 .Append('（').Append(Weekdays[(int)date.DayOfWeek]).Append("）\n");
             foreach (var persona in personas)
             {
-                var offset = OffsetOf(persona, utcOffsets);
                 var personaRows = rows.Where(row => row.Persona == persona && LocalDate(row, utcOffsets) == date).ToList();
                 if (personaRows.Count == 0)
                 {
@@ -52,7 +51,7 @@ public static class DryRunReport
                 builder.Append(persona.Value).Append('\n');
                 foreach (var row in personaRows)
                 {
-                    builder.Append("  ").Append(FormatRow(row, offset)).Append('\n');
+                    builder.Append("  ").Append(FormatRow(row, utcOffsets)).Append('\n');
                 }
             }
         }
@@ -70,7 +69,9 @@ public static class DryRunReport
         return builder.ToString();
     }
 
-    /// <summary>適用されたイベントから、行動と移動の行を作る。同じ人の終わりの記録で閉じ、閉じないものは終わりを持たない。</summary>
+    /// <summary>
+    /// 適用されたイベントから、行動と移動の行を作る。同じ人の終わりの記録で閉じる。途中で次の行が始まったら、その開始の時刻で閉じる。
+    /// </summary>
     private static List<Row> BuildRows(IEnumerable<LoggedEvent> applied)
     {
         var rows = new List<Row>();
@@ -86,16 +87,16 @@ public static class DryRunReport
             switch (ev.Payload)
             {
                 case ActionStartedPayload started:
-                    Flush(persona, rows, open);
-                    open[persona] = new Row(persona, ev.Time, null, RowKind.Action, $"[{ReasonLabel(started.Reason)}] {started.ActionId} @{started.Place.Value}");
+                    CloseAt(persona, ev.Time, rows, open);
+                    open[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.Action, $"[{ReasonLabel(started.Reason)}] {started.ActionId} @{started.Place.Value}");
                     break;
                 case ActionEndedPayload when open.TryGetValue(persona, out var action) && action.Kind == RowKind.Action:
                     rows.Add(action with { End = ev.Time });
                     open.Remove(persona);
                     break;
                 case TravelStartedPayload travel:
-                    Flush(persona, rows, open);
-                    open[persona] = new Row(persona, ev.Time, null, RowKind.Travel, $"移動 {travel.From.Value} → {travel.To.Value}");
+                    CloseAt(persona, ev.Time, rows, open);
+                    open[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.Travel, $"移動 {travel.From.Value} → {travel.To.Value}");
                     break;
                 case TravelArrivedPayload when open.TryGetValue(persona, out var trip) && trip.Kind == RowKind.Travel:
                     rows.Add(trip with { End = ev.Time });
@@ -106,36 +107,37 @@ public static class DryRunReport
 
         foreach (var persona in open.Keys.OrderBy(id => id.Value, StringComparer.Ordinal).ToList())
         {
-            Flush(persona, rows, open);
+            rows.Add(open[persona]);
         }
 
         return rows;
     }
 
-    /// <summary>人の開いている行があれば、終わりのないまま行の列に移す。</summary>
-    private static void Flush(PersonaId persona, List<Row> rows, Dictionary<PersonaId, Row> open)
+    /// <summary>人の開いている行があれば、時刻 at で閉じて行の列に移す。</summary>
+    private static void CloseAt(PersonaId persona, DateTimeOffset at, List<Row> rows, Dictionary<PersonaId, Row> open)
     {
         if (open.Remove(persona, out var pending))
         {
-            rows.Add(pending);
+            rows.Add(pending with { End = at });
         }
     }
 
-    /// <summary>行を "開始-終わり 本文" の形にする。終わりがなければ --:--。</summary>
-    private static string FormatRow(Row row, TimeSpan offset)
+    /// <summary>行を "開始-終わり 本文" の形にする。終わりの記録がなければ「未終了」。</summary>
+    private static string FormatRow(Row row, IReadOnlyDictionary<WorldId, TimeSpan> utcOffsets)
     {
+        var offset = OffsetOf(row, utcOffsets);
         var start = TimeOf(row.Start, offset);
         var end = row.End is { } finished ? TimeOf(finished, offset) : Unfinished;
         return $"{start}-{end} {row.Body}";
     }
 
     /// <summary>行の開始の現地の日付。</summary>
-    private static DateOnly LocalDate(Row row, IReadOnlyDictionary<PersonaId, TimeSpan> utcOffsets) =>
-        LocalTimeHelper.ToLocal(row.Start, OffsetOf(row.Persona, utcOffsets)).Date;
+    private static DateOnly LocalDate(Row row, IReadOnlyDictionary<WorldId, TimeSpan> utcOffsets) =>
+        LocalTimeHelper.ToLocal(row.Start, OffsetOf(row, utcOffsets)).Date;
 
-    /// <summary>人の現地の時差。記録がなければ UTC。</summary>
-    private static TimeSpan OffsetOf(PersonaId persona, IReadOnlyDictionary<PersonaId, TimeSpan> utcOffsets) =>
-        utcOffsets.TryGetValue(persona, out var offset) ? offset : TimeSpan.Zero;
+    /// <summary>行のワールドの現地の時差。ワールドがなければ UTC。</summary>
+    private static TimeSpan OffsetOf(Row row, IReadOnlyDictionary<WorldId, TimeSpan> utcOffsets) =>
+        row.World is { } world && utcOffsets.TryGetValue(world, out var offset) ? offset : TimeSpan.Zero;
 
     /// <summary>UTC の時刻を、現地の "HH:mm" にする。</summary>
     private static string TimeOf(DateTimeOffset utc, TimeSpan offset) =>
@@ -164,11 +166,12 @@ public static class DryRunReport
         Travel,
     }
 
-    /// <summary>表の1行。End が null なら、記録の終わりまで続いている。</summary>
+    /// <summary>表の1行。End が null なら、記録の終わりまで続いている（未終了）。</summary>
     /// <param name="Persona">人。</param>
+    /// <param name="World">人のワールド。記録になければ null。</param>
     /// <param name="Start">開始の時刻（UTC）。</param>
-    /// <param name="End">終わりの時刻（UTC）。まだ閉じていなければ null。</param>
+    /// <param name="End">終わりの時刻（UTC）。終わりの記録があればその時刻、途中で次の行が始まったらその開始の時刻、記録の終わりまで続いていれば null。</param>
     /// <param name="Kind">行の種類。</param>
     /// <param name="Body">本文（行動の表記、または移動の表記）。</param>
-    private sealed record Row(PersonaId Persona, DateTimeOffset Start, DateTimeOffset? End, RowKind Kind, string Body);
+    private sealed record Row(PersonaId Persona, WorldId? World, DateTimeOffset Start, DateTimeOffset? End, RowKind Kind, string Body);
 }
