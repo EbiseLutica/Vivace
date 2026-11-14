@@ -5,7 +5,7 @@ using Vivace.Core.Events;
 namespace Vivace.Core;
 
 /// <summary>
-/// 投入の窓口の検査。時刻を決め、どの型にも共通の検査をしてから、その型のルールに検査を任せ、通ったらキューに入れる下書きを作る。
+/// 投入の窓口の検査。時刻を決め、どの型にも共通の検査をしてから、その型のルールに検査を任せ、通ったらキューに入れるドラフトを作る。
 /// </summary>
 public sealed class InjectionValidator
 {
@@ -22,12 +22,12 @@ public sealed class InjectionValidator
         _ctx = ctx;
     }
 
-    /// <summary>要求を検査する。通ったらキューに入れる下書きを、通らなければ拒否の理由を返す。</summary>
+    /// <summary>要求を検査する。通ったらキューに入れるドラフトを、通らなければ拒否の理由を返す。</summary>
     /// <param name="state">いまの状態。</param>
     /// <param name="pending">未適用のイベント。</param>
     /// <param name="request">投入の要求。</param>
     /// <param name="now">エンジンが処理する時点の時計の時刻。</param>
-    /// <param name="draft">通ったときの下書き。</param>
+    /// <param name="draft">通ったときのドラフト。</param>
     /// <param name="reason">通らなかったときの理由。</param>
     /// <returns>通ったかどうか。</returns>
     public bool TryValidate(

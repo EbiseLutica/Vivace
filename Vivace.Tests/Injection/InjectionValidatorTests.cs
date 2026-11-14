@@ -25,7 +25,7 @@ public class InjectionValidatorTests
         Assert.Equal("過去の時刻", reason);
     }
 
-    /// <summary>時刻を省略すると、処理する時点の時刻で、要求の出所のまま下書きになる。</summary>
+    /// <summary>時刻を省略すると、処理する時点の時刻で、要求の出所のままドラフトになる。</summary>
     [Fact]
     public void OmittedTimeUsesNow()
     {
@@ -149,7 +149,7 @@ public class InjectionValidatorTests
     private static SimEvent QueuedWorld(DateTimeOffset time, WorldDefId defId) =>
         new(1, time, EventTypes.WorldCreated, null, null, new WorldCreatedPayload(defId, 42), null, null, null, Origin.Test, null, null);
 
-    /// <summary>基準の時刻で検査し、通ることを確かめて下書きを返す。</summary>
+    /// <summary>基準の時刻で検査し、通ることを確かめてドラフトを返す。</summary>
     private static EventDraft Accept(SimState state, SimEvent[] pending, InjectRequest request)
     {
         var accepted = new InjectionValidator(Fixture.Context).TryValidate(state, pending, request, Fixture.Now, out var draft, out var reason);

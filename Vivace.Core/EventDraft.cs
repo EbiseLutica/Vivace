@@ -6,7 +6,7 @@ using Vivace.Core.Events.Payloads;
 
 namespace Vivace.Core;
 
-/// <summary>キューに入る前のイベントの下書き。Apply の後続、決める側の出力、投入のいずれにも使う。</summary>
+/// <summary>キューに入る前のイベントのドラフト。Apply の後続、決める側の出力、投入のいずれにも使う。</summary>
 /// <param name="Time">時刻。</param>
 /// <param name="EventType">イベントタイプの名前。</param>
 /// <param name="WorldId">ワールド。</param>

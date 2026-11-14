@@ -246,7 +246,7 @@ public sealed record LlmPolicy(
       <tr><td><code>EventApplier</code> / <code>IEventRule</code></td><td>Apply の入口と、イベントタイプごとのルール。入口は適用前の検査（guard）を評価してから、ルールを引いて呼ぶ。入口はインスタンスで、不変の規則のコンテキストとルールのテーブルだけを持つ。副作用を持たない</td><td>D2</td></tr>
       <tr><td><code>Lanes</code></td><td>レーンごとの直列の実行と、LLM の同時実行数の制限</td><td>D1 1.5</td></tr>
       <tr><td><code>Dispatcher</code></td><td>配信役。未送信の操作を送り、結果をコマンドで返す</td><td>VISION 10章</td></tr>
-      <tr><td><code>InjectionValidator</code></td><td>投入の窓口。要求を検査し、キューに入れる下書きにする</td><td>D2 2.8</td></tr>
+      <tr><td><code>InjectionValidator</code></td><td>投入の窓口。要求を検査し、キューに入れるドラフトにする</td><td>D2 2.8</td></tr>
       <tr><td><code>DefinitionLoader</code> / <code>DefinitionValidator</code></td><td>TOML の読み込みと検証。エディタからも呼べる</td><td>D3、D7</td></tr>
       <tr><td><code>RouteTable</code></td><td>最短経路のテーブル（グラフのバージョンごとにキャッシュ）</td><td>D5</td></tr>
       <tr><td><code>UtilityDecider</code></td><td>候補の絞り込み、スコア、抽選</td><td>D5</td></tr>
