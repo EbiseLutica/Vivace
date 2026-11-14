@@ -344,7 +344,7 @@ public static class FixedScheduleResolver
     /// <summary>展開したブロックの1区間。</summary>
     private readonly record struct Piece(BlockDef Block, int Start, int End, Inherited Inherited);
 
-    /// <summary>1日の解決に使う文脈と、途中の結果。</summary>
+    /// <summary>1日の解決に使うコンテキストと、途中の結果。</summary>
     private sealed record DayContext(
         DefinitionPack Definitions,
         DateOnly Date,

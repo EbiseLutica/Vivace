@@ -117,7 +117,7 @@
   <p>どちらでも、コアから見えるのは <code>ILlmClient</code> だけ（D4 4.4）。PoC では、次を確かめる。</p>
   <ol>
     <li><strong>構造化出力</strong>：Planner と判定の出力スキーマで、形の崩れた出力がどのくらい出るか</li>
-    <li><strong>ツールの往復</strong>：記憶の検索のツールを、ペルソナと audience の文脈つきで呼べるか（D4 4.4）</li>
+    <li><strong>ツールの往復</strong>：記憶の検索のツールを、ペルソナと audience のコンテキストつきで呼べるか（D4 4.4）</li>
     <li><strong>プロンプトキャッシュ</strong>：ペルソナの lore とワールドの lore を固定の前置きにして、キャッシュが効くか。1人1日 30〜100 回の呼び出し（D6 6.9）の費用に直結する</li>
     <li><strong>使用量</strong>：トークン数とモデル名を、呼び出しごとに取れるか（痕跡と実行レポート）</li>
     <li><strong>取り消し</strong>：<code>CancellationToken</code> で、締め切り（D1 1.6）に呼び出しを止められるか</li>

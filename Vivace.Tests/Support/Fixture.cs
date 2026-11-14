@@ -33,7 +33,7 @@ public static class Fixture
         return new RuleContext(definitions, RouteCache.Create(definitions));
     });
 
-    /// <summary>テストの規則の文脈（定義と最短経路の表）。</summary>
+    /// <summary>テストの規則のコンテキスト（定義と最短経路の表）。</summary>
     public static RuleContext Context => Shared.Value;
 
     /// <summary>空の状態。位置は基準の時刻。</summary>

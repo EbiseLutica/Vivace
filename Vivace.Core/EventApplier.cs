@@ -12,11 +12,11 @@ public sealed class EventApplier
     /// <summary>扱うイベントタイプとルールの表。起動時に組み、以後は変えない。キーは序数で比べる。</summary>
     internal static readonly ImmutableDictionary<string, IEventRule> Table = BuildTable();
 
-    /// <summary>規則の文脈。</summary>
+    /// <summary>規則のコンテキスト。</summary>
     private readonly RuleContext _ctx;
 
-    /// <summary>規則の文脈を受け取って作る。</summary>
-    /// <param name="ctx">規則の文脈。</param>
+    /// <summary>規則のコンテキストを受け取って作る。</summary>
+    /// <param name="ctx">規則のコンテキスト。</param>
     public EventApplier(RuleContext ctx)
     {
         _ctx = ctx;

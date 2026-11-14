@@ -12,7 +12,7 @@ public static class Invariants
     public const int MaxAppliedAtOneInstant = 10_000;
 
     /// <summary>1回の適用の後に、状態を検査する。</summary>
-    /// <param name="ctx">規則の文脈。</param>
+    /// <param name="ctx">規則のコンテキスト。</param>
     /// <param name="state">適用の後の状態。</param>
     /// <param name="previousTime">適用の前の位置の時刻。</param>
     /// <param name="busy">決める側の仕事が動いている（走っている、または出力を待っている）ペルソナ。</param>

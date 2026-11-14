@@ -9,7 +9,7 @@ namespace Vivace.Core.Domain.State;
 /// <param name="NextRebuildAt">次に作り直す時刻。</param>
 /// <param name="Source">由来。</param>
 /// <param name="Blocks">ブロックの列。</param>
-/// <param name="Summary">期間の一言の要約（文脈に使う）。</param>
+/// <param name="Summary">期間の一言の要約（コンテキストに使う）。</param>
 public sealed record DayPlan(
     long Version,
     DateTimeOffset HorizonStart,

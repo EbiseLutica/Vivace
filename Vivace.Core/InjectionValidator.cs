@@ -12,11 +12,11 @@ public sealed class InjectionValidator
     /// <summary>ルールがない型、またはルールが投入を受け付けない型の拒否の理由。</summary>
     internal const string UnsupportedReason = "未対応の型";
 
-    /// <summary>規則の文脈。</summary>
+    /// <summary>規則のコンテキスト。</summary>
     private readonly RuleContext _ctx;
 
-    /// <summary>規則の文脈を受け取って作る。</summary>
-    /// <param name="ctx">規則の文脈。</param>
+    /// <summary>規則のコンテキストを受け取って作る。</summary>
+    /// <param name="ctx">規則のコンテキスト。</param>
     public InjectionValidator(RuleContext ctx)
     {
         _ctx = ctx;
