@@ -728,11 +728,11 @@ public static class DefinitionValidator
     /// <summary>ワイルドカードの前の部分を返す（末尾の "." を含む）。</summary>
     private static string WildcardPrefix(string entry) => entry[..^1];
 
-    /// <summary>問題を一覧に足す。重さはコードから決める。</summary>
+    /// <summary>問題を一覧に足す。重大度はコードから決める。</summary>
     private static void Add(List<DefinitionIssue> issues, DefinitionIssueCode code, SourceLocation location, string message) =>
         issues.Add(new DefinitionIssue(SeverityOf(code), code, location, message));
 
-    /// <summary>問題のコードの重さを返す。</summary>
+    /// <summary>問題のコードの重大度を返す。</summary>
     private static IssueSeverity SeverityOf(DefinitionIssueCode code) => code switch
     {
         DefinitionIssueCode.UnknownKey
