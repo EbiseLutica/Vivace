@@ -16,7 +16,14 @@ public static class ValidateCommand
             return 1;
         }
 
-        var result = DefinitionLoader.LoadDirectory(dir);
+        return Write(DefinitionLoader.LoadDirectory(dir), output);
+    }
+
+    /// <summary>読み込みの結果の問題を書き、件数を書く。エラーがあれば 1、なければ 0 を返す。</summary>
+    /// <param name="result">読み込みの結果。</param>
+    /// <param name="output">出力先。</param>
+    public static int Write(DefinitionLoadResult result, TextWriter output)
+    {
         foreach (var issue in result.Issues)
         {
             output.WriteLine(issue.ToString());
