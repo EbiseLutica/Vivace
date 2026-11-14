@@ -39,9 +39,9 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly List<Output> _held = [];
     private readonly HashSet<long> _dropped = [];
     private readonly Channel<Output> _outputs = Channel.CreateUnbounded<Output>();
-    /// <summary>走っている間に届いた投入のコマンド。各周の先頭で取り出す。</summary>
+    /// <summary>実行中に届いた投入のコマンド。各周の先頭で取り出す。</summary>
     private readonly Channel<InjectCommand> _commands = Channel.CreateUnbounded<InjectCommand>();
-    /// <summary>走っているかどうかのフラグと、投入のコマンドの受け付けを守るロック。</summary>
+    /// <summary>実行中かどうかのフラグと、投入のコマンドの受け付けを守るロック。</summary>
     private readonly Lock _gate = new();
     private readonly List<LoggedEvent> _log = [];
     private long _nextSeq;
@@ -98,7 +98,7 @@ public sealed class SimEngine : IAsyncDisposable
 
     /// <summary>
     /// 投入の窓口。要求を検査し、通ればキューに入れて連番を、通らなければ拒否の理由を返す。
-    /// 走っていなければその場で処理し、走っている間は、ループが次の周の先頭で処理する。
+    /// 実行中でなければその場で処理し、実行中は、ループが次の周の先頭で処理する。
     /// 検査は、処理する時点の状態とキューと時計の時刻で行う。
     /// </summary>
     /// <param name="request">投入の要求。</param>
@@ -164,7 +164,7 @@ public sealed class SimEngine : IAsyncDisposable
         {
             if (_looping)
             {
-                throw new InvalidOperationException("RunUntilAsync はすでに走っています。");
+                throw new InvalidOperationException("RunUntilAsync はすでに実行中です。");
             }
 
             _looping = true;
@@ -238,7 +238,7 @@ public sealed class SimEngine : IAsyncDisposable
 
     /// <summary>
     /// レーンを止め、動いている仕事の終わりを待ってから、保存先を閉じる。仕事の結果は捨てる。
-    /// レーンの仕事の例外は、ここでは投げない（走らせている間に RunUntilAsync が投げる）。
+    /// レーンの仕事の例外は、ここでは投げない（実行している間に RunUntilAsync が投げる）。
     /// </summary>
     public async ValueTask DisposeAsync()
     {
@@ -507,7 +507,7 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>決める側の仕事が動いている（走っている、または出力を待っている）ペルソナ。</summary>
+    /// <summary>決める側の仕事が動いている（実行中、または出力を待っている）ペルソナ。</summary>
     private ImmutableHashSet<PersonaId> Busy() =>
         _running.Values.Select(run => run.Persona).Concat(_held.Select(output => output.Persona)).ToImmutableHashSet();
 
@@ -523,7 +523,7 @@ public sealed class SimEngine : IAsyncDisposable
     /// <summary>実行中の決める仕事。</summary>
     private sealed record Running(long Key, PersonaId Persona, DateTimeOffset Horizon, string Lane);
 
-    /// <summary>走っている間に届いた投入のコマンド。</summary>
+    /// <summary>実行中に届いた投入のコマンド。</summary>
     private sealed record InjectCommand(InjectRequest Request, TaskCompletionSource<InjectResult> Completion);
 
     /// <summary>決める仕事の結果。</summary>

@@ -7,7 +7,7 @@ using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Engine;
 
-/// <summary>エンジンの投入の窓口。走っていないときはその場で、走っている間はループの中で処理する。</summary>
+/// <summary>エンジンの投入の窓口。実行中でないときはその場で、実行中はループの中で処理する。</summary>
 public class InjectAsyncTests
 {
     private static readonly (PersonaDefId, PlaceId)[] KaoriOnly = [(new PersonaDefId("kaori"), new PlaceId("kaori_room"))];
@@ -15,7 +15,7 @@ public class InjectAsyncTests
     private static readonly PlaceId HomeLiving = new("home_living");
 
     /// <summary>
-    /// 走っていないときの投入は、その場で連番を返す。ワールドと香織で 1 と 2 を使ったので、栞は 3。
+    /// 実行中でないときの投入は、その場で連番を返す。ワールドと香織で 1 と 2 を使ったので、栞は 3。
     /// 拒否した要求は連番を使わない。
     /// </summary>
     [Fact]
@@ -32,7 +32,7 @@ public class InjectAsyncTests
         Assert.True(accepted.Accepted);
     }
 
-    /// <summary>走っていないときの過去の時刻は、拒否する。時計はシナリオの開始にある。</summary>
+    /// <summary>実行中でないときの過去の時刻は、拒否する。時計はシナリオの開始にある。</summary>
     [Fact]
     public async Task InjectOutsideRunRejectsPastTime()
     {
@@ -44,7 +44,7 @@ public class InjectAsyncTests
     }
 
     /// <summary>
-    /// 走っている間（決める側の仕事の出力を待っている間）の投入は、ループが起きて処理し、仕事が終わる前に結果を返す。
+    /// 実行中（決める側の仕事の出力を待っている間）の投入は、ループが起きて処理し、仕事が終わる前に結果を返す。
     /// 時刻を省略した栞の生成は、エンジンが処理した時点の時刻で適用され、出所も残る。仮想時計は、出力を待っている間は進まないので、
     /// 投入の直前に読んだ時計の時刻がそのまま適用の時刻になる。
     /// </summary>
@@ -119,7 +119,7 @@ public class InjectAsyncTests
         Assert.Equal(until, clock.UtcNow);
     }
 
-    /// <summary>走っている間に、もう一度 RunUntilAsync を呼ぶと、例外になる。</summary>
+    /// <summary>実行中に、もう一度 RunUntilAsync を呼ぶと、例外になる。</summary>
     [Fact]
     public async Task RunUntilWhileRunningThrows()
     {
