@@ -83,7 +83,7 @@ public sealed class Lanes
         /// <summary>レーンを閉じたことの知らせ先。</summary>
         private readonly Action<Exception> _onFault;
 
-        /// <summary>仕事の列を作り、読み手のループを起動する。</summary>
+        /// <summary>仕事の列を作り、コンシューマーのループを起動する。</summary>
         /// <param name="onFault">仕事の例外でレーンを閉じたときに、その例外を受け取る。</param>
         public Lane(Action<Exception> onFault)
         {
@@ -94,7 +94,7 @@ public sealed class Lanes
         /// <summary>仕事の列。</summary>
         public Channel<Func<Task>> Jobs { get; } = Channel.CreateUnbounded<Func<Task>>();
 
-        /// <summary>読み手のループ。仕事が例外を投げると、その例外で失敗する。</summary>
+        /// <summary>コンシューマーのループ。仕事が例外を投げると、その例外で失敗する。</summary>
         public Task Loop { get; }
 
         /// <summary>レーンを閉じた仕事の例外。閉じていなければ null。</summary>
