@@ -1,3 +1,4 @@
+using System.Globalization;
 using Vivace.Core.Definitions;
 
 namespace Vivace.Cli;
@@ -31,7 +32,7 @@ public static class ValidateCommand
 
         var errors = result.Issues.Count(issue => issue.Severity == IssueSeverity.Error);
         var warnings = result.Issues.Count(issue => issue.Severity == IssueSeverity.Warning);
-        output.WriteLine($"エラー {errors} 件、警告 {warnings} 件");
+        output.WriteLine(string.Create(CultureInfo.InvariantCulture, $"エラー {errors} 件、警告 {warnings} 件"));
         return result.HasErrors ? 1 : 0;
     }
 }
