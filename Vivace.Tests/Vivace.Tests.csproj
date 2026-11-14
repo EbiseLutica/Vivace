@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Vivace.Core\Vivace.Core.csproj" />
+    <ProjectReference Include="..\Vivace.Cli\Vivace.Cli.csproj" />
     <ProjectReference Include="..\Vivace.Testing\Vivace.Testing.csproj" />
   </ItemGroup>
 
