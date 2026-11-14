@@ -18,7 +18,7 @@
     <span class="chip">2026-11-06 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
     <span class="chip fixed">案はすべて合意（57 件）</span>
-    <span class="chip fixed">枠の外の判断もすべて合意（161 件）</span>
+    <span class="chip fixed">枠の外の判断もすべて合意（168 件）</span>
   </div>
 </header>
 
@@ -173,7 +173,7 @@
 
 <section id="judgments">
   <h2><span class="num">0.5</span>枠の外の判断</h2>
-  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-161）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
+  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-168）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
   <h3>VISION の解釈で決めたもの</h3>
   <p>VISION から導いたつもりで、実際には読み方を1つに決めたもの。いちばん見落としやすいので、先に見てほしい。</p>
   <div class="table-wrap">
@@ -317,6 +317,13 @@
       <tr><td>J-158</td><td>公開 API の <code>View</code> は、いまは <code>SimState</code>（不変の状態）そのものを返す。読み取り用の <code>StateView</code> は、ビューアや実行レポートを作るときに、要るものだけを足す <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a></td></tr>
       <tr><td>J-159</td><td>購読（<code>Subscribe</code>）は、<code>AppliedEvent</code> を作らず、適用の記録の1件（<code>LoggedEvent</code>、<code>Status = Applied</code>）をコミットのあとに流す。登録は呼んだ時点で行う（列挙を始める前に適用されたものも取りこぼさない）。容量つきの <code>Channel</code> があふれた購読は、<code>InvalidOperationException</code> で終わらせて外し、エンジンは止めない。エンジンを破棄すると、購読は正常に終わり、破棄したあとの購読は何も流さずにすぐ終わる（例外にはしない） <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a></td></tr>
       <tr><td>J-161</td><td>ビルダー（<code>VivaceEngineBuilder</code>）では、定義、保存先、時計を必須にし、欠けていれば <code>Build()</code> が例外を投げる。定義のフォルダにエラーがあるときも例外にする。実時間の時計（<code>SystemClock</code>）を作る段階5 までは、時計の既定を置かない。<code>DryRun()</code> は、チャンネルと配信役ができるまではフラグだけを持つ。省略できるのは、決定（既定は効用による決定）、祝日のカレンダー（既定は祝日なし）、乱数（既定は SplitMix） <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a></td></tr>
+      <tr><td>J-162</td><td><code>vivace validate</code> の出力と終了コード：問題は読み込みの並びのまま、1行ずつ「位置: 重大度 コード: 文面」で出し、最後に件数を出す。エラーがあれば 1、なければ 0。定義のフォルダがないときは、その旨を出して 1 <span class="chip fixed">合意</span></td><td><a href="7-operations.html#validation">D7 7.2</a></td></tr>
+      <tr><td>J-163</td><td><code>vivace dry-run</code> の既定の開始とシードは、テスト用の <code>Scenario.Start</code> と <code>Scenario.WorldSeed</code> を共有する（値を2か所に書かない）。定義にあるワールドは、ID の序数順にすべて生成し、<code>--seed</code> の値を全ワールドに使う（ワールドごとの種は定義にないため）。投入の発生元は管理者 <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
+      <tr><td>J-164</td><td>行動表の形：日は行の開始を、その人のワールドの現地の日付で区切り（J-166）、行の開始の日に入れる（日をまたぐ行も開始の日）。日の中は人を ID の序数順に、行は開始の順に並べる。理由の表記は 予定、自由、反射、遅刻。行は同じ人の終わりの記録（<code>action.ended</code> か <code>travel.arrived</code>）で閉じる。記録の終わりまで続いている行だけを「未終了」にし、途中で次の行が始まった行は、その開始の時刻で閉じる <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
+      <tr><td>J-165</td><td><code>vivace dry-run</code> の祝日は既定（祝日なし）で回す。テスト用の <code>TestHolidays</code> は使わない。ワールド定義の <code>calendar.holidays</code> に提供元の名前（例: <code>jp</code>）があり、CLI がその提供元を用意できないときは、行動表の前に「testville: 祝日のカレンダー jp は未対応のため、祝日なしで回した」の1行を出す（ワールドは ID の序数順）。黙って無視しない <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
+      <tr><td>J-166</td><td>行動表の日付の区切りは、ワールドごとの時差で行う。行の時差は、その行の開始のイベントが持つワールド（記録の <code>WorldId</code>）から引く。ワールド ID から定義 ID を引く表は、保存先の最後の状態から作る。破棄されたワールドも、状態に <code>Status</code> つきで残る。破棄された人やワールドの行も、正しい現地の日付に切れるようにする <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
+      <tr><td>J-167</td><td><code>vivace dry-run</code> の日数の上限は数値で決めず、開始から日数を足した終わりの時刻が計算でき、さらにその1日後も計算できるかで判定する（日付の計算が範囲の端で落ちないように。開始が範囲の端でも、--days のせいとは限らない）。計算できなければ「開始と日数から終わりの時刻を計算できません。」の日本語のエラーで 1 を返し、回さない <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
+      <tr><td>J-168</td><td><code>vivace dry-run</code> の <code>--start</code> は、オフセットが必須の ISO 8601 だけを受ける（<code>+09:00</code> の形と <code>Z</code>。オフセットのない時刻、日付だけ、ISO 8601 でないものは拒否）。既定の値は、同じ形の文字列（<code>2026-11-01T23:00+09:00</code>）で、ヘルプにもそのまま出す。<code>--days</code> の省略は、日本語のエラーで止める <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>
