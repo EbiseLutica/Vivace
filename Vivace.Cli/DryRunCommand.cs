@@ -2,7 +2,6 @@ using Vivace.Core;
 using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
 using Vivace.Core.Domain.State;
-using Vivace.Core.Events;
 using Vivace.Core.Time;
 using Vivace.Testing;
 
@@ -47,20 +46,9 @@ public static class DryRunCommand
             .DryRun()
             .Build();
 
-        foreach (var world in definitions.Worlds.Values.OrderBy(w => w.Id.Value, StringComparer.Ordinal))
+        if (!await WorldSetup.InjectAsync(engine, definitions, seed, start, output, ct))
         {
-            if (!await Inject(engine, InjectRequest.WorldCreated(world.Id, seed, Origin.Admin, start), output, ct))
-            {
-                return 1;
-            }
-        }
-
-        foreach (var persona in definitions.Personas.Values.OrderBy(persona => persona.Id.Value, StringComparer.Ordinal))
-        {
-            if (!await Inject(engine, InjectRequest.PersonaCreated(persona.Id, new PlaceId(persona.Home), Origin.Admin, start), output, ct))
-            {
-                return 1;
-            }
+            return 1;
         }
 
         await engine.RunUntilAsync(until, ct);
@@ -68,13 +56,7 @@ public static class DryRunCommand
         var offsets = (storage.Latest?.Worlds.Values ?? Enumerable.Empty<WorldState>()).ToDictionary(
             world => world.Id,
             world => definitions.Worlds[world.DefId].UtcOffset);
-        foreach (var world in definitions.Worlds.Values.OrderBy(w => w.Id.Value, StringComparer.Ordinal))
-        {
-            if (world.HolidayCalendar is { } calendar)
-            {
-                output.WriteLine($"{world.Id.Value}: 祝日のカレンダー {calendar} は未対応のため、祝日なしで回した");
-            }
-        }
+        WorldSetup.WriteHolidayNotices(definitions, output);
 
         output.Write(DryRunReport.Render(storage.Events, offsets));
         return 0;
@@ -94,18 +76,5 @@ public static class DryRunCommand
             until = default;
             return false;
         }
-    }
-
-    /// <summary>投入し、拒否されたら理由を書く。受け付けたら true。</summary>
-    private static async Task<bool> Inject(VivaceEngine engine, InjectRequest request, TextWriter output, CancellationToken ct)
-    {
-        var result = await engine.InjectAsync(request, ct);
-        if (result.Accepted)
-        {
-            return true;
-        }
-
-        output.WriteLine($"投入が拒否されました（{request.EventType}）: {result.Reason}");
-        return false;
     }
 }
