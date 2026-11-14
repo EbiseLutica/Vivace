@@ -47,13 +47,13 @@ public sealed class ScaledClock : IClock
         {
             var elapsed = _timeProvider.GetElapsedTime(_baseTimestamp);
             var scaled = elapsed.Ticks * _speed;
-            var headroom = (DateTimeOffset.MaxValue - _start).Ticks;
-            if (scaled >= headroom)
+            var limit = Math.BitDecrement((double)(DateTimeOffset.MaxValue - _start).Ticks);
+            if (scaled >= limit)
             {
                 return DateTimeOffset.MaxValue;
             }
 
-            return _start + TimeSpan.FromTicks(Math.Min((long)scaled, headroom));
+            return _start + TimeSpan.FromTicks((long)scaled);
         }
     }
 
