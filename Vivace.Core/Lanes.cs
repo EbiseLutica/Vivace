@@ -9,7 +9,7 @@ namespace Vivace.Core;
 /// </summary>
 public sealed class Lanes
 {
-    /// <summary>レーンの作成と、終わりの印を守る錠。</summary>
+    /// <summary>レーンの作成と、終わりの印を守るロック。</summary>
     private readonly Lock _gate = new();
     /// <summary>鍵ごとのレーン。</summary>
     private readonly Dictionary<string, Lane> _lanes = new(StringComparer.Ordinal);

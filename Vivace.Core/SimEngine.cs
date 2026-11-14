@@ -41,24 +41,24 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly Channel<Output> _outputs = Channel.CreateUnbounded<Output>();
     /// <summary>走っている間に届いた投入のコマンド。各周の先頭で取り出す。</summary>
     private readonly Channel<InjectCommand> _commands = Channel.CreateUnbounded<InjectCommand>();
-    /// <summary>走っているかどうかの印と、投入のコマンドの受け付けを守る錠。</summary>
+    /// <summary>走っているかどうかの印と、投入のコマンドの受け付けを守るロック。</summary>
     private readonly Lock _gate = new();
     private readonly List<LoggedEvent> _log = [];
     private long _nextSeq;
     private long _applyNo;
     private int _sameInstantStreak;
     private SimState _state;
-    /// <summary>RunUntilAsync の中にいるか。錠の下で読み書きする。</summary>
+    /// <summary>RunUntilAsync の中にいるか。ロックを取って読み書きする。</summary>
     private bool _looping;
     /// <summary>決める側の仕事の出力が届くのを待つ仕事。キャンセルを持たせず、ループが待つ場面で使い回す。</summary>
     private Task<bool>? _outputWait;
     /// <summary>投入のコマンドが届くのを待つ仕事。キャンセルを持たせず、ループが待つ場面で使い回す。</summary>
     private Task<bool>? _commandWait;
-    /// <summary>購読の一覧を守る錠。</summary>
+    /// <summary>購読の一覧を守るロック。</summary>
     private readonly Lock _subscribersGate = new();
     /// <summary>購読ごとの、適用したイベントの受け渡しの列。</summary>
     private readonly List<Channel<LoggedEvent>> _subscribers = [];
-    /// <summary>破棄したか。購読の一覧の錠の下で読み書きする。</summary>
+    /// <summary>破棄したか。購読の一覧のロックを取って読み書きする。</summary>
     private bool _disposed;
 
     /// <summary>初期の状態と部品から、エンジンを作る。</summary>
