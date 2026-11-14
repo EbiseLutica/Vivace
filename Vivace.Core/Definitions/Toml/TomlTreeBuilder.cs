@@ -111,7 +111,7 @@ internal static class TomlTreeBuilder
             return root;
         }
 
-        /// <summary>見出しの表を作る。二度書けば重複のエラーにする。</summary>
+        /// <summary>見出しのテーブルを作る。二度書けば重複のエラーにする。</summary>
         private TomlTable DefineHeaderTable(TomlTable parent, string name, SourceLocation location)
         {
             if (parent.TryGet(name, out var existing) && existing is TomlArray)
@@ -131,7 +131,7 @@ internal static class TomlTreeBuilder
             return table;
         }
 
-        /// <summary>表の配列に要素を足す。</summary>
+        /// <summary>テーブルの配列に要素を足す。</summary>
         private TomlTable AppendTableArrayElement(TomlTable parent, string name, SourceLocation location)
         {
             var element = new TomlTable(location) { HeaderDefined = true };
@@ -153,7 +153,7 @@ internal static class TomlTreeBuilder
             return element;
         }
 
-        /// <summary>途中の表を、なければ作って返す。</summary>
+        /// <summary>途中のテーブルを、なければ作って返す。</summary>
         private TomlTable GetOrCreateTable(TomlTable parent, string name, SourceLocation location)
         {
             if (!parent.TryGet(name, out var existing))
@@ -175,7 +175,7 @@ internal static class TomlTreeBuilder
             }
         }
 
-        /// <summary>キーと値を表に入れる。同じキーがあれば重複のエラーにする。</summary>
+        /// <summary>キーと値をテーブルに入れる。同じキーがあれば重複のエラーにする。</summary>
         private void SetKeyValue(TomlTable table, KeyValueSyntax keyValue)
         {
             var names = KeyNames(keyValue.Key);

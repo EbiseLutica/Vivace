@@ -381,7 +381,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>同じ表の見出しを2回書けば、重複のエラーになる。</summary>
+    /// <summary>同じテーブルの見出しを2回書けば、重複のエラーになる。</summary>
     [Fact]
     public void DuplicateTableHeaderIsReported()
     {

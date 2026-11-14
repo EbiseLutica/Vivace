@@ -6,7 +6,7 @@ public enum DefinitionIssueCode
     /// <summary>TOML の構文。</summary>
     SyntaxError,
 
-    /// <summary>同じ表に、同じキーが2回ある。</summary>
+    /// <summary>同じテーブルに、同じキーが2回ある。</summary>
     DuplicateKey,
 
     /// <summary>必須の項目がない。</summary>

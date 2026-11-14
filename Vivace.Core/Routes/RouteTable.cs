@@ -3,7 +3,7 @@ using Vivace.Core.Domain;
 
 namespace Vivace.Core.Routes;
 
-/// <summary>全点対の最短経路の表。閉鎖中の場所は、渡す場所の列に入れない。</summary>
+/// <summary>全点対の最短経路のテーブル。閉鎖中の場所は、渡す場所の列に入れない。</summary>
 public sealed class RouteTable
 {
     private const int Unreachable = int.MaxValue / 4;
@@ -22,11 +22,11 @@ public sealed class RouteTable
         _next = next;
     }
 
-    /// <summary>この表に入っている場所。</summary>
+    /// <summary>このテーブルに入っている場所。</summary>
     public ImmutableArray<PlaceId> Places => _places;
 
     /// <summary>
-    /// 場所の列と辺の列から、最短経路の表を作る。辺の端が場所の列にないものは無視する。
+    /// 場所の列と辺の列から、最短経路のテーブルを作る。辺の端が場所の列にないものは無視する。
     /// </summary>
     /// <param name="places">使ってよい場所（閉鎖中のものは入れない）。</param>
     /// <param name="edges">辺の列。同じ組が複数あれば、いちばん短いものを使う。</param>

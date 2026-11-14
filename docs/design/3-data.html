@@ -77,7 +77,7 @@
 
       <rect class="box good" x="540" y="40" width="200" height="120" rx="10"/>
       <text class="title" x="640" y="66" text-anchor="middle">SQLite</text>
-      <text class="sub" x="640" y="92" text-anchor="middle">状態の表 / イベント</text>
+      <text class="sub" x="640" y="92" text-anchor="middle">状態のテーブル / イベント</text>
       <text class="sub" x="640" y="112" text-anchor="middle">受信箱 / 送信 / 記憶</text>
       <text class="sub" x="640" y="140" text-anchor="middle">変わった行だけ書く</text>
 
@@ -386,7 +386,7 @@ sealed record PersonaState(
     <li>受信箱は、ペルソナインスタンスの状態に持つ（VISION 2章）。アイテムの形は下の「受信箱のアイテム」</li>
     <li>プランのブロック（<code>PlanBlock</code>）は、開始、終了（UTC）、種類（固定、計画、自由）、行動、場所に加えて、電話の指定、間隔、同行、同行者が抜けたときの扱いを、プランを作ったときの固定予定から写して持つ。ID は固定と計画のブロックだけが持ち、自由時間は null（J-124。変更は次のプランから。D1 1.12）</li>
     <li>発生中の出来事（<code>ActiveIncident</code>）は、解決済みの効果（対象の場所を含む。3.8 の <code>incidents</code>）を持つ。解消のときに定義を引き直さない。その場の定義の出来事は、<code>DefId</code> を null にする（J-119）</li>
-    <li>受信箱と未送信の操作は、処理が済んだら状態から外し、SQLite の表にだけ残す。状態は、決める側に渡す写しでもあるので、小さく保つ</li>
+    <li>受信箱と未送信の操作は、処理が済んだら状態から外し、SQLite のテーブルにだけ残す。状態は、決める側に渡す写しでもあるので、小さく保つ</li>
     <li>居合わせ（誰と同じ場所にいるか）は、状態に持たない。<code>Personas</code> の <code>Location</code> から導く（VISION 2章）</li>
     <li>定義も同じく不変の <code>DefinitionPack</code> にし、Apply と決める側に引数で渡す（VISION 4章）。最短経路のような導出データは、<code>DefinitionPack</code> と <code>GraphVersion</code> をキーにしたキャッシュに持ち、保存しない</li>
   </ul>
@@ -396,7 +396,7 @@ sealed record PersonaState(
   </div>
   <div class="callout">
     <span class="label">決定 P-22　インスタンス ID は定義 ID</span>
-    <code>kaori</code>、<code>tokyo</code>。1つの定義から生成するインスタンスは1つだけ（VISION 2章）なので、ワールド ID を含めなくても決まる。破棄したあとに同じ定義から生成し直したら、<code>kaori#2</code> のように番号を付け、前のインスタンスと見分ける。ログと記憶の表で、人が読んで誰かわかる形にする。（当初は「定義 ID@ワールド ID」としていたが、ペルソナはワールドを跨いでも1人なので改めた）
+    <code>kaori</code>、<code>tokyo</code>。1つの定義から生成するインスタンスは1つだけ（VISION 2章）なので、ワールド ID を含めなくても決まる。破棄したあとに同じ定義から生成し直したら、<code>kaori#2</code> のように番号を付け、前のインスタンスと見分ける。ログと記憶のテーブルで、人が読んで誰かわかる形にする。（当初は「定義 ID@ワールド ID」としていたが、ペルソナはワールドを跨いでも1人なので改めた）
   </div>
 </section>
 
@@ -436,7 +436,7 @@ sealed record Attachment(string Kind, string Url, string? Description);   // Kin
     <li>それまでの会話（<code>Thread</code>）は、チャンネルが到着のときに取って入れる。ノートへの返信なら返信チェーン、DM なら直近のメッセージ（ebise と同じ）。到着のイベントに記録されるので、決める側は外を取り直さずに読める。長い会話でも、直近 20 件までにする</li>
     <li>自分の発言かどうか（<code>IsSelf</code>）は、チャンネルが付ける。LLM には、自分の発言と相手の発言を分けて見せる</li>
     <li><code>ConversationKey</code> が同じアイテムは、同じ会話として、まとめて捌く（D6 6.5）</li>
-    <li><code>notification.arrived</code> の適用で入り、<code>inbox.handled</code> の適用で外れる（D2 2.3）。到着の連番は、チャンネルの受け付けでは 0 で積み、適用のときに入れる（J-111）。外れたあとは、<code>inbox</code> の表に、結果と一緒に残る（3.8）</li>
+    <li><code>notification.arrived</code> の適用で入り、<code>inbox.handled</code> の適用で外れる（D2 2.3）。到着の連番は、チャンネルの受け付けでは 0 で積み、適用のときに入れる（J-111）。外れたあとは、<code>inbox</code> のテーブルに、結果と一緒に残る（3.8）</li>
   </ul>
 </section>
 
@@ -444,7 +444,7 @@ sealed record Attachment(string Kind, string Url, string? Description);   // Kin
   <h2><span class="num">3.8</span>SQLite のスキーマ</h2>
   <p>よく絞り込む項目は列にし、構造が深いものは JSON の列にする。同梱の SQLite には JSON 関数が入っているので、JSON の中身でも絞り込める。</p>
   <figure class="diagram">
-    <svg viewBox="0 0 760 270" role="img" aria-label="表の関係">
+    <svg viewBox="0 0 760 270" role="img" aria-label="テーブルの関係">
       <rect class="box accent" x="290" y="20" width="180" height="56" rx="8"/>
       <text class="title" x="380" y="44" text-anchor="middle">events</text>
       <text class="sub" x="380" y="63" text-anchor="middle">キューとログ</text>
@@ -481,7 +481,7 @@ sealed record Attachment(string Kind, string Url, string? Description);   // Kin
       <text class="sub" x="300" y="110" text-anchor="end">適用で書く</text>
       <text class="sub" x="460" y="110">整理ジョブが読む</text>
     </svg>
-    <figcaption>緑はエンジンが書く状態の表。記憶の表は整理ジョブが書く</figcaption>
+    <figcaption>緑はエンジンが書く状態のテーブル。記憶のテーブルは整理ジョブが書く</figcaption>
   </figure>
 <pre><code>-- キューとログ（VISION 2章「イベント」）
 CREATE TABLE events (
@@ -507,7 +507,7 @@ CREATE INDEX ix_events_open    ON events(status) WHERE status IN ('pending', 'pr
 CREATE INDEX ix_events_persona ON events(persona_id, apply_no);
 CREATE INDEX ix_events_type    ON events(persona_id, event_type, time_utc);
 
--- 状態の表
+-- 状態のテーブル
 CREATE TABLE worlds (
   id TEXT PRIMARY KEY, def_id TEXT NOT NULL, seed INTEGER NOT NULL,
   status TEXT NOT NULL, graph_version INTEGER NOT NULL, created_seq INTEGER NOT NULL
@@ -583,8 +583,8 @@ CREATE TABLE memory_cursors (
     <li>接続の設定は <code>journal_mode=WAL</code>、<code>synchronous=NORMAL</code>、<code>busy_timeout=5000</code>、<code>foreign_keys=ON</code></li>
   </ul>
   <div class="callout">
-    <span class="label">決定 P-23　表の構成は「よく使う列 + JSON」</span>
-    完全に正規化すると、ペルソナの状態だけで 10 表近くになり、Apply のたびの書き込みが煩雑になる。状態の表は、絞り込みに使う列（ID、所属、状態）だけを列にし、残りを JSON にする。生えた場所、辞書、受信箱、送信、記憶のように、ビューアや実行レポートで一覧にするものは、別の表にする。
+    <span class="label">決定 P-23　テーブルの構成は「よく使う列 + JSON」</span>
+    完全に正規化すると、ペルソナの状態だけで 10 テーブル近くになり、Apply のたびの書き込みが煩雑になる。状態のテーブルは、絞り込みに使う列（ID、所属、状態）だけを列にし、残りを JSON にする。生えた場所、辞書、受信箱、送信、記憶のように、ビューアや実行レポートで一覧にするものは、別のテーブルにする。
   </div>
   <div class="callout">
     <span class="label">決定 P-24　時刻は UTC の Unix ミリ秒で保存する</span>

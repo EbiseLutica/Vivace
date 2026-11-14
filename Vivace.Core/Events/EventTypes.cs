@@ -4,7 +4,7 @@ using Vivace.Core.Events.Payloads;
 namespace Vivace.Core.Events;
 
 /// <summary>
-/// イベントタイプの名前と、段と、ペイロードの型の表。
+/// イベントタイプの名前と、段と、ペイロードの型のテーブル。
 /// </summary>
 public static class EventTypes
 {
@@ -157,10 +157,10 @@ public static class EventTypes
     private static readonly ImmutableDictionary<string, EventTypeInfo> ByName =
         Table.ToImmutableDictionary(info => info.Name);
 
-    /// <summary>すべてのイベントタイプの表。</summary>
+    /// <summary>すべてのイベントタイプのテーブル。</summary>
     public static ImmutableArray<EventTypeInfo> All => Table;
 
-    /// <summary>イベントタイプの名前から、表の1件を引く。知らない名前なら false。</summary>
+    /// <summary>イベントタイプの名前から、テーブルの1件を引く。知らない名前なら false。</summary>
     /// <param name="name">イベントタイプの名前。</param>
     /// <param name="info">見つかった1件。</param>
     public static bool TryGet(string name, out EventTypeInfo info) => ByName.TryGetValue(name, out info!);

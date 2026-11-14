@@ -5,17 +5,17 @@ using Vivace.Core.Time;
 namespace Vivace.Core.Definitions.Toml;
 
 /// <summary>
-/// 表の項目を型つきで読む。読んだキーを覚え、最後に Done で読まなかったキーを警告する。
+/// テーブルの項目を型つきで読む。読んだキーを覚え、最後に Done で読まなかったキーを警告する。
 /// 型が合わないときや必須の項目がないときは、位置つきのエラーを積む。
 /// </summary>
 internal sealed class TableReader(TomlTable table, List<DefinitionIssue> issues)
 {
     private readonly HashSet<string> _used = [];
 
-    /// <summary>読む表の位置。</summary>
+    /// <summary>読むテーブルの位置。</summary>
     public SourceLocation Location => table.Location;
 
-    /// <summary>問題の集め先。子の表を読む TableReader に渡す。</summary>
+    /// <summary>問題の集め先。子のテーブルを読む TableReader に渡す。</summary>
     public List<DefinitionIssue> Issues => issues;
 
     /// <summary>キーの値を、TOML の配列として読む。型が違えばエラー。</summary>
@@ -112,7 +112,7 @@ internal sealed class TableReader(TomlTable table, List<DefinitionIssue> issues)
         return Parsed(key, parser, expected);
     }
 
-    /// <summary>キーの位置を返す。キーがなければ表の位置。</summary>
+    /// <summary>キーの位置を返す。キーがなければテーブルの位置。</summary>
     /// <param name="key">キー。</param>
     public SourceLocation LocationOf(string key) =>
         table.TryGet(key, out var node) ? node.Location : table.Location;
@@ -224,7 +224,7 @@ internal sealed class TableReader(TomlTable table, List<DefinitionIssue> issues)
         return result.ToImmutable();
     }
 
-    /// <summary>表を読む。型が違えばエラー。</summary>
+    /// <summary>テーブルを読む。型が違えばエラー。</summary>
     /// <param name="key">キー。</param>
     public TomlTable? Table(string key)
     {
@@ -238,11 +238,11 @@ internal sealed class TableReader(TomlTable table, List<DefinitionIssue> issues)
             return child;
         }
 
-        TypeError(node, key, "表");
+        TypeError(node, key, "テーブル");
         return null;
     }
 
-    /// <summary>表の配列（[[key]]）を読む。なければ空。</summary>
+    /// <summary>テーブルの配列（[[key]]）を読む。なければ空。</summary>
     /// <param name="key">キー。</param>
     public IReadOnlyList<TomlTable> TableArray(string key)
     {
@@ -256,7 +256,7 @@ internal sealed class TableReader(TomlTable table, List<DefinitionIssue> issues)
             return array.Items.OfType<TomlTable>().ToList();
         }
 
-        TypeError(node, key, "表の配列");
+        TypeError(node, key, "テーブルの配列");
         return [];
     }
 
@@ -357,7 +357,7 @@ internal sealed class TableReader(TomlTable table, List<DefinitionIssue> issues)
         }
     }
 
-    /// <summary>必須の項目がないエラーを積む（表の位置）。</summary>
+    /// <summary>必須の項目がないエラーを積む（テーブルの位置）。</summary>
     /// <param name="key">キー。</param>
     public void Missing(string key) =>
         issues.Add(new DefinitionIssue(
@@ -366,7 +366,7 @@ internal sealed class TableReader(TomlTable table, List<DefinitionIssue> issues)
             table.Location,
             $"必須の項目がありません: {key}"));
 
-    /// <summary>値の範囲や形式のエラーを積む。位置が不明なら表の位置を使う。</summary>
+    /// <summary>値の範囲や形式のエラーを積む。位置が不明ならテーブルの位置を使う。</summary>
     /// <param name="node">問題の値。</param>
     /// <param name="message">説明。</param>
     public void Invalid(TomlNode? node, string message) =>

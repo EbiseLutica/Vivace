@@ -3,10 +3,10 @@ using Vivace.Core.Events;
 
 namespace Vivace.Tests.Events;
 
-/// <summary>イベントタイプの表が、全タイプを漏れなく持つことを確かめる。</summary>
+/// <summary>イベントタイプのテーブルが、全タイプを漏れなく持つことを確かめる。</summary>
 public class EventTypeTableTests
 {
-    /// <summary>段の表とイベントタイプの全件（名前と段）。</summary>
+    /// <summary>段のテーブルとイベントタイプの全件（名前と段）。</summary>
     private static readonly (string Name, EventStage Stage)[] Expected =
     [
         ("day.started", EventStage.DayTurn),
@@ -47,7 +47,7 @@ public class EventTypeTableTests
         ("post.skipped", EventStage.Decision),
     ];
 
-    /// <summary>表は、全タイプを、正しい段と一緒に過不足なく持つ。</summary>
+    /// <summary>テーブルは、全タイプを、正しい段と一緒に過不足なく持つ。</summary>
     [Fact]
     public void TableHoldsEveryEventTypeWithItsStage()
     {
@@ -57,7 +57,7 @@ public class EventTypeTableTests
         Assert.Equal(Expected.Length, table.Count);
         foreach (var (name, stage) in Expected)
         {
-            Assert.True(table.ContainsKey(name), $"表にイベントタイプがありません: {name}");
+            Assert.True(table.ContainsKey(name), $"テーブルにイベントタイプがありません: {name}");
             Assert.Equal(stage, table[name]);
             Assert.Equal(stage, EventTypes.StageOf(name));
         }

@@ -9,7 +9,7 @@ namespace Vivace.Core;
 /// <summary>イベントの適用の入口。イベントを適用し、新しい状態と後続のイベントとシグナルを返す。同じ入力なら同じ結果になる。</summary>
 public sealed class EventApplier
 {
-    /// <summary>扱うイベントタイプとルールの表。起動時に組み、以後は変えない。キーは序数で比べる。</summary>
+    /// <summary>扱うイベントタイプとルールのテーブル。起動時に組み、以後は変えない。キーは序数で比べる。</summary>
     internal static readonly ImmutableDictionary<string, IEventRule> Table = BuildTable();
 
     /// <summary>規則のコンテキスト。</summary>
@@ -98,7 +98,7 @@ public sealed class EventApplier
         return new ApplyResult(state, EventStatus.Rejected, reason, followUps, []);
     }
 
-    /// <summary>全ルールから表を組む。同じイベントタイプのルールがあれば例外になる。</summary>
+    /// <summary>全ルールからテーブルを組む。同じイベントタイプのルールがあれば例外になる。</summary>
     private static ImmutableDictionary<string, IEventRule> BuildTable() =>
         new IEventRule[]
         {

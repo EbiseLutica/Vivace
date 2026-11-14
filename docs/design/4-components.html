@@ -230,9 +230,9 @@ public sealed record LlmPolicy(
     VISION 付録「LLM クライアントの抽象」への案。コアは Microsoft.Extensions.AI の <code>IChatClient</code> に直接依存せず、上の小さな口だけを持つ。理由は2つ。コアが求めるのは「目的」と「段」で、モデル名やプロバイダの設定ではないこと。テストの台本の LLM（目的ごとに決まった応答を返す）が書きやすいこと。実装の側で <code>IChatClient</code> を使うのは自由で、Anthropic の公式 SDK は <code>IChatClient</code> を実装している（D8）。
   </div>
   <div class="callout">
-    <span class="label">決定 P-53　目的は登録制にし、目的ごとの取り決めはコアの表に集める</span>
-    <p>目的ごとの取り決め（段の上書き、再試行の方針）は、すべてコアの <code>LlmPolicy</code> の表に持つ。LLM の実装が持つのは「段 → モデル名」の対応だけ。</p>
-    <p>目的は登録制にする。コアの目的（D6 6.2 の表）は、最初から既定の段つきで登録しておく。プラグインは、登録のときに <code>AddLlmPurpose</code> で申告する（名前はプラグインの名前で始める。4.7）。起動時に、<code>LlmPolicy</code> の表にある目的が登録されていなければ、警告を出す（書き間違えると、設定が黙って効かないため）。登録されていない目的で呼ばれたら、既定の方針で呼んだうえで、ログに警告を出す（止めはしない）。</p>
+    <span class="label">決定 P-53　目的は登録制にし、目的ごとの取り決めはコアのテーブルに集める</span>
+    <p>目的ごとの取り決め（段の上書き、再試行の方針）は、すべてコアの <code>LlmPolicy</code> のテーブルに持つ。LLM の実装が持つのは「段 → モデル名」の対応だけ。</p>
+    <p>目的は登録制にする。コアの目的（D6 6.2 の表）は、最初から既定の段つきで登録しておく。プラグインは、登録のときに <code>AddLlmPurpose</code> で申告する（名前はプラグインの名前で始める。4.7）。起動時に、<code>LlmPolicy</code> のテーブルにある目的が登録されていなければ、警告を出す（書き間違えると、設定が黙って効かないため）。登録されていない目的で呼ばれたら、既定の方針で呼んだうえで、ログに警告を出す（止めはしない）。</p>
     <p class="alt">レビューで足した。目的を足す場所が「登録」の1か所に決まり、書き間違いが起動時に見つかる。</p>
   </div>
 </section>
@@ -243,12 +243,12 @@ public sealed record LlmPolicy(
     <table>
       <tr><th>部品</th><th>役目</th><th>詳細</th></tr>
       <tr><td><code>SimEngine</code></td><td>コマンドの処理、キュー、ホライズンの壁、締め切り、適用、シグナルの実行</td><td>D1</td></tr>
-      <tr><td><code>EventApplier</code> / <code>IEventRule</code></td><td>Apply の入口と、イベントタイプごとのルール。入口は適用前の検査（guard）を評価してから、ルールを引いて呼ぶ。入口はインスタンスで、不変の規則のコンテキストとルールの表だけを持つ。副作用を持たない</td><td>D2</td></tr>
+      <tr><td><code>EventApplier</code> / <code>IEventRule</code></td><td>Apply の入口と、イベントタイプごとのルール。入口は適用前の検査（guard）を評価してから、ルールを引いて呼ぶ。入口はインスタンスで、不変の規則のコンテキストとルールのテーブルだけを持つ。副作用を持たない</td><td>D2</td></tr>
       <tr><td><code>Lanes</code></td><td>レーンごとの直列の実行と、LLM の同時実行数の制限</td><td>D1 1.5</td></tr>
       <tr><td><code>Dispatcher</code></td><td>配信役。未送信の操作を送り、結果をコマンドで返す</td><td>VISION 10章</td></tr>
       <tr><td><code>InjectionValidator</code></td><td>投入の窓口。要求を検査し、キューに入れる下書きにする</td><td>D2 2.8</td></tr>
       <tr><td><code>DefinitionLoader</code> / <code>DefinitionValidator</code></td><td>TOML の読み込みと検証。エディタからも呼べる</td><td>D3、D7</td></tr>
-      <tr><td><code>RouteTable</code></td><td>最短経路の表（グラフのバージョンごとにキャッシュ）</td><td>D5</td></tr>
+      <tr><td><code>RouteTable</code></td><td>最短経路のテーブル（グラフのバージョンごとにキャッシュ）</td><td>D5</td></tr>
       <tr><td><code>UtilityDecider</code></td><td>候補の絞り込み、スコア、抽選</td><td>D5</td></tr>
       <tr><td><code>DayPlanner</code> / <code>PlanValidator</code></td><td>Planner の手順と、出力の検査・補正</td><td>D5、D6</td></tr>
       <tr><td><code>IncidentLottery</code></td><td>日の始まりの出来事の抽選</td><td>D5</td></tr>

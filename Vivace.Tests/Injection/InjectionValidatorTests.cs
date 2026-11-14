@@ -50,7 +50,7 @@ public class InjectionValidatorTests
         Assert.Equal(Fixture.Now, draft.Time);
     }
 
-    /// <summary>ルールの表にない型は、未対応で拒否する。</summary>
+    /// <summary>ルールのテーブルにない型は、未対応で拒否する。</summary>
     [Fact]
     public void TypeWithoutRuleIsRejected()
     {
@@ -59,7 +59,7 @@ public class InjectionValidatorTests
         Assert.Equal("未対応の型", Reject(Fixture.WithKaori(), [], request));
     }
 
-    /// <summary>ルールの表にあっても、投入の検査を持たない型（日の始まり）は、未対応で拒否する。</summary>
+    /// <summary>ルールのテーブルにあっても、投入の検査を持たない型（日の始まり）は、未対応で拒否する。</summary>
     [Fact]
     public void RuleWithoutInjectionCheckIsRejected()
     {

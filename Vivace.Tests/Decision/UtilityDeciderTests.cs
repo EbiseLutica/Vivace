@@ -29,7 +29,7 @@ public class UtilityDeciderTests
         null,
         null);
 
-    /// <summary>状態変数ごとの数の表を作る。</summary>
+    /// <summary>状態変数ごとの数のテーブルを作る。</summary>
     private static ImmutableDictionary<VitalName, double> Map(params (VitalName Vital, double Value)[] entries) =>
         entries.ToImmutableDictionary(entry => entry.Vital, entry => entry.Value);
 

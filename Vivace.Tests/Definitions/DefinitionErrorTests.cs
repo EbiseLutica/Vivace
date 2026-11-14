@@ -20,7 +20,7 @@ public class DefinitionErrorTests
         Assert.Null(result.Definitions);
     }
 
-    /// <summary>必須の項目（ここでは場所の name）がなければ、その表の見出しの位置にエラーが出る。</summary>
+    /// <summary>必須の項目（ここでは場所の name）がなければ、そのテーブルの見出しの位置にエラーが出る。</summary>
     [Fact]
     public void MissingRequiredItemIsReportedAtTableHeader()
     {

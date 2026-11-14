@@ -3,7 +3,7 @@ using Vivace.Core.Routes;
 
 namespace Vivace.Tests.Routes;
 
-/// <summary>最短経路の表（Floyd–Warshall）を、テスト用の小さな町で確かめる。</summary>
+/// <summary>最短経路のテーブル（Floyd–Warshall）を、テスト用の小さな町で確かめる。</summary>
 public class RouteTableTests
 {
     private static readonly PlaceId KaoriRoom = new("kaori_room");
@@ -57,7 +57,7 @@ public class RouteTableTests
         Assert.Null(table.Minutes(KaoriRoom, Cafe));
     }
 
-    /// <summary>道路の工事などで辺の時間を変えた表では、その辺を通る経路の時間が変わる。</summary>
+    /// <summary>道路の工事などで辺の時間を変えたテーブルでは、その辺を通る経路の時間が変わる。</summary>
     [Fact]
     public void SlowedEdgeChangesTheRouteTime()
     {
