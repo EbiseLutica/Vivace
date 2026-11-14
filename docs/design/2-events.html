@@ -69,7 +69,7 @@
     PersonaId? PersonaId,
     EventPayload Payload,        // イベントタイプごとの中身（D3 3.9）。決めた結果もここに入る
     Guard? Guard,                // 適用前の検査（D1 1.7）
-    long? BatchSeq,              // 同じハンドラの出力のまとまり（契機の決めどきの Seq）
+    long? BatchSeq,              // 同じハンドラの出力のまとまり（トリガーの決めどきの Seq）
     long? CauseSeq,              // このイベントを生んだイベントの Seq
     Origin Origin,               // 2.9
     JsonElement? Trace,          // 痕跡（2.9）
@@ -379,7 +379,7 @@
       <tr><td><code>plugin:&lt;名前&gt;</code></td><td>プラグインが投入した</td></tr>
     </table>
   </div>
-  <p>後続のイベントは、契機のイベントの origin を引き継ぐ（追いつきの中で積まれたものは、すべて <code>catchup</code>）。</p>
+  <p>後続のイベントは、トリガーのイベントの origin を引き継ぐ（追いつきの中で積まれたものは、すべて <code>catchup</code>）。</p>
   <p>痕跡（trace）は、イベントにしない途中の結果を、JSON で付ける。Decider の候補とスコアの上位、話題の抽出と判定、LLM の呼び出しの記録（目的、モデル、トークン数、所要時間）など。ビューアと実行レポートが読む。中身の形は、ハンドラごとに決め、Apply は読まない。</p>
 </section>
 

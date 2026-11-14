@@ -10,7 +10,7 @@ namespace Vivace.Tests.Engine;
 
 /// <summary>
 /// 毎日 0:00（現地）の状態変数を、シナリオの途中で読んで固定する。事実のイベントの列は状態変数を見ないので、これで率の誤りを捕まえる。
-/// また、決める側の出力が、契機の発生元を引き継ぐことを確かめる。
+/// また、決める側の出力が、トリガーの発生元を引き継ぐことを確かめる。
 /// </summary>
 public class DailyVitalsTests
 {
@@ -42,7 +42,7 @@ public class DailyVitalsTests
         await Snapshot.Text(text.ToString());
     }
 
-    /// <summary>決める側の出力は、契機の発生元を引き継ぐ。テストが注入した生成から始まった計画は、テストの発生元を持つ。</summary>
+    /// <summary>決める側の出力は、トリガーの発生元を引き継ぐ。テストが注入した生成から始まった計画は、テストの発生元を持つ。</summary>
     [Fact]
     public async Task HandlerOutputsInheritTheOriginOfTheirTrigger()
     {

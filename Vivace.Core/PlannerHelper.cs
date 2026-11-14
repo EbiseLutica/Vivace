@@ -17,8 +17,8 @@ internal static class PlannerHelper
     /// </summary>
     /// <param name="persona">ペルソナ。</param>
     /// <param name="periodKey">期間のキー。</param>
-    /// <param name="seq">契機のイベントの連番（シグナルの順序に使う）。</param>
-    /// <param name="now">契機の時刻。</param>
+    /// <param name="seq">トリガーのイベントの連番（シグナルの順序に使う）。</param>
+    /// <param name="now">トリガーの時刻。</param>
     internal static (PersonaState Persona, StartPlannerSignal Signal)? Wake(PersonaState persona, string periodKey, long seq, DateTimeOffset now)
     {
         if (persona.PlannedFor == periodKey)

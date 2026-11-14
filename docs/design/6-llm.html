@@ -82,7 +82,7 @@
   <p>「目的」は、LLM の呼び出しに付ける名前（<code>LlmRequest.Purpose</code>、D4 4.4）。LLM には見せない。使うのは、痕跡と計測（目的ごとの回数とトークン数。D7 7.3）、目的ごとの再試行と管理者への通知（D7 7.1）、段の上書き（6.1）、テストの台本の LLM が応答を引くとき（D7 7.4）。目的は登録制で、下の表の目的は、表の段を既定としてコアが最初から登録する。新しい種類の呼び出しを足すときは、目的を登録する（D4 P-53）。</p>
   <div class="table-wrap">
     <table>
-      <tr><th>目的</th><th>段</th><th>契機</th><th>出力</th><th>失敗したとき</th></tr>
+      <tr><th>目的</th><th>段</th><th>トリガー</th><th>出力</th><th>失敗したとき</th></tr>
       <tr><td><code>planner</code></td><td>Main</td><td>記憶の整理のあと（寝たとき）、または作り直す時刻（D5 5.5）</td><td>構造化：計画ブロックの列と要約（D5 5.5）</td><td>再生成 2 回、だめなら固定予定だけ</td></tr>
       <tr><td><code>inbox.triage</code></td><td>Light</td><td>スマホを開く</td><td>構造化：通知ごとに 返信 / リアクション（絵文字）/ 何もしない</td><td>その回は何も処理しない（通知は残る）</td></tr>
       <tr><td><code>inbox.reply</code></td><td>Main</td><td>返信すると決めた会話ごと</td><td>テキスト：返信の本文（校閲で却下されたら、理由つきで書き直す）</td><td>その会話だけ処理せずに残す</td></tr>
@@ -318,7 +318,7 @@ follow_back = "always"           # always | never</code></pre>
   <h2><span class="num">6.9</span>呼び出しの量の目安</h2>
   <div class="table-wrap">
     <table>
-      <tr><th>契機</th><th>1日の回数（1人）</th><th>1回の呼び出し</th><th>1日の呼び出し</th></tr>
+      <tr><th>トリガー</th><th>1日の回数（1人）</th><th>1回の呼び出し</th><th>1日の呼び出し</th></tr>
       <tr><td>Planner</td><td>1（睡眠ごと）</td><td>1〜3</td><td>1〜3</td></tr>
       <tr><td>スマホを開く</td><td>8〜15</td><td>振り分け 1 + 返信の数 ×（文面 + 校閲。書き直しで最大 3 回）</td><td>20〜60</td></tr>
       <tr><td>投稿する</td><td>4〜8</td><td>抽出 1 + 判定 0〜3 + 場所 0〜1 +（文面 + 校閲。書き直しで最大 3 回）</td><td>15〜50</td></tr>

@@ -493,7 +493,7 @@ public sealed class SimEngine : IAsyncDisposable
         _held.Add(output);
     }
 
-    /// <summary>ホライズンが limit 以下になった出力を、契機の連番の順にキューへ入れる。</summary>
+    /// <summary>ホライズンが limit 以下になった出力を、トリガーの連番の順にキューへ入れる。</summary>
     private void InsertHeld(DateTimeOffset limit)
     {
         var ready = _held.Where(output => output.Horizon <= limit).OrderBy(output => output.BatchSeq).ToList();

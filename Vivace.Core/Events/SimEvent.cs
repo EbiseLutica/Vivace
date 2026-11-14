@@ -12,7 +12,7 @@ namespace Vivace.Core.Events;
 /// <param name="PersonaId">ペルソナ。関係しなければ null。</param>
 /// <param name="Payload">イベントタイプごとの中身。決めた結果もここに入る。</param>
 /// <param name="Guard">適用前の検査。</param>
-/// <param name="BatchSeq">同じハンドラの出力のまとまり（契機の決めどきの連番）。</param>
+/// <param name="BatchSeq">同じハンドラの出力のまとまり（トリガーの決めどきの連番）。</param>
 /// <param name="CauseSeq">このイベントを生んだイベントの連番。</param>
 /// <param name="Origin">発生元。</param>
 /// <param name="Trace">痕跡。Apply は読まない。</param>
