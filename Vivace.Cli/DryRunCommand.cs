@@ -1,6 +1,7 @@
 using Vivace.Core;
 using Vivace.Core.Definitions;
 using Vivace.Core.Domain;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Events;
 using Vivace.Core.Time;
 using Vivace.Testing;
@@ -64,7 +65,7 @@ public static class DryRunCommand
 
         await engine.RunUntilAsync(until, ct);
 
-        var offsets = engine.View.Worlds.Values.ToDictionary(
+        var offsets = (storage.Latest?.Worlds.Values ?? Enumerable.Empty<WorldState>()).ToDictionary(
             world => world.Id,
             world => definitions.Worlds[world.DefId].UtcOffset);
         foreach (var world in definitions.Worlds.Values.OrderBy(w => w.Id.Value, StringComparer.Ordinal))
