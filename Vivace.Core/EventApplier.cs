@@ -6,7 +6,7 @@ using Vivace.Core.EventRules;
 
 namespace Vivace.Core;
 
-/// <summary>イベントの適用の入口。イベントを適用し、新しい状態と後続のイベントとシグナルを返す。同じ入力なら同じ結果になる。</summary>
+/// <summary>イベントの適用のエントリポイント。イベントを適用し、新しい状態と後続のイベントとシグナルを返す。同じ入力なら同じ結果になる。</summary>
 public sealed class EventApplier
 {
     /// <summary>扱うイベントタイプとルールのテーブル。起動時に組み、以後は変えない。キーは序数で比べる。</summary>

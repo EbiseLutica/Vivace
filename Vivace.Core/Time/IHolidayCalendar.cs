@@ -1,7 +1,7 @@
 namespace Vivace.Core.Time;
 
 /// <summary>
-/// 祝日の判定。提供元はワールドのカレンダーが決める。コアは口だけを持つ。
+/// 祝日の判定。提供元はワールドのカレンダーが決める。コアはインターフェースだけを持つ。
 /// </summary>
 public interface IHolidayCalendar
 {

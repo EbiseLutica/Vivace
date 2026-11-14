@@ -18,7 +18,7 @@
 <header class="hero">
   <div class="kicker">VIVACE / DESIGN / D4</div>
   <h1>コンポーネント</h1>
-  <p>アセンブリの分け方、コアが外に求める口（ポート）、コアの中の部品、ホストから使う公開 API、プラグインの仕組み。</p>
+  <p>アセンブリの分け方、コアが外に求めるインターフェース（ポート）、コアの中の部品、ホストから使う公開 API、プラグインの仕組み。</p>
   <div class="meta">
     <span class="chip">2026-11-03 時点</span>
     <span class="chip draft">案を含む</span>
@@ -108,7 +108,7 @@
 
 <section id="ports">
   <h2><span class="num">4.2</span>ポート</h2>
-  <p>コアが外に求める口。実装はホストが渡す。</p>
+  <p>コアが外に求めるインターフェース。実装はホストが渡す。</p>
   <div class="table-wrap">
     <table>
       <tr><th>ポート</th><th>役目</th><th>コアに同梱する実装</th></tr>
@@ -223,11 +223,11 @@ public sealed record LlmPolicy(
     <li>モデル名はコアに書かない。<code>Tier</code> から実際のモデルへの対応は、LLM の実装の設定に持つ</li>
     <li>ツールの呼び出しの往復は、実装の側で回す。<code>ToolContext</code> には、呼び出し元のペルソナと audience を入れ、記憶の検索が dm の記憶を返さないようにする（VISION 13章）</li>
     <li>再試行（指数バックオフ）は、コアの側で、目的ごとの方針で包む（D7）。実装は1回の呼び出しだけを担う</li>
-    <li>コアの中の処理とプラグインは、<code>ILlmClient</code> を直接呼ばず、エンジンの LLM の口（<code>engine.Llm</code>）を通して、目的の名前で呼ぶ。エンジンが段を決め、再試行で包み、痕跡と計測を残してから、<code>ILlmClient</code> を呼ぶ</li>
+    <li>コアの中の処理とプラグインは、<code>ILlmClient</code> を直接呼ばず、エンジンの LLM のインターフェース（<code>engine.Llm</code>）を通して、目的の名前で呼ぶ。エンジンが段を決め、再試行で包み、痕跡と計測を残してから、<code>ILlmClient</code> を呼ぶ</li>
   </ul>
   <div class="callout">
-    <span class="label">決定 P-26　LLM クライアントは、コア独自の薄い口にする</span>
-    VISION 付録「LLM クライアントの抽象」への案。コアは Microsoft.Extensions.AI の <code>IChatClient</code> に直接依存せず、上の小さな口だけを持つ。理由は2つ。コアが求めるのは「目的」と「段」で、モデル名やプロバイダの設定ではないこと。テストの台本の LLM（目的ごとに決まった応答を返す）が書きやすいこと。実装の側で <code>IChatClient</code> を使うのは自由で、Anthropic の公式 SDK は <code>IChatClient</code> を実装している（D8）。
+    <span class="label">決定 P-26　LLM クライアントは、コア独自の薄いインターフェースにする</span>
+    VISION 付録「LLM クライアントの抽象」への案。コアは Microsoft.Extensions.AI の <code>IChatClient</code> に直接依存せず、上の小さなインターフェースだけを持つ。理由は2つ。コアが求めるのは「目的」と「段」で、モデル名やプロバイダの設定ではないこと。テストの台本の LLM（目的ごとに決まった応答を返す）が書きやすいこと。実装の側で <code>IChatClient</code> を使うのは自由で、Anthropic の公式 SDK は <code>IChatClient</code> を実装している（D8）。
   </div>
   <div class="callout">
     <span class="label">決定 P-53　目的は登録制にし、目的ごとの取り決めはコアのテーブルに集める</span>
@@ -243,7 +243,7 @@ public sealed record LlmPolicy(
     <table>
       <tr><th>部品</th><th>役目</th><th>詳細</th></tr>
       <tr><td><code>SimEngine</code></td><td>コマンドの処理、キュー、ホライズンの壁、締め切り、適用、シグナルの実行</td><td>D1</td></tr>
-      <tr><td><code>EventApplier</code> / <code>IEventRule</code></td><td>Apply の入口と、イベントタイプごとのルール。入口は適用前の検査（guard）を評価してから、ルールを引いて呼ぶ。入口はインスタンスで、不変の規則のコンテキストとルールのテーブルだけを持つ。副作用を持たない</td><td>D2</td></tr>
+      <tr><td><code>EventApplier</code> / <code>IEventRule</code></td><td>Apply のエントリポイントと、イベントタイプごとのルール。エントリポイントは適用前の検査（guard）を評価してから、ルールを引いて呼ぶ。エントリポイントはインスタンスで、不変の規則のコンテキストとルールのテーブルだけを持つ。副作用を持たない</td><td>D2</td></tr>
       <tr><td><code>Lanes</code></td><td>レーンごとの直列の実行と、LLM の同時実行数の制限</td><td>D1 1.5</td></tr>
       <tr><td><code>Dispatcher</code></td><td>配信役。未送信の操作を送り、結果をコマンドで返す</td><td>VISION 10章</td></tr>
       <tr><td><code>InjectionValidator</code></td><td>投入の窓口。要求を検査し、キューに入れるドラフトにする</td><td>D2 2.8</td></tr>
@@ -298,9 +298,9 @@ ValidationReport report = DefinitionLoader.Validate("defs/", plugins);</code></p
   <ul>
     <li><code>DryRun()</code> は、チャンネルをすべて <code>NullChannel</code> に替え、配信役を止める</li>
     <li><code>Subscribe</code> は、適用済みのイベント（適用の記録の1件、<code>LoggedEvent</code> の <code>Status = Applied</code>）を、コミットのあとに適用の順で流す。登録は <code>Subscribe</code> を呼んだ時点で行う。購読ごとに容量つきのバッファ（<code>Channel</code>）を持ち、遅い購読者は、バッファ（いまは 1,024 件、J-160）があふれたら例外で終わらせて切断する（エンジンを止めない）。エンジンを破棄すると、購読は正常に終わり、破棄したあとの購読は何も流さずにすぐ終わる（J-159）</li>
-    <li>ビルダーの口は、いまは <code>UseDefinitions</code>（フォルダか、読み込み済みの <code>DefinitionPack</code>）、<code>UseStorage</code>、<code>UseClock</code>、<code>UseDecider</code>、<code>UseHolidays</code>、<code>UseRandom</code>、<code>DryRun()</code>。定義、保存先、時計は必須で、欠けていれば <code>Build()</code> が例外を投げる。定義のフォルダにエラーがあるときも例外にする。<code>DryRun()</code> は、チャンネルと配信役ができるまではフラグだけを持つ。エンジンの口は <code>InjectAsync</code>、<code>View</code>、<code>Subscribe</code>、<code>RunUntilAsync</code>、<code>DisposeAsync</code> で、中の <code>SimEngine</code> に任せる（J-161）</li>
+    <li>ビルダーの API は、いまは <code>UseDefinitions</code>（フォルダか、読み込み済みの <code>DefinitionPack</code>）、<code>UseStorage</code>、<code>UseClock</code>、<code>UseDecider</code>、<code>UseHolidays</code>、<code>UseRandom</code>、<code>DryRun()</code>。定義、保存先、時計は必須で、欠けていれば <code>Build()</code> が例外を投げる。定義のフォルダにエラーがあるときも例外にする。<code>DryRun()</code> は、チャンネルと配信役ができるまではフラグだけを持つ。エンジンの API は <code>InjectAsync</code>、<code>View</code>、<code>Subscribe</code>、<code>RunUntilAsync</code>、<code>DisposeAsync</code> で、中の <code>SimEngine</code> に任せる（J-161）</li>
     <li><code>View</code> は、いまは <code>SimState</code>（不変の状態）そのものを返す。読み取り用の <code>StateView</code>（4.5）は、ビューアや実行レポートを作るときに、要るものだけを足す（J-158）</li>
-    <li>プラグインにも、このエンジンそのものを渡す（4.7）。ホストに使えてプラグインに使えない口は作らない</li>
+    <li>プラグインにも、このエンジンそのものを渡す（4.7）。ホストに使えてプラグインに使えない API は作らない</li>
     <li>DI コンテナには依存しない。ASP.NET Core などから使うときのための <code>services.AddVivace(...)</code> は、API 層を作るときに別のパッケージで足す</li>
     <li><code>InjectAsync</code> は、要求（<code>InjectRequest</code>）を窓口で検査し、受け付けたら連番を、拒否なら理由を返す（D2 2.8）。<code>RunUntilAsync</code> の外では、ロック（<code>System.Threading.Lock</code>）を取ってその場で処理する。中では、コマンドを <code>Channel</code> に入れ、ループが各回の先頭で取り出す。ループが決める側の出力を待っている間も、コマンドが届けば起きて処理する。<code>RunUntilAsync</code> を抜けるときは、残ったコマンドをすべて処理してから、外の扱いに戻す。検査は、処理する時点（ループの中では取り出した時点）の状態とキューと時計の時刻で行う。時計の待ちは、いまはコマンドで起きない（<code>SystemClock</code> を作るときに D1 1.4 に合わせる、J-157）</li>
   </ul>

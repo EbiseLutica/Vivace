@@ -24,7 +24,7 @@ public sealed class SimEngine : IAsyncDisposable
     public const int SubscriberCapacity = 1024;
 
     private readonly RuleContext _ctx;
-    /// <summary>イベントの適用の入口。</summary>
+    /// <summary>イベントの適用のエントリポイント。</summary>
     private readonly EventApplier _applier;
     /// <summary>投入の窓口の検査。</summary>
     private readonly InjectionValidator _validator;
@@ -80,7 +80,7 @@ public sealed class SimEngine : IAsyncDisposable
     /// <summary>エンジンを作る。</summary>
     /// <param name="definitions">読み込んだ定義。</param>
     /// <param name="storage">保存先。</param>
-    /// <param name="random">乱数の列を開く口。</param>
+    /// <param name="random">乱数の列を開く実装。</param>
     /// <param name="clock">時計。イベントの時刻まで待ってから適用する。</param>
     /// <param name="decider">自由時間の決定。省略すると UtilityDecider。</param>
     /// <param name="holidays">祝日のカレンダー。省略すると祝日のないカレンダー。</param>

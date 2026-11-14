@@ -83,7 +83,7 @@ public class DefinitionLoaderTests
         Assert.Equal(first.Hash, second.Hash);
     }
 
-    /// <summary>フォルダを読む入口（LoadDirectory）も、埋め込みと同じ結果になる。</summary>
+    /// <summary>フォルダを読むメソッド（LoadDirectory）も、埋め込みと同じ結果になる。</summary>
     [Fact]
     public void LoadsFromDirectoryWithTheSameResult()
     {

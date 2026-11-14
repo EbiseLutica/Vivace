@@ -15,7 +15,7 @@ public sealed class Lanes
     private readonly Dictionary<string, Lane> _lanes = new(StringComparer.Ordinal);
     /// <summary>CompleteAsync を呼んだか。</summary>
     private bool _completed;
-    /// <summary>最初にレーンを閉じた仕事の例外を伝える口。</summary>
+    /// <summary>最初にレーンを閉じた仕事の例外を伝える TaskCompletionSource。</summary>
     private readonly TaskCompletionSource<Exception> _failure = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     /// <summary>どれかのレーンで仕事が初めて例外を投げたときに、その例外を結果として完了する。失敗がなければ完了しない。</summary>

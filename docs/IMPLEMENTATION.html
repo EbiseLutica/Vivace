@@ -66,7 +66,7 @@
   <ul>
     <li><strong>参照</strong>：各段階は、作るものを設計の章（D1〜D8）で指す。仕組みの説明は繰り返さない</li>
     <li><strong>更新</strong>：終えた項目は、チェックを入れる（<code>checked</code> を足す）。設計の落とし穴が見つかったら、設計書を直し、ここは順番や範囲が変わるときだけ直す</li>
-    <li><strong>範囲</strong>：Vivace.Core と、コアが外に求める口の実装。到達点は VISION 1章の「ebise 相当の再現」</li>
+    <li><strong>範囲</strong>：Vivace.Core と、コアが外に求めるインターフェースの実装。到達点は VISION 1章の「ebise 相当の再現」</li>
   </ul>
 </section>
 
@@ -119,7 +119,7 @@
 
       <rect class="box" x="24" y="456" width="500" height="72" rx="8"/>
       <text class="title" x="40" y="478">段階5 実時間の運転</text>
-      <text x="40" y="498">締め切り、配信役、チャンネルの口、デーモンと CLI</text>
+      <text x="40" y="498">締め切り、配信役、チャンネルの API、デーモンと CLI</text>
       <text class="sub" x="40" y="516">完了：偽のチャンネルで実時間に動く</text>
       <path class="arrow" d="M274 528 V542"/>
 
@@ -229,7 +229,7 @@
   <ul class="tasks">
     <li><input type="checkbox" checked disabled><code>IEventRule</code>（イベントタイプと <code>Apply</code>）と、ペイロードを型つきで受け取る基底 <code>EventRule&lt;TPayload&gt;</code></li>
     <li><input type="checkbox" checked disabled>段階2 で扱うイベントタイプごとに、ルールのクラスを1つずつ作る。ルールはフィールドを持たず、ルールどうしで呼び合わない</li>
-    <li><input type="checkbox" checked disabled>適用の入口 <code>EventApplier.Apply</code> は、guard の評価と、テーブルからルールを引いて呼ぶことだけにする。入口はインスタンスで、不変の規則のコンテキストを持つ。テーブルは起動時に組む不変の辞書。テーブルにないタイプは、いまと同じく例外にする</li>
+    <li><input type="checkbox" checked disabled>適用のエントリポイント <code>EventApplier.Apply</code> は、guard の評価と、テーブルからルールを引いて呼ぶことだけにする。エントリポイントはインスタンスで、不変の規則のコンテキストを持つ。テーブルは起動時に組む不変の辞書。テーブルにないタイプは、いまと同じく例外にする</li>
     <li><input type="checkbox" checked disabled>複数のルールが使う処理（状態の差し替え、後続のイベントの生成、ブロックの開始、率の計算し直しなど）は、関心ごとのクラスに分ける。1つの共通クラスに寄せない</li>
     <li><input type="checkbox" checked disabled>テーブルが、段階2 で扱うタイプをすべて持つことのテスト</li>
   </ul>
@@ -400,7 +400,7 @@
   <p><strong>前提</strong>：LLM の PoC（<a href="design/8-stack.html#poc">D8 8.4</a>）が終わっている。</p>
   <p><strong>参照</strong>：<a href="design/4-components.html#llm-port">D4 4.4</a>、<a href="design/5-decision.html#planner">D5 5.5</a>、<a href="design/6-llm.html#tiers">D6 6.1</a>〜<a href="design/6-llm.html#post">6.6</a>、<a href="design/6-llm.html#review">6.10</a>、<a href="design/7-operations.html#errors">D7 7.1</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" disabled><code>Vivace.Llm.*</code>、<code>ScriptedLlm</code>、エンジンの LLM の口（<code>engine.Llm</code>）、目的の登録、<code>LlmPolicy</code></li>
+    <li><input type="checkbox" disabled><code>Vivace.Llm.*</code>、<code>ScriptedLlm</code>、エンジンの LLM のインターフェース（<code>engine.Llm</code>）、目的の登録、<code>LlmPolicy</code></li>
     <li><input type="checkbox" disabled><code>ContextBuilder</code> と <code>Diary</code></li>
     <li><input type="checkbox" disabled><code>DayPlanner</code> と <code>PlanValidator</code></li>
     <li><input type="checkbox" disabled><code>InboxHandler</code>：Message、Reaction、Follow の処理と、Other を回す <code>INotificationRule</code></li>

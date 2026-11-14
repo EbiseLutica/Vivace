@@ -28,7 +28,7 @@ public sealed class VivaceEngineBuilder
     /// <summary>祝日のカレンダー。省略すると祝日のないカレンダー。</summary>
     private IHolidayCalendar? _holidays;
 
-    /// <summary>乱数の列を開く口。省略すると SplitMix。</summary>
+    /// <summary>乱数の列を開く実装。省略すると SplitMix。</summary>
     private IRandomSource? _random;
 
     /// <summary>空のビルダーを作る。VivaceEngine.Create から使う。</summary>
@@ -89,8 +89,8 @@ public sealed class VivaceEngineBuilder
         return this;
     }
 
-    /// <summary>乱数の列を開く口を使う。</summary>
-    /// <param name="random">乱数の列を開く口。</param>
+    /// <summary>乱数の列を開く実装を使う。</summary>
+    /// <param name="random">乱数の列を開く実装。</param>
     public VivaceEngineBuilder UseRandom(IRandomSource random)
     {
         _random = random;
