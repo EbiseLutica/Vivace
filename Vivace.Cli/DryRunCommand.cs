@@ -21,6 +21,12 @@ public static class DryRunCommand
     /// <param name="ct">キャンセル。</param>
     public static async Task<int> RunAsync(string dir, int days, ulong seed, DateTimeOffset start, TextWriter output, CancellationToken ct)
     {
+        if (!TryEndOf(start, days, out var until))
+        {
+            output.WriteLine("--days が大きすぎて、終わりの時刻を計算できません。");
+            return 1;
+        }
+
         if (!Directory.Exists(dir))
         {
             return ValidateCommand.Run(dir, output);
@@ -40,7 +46,7 @@ public static class DryRunCommand
             .DryRun()
             .Build();
 
-        foreach (var world in definitions.Worlds.Values.OrderBy(world => world.Id.Value, StringComparer.Ordinal))
+        foreach (var world in definitions.Worlds.Values.OrderBy(w => w.Id.Value, StringComparer.Ordinal))
         {
             if (!await Inject(engine, InjectRequest.WorldCreated(world.Id, seed, Origin.Admin, start), output, ct))
             {
@@ -56,13 +62,36 @@ public static class DryRunCommand
             }
         }
 
-        await engine.RunUntilAsync(start.AddDays(days), ct);
+        await engine.RunUntilAsync(until, ct);
 
         var offsets = engine.View.Worlds.Values.ToDictionary(
             world => world.Id,
             world => definitions.Worlds[world.DefId].UtcOffset);
+        foreach (var world in definitions.Worlds.Values.OrderBy(w => w.Id.Value, StringComparer.Ordinal))
+        {
+            if (world.HolidayCalendar is { } calendar)
+            {
+                output.WriteLine($"{world.Id.Value}: 祝日のカレンダー {calendar} は未対応のため、祝日なしで回した");
+            }
+        }
+
         output.Write(DryRunReport.Render(storage.Events, offsets));
         return 0;
+    }
+
+    /// <summary>開始から days 日後の時刻を求める。範囲を超えて計算できなければ false。</summary>
+    private static bool TryEndOf(DateTimeOffset start, int days, out DateTimeOffset until)
+    {
+        try
+        {
+            until = start.AddDays(days);
+            return true;
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            until = default;
+            return false;
+        }
     }
 
     /// <summary>投入し、拒否されたら理由を書く。受け付けたら true。</summary>

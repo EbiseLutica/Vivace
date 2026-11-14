@@ -1,4 +1,5 @@
-﻿2026-11-01（日）
+﻿testville: 祝日のカレンダー jp は未対応のため、祝日なしで回した
+2026-11-01（日）
 kaori
   23:00-23:45 [自由] core.go_to_next @kaori_room
   23:45-06:30 [予定] core.sleep @kaori_room
