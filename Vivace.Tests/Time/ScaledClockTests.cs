@@ -92,6 +92,17 @@ public class ScaledClockTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => wait.WaitAsync(Bound, TestContext.Current.CancellationToken));
     }
 
+    /// <summary>すでにキャンセルされていれば、待たずに OperationCanceledException になる。</summary>
+    [Fact]
+    public async Task WaitThrowsWhenAlreadyCancelled()
+    {
+        var clock = new ScaledClock(Start, 60, new FakeTimeProvider(Start));
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => clock.WaitUntilAsync(Start.AddHours(1), cancellation.Token).AsTask());
+    }
+
     /// <summary>DateTimeOffset.MaxValue への待ちは、例外にならず、待ちに入る（キャンセルで抜ける）。</summary>
     [Fact]
     public async Task WaitUntilMaxValueWaitsWithoutThrowing()
