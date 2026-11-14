@@ -6,7 +6,7 @@ using Vivace.Core.Storage;
 
 namespace Vivace.Cli;
 
-/// <summary>行動表と流れる出力で共通の表記。理由、行動と移動の本文、適用と捨てた と却下の件数。</summary>
+/// <summary>行動表と流れる出力で共通の表記。理由、行動と移動の本文、適用、捨てた、却下の件数。</summary>
 public static class ReportText
 {
     /// <summary>行動の理由の表記。</summary>
