@@ -238,7 +238,7 @@ public class PlanRulesTests
         Assert.Null(result.State.Personas[Fixture.Kaori].Activity);
     }
 
-    /// <summary>規則にない型は、黙って捨てず、例外で止める。</summary>
+    /// <summary>規則にない型は、握りつぶさず、例外で止める。</summary>
     [Fact]
     public void UnsupportedEventTypeThrows()
     {

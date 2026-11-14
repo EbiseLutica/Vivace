@@ -269,7 +269,7 @@ public class ReviewRegressionTests
         DefinitionFixtures.Find(result, DefinitionIssueCode.InvalidValue, location);
     }
 
-    /// <summary>行動の ID が空なら、値のエラーになる（黙って捨てない）。</summary>
+    /// <summary>行動の ID が空なら、値のエラーになる（握りつぶさない）。</summary>
     [Fact]
     public void EmptyActionIdIsRejected()
     {

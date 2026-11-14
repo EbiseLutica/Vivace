@@ -50,7 +50,7 @@ public class LanesTests
         }
     }
 
-    /// <summary>止めたレーンにジョブを入れると、黙って捨てず、例外にする。</summary>
+    /// <summary>止めたレーンにジョブを入れると、握りつぶさず、例外にする。</summary>
     [Fact]
     public async Task PostingToCompletedLaneThrows()
     {

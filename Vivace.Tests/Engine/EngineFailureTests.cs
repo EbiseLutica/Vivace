@@ -9,11 +9,11 @@ using Vivace.Tests.Support;
 namespace Vivace.Tests.Engine;
 
 /// <summary>
-/// エンジンを通した却下と、決める側のジョブの例外。どちらも黙って捨てず、記録に残るか、例外で止まる。
+/// エンジンを通した却下と、決める側のジョブの例外。どちらも握りつぶさず、記録に残るか、例外で止まる。
 /// </summary>
 public class EngineFailureTests
 {
-    /// <summary>決める側のジョブが例外を投げたら、エンジンは例外で止まる（黙って続けない）。</summary>
+    /// <summary>決める側のジョブが例外を投げたら、エンジンは例外で止まる（握りつぶして続けない）。</summary>
     [Fact]
     public async Task FailingDecisionStopsEngine()
     {
