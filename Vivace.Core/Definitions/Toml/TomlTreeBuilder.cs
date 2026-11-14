@@ -5,11 +5,11 @@ using Tomlyn.Syntax;
 
 namespace Vivace.Core.Definitions.Toml;
 
-/// <summary>Tomlyn の構文木から、位置つきの TOML の木を作る。</summary>
+/// <summary>Tomlyn の構文木から、位置つきの TOML のツリーを作る。</summary>
 internal static class TomlTreeBuilder
 {
     /// <summary>
-    /// 文字列の TOML を読む。構文のエラーがあれば、木は作らず、エラーの一覧を返す。
+    /// 文字列の TOML を読む。構文のエラーがあれば、ツリーは作らず、エラーの一覧を返す。
     /// </summary>
     /// <param name="text">TOML の文字列。</param>
     /// <param name="path">ファイルのパス（位置に使う）。</param>
@@ -70,7 +70,7 @@ internal static class TomlTreeBuilder
         }
     }
 
-    /// <summary>構文木をたどって、TOML の木を組み立てる。</summary>
+    /// <summary>構文木をたどって、TOML のツリーを組み立てる。</summary>
     private sealed class Builder(string path, List<DefinitionIssue> issues, LineIndex lines)
     {
         public TomlTable Build(DocumentSyntax document)
