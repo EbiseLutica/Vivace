@@ -17,7 +17,7 @@ using Vivace.Core.Time;
 
 namespace Vivace.Core;
 
-/// <summary>シミュレーションのエンジン。状態を書く唯一の場所で、イベントを時刻、段、連番の順に適用し、決める側の出力を取り込む。</summary>
+/// <summary>シミュレーションのエンジン。状態を書く唯一の場所で、イベントを時刻、ステージ、連番の順に適用し、決める側の出力を取り込む。</summary>
 public sealed class SimEngine : IAsyncDisposable
 {
     /// <summary>購読ごとに、読まれずに溜めておける件数。超えた購読は切断する。</summary>
@@ -33,7 +33,7 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly IRandomSource _random;
     private readonly IClock _clock;
     private readonly Lanes _lanes = new();
-    /// <summary>未適用のイベント。時刻、段、連番の順に取り出す。</summary>
+    /// <summary>未適用のイベント。時刻、ステージ、連番の順に取り出す。</summary>
     private readonly PriorityQueue<SimEvent, (DateTimeOffset Time, int Stage, long Seq)> _queue = new();
     private readonly Dictionary<long, Running> _running = [];
     private readonly List<Output> _held = [];

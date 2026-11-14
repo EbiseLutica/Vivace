@@ -353,7 +353,7 @@ threshold.health = 25</code></pre>
   <h2><span class="num">3.7</span>ドメイン型</h2>
   <p>状態は、<code>record</code> と <code>System.Collections.Immutable</code> の不変オブジェクトで持つ。Apply は、変わったところだけを作り直した新しい状態を返す。</p>
 <pre><code>sealed record SimState(
-    ApplyCursor Cursor,                                 // 最後に適用した（時刻、段、連番）と適用番号
+    ApplyCursor Cursor,                                 // 最後に適用した（時刻、ステージ、連番）と適用番号
     ImmutableDictionary&lt;WorldId, WorldState&gt; Worlds,
     ImmutableDictionary&lt;PersonaId, PersonaState&gt; Personas);
 
@@ -487,7 +487,7 @@ sealed record Attachment(string Kind, string Url, string? Description);   // Kin
 CREATE TABLE events (
   seq            INTEGER PRIMARY KEY,      -- 連番 = ID
   time_utc       INTEGER NOT NULL,         -- 絶対時刻（Unix ミリ秒）
-  event_type     TEXT    NOT NULL,         -- イベントタイプ（段は保存せず、ここから引く）
+  event_type     TEXT    NOT NULL,         -- イベントタイプ（ステージは保存せず、ここから引く）
   world_id       TEXT,
   persona_id     TEXT,
   status         TEXT    NOT NULL,         -- pending / processing / applied / skipped / rejected
@@ -577,7 +577,7 @@ CREATE TABLE memory_cursors (
 );</code></pre>
   <ul>
     <li>ペルソナの行は、変わるたびに行ごと書き直す。1行は数 KB で、前提の規模なら十分に軽い</li>
-    <li>キューの順序（時刻、段、連番）は、メモリの上で並べる（D1 1.4）。段は列に持たないので、SQL では並べない</li>
+    <li>キューの順序（時刻、ステージ、連番）は、メモリの上で並べる（D1 1.4）。ステージは列に持たないので、SQL では並べない</li>
     <li>イベントは消さない。1人あたり1日 150 件ほどとして、10 人で年 55 万件。SQLite で問題のない量</li>
     <li>スキーマのバージョンは <code>PRAGMA user_version</code> で持つ。マイグレーションは、アセンブリに埋め込んだ番号つきの SQL で、起動時に足りない分を1つのトランザクションで当てる</li>
     <li>接続の設定は <code>journal_mode=WAL</code>、<code>synchronous=NORMAL</code>、<code>busy_timeout=5000</code>、<code>foreign_keys=ON</code></li>

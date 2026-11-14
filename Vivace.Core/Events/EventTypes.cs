@@ -4,7 +4,7 @@ using Vivace.Core.Events.Payloads;
 namespace Vivace.Core.Events;
 
 /// <summary>
-/// イベントタイプの名前と、段と、ペイロードの型のテーブル。
+/// イベントタイプの名前と、ステージと、ペイロードの型のテーブル。
 /// </summary>
 public static class EventTypes
 {
@@ -165,7 +165,7 @@ public static class EventTypes
     /// <param name="info">見つかった1件。</param>
     public static bool TryGet(string name, out EventTypeInfo info) => ByName.TryGetValue(name, out info!);
 
-    /// <summary>イベントタイプの名前から段を引く。知らない名前なら例外。</summary>
+    /// <summary>イベントタイプの名前からステージを引く。知らない名前なら例外。</summary>
     /// <param name="name">イベントタイプの名前。</param>
     public static EventStage StageOf(string name)
     {

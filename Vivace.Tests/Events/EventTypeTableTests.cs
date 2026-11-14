@@ -6,7 +6,7 @@ namespace Vivace.Tests.Events;
 /// <summary>イベントタイプのテーブルが、全タイプを漏れなく持つことを確かめる。</summary>
 public class EventTypeTableTests
 {
-    /// <summary>段のテーブルとイベントタイプの全件（名前と段）。</summary>
+    /// <summary>ステージのテーブルとイベントタイプの全件（名前とステージ）。</summary>
     private static readonly (string Name, EventStage Stage)[] Expected =
     [
         ("day.started", EventStage.DayTurn),
@@ -47,7 +47,7 @@ public class EventTypeTableTests
         ("post.skipped", EventStage.Decision),
     ];
 
-    /// <summary>テーブルは、全タイプを、正しい段と一緒に過不足なく持つ。</summary>
+    /// <summary>テーブルは、全タイプを、正しいステージと一緒に過不足なく持つ。</summary>
     [Fact]
     public void TableHoldsEveryEventTypeWithItsStage()
     {
@@ -76,7 +76,7 @@ public class EventTypeTableTests
         Assert.Equal(1, new DayStartedPayload(new DateOnly(2026, 11, 2)).V);
     }
 
-    /// <summary>知らないイベントタイプの名前は、段を引けない。</summary>
+    /// <summary>知らないイベントタイプの名前は、ステージを引けない。</summary>
     [Fact]
     public void UnknownEventTypeHasNoStage()
     {

@@ -1,7 +1,7 @@
 namespace Vivace.Core.Events;
 
 /// <summary>
-/// 段。同じ時刻のイベントを並べる順番。数が小さいほど先に適用する。
+/// ステージ。同じ時刻のイベントを並べる順番。数が小さいほど先に適用する。
 /// </summary>
 public enum EventStage
 {

@@ -32,7 +32,7 @@
     <ol>
       <li class="part">D2 イベントと語彙</li>
       <li><a href="#envelope">2.1 イベントの共通の項目</a></li>
-      <li><a href="#stages">2.2 段とイベントタイプの一覧</a></li>
+      <li><a href="#stages">2.2 ステージとイベントタイプの一覧</a></li>
       <li><a href="#types">2.3 イベントタイプごとの Apply</a></li>
       <li><a href="#chain">2.4 行動のチェーン</a></li>
       <li><a href="#effects">2.5 行動の効果の語彙</a></li>
@@ -75,7 +75,7 @@
     JsonElement? Trace,          // 痕跡（2.9）
     DateTimeOffset? RealTime);   // 実時刻（送信完了、外部からの元の到着）</code></pre>
   <ul>
-    <li><strong>段</strong>は、イベントタイプから一意に決まる（2.2）。だから項目としては持たず、保存もしない。並べるときに、イベントタイプから引く</li>
+    <li><strong>ステージ</strong>は、イベントタイプから一意に決まる（2.2）。だから項目としては持たず、保存もしない。並べるときに、イベントタイプから引く</li>
     <li><strong>バージョン番号</strong>は、イベントタイプごとの意味が違うので、ペイロードの中に持つ（行動のバージョン、状態変数のバージョン、プランのバージョン）。古いものを捨てる判定に使う</li>
     <li>ワールドとペルソナは、オブジェクトではなく ID で指す。状態は Apply のたびに新しいオブジェクトに置き換わる（P-21）ので、参照で持つと古い時点のスナップショットを指し続けてしまうから。中身が要るときは、その時点の状態から <code>state.Personas[ev.PersonaId]</code> のように引く</li>
     <li><strong>CauseSeq</strong> は、VISION にない項目。後続のイベントやハンドラの出力が、どのイベントから生まれたかを辿れるようにする。ビューアと実行レポートで「なぜこれが起きたか」を表示するのに使う</li>
@@ -88,11 +88,11 @@
 </section>
 
 <section id="stages">
-  <h2><span class="num">2.2</span>段とイベントタイプの一覧</h2>
-  <p>段の意味と並びは VISION 4章のとおり。ここでは、各段に入るイベントタイプを確定させる。</p>
+  <h2><span class="num">2.2</span>ステージとイベントタイプの一覧</h2>
+  <p>ステージの意味と並びは VISION 4章のとおり。ここでは、各ステージに入るイベントタイプを確定させる。</p>
   <div class="table-wrap">
     <table>
-      <tr><th>段</th><th>意味</th><th>イベントタイプ</th></tr>
+      <tr><th>ステージ</th><th>意味</th><th>イベントタイプ</th></tr>
       <tr><td><span class="stage">1</span></td><td>日付が変わる</td><td><code>day.started</code></td></tr>
       <tr><td><span class="stage">2</span></td><td>終わることが終わる</td><td><code>action.ended</code> <code>travel.arrived</code> <code>incident.resolved</code></td></tr>
       <tr><td><span class="stage">3</span></td><td>世界が変わる</td><td><code>incident.occurred</code> <code>place.added</code> <code>place.adopted</code> <code>place.retired</code> <code>term.recorded</code> <code>vital.adjusted</code> <code>condition.attached</code> <code>condition.detached</code> <code>persona.created</code> <code>persona.destroyed</code> <code>persona.gap</code> <code>world.created</code> <code>world.destroyed</code> <code>definitions.reloaded</code></td></tr>
@@ -104,7 +104,7 @@
   </div>
   <div class="callout">
     <span class="label">決定 P-11　イベントタイプの一覧</span>
-    上の表で確定させる。ペルソナとワールドの生成・破棄（<code>persona.created</code> など）は、「世界が変わる」の段に置く。状態変数の設定（<code>vital.adjusted</code>）と状態の付与（<code>condition.attached</code>）は、外からの投入でしか起きないが、出来事と同じく「世界が変わる」に置く。
+    上の表で確定させる。ペルソナとワールドの生成・破棄（<code>persona.created</code> など）は、「世界が変わる」のステージに置く。状態変数の設定（<code>vital.adjusted</code>）と状態の付与（<code>condition.attached</code>）は、外からの投入でしか起きないが、出来事と同じく「世界が変わる」に置く。
   </div>
 </section>
 
@@ -362,7 +362,7 @@
   <ul>
     <li>投入 API が受け付けるのは、Apply のルールのテーブルにあり、そのルールが投入の検査を持つ型だけ。型ごとの検査は、その型のルール（<code>EventRule</code>）の仮想メソッドに置き、既定は「未対応の型」で拒否する。テーブルにない型も同じ理由で拒否する。上の表の型は、その型のルールを作るときに、適用と投入の検査を同じクラスに並べて足す。いまの段階で受け付けるのは <code>world.created</code> と <code>persona.created</code> だけ</li>
     <li>guard の評価は、型に紐づかないので、ルールに置かずに Apply のエントリポイント（<code>EventApplier</code>）に置いたままにする</li>
-    <li><code>persona.created</code> の「生成先のワールドが生成済み」は、要求の時刻以前の <code>world.created</code>（同じ居住ワールドの定義）がキューにあれば、生成済みとみなす。ワールドとペルソナを同じ時刻に続けて投入できるようにするため。同じ時刻なら、段が同じで先に積んだ <code>world.created</code> が先に適用される。要求より後の時刻の <code>world.created</code> しかなければ、ペルソナが先に適用されて捨てられるので、拒否する（J-155）</li>
+    <li><code>persona.created</code> の「生成先のワールドが生成済み」は、要求の時刻以前の <code>world.created</code>（同じ居住ワールドの定義）がキューにあれば、生成済みとみなす。ワールドとペルソナを同じ時刻に続けて投入できるようにするため。同じ時刻なら、ステージが同じで先に積んだ <code>world.created</code> が先に適用される。要求より後の時刻の <code>world.created</code> しかなければ、ペルソナが先に適用されて捨てられるので、拒否する（J-155）</li>
   </ul>
 </section>
 

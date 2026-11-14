@@ -31,6 +31,6 @@ public sealed record SimEvent(
     JsonElement? Trace,
     DateTimeOffset? RealTime)
 {
-    /// <summary>イベントタイプから引いた段。</summary>
+    /// <summary>イベントタイプから引いたステージ。</summary>
     public EventStage Stage => EventTypes.StageOf(EventType);
 }
