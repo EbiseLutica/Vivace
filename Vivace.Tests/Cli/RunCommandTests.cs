@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Text;
 using Vivace.Cli;
 using Vivace.Core.Time;
 using Vivace.Testing;
@@ -129,6 +130,34 @@ public class RunCommandTests
         Assert.Matches(CountPattern, output.ToString());
     }
 
+    /// <summary>
+    /// 購読が容量を超えてあふれたら、理由を1行出し、件数の行を出して 1 を返す。出力は、あふれた後に開くゲートで止めておき、読みを遅らせる。
+    /// </summary>
+    [Fact]
+    public async Task SubscriberOverflowIsReportedAndExitsOne()
+    {
+        using var folder = new DefinitionFolder(TestWorld.Files());
+        var inner = new StringWriter { NewLine = "\n" };
+        using var gate = new ManualResetEventSlim(false);
+        var output = new GatedWriter(inner, gate, freeLines: 1);
+        var clock = new ActionClock(new VirtualClock(Scenario.Start), 20, gate.Set);
+
+        var code = await RunCommand.RunAsync(
+            folder.Path,
+            clock,
+            Scenario.WorldSeed,
+            false,
+            output,
+            CancellationToken.None,
+            Scenario.Start.AddDays(1),
+            subscriberCapacity: 1);
+
+        var text = inner.ToString();
+        Assert.Equal(1, code);
+        Assert.Contains("購読が追いつかず、溜まった件数が容量を超えたので切断しました。\n", text, StringComparison.Ordinal);
+        Assert.Matches(CountPattern, text);
+    }
+
     /// <summary>時計が例外で止まったら、例外の型と文面を1行出し、件数の行を出して 1 を返す。</summary>
     [Fact]
     public async Task ClockErrorIsReportedAndExitsOne()
@@ -184,6 +213,32 @@ public class RunCommandTests
         var root = new RootCommand();
         root.Subcommands.Add(RunCommand.Create());
         return root.Parse(args);
+    }
+
+    /// <summary>最初の数行だけ書き、以降の行はゲートが開くまで止める出力（読みの遅れを作る）。</summary>
+    private sealed class GatedWriter(TextWriter inner, ManualResetEventSlim gate, int freeLines) : TextWriter
+    {
+        /// <summary>いままでに書こうとした行の数。</summary>
+        private int _lines;
+
+        /// <summary>文字の符号化。使わないので UTF-8。</summary>
+        public override Encoding Encoding => Encoding.UTF8;
+
+        /// <summary>行を書く。自由に書ける行数を超えたら、ゲートが開くまで待つ。</summary>
+        /// <param name="value">書く行。</param>
+        public override void WriteLine(string? value)
+        {
+            if (++_lines > freeLines)
+            {
+                gate.Wait();
+            }
+
+            inner.WriteLine(value);
+        }
+
+        /// <summary>待たずに書く（件数の行は、ゲートの後に書く）。</summary>
+        /// <param name="value">書く文字。</param>
+        public override void Write(string? value) => inner.Write(value);
     }
 
     /// <summary>時刻を読むたびに1ミリ秒進める時計（実時間の時計が読みのあいだに進むことの代わり）。</summary>
