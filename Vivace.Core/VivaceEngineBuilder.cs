@@ -97,7 +97,7 @@ public sealed class VivaceEngineBuilder
         return this;
     }
 
-    /// <summary>ドライラン（外に何も出さない）として組む。</summary>
+    /// <summary>ドライラン（外に何も出さない）として組む。早送りにするには、UseClock で VirtualClock を渡す（省くと実時間になる）。</summary>
     public VivaceEngineBuilder DryRun()
     {
         IsDryRun = true;
