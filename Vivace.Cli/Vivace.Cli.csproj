@@ -14,4 +14,8 @@
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Vivace.Tests" />
+  </ItemGroup>
+
 </Project>

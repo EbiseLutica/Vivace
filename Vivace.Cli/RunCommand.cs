@@ -62,14 +62,16 @@ public static class RunCommand
     /// <param name="output">出力先。</param>
     /// <param name="ct">止めるためのキャンセル（Ctrl+C）。</param>
     /// <param name="until">回す先の時刻。省略するとキャンセルまで回す。</param>
-    public static async Task<int> RunAsync(
+    /// <param name="subscriberCapacity">流す購読の容量。省略すると既定の容量（テストで、あふれる経路を作るために指定する）。</param>
+    internal static async Task<int> RunAsync(
         string dir,
         IClock clock,
         ulong seed,
         bool all,
         TextWriter output,
         CancellationToken ct,
-        DateTimeOffset? until = null)
+        DateTimeOffset? until = null,
+        int? subscriberCapacity = null)
     {
         if (!Directory.Exists(dir))
         {
@@ -91,7 +93,10 @@ public static class RunCommand
             .UseClock(clock)
             .Build();
         using var run = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        var printing = PrintAsync(engine.Subscribe(CancellationToken.None), Offsets(definitions), all, output, run);
+        var feed = subscriberCapacity is { } capacity
+            ? engine.Subscribe(capacity, CancellationToken.None)
+            : engine.Subscribe(CancellationToken.None);
+        var printing = PrintAsync(feed, Offsets(definitions), all, output, run);
 
         var code = 0;
         try
