@@ -69,7 +69,7 @@
     PersonaId? PersonaId,
     EventPayload Payload,        // イベントタイプごとの中身（D3 3.9）。決めた結果もここに入る
     Guard? Guard,                // 適用前の検査（D1 1.7）
-    long? BatchSeq,              // 同じハンドラの出力のまとまり（トリガーの決めどきの Seq）
+    long? BatchSeq,              // 同じハンドラの出力のまとまり（トリガーの決定タイミングの Seq）
     long? CauseSeq,              // このイベントを生んだイベントの Seq
     Origin Origin,               // 2.9
     JsonElement? Trace,          // 痕跡（2.9）
@@ -119,8 +119,8 @@
       <tr><td><code>day.started</code></td><td>Apply、投入（ワールドの生成時）</td><td>ワールド、現地の日付</td><td>翌日の分を積む。出来事の抽選の <code>StartHandler</code> を出す（Planner は動かさない。D5 5.5）</td></tr>
       <tr><td><code>plan.committed</code></td><td>ハンドラ（Planner）</td><td>ペルソナ、期間（ホライズンから）、ブロックの列、由来（llm / fallback）、プランのバージョン</td><td>プランを差し替え、バージョンを上げる。新しく入ったブロックの開始を <code>block.started</code> で積む。いま続いているブロックは、積み直さない（同じブロックが同じ時刻でプランにあれば、積まない。J-135）。いま動いているブロックが、プランにまだ始まっていなければ、今の時刻に始める。次に作り直す時刻を決めて、そこに <code>plan.due</code> を積む</td></tr>
       <tr><td><code>plan.due</code></td><td>Apply（<code>plan.committed</code>）</td><td>ペルソナ、プランのバージョン</td><td>バージョンが古ければ捨てる。このプランの期間の Planner がまだ動いていなければ（寝ていない）、起きたままの Planner の <code>StartHandler</code> を出す（D5 5.5）。段階2 では、同じ時刻に睡眠が始まるなら動かず、睡眠の開始が Planner を起こす（J-142）。Planner の期間のキーは、睡眠のブロック ID（J-141）。睡眠が始まれないときは、ブロックの開始で Planner を起こす（J-148）</td></tr>
-      <tr><td><code>block.started</code></td><td>Apply</td><td>ペルソナ、ブロック ID（自由時間は null）、プランのバージョン</td><td>いまのプランに、そのブロックが同じ時刻で入っているかで見る（バージョンでは見ない。J-135）。同じブロックは一度だけ始める。移動中なら捨て、到着のときに確かめ直す（J-143）。自由時間なら決めどきを積む（決め中、行動中なら捨てる）。固定・計画のブロックなら、開始時の確認をする。満たせば <code>action.started</code>、満たせなければ決めどき（予定の乱れ）を積む。反射の行動の途中なら、それを打ち切らず、ブロックは始めない（反射の行動が終わったときに決める。D5 5.7）。スマホが開けるブロックなら <code>phone.opportunity</code> も積む</td></tr>
-      <tr><td><code>phone.opportunity</code></td><td>Apply</td><td>ペルソナ、ブロック ID</td><td>決めどき（スマホを開く機会）を積む。長いブロックで間隔が決まっていれば、次の機会も積む（D5）</td></tr>
+      <tr><td><code>block.started</code></td><td>Apply</td><td>ペルソナ、ブロック ID（自由時間は null）、プランのバージョン</td><td>いまのプランに、そのブロックが同じ時刻で入っているかで見る（バージョンでは見ない。J-135）。同じブロックは一度だけ始める。移動中なら捨て、到着のときに確かめ直す（J-143）。自由時間なら決定タイミングを積む（決定中、行動中なら捨てる）。固定・計画のブロックなら、開始時の確認をする。満たせば <code>action.started</code>、満たせなければ決定タイミング（予定の乱れ）を積む。反射の行動の途中なら、それを打ち切らず、ブロックは始めない（反射の行動が終わったときに決める。D5 5.7）。スマホが開けるブロックなら <code>phone.opportunity</code> も積む</td></tr>
+      <tr><td><code>phone.opportunity</code></td><td>Apply</td><td>ペルソナ、ブロック ID</td><td>決定タイミング（スマホを開く機会）を積む。長いブロックで間隔が決まっていれば、次の機会も積む（D5）</td></tr>
     </table>
   </div>
 
@@ -128,18 +128,18 @@
   <div class="table-wrap">
     <table>
       <tr><th>イベントタイプ</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
-      <tr><td><code>decision.requested</code></td><td>Apply</td><td>ペルソナ、理由（下表）、ブロック ID</td><td>状態は <code>processing</code> にする（決め中のフラグ <code>Deciding</code> を立てる。P-07、J-133）。<code>StartHandler</code> を出す（D1 1.8）。決め中に来たものは捨てる</td></tr>
-      <tr><td><code>activity.chosen</code></td><td>ハンドラ（Decider）</td><td>行動、場所、経路、移動時間、所要時間、副行動か、乱数の範囲、候補の要約（痕跡）</td><td>guard（行動のバージョン、実行できること、乱数の位置）を確かめる。行動のバージョンを上げ、乱数の位置を進める。場所が違えば <code>travel.started</code>、同じなら <code>action.started</code> を同じ時刻に積む。所要時間 0 の <code>core.idle</code>（何もしない）は、乱数の位置だけを進め、バージョンを上げず、後続を積まない（J-129）。待ちが 0 以下の次の予定の場所へ向かう行動は、移動だけで終わり、到着で決めどきを積み直す。同じ場所なら何も積まない（J-143）</td></tr>
-      <tr><td><code>block.responded</code></td><td>ハンドラ（予定の乱れへの対応）</td><td>ブロック ID、選んだもの（遅刻 / 欠席 / 待つ）</td><td>遅刻は、ブロックの場所への移動を始める。欠席は、そのブロックを自由時間として扱い、決めどきを積む。待つは、出来事の解消かブロックの終わりの早いほうまで待機し、そこで開始時の確認をやり直す</td></tr>
+      <tr><td><code>decision.requested</code></td><td>Apply</td><td>ペルソナ、理由（下表）、ブロック ID</td><td>状態は <code>processing</code> にする（決定中のフラグ <code>Deciding</code> を立てる。P-07、J-133）。<code>StartHandler</code> を出す（D1 1.8）。決定中に来たものは捨てる</td></tr>
+      <tr><td><code>activity.chosen</code></td><td>ハンドラ（Decider）</td><td>行動、場所、経路、移動時間、所要時間、副行動か、乱数の範囲、候補の要約（痕跡）</td><td>guard（行動のバージョン、実行できること、乱数の位置）を確かめる。行動のバージョンを上げ、乱数の位置を進める。場所が違えば <code>travel.started</code>、同じなら <code>action.started</code> を同じ時刻に積む。所要時間 0 の <code>core.idle</code>（何もしない）は、乱数の位置だけを進め、バージョンを上げず、後続を積まない（J-129）。待ちが 0 以下の次の予定の場所へ向かう行動は、移動だけで終わり、到着で決定タイミングを積み直す。同じ場所なら何も積まない（J-143）</td></tr>
+      <tr><td><code>block.responded</code></td><td>ハンドラ（予定の乱れへの対応）</td><td>ブロック ID、選んだもの（遅刻 / 欠席 / 待つ）</td><td>遅刻は、ブロックの場所への移動を始める。欠席は、そのブロックを自由時間として扱い、決定タイミングを積む。待つは、出来事の解消かブロックの終わりの早いほうまで待機し、そこで開始時の確認をやり直す</td></tr>
       <tr><td><code>travel.started</code></td><td>Apply</td><td>出発地、目的地、経路（区間の列）、到着の時刻、行動のバージョン</td><td>移動中にする。居合わせが変わるので、社交欲求の率を出発地の全員について計算し直す。<code>travel.arrived</code> を積む</td></tr>
-      <tr><td><code>travel.arrived</code></td><td>Apply</td><td>場所、行動のバージョン</td><td>バージョンが古ければ捨てる。居場所を書き換え、着いた場所の全員の率を計算し直す。続きの行動があれば <code>action.started</code>。続きの行動がなければ、着いた時刻に始まっていない固定ブロックがあれば <code>block.started</code> を、自由時間なら決めどきを積む（J-134、J-143）</td></tr>
+      <tr><td><code>travel.arrived</code></td><td>Apply</td><td>場所、行動のバージョン</td><td>バージョンが古ければ捨てる。居場所を書き換え、着いた場所の全員の率を計算し直す。続きの行動があれば <code>action.started</code>。続きの行動がなければ、着いた時刻に始まっていない固定ブロックがあれば <code>block.started</code> を、自由時間なら決定タイミングを積む（J-134、J-143）</td></tr>
       <tr><td><code>action.started</code></td><td>Apply</td><td>行動、場所、所要時間、理由（chosen / block / reflex / late）、行動のバージョン</td><td>行動中にし、率を切り替え、開始時の効果を当てる。<code>action.ended</code> を積む。効果に応じて <code>StartHandler</code>（受信箱、投稿）や <code>Consolidate</code>（睡眠、気絶）を出す。<code>Consolidate</code> を出すときは、このプランの期間の Planner がまだ動いていなければ、整理のあとに動く Planner の <code>StartHandler</code> も出す（D5 5.5）</td></tr>
-      <tr><td><code>action.ended</code></td><td>Apply</td><td>行動、行動のバージョン</td><td>バージョンが古ければ捨てる。バージョンは上げない（J-131。出力のハンドラは、同じ時刻でこのバージョンを見て適用されるため）。終了時の効果を当て、率を戻す。同じ時刻にブロックの開始がなく、自由時間の中なら、決めどきを積む。反射の行動が終わったときに、固定・計画のブロックの途中なら、決めどき（予定の乱れ。遅刻 / 欠席）を積む（D5 5.7）</td></tr>
+      <tr><td><code>action.ended</code></td><td>Apply</td><td>行動、行動のバージョン</td><td>バージョンが古ければ捨てる。バージョンは上げない（J-131。出力のハンドラは、同じ時刻でこのバージョンを見て適用されるため）。終了時の効果を当て、率を戻す。同じ時刻にブロックの開始がなく、自由時間の中なら、決定タイミングを積む。反射の行動が終わったときに、固定・計画のブロックの途中なら、決定タイミング（予定の乱れ。遅刻 / 欠席）を積む（D5 5.7）</td></tr>
     </table>
   </div>
   <div class="table-wrap">
     <table>
-      <tr><th>決めどきの理由</th><th>いつ</th><th>候補</th></tr>
+      <tr><th>決定タイミングの理由</th><th>いつ</th><th>候補</th></tr>
       <tr><td><code>free</code></td><td>自由時間のブロックが始まった</td><td>Decider の通常の候補</td></tr>
       <tr><td><code>ended</code></td><td>自由時間の中で、行動が終わった</td><td>Decider の通常の候補</td></tr>
       <tr><td><code>interrupted</code></td><td>出来事で行動が中断された</td><td>いまの場所から帰還できる候補</td></tr>
@@ -167,10 +167,10 @@
   <div class="table-wrap">
     <table>
       <tr><th>イベントタイプ</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
-      <tr><td><code>incident.occurred</code></td><td>ハンドラ（出来事の抽選）、投入</td><td>出来事の ID（その場の定義なら null）、対象、持続時間、解決済みの効果（対象の場所を含む。D3 3.7、3.8）、抽選の結果</td><td>効果を当てる。持続時間があれば <code>incident.resolved</code> を積む。影響を受けうるペルソナの実行中の行動を検査し、通らなければ中断して決めどきを積む。移動中に区間が伸びたら、到着を積み直す（VISION 9章）</td></tr>
+      <tr><td><code>incident.occurred</code></td><td>ハンドラ（出来事の抽選）、投入</td><td>出来事の ID（その場の定義なら null）、対象、持続時間、解決済みの効果（対象の場所を含む。D3 3.7、3.8）、抽選の結果</td><td>効果を当てる。持続時間があれば <code>incident.resolved</code> を積む。影響を受けうるペルソナの実行中の行動を検査し、通らなければ中断して決定タイミングを積む。移動中に区間が伸びたら、到着を積み直す（VISION 9章）</td></tr>
       <tr><td><code>incident.resolved</code></td><td>Apply</td><td>発生中の出来事の ID</td><td>効果を戻す。最短経路のキャッシュを作り直す</td></tr>
       <tr><td><code>place.added</code></td><td>ハンドラ（投稿する）、投入</td><td>場所（id、name、tags、links）、状態（採用済み / 候補）</td><td>guard（同じ名前がない）を確かめ、生えた場所に入れる。採用済みなら最短経路を作り直す</td></tr>
-      <tr><td><code>place.adopted</code> / <code>retired</code></td><td>投入</td><td>場所 ID</td><td>候補を採用する / 廃止する。廃止した場所に誰かがいれば、その人の行動はそのまま終わらせ、次の決めどきから候補に出さない</td></tr>
+      <tr><td><code>place.adopted</code> / <code>retired</code></td><td>投入</td><td>場所 ID</td><td>候補を採用する / 廃止する。廃止した場所に誰かがいれば、その人の行動はそのまま終わらせ、次の決定タイミングから候補に出さない</td></tr>
       <tr><td><code>term.recorded</code></td><td>ハンドラ（投稿する）</td><td>語、判定（通す / 変換する / 却下する）、変換先、構造に載るかの分類</td><td>guard（語がまだない）を確かめ、辞書に足す</td></tr>
     </table>
   </div>
@@ -206,7 +206,7 @@
 
 <section id="chain">
   <h2><span class="num">2.4</span>行動のチェーン</h2>
-  <p>自由時間の1回の決定から、次の決めどきまでの流れ。灰色は Apply が積む後続のイベント。</p>
+  <p>自由時間の1回の決定から、次の決定タイミングまでの流れ。灰色は Apply が積む後続のイベント。</p>
   <figure class="diagram">
     <svg viewBox="0 0 760 200" role="img" aria-label="行動のチェーン">
       <path class="tick" d="M30 120 H740"/>

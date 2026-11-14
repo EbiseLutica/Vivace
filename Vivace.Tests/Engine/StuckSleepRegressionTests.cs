@@ -7,7 +7,7 @@ using Vivace.Tests.Definitions;
 namespace Vivace.Tests.Engine;
 
 /// <summary>
-/// 睡眠のブロックが始まれないと、Planner が起きず、同じ時刻の決めどきを積み続けて時刻が進まなくなる誤りの再発防止。
+/// 睡眠のブロックが始まれないと、Planner が起きず、同じ時刻の決定タイミングを積み続けて時刻が進まなくなる誤りの再発防止。
 /// 定義は、睡眠（記憶の整理を起こす行動）の場所が、行動の条件（場所のタグ）を満たさない組み合わせ。読み込みは通る。
 /// </summary>
 public class StuckSleepRegressionTests

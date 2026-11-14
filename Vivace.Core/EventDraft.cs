@@ -33,10 +33,10 @@ public sealed record EventDraft(
     internal static EventDraft Next(DateTimeOffset time, string eventType, PersonaState persona, EventPayload payload) =>
         new(time, eventType, persona.World, persona.Id, payload);
 
-    /// <summary>決めどきのイベントを作る。</summary>
+    /// <summary>決定タイミングのイベントを作る。</summary>
     /// <param name="now">時刻。</param>
     /// <param name="persona">ペルソナ。</param>
-    /// <param name="reason">決めどきの理由。</param>
+    /// <param name="reason">決定タイミングの理由。</param>
     /// <param name="blockId">関わるブロックの ID。なければ null。</param>
     internal static EventDraft DecisionRequested(DateTimeOffset now, PersonaState persona, DecisionReason reason, string? blockId) =>
         Next(now, EventTypes.DecisionRequested, persona, new DecisionRequestedPayload(reason, blockId));

@@ -487,7 +487,7 @@ public sealed class SimEngine : IAsyncDisposable
 
         if (output.Error is { } error)
         {
-            throw new InvalidOperationException($"決める側のジョブが失敗しました（決めどき {output.BatchSeq}）: {error}");
+            throw new InvalidOperationException($"決める側のジョブが失敗しました（決定タイミング {output.BatchSeq}）: {error}");
         }
 
         _held.Add(output);

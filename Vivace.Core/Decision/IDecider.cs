@@ -4,6 +4,6 @@ namespace Vivace.Core.Decision;
 public interface IDecider
 {
     /// <summary>コンテキストから次の行動を1つ決める。</summary>
-    /// <param name="context">決めどきのコンテキスト。</param>
+    /// <param name="context">決定タイミングのコンテキスト。</param>
     DeciderOutput Decide(DecisionContext context);
 }

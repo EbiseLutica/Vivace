@@ -317,10 +317,10 @@
   <h4 id="phase3-4">3-4 予定の乱れ</h4>
   <p><strong>参照</strong>：<a href="design/5-decision.html#special">D5 5.4</a>、<a href="design/2-events.html#types">D2 2.3</a>、<a href="design/1-execution.html#guard">D1 1.7</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" disabled><code>block.responded</code>：固定ブロックを満たせないときの決めどきと、Decider の反応（重みは P-31）</li>
-    <li><input type="checkbox" disabled>遅れて着くときも決めどきにする（段階2 の自動の遅刻をやめる。J-138）。帰還できるかの判定を、Apply の guard でも見る</li>
+    <li><input type="checkbox" disabled><code>block.responded</code>：固定ブロックを満たせないときの決定タイミングと、Decider の反応（重みは P-31）</li>
+    <li><input type="checkbox" disabled>遅れて着くときも決定タイミングにする（段階2 の自動の遅刻をやめる。J-138）。帰還できるかの判定を、Apply の guard でも見る</li>
     <li><input type="checkbox" disabled>移動より短いブロックの欠席を、事実として残す（J-143。段階2 では何も残らない）</li>
-    <li><input type="checkbox" disabled>Retry の決めどきが、元のブロック ID と理由を持ち越す</li>
+    <li><input type="checkbox" disabled>Retry の決定タイミングが、元のブロック ID と理由を持ち越す</li>
   </ul>
   <p><strong>完了条件</strong>：遅刻と欠席がイベントの列に残るシナリオが通る。</p>
 
@@ -444,7 +444,7 @@
   <div class="table-wrap">
     <table>
       <tr><th>穴</th><th>場所</th><th>起きること</th><th>決める時期</th></tr>
-      <tr><td>再起動で起動し直せないハンドラがある</td><td>D1 1.3、1.11、D2 2.3</td><td>復元の対象は処理中の決めどきだけ。<code>day.started</code> の抽選も同じで、再実行は J-123 で同じ結果になる（段階4 で扱う）。Planner、出来事の抽選、効果のハンドラは <code>day.started</code>、<code>action.started</code>、<code>plan.due</code> から起動するので、途中で落ちると、出力が届かないまま進む</td><td>段階4</td></tr>
+      <tr><td>再起動で起動し直せないハンドラがある</td><td>D1 1.3、1.11、D2 2.3</td><td>復元の対象は処理中の決定タイミングだけ。<code>day.started</code> の抽選も同じで、再実行は J-123 で同じ結果になる（段階4 で扱う）。Planner、出来事の抽選、効果のハンドラは <code>day.started</code>、<code>action.started</code>、<code>plan.due</code> から起動するので、途中で落ちると、出力が届かないまま進む</td><td>段階4</td></tr>
     </table>
   </div>
 </section>

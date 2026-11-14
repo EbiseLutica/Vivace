@@ -85,7 +85,7 @@ public sealed class EventApplier
         return null;
     }
 
-    /// <summary>却下の結果を作り、決め直しが要れば決めどきを積む。</summary>
+    /// <summary>却下の結果を作り、再決定が要れば決定タイミングを積む。</summary>
     private static ApplyResult Rejected(SimState state, SimEvent ev, Guard guard, string reason)
     {
         var followUps = ImmutableArray<EventDraft>.Empty;

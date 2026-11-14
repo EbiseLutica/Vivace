@@ -40,7 +40,7 @@ public sealed class UtilityDecider : IDecider
         var persona = state.Personas[context.Persona];
         if (persona.Location is not AtPlace at)
         {
-            throw new InvalidOperationException("決めどきは、ペルソナが場所にいるときにしか起きません。");
+            throw new InvalidOperationException("決定タイミングは、ペルソナが場所にいるときにしか起きません。");
         }
 
         var personaDef = defs.Personas[persona.DefId];

@@ -72,7 +72,7 @@ public class PlanRulesTests
         Assert.Empty(result.FollowUps);
     }
 
-    /// <summary>自由時間のブロックの開始は、いま行動がなければ決めどき（自由時間）を積む。</summary>
+    /// <summary>自由時間のブロックの開始は、いま行動がなければ決定タイミング（自由時間）を積む。</summary>
     [Fact]
     public void FreeBlockStartRequestsDecisionWhenIdle()
     {
@@ -225,7 +225,7 @@ public class PlanRulesTests
         Assert.Equal(blockId, result.State.Personas[Fixture.Kaori].LastBlockId);
     }
 
-    /// <summary>プランがないペルソナは、行動の終わりで決めどきを積まない（自由時間でも、ブロックの途中でもないため）。</summary>
+    /// <summary>プランがないペルソナは、行動の終わりで決定タイミングを積まない（自由時間でも、ブロックの途中でもないため）。</summary>
     [Fact]
     public void ActionEndWithoutPlanRequestsNoDecision()
     {

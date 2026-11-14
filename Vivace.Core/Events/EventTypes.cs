@@ -89,7 +89,7 @@ public static class EventTypes
     /// <summary>スマホを開く機会。</summary>
     public const string PhoneOpportunity = "phone.opportunity";
 
-    /// <summary>決めどきの要求。</summary>
+    /// <summary>決定タイミングの要求。</summary>
     public const string DecisionRequested = "decision.requested";
 
     /// <summary>行動の決定（Decider の出力）。</summary>

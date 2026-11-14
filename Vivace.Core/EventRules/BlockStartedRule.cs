@@ -8,13 +8,13 @@ using Vivace.Core.Signals;
 
 namespace Vivace.Core.EventRules;
 
-/// <summary>ブロックを始める。自由時間なら決めどきを積む。</summary>
+/// <summary>ブロックを始める。自由時間なら決定タイミングを積む。</summary>
 internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
 {
     /// <summary>扱うイベントタイプ。</summary>
     public override string EventType => EventTypes.BlockStarted;
 
-    /// <summary>ブロックを始める。自由時間なら決めどきを積む。</summary>
+    /// <summary>ブロックを始める。自由時間なら決定タイミングを積む。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, BlockStartedPayload payload)
     {
         if (state.AlivePersona(ev.PersonaId) is not { } persona)
@@ -26,7 +26,7 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
         {
             if (persona.Activity is not null || persona.Location is not AtPlace || persona.Deciding)
             {
-                return ApplyResult.Skipped(state, "行動中か、決め中");
+                return ApplyResult.Skipped(state, "行動中か、決定中");
             }
 
             return persona.Plan?.FreeAt(ev.Time) is null
@@ -37,7 +37,7 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
         return StartFixedBlock(ctx, state, persona, payload.BlockId, ev.Time, ev.Seq);
     }
 
-    /// <summary>固定・計画のブロックを始める。いまの行動を打ち切り、行動の場所まで移動してから、行動を始める。満たせなければ、予定の乱れの決めどきを積む。</summary>
+    /// <summary>固定・計画のブロックを始める。いまの行動を打ち切り、行動の場所まで移動してから、行動を始める。満たせなければ、予定の乱れの決定タイミングを積む。</summary>
     private static ApplyResult StartFixedBlock(RuleContext ctx, SimState state, PersonaState persona, string blockId, DateTimeOffset now, long seq)
     {
         var block = persona.Plan?.CurrentBlock(blockId, now);

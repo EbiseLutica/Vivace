@@ -68,7 +68,7 @@ public class EngineFailureTests
         }
     }
 
-    /// <summary>guard が通らない出力は、却下として記録され、決め直しで続く。</summary>
+    /// <summary>guard が通らない出力は、却下として記録され、再決定で続く。</summary>
     [Fact]
     public async Task StaleDecisionIsRecordedAsRejectedAndRunContinues()
     {

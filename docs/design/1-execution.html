@@ -172,7 +172,7 @@ record ApplyResult(
   <div class="grid two">
     <div class="card">
       <h4>後続のイベント</h4>
-      <p>ルールだけで決まる次のイベント。翌日の日の始まり、しきい値到達の予測、行動の終了、到着、決めどきなど。Apply と同じトランザクションでキューに入る。</p>
+      <p>ルールだけで決まる次のイベント。翌日の日の始まり、しきい値到達の予測、行動の終了、到着、決定タイミングなど。Apply と同じトランザクションでキューに入る。</p>
     </div>
     <div class="card">
       <h4>シグナル</h4>
@@ -187,7 +187,7 @@ record ApplyResult(
   <div class="table-wrap">
     <table>
       <tr><th>シグナル</th><th>依頼の中身</th><th>再起動したときの復元</th></tr>
-      <tr><td><code>StartHandler</code></td><td>決めどきのハンドラを、レーンで起動する</td><td>「処理中」の決めどきを探して、起動し直す</td></tr>
+      <tr><td><code>StartHandler</code></td><td>決定タイミングのハンドラを、レーンで起動する</td><td>「処理中」の決定タイミングを探して、起動し直す</td></tr>
       <tr><td><code>CancelHandler</code></td><td>割り込みで不要になったハンドラを取り消す</td><td>不要。古い出力は検査で弾かれる（1.7）</td></tr>
       <tr><td><code>Deliver</code></td><td>未送信の外向きの操作を、配信役に渡す</td><td>未送信のものは、送らずに「送信不明」にする（VISION 10章）</td></tr>
       <tr><td><code>Consolidate</code></td><td>記憶の整理を起こす（範囲の上限の適用番号つき）</td><td>起動時に、カーソルから現在までを1回まとめて整理する（VISION UC-1）</td></tr>
@@ -200,7 +200,7 @@ record ApplyResult(
   </div>
 </section>
 
-<p><strong>取り消し</strong>（J-145）：<code>CancelHandler</code> は、決める側のレーンだけを止める。Planner のレーンは止めない。段階2 では、決めどきは出力を待つ間に並列に止まらないので、規則だけを単体で確かめる。</p>
+<p><strong>取り消し</strong>（J-145）：<code>CancelHandler</code> は、決める側のレーンだけを止める。Planner のレーンは止めない。段階2 では、決定タイミングは出力を待つ間に並列に止まらないので、規則だけを単体で確かめる。</p>
 <section id="step">
   <h2><span class="num">1.4</span>エンジンの1歩</h2>
   <p>エンジンは、次の手順を繰り返す。</p>
@@ -214,7 +214,7 @@ record ApplyResult(
   </ol>
   <p>キューは、SQLite の未適用のイベントを、メモリの優先度つきキュー（<code>PriorityQueue</code>）に読み込んだもの。決める側の出力は、トリガーの連番の順に、ホライズンが先頭の時刻以下になったときに積む（同じ時刻の出力の連番は、並列に動いても毎回同じ。J-137）。シグナルは、コミットのあとに実行する（D1 1.3。J-145）。起動時に読み込み、以後はエンジンが両方を同時に更新する。読むのはメモリのほうだけ。</p>
   <figure class="diagram">
-    <svg viewBox="0 0 760 360" role="img" aria-label="決めどきの処理の流れ">
+    <svg viewBox="0 0 760 360" role="img" aria-label="決定タイミングの処理の流れ">
       <text class="title" x="110" y="28" text-anchor="middle">エンジン</text>
       <text class="title" x="380" y="28" text-anchor="middle">決定レーン</text>
       <text class="title" x="650" y="28" text-anchor="middle">SQLite</text>
@@ -223,7 +223,7 @@ record ApplyResult(
       <path class="tick" d="M650 38 V350"/>
 
       <rect class="box accent" x="30" y="50" width="160" height="40" rx="6"/>
-      <text x="110" y="75" text-anchor="middle">決めどきを適用</text>
+      <text x="110" y="75" text-anchor="middle">決定タイミングを適用</text>
       <path class="arrow" d="M190 70 H648"/>
       <text class="sub" x="420" y="64" text-anchor="middle">① 処理中にする、適用番号を振る（tx）</text>
 
@@ -243,7 +243,7 @@ record ApplyResult(
       <rect class="box accent" x="30" y="206" width="160" height="40" rx="6"/>
       <text x="110" y="231" text-anchor="middle">出力を取り込む</text>
       <path class="arrow" d="M190 226 H648"/>
-      <text class="sub" x="420" y="220" text-anchor="middle">⑤ 出力を挿入、決めどきを applied に（tx）</text>
+      <text class="sub" x="420" y="220" text-anchor="middle">⑤ 出力を挿入、決定タイミングを applied に（tx）</text>
 
       <rect class="box good" x="30" y="270" width="160" height="56" rx="6"/>
       <text x="110" y="292" text-anchor="middle">出力を順に適用</text>
@@ -251,7 +251,7 @@ record ApplyResult(
       <path class="arrow" d="M190 298 H648"/>
       <text class="sub" x="420" y="292" text-anchor="middle">⑥ 1件ごとに1つの tx</text>
     </svg>
-    <figcaption>決めどきの処理。状態を書くのはエンジンだけで、レーンはスナップショットを読むだけ</figcaption>
+    <figcaption>決定タイミングの処理。状態を書くのはエンジンだけで、レーンはスナップショットを読むだけ</figcaption>
   </figure>
 </section>
 
@@ -261,7 +261,7 @@ record ApplyResult(
   <div class="table-wrap">
     <table>
       <tr><th>ハンドラ</th><th>トリガー</th><th>レーン</th><th>ホライズン</th><th>LLM</th></tr>
-      <tr><td>Decider</td><td>決めどき（自由時間、行動の終了、中断、決め直し）</td><td>決定</td><td>トリガーの時刻</td><td>使わない</td></tr>
+      <tr><td>Decider</td><td>決定タイミング（自由時間、行動の終了、中断、再決定）</td><td>決定</td><td>トリガーの時刻</td><td>使わない</td></tr>
       <tr><td>予定の乱れへの対応（遅刻・欠席・待つ）</td><td>ブロックの開始時の確認で、満たせないとき</td><td>決定</td><td>トリガーの時刻</td><td>使わない</td></tr>
       <tr><td>スマホを開く機会</td><td>機会のイベント</td><td>決定</td><td>トリガーの時刻</td><td>使わない</td></tr>
       <tr><td>効果「受信箱を処理する」</td><td>「スマホを開く」の開始</td><td>決定</td><td>行動の終了の時刻</td><td>使う</td></tr>
@@ -325,7 +325,7 @@ record ApplyResult(
   </div>
   <ul>
     <li>同じハンドラの出力は、1つのまとまり（batch）として扱う。どれか1件の guard が通らなければ、そのイベントを「却下」にし、同じまとまりの残りの未適用のイベントも、すべて「却下」にする</li>
-    <li>まとまりには、却下されたときの動き（<code>onReject</code>）を持たせる。<code>redecide</code> は、同じ時刻（いま）に決めどきを積み直す。<code>recompose</code> は、文面の作り直しを積む（辞書の食い違い）。<code>drop</code> は何もしない（割り込みで不要になった場合）</li>
+    <li>まとまりには、却下されたときの動き（<code>onReject</code>）を持たせる。<code>redecide</code> は、同じ時刻（いま）に決定タイミングを積み直す。<code>recompose</code> は、文面の作り直しを積む（辞書の食い違い）。<code>drop</code> は何もしない（割り込みで不要になった場合）</li>
     <li>検査は、状態だけで決まるので決定的。Apply の一部として単体テストできる</li>
   </ul>
   <div class="callout">
@@ -357,14 +357,14 @@ record ApplyResult(
 
       <rect class="box warn" x="560" y="60" width="160" height="48" rx="8"/>
       <text class="title" x="640" y="82" text-anchor="middle">processing</text>
-      <text class="sub" x="640" y="99" text-anchor="middle">決めどき：処理中</text>
+      <text class="sub" x="640" y="99" text-anchor="middle">決定タイミング：処理中</text>
 
 
       <path class="arrow" d="M170 112 L318 50"/>
       <path class="arrow" d="M170 124 H318"/>
       <path class="arrow" d="M170 136 L318 198"/>
       <path class="arrow" d="M170 106 C 260 70, 450 70, 558 80"/>
-      <text class="sub" x="470" y="66">決めどき</text>
+      <text class="sub" x="470" y="66">決定タイミング</text>
       <path class="arrow" d="M600 60 C 590 24, 500 24, 452 38"/>
       <text class="sub" x="530" y="16" text-anchor="middle">出力を取り込んだ</text>
       <path class="arrow dash" d="M720 74 C 756 66, 756 102, 722 96"/>
@@ -373,12 +373,12 @@ record ApplyResult(
     <figcaption>イベントの状態。行は消さず、中身も書き換えない（VISION 4章）。変わるのは状態と適用番号だけ</figcaption>
   </figure>
   <ul>
-    <li>適用番号を持つのは、applied と processing（決めどき）だけ。skipped と rejected は持たない（何も適用していないから）</li>
+    <li>適用番号を持つのは、applied と processing（決定タイミング）だけ。skipped と rejected は持たない（何も適用していないから）</li>
     <li>rejected と skipped には、理由（<code>status_reason</code>）を残す。ビューアと実行レポートで、なぜ起きなかったかを読める</li>
   </ul>
   <div class="callout">
-    <span class="label">決定 P-07　決めどきの適用番号は、処理中に入るときに振る。処理済みは applied にまとめる</span>
-    決めどきにとっての「適用」は、処理中に入る瞬間なので、そこで適用番号を振る。出力を取り込んだら、ほかのイベントと同じ applied にする（決めどきだけの「処理済み」は持たない）。再起動で処理中のものを決め直すときは、状態を pending に戻さず、processing のままハンドラを起動し直す（効果は「未適用に戻して決め直す」と同じで、適用番号が振り直しで飛ばない）。
+    <span class="label">決定 P-07　決定タイミングの適用番号は、処理中に入るときに振る。処理済みは applied にまとめる</span>
+    決定タイミングにとっての「適用」は、処理中に入る瞬間なので、そこで適用番号を振る。出力を取り込んだら、ほかのイベントと同じ applied にする（決定タイミングだけの「処理済み」は持たない）。再起動で処理中のものを再決定するときは、状態を pending に戻さず、processing のままハンドラを起動し直す（効果は「未適用に戻して再決定する」と同じで、適用番号が振り直しで飛ばない）。
   </div>
 
   <h3>ペルソナの行動</h3>
@@ -386,7 +386,7 @@ record ApplyResult(
     <svg viewBox="0 0 760 240" role="img" aria-label="ペルソナの行動の状態遷移">
       <rect class="box accent" x="30" y="90" width="150" height="56" rx="8"/>
       <text class="title" x="105" y="114" text-anchor="middle">決定待ち</text>
-      <text class="sub" x="105" y="133" text-anchor="middle">決めどきの処理中</text>
+      <text class="sub" x="105" y="133" text-anchor="middle">決定タイミングの処理中</text>
 
       <rect class="box" x="300" y="20" width="160" height="56" rx="8"/>
       <text class="title" x="380" y="44" text-anchor="middle">移動中</text>
@@ -431,7 +431,7 @@ record ApplyResult(
     <table>
       <tr><th>処理</th><th>1つのトランザクションで書くもの</th><th>書き手</th></tr>
       <tr><td>イベントの適用</td><td>変わった状態の行、イベントの状態と適用番号、後続のイベントの挿入、付随するテーブル（受信箱、未送信の操作、生えた場所、辞書、発生中の出来事）</td><td>エンジン</td></tr>
-      <tr><td>ハンドラの出力の取り込み</td><td>出力のイベントの挿入、決めどきを applied に</td><td>エンジン</td></tr>
+      <tr><td>ハンドラの出力の取り込み</td><td>出力のイベントの挿入、決定タイミングを applied に</td><td>エンジン</td></tr>
       <tr><td>到着、投入、送信結果</td><td>イベントの挿入（pending）。受信箱に入るのは、そのイベントを適用したとき</td><td>エンジン</td></tr>
       <tr><td>記憶の整理（1つの層）</td><td>記憶のアイテムと threads の更新、その層のカーソル</td><td>整理ジョブ</td></tr>
     </table>
@@ -471,7 +471,7 @@ record ApplyResult(
     <li>状態のテーブルから SimState を組み立て、未適用と処理中のイベントでキューを作る</li>
     <li>未送信の操作ごとに「送信不明」のイベントを挿入する</li>
     <li>最後に適用したイベントの時刻と、いまの時刻を比べる。差が 1 分を超えていれば、追いつきに入る</li>
-    <li>処理中の決めどきのハンドラを起動し直し、エンジンを動かす</li>
+    <li>処理中の決定タイミングのハンドラを起動し直し、エンジンを動かす</li>
   </ol>
   <h3>追いつき</h3>
   <ul>
@@ -487,7 +487,7 @@ record ApplyResult(
   <h3>停止</h3>
   <ol>
     <li>受付を閉じる（新しいコマンドを受けない）</li>
-    <li>実行中のハンドラを取り消す。決めどきは processing のまま残り、次の起動で決め直す</li>
+    <li>実行中のハンドラを取り消す。決定タイミングは processing のまま残り、次の起動で再決定する</li>
     <li>すべてのレーンを閉じ（これ以降は、新しいレーンも作らない）、動いているジョブの終わりを待つ。ジョブの例外で閉じたレーンがあっても、ここでは例外を投げない（実行している間に出す。D7 7.1）（J-151）</li>
     <li>実行中のトランザクションのコミットを待って、接続を閉じる。配信役が送信中のものは、結果を待たずに閉じてよい（次の起動で不明になる）</li>
   </ol>
@@ -504,7 +504,7 @@ record ApplyResult(
   <div class="callout">
     <span class="label">決定 P-09　定義の読み直しのトリガーと、実行中の行動が消えたとき</span>
     <p>読み直しは、コアの公開 API（<code>ReloadDefinitionsAsync</code>、D4 4.6）として持つ。コアはファイルを監視せず、いつ呼ぶかはホストが決める。最小の CLI では、<code>vivace daemon --watch</code> のときに定義のフォルダを監視し、変更が 1 秒落ち着いたら呼ぶ（D7 7.5）。将来の API 層やエディタは、保存したときに同じ API を呼ぶ。</p>
-    実行中の行動や、いる場所が、新しい定義から消えていても、その行動は終了の時刻まで続ける（中断しない）。次の決めどきからは、新しい定義で候補を作る。ペルソナ定義が消えたインスタンスは、エラーとして読み直しを拒否する（先に破棄を投入する。1.13）。
+    実行中の行動や、いる場所が、新しい定義から消えていても、その行動は終了の時刻まで続ける（中断しない）。次の決定タイミングからは、新しい定義で候補を作る。ペルソナ定義が消えたインスタンスは、エラーとして読み直しを拒否する（先に破棄を投入する。1.13）。
   </div>
 </section>
 

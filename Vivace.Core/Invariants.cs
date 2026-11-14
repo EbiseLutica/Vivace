@@ -46,7 +46,7 @@ public static class Invariants
             var events = pending[persona.Id].ToList();
             if (persona.Deciding && !events.Any(ev => ev.EventType == EventTypes.ActivityChosen))
             {
-                throw new InvariantViolationException($"決め中なのに、決めるジョブが動いていません: {persona.Id}");
+                throw new InvariantViolationException($"決定中なのに、決めるジョブが動いていません: {persona.Id}");
             }
 
             if (persona.Activity is { } activity)
@@ -81,7 +81,7 @@ public static class Invariants
                     or EventTypes.TravelStarted
                     || ev.Payload is BlockStartedPayload { BlockId: null }))
             {
-                throw new InvariantViolationException($"自由時間なのに、決めどきが予定されていません（アイドル）: {persona.Id}");
+                throw new InvariantViolationException($"自由時間なのに、決定タイミングが予定されていません（アイドル）: {persona.Id}");
             }
         }
     }

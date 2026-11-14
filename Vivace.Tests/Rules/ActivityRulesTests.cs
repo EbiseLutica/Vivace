@@ -10,7 +10,7 @@ using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Rules;
 
-/// <summary>行動の開始と終了、移動、決めどき、行動の決定の Apply を、手で計算した小さな例で確かめる。</summary>
+/// <summary>行動の開始と終了、移動、決定タイミング、行動の決定の Apply を、手で計算した小さな例で確かめる。</summary>
 public class ActivityRulesTests
 {
     private static readonly PlaceId KaoriRoom = new("kaori_room");
@@ -20,11 +20,11 @@ public class ActivityRulesTests
     private static SimEvent ActionStarted(long seq, string action, PlaceId place, TimeSpan duration, long version) =>
         Fixture.Event(seq, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload(action, place, duration, ActivityReason.Chosen, version, null), Fixture.Kaori);
 
-    /// <summary>決めどきのイベントを作る。</summary>
+    /// <summary>決定タイミングのイベントを作る。</summary>
     private static SimEvent Request(long seq) =>
         Fixture.Event(seq, Fixture.Now, EventTypes.DecisionRequested, new DecisionRequestedPayload(DecisionReason.Free, null), Fixture.Kaori);
 
-    /// <summary>決めどきの決定の中身（行動、場所、所要時間、乱数の範囲）を作る。移動は 0 分。</summary>
+    /// <summary>決定タイミングの決定の中身（行動、場所、所要時間、乱数の範囲）を作る。移動は 0 分。</summary>
     private static ActivityChosenPayload Choice(string action, PlaceId place, int minutes, ulong from, ulong to) =>
         new(action, place, ImmutableArray<RouteStep>.Empty, 0, TimeSpan.FromMinutes(minutes), false, new RngDraws(Fixture.Kaori.Value, "decide", from, to));
 
@@ -102,7 +102,7 @@ public class ActivityRulesTests
         Assert.Empty(Fixture.Apply(Fixture.WithKaori(), sameTime).Signals);
     }
 
-    /// <summary>決めどきの要求は、決め中のフラグを立て、Decider の起動を依頼する。決め中にもう一度要求すると捨てる。</summary>
+    /// <summary>決定タイミングの要求は、決定中のフラグを立て、Decider の起動を依頼する。決定中にもう一度要求すると捨てる。</summary>
     [Fact]
     public void DecisionRequestIsRecordedOnceAndStartsDecider()
     {
@@ -115,7 +115,7 @@ public class ActivityRulesTests
         Assert.Empty(second.Signals);
     }
 
-    /// <summary>決め直しの出力が guard で却下されると、決め中のフラグを下ろし、決め直しを積む。</summary>
+    /// <summary>再決定の出力が guard で却下されると、決定中のフラグを下ろし、再決定を積む。</summary>
     [Fact]
     public void StaleDecisionIsRejectedAndRequestedAgain()
     {
