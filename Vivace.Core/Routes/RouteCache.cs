@@ -28,7 +28,7 @@ public sealed class RouteCache
         return new RouteCache(tables.ToImmutable());
     }
 
-    /// <summary>1つのワールドの、場所と辺から最短経路のテーブルを組む。</summary>
+    /// <summary>1つのワールドの、場所と区間から最短経路のテーブルを組む。</summary>
     /// <param name="world">ワールドの定義。</param>
     public static RouteTable BuildTable(WorldDef world)
     {

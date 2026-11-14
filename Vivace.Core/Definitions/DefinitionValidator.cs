@@ -91,7 +91,7 @@ public static class DefinitionValidator
             if (reverse.Minutes != link.Minutes)
             {
                 Add(issues, DefinitionIssueCode.EdgeMismatch, reverse.Source,
-                    $"両側に書いた辺の移動時間が食い違っています: {from} と {to}（{link.Minutes} 分と {reverse.Minutes} 分）");
+                    $"両側に書いた区間の移動時間が食い違っています: {from} と {to}（{link.Minutes} 分と {reverse.Minutes} 分）");
             }
         }
 

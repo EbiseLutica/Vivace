@@ -131,7 +131,7 @@
       <tr><td><code>decision.requested</code></td><td>Apply</td><td>ペルソナ、理由（下表）、ブロック ID</td><td>状態は <code>processing</code> にする（決め中のフラグ <code>Deciding</code> を立てる。P-07、J-133）。<code>StartHandler</code> を出す（D1 1.8）。決め中に来たものは捨てる</td></tr>
       <tr><td><code>activity.chosen</code></td><td>ハンドラ（Decider）</td><td>行動、場所、経路、移動時間、所要時間、副行動か、乱数の範囲、候補の要約（痕跡）</td><td>guard（行動のバージョン、実行できること、乱数の位置）を確かめる。行動のバージョンを上げ、乱数の位置を進める。場所が違えば <code>travel.started</code>、同じなら <code>action.started</code> を同じ時刻に積む。所要時間 0 の <code>core.idle</code>（何もしない）は、乱数の位置だけを進め、バージョンを上げず、後続を積まない（J-129）。待ちが 0 以下の次の予定の場所へ向かう行動は、移動だけで終わり、到着で決めどきを積み直す。同じ場所なら何も積まない（J-143）</td></tr>
       <tr><td><code>block.responded</code></td><td>ハンドラ（予定の乱れへの対応）</td><td>ブロック ID、選んだもの（遅刻 / 欠席 / 待つ）</td><td>遅刻は、ブロックの場所への移動を始める。欠席は、そのブロックを自由時間として扱い、決めどきを積む。待つは、出来事の解消かブロックの終わりの早いほうまで待機し、そこで開始時の確認をやり直す</td></tr>
-      <tr><td><code>travel.started</code></td><td>Apply</td><td>出発地、目的地、経路（辺の列）、到着の時刻、行動のバージョン</td><td>移動中にする。居合わせが変わるので、社交欲求の率を出発地の全員について計算し直す。<code>travel.arrived</code> を積む</td></tr>
+      <tr><td><code>travel.started</code></td><td>Apply</td><td>出発地、目的地、経路（区間の列）、到着の時刻、行動のバージョン</td><td>移動中にする。居合わせが変わるので、社交欲求の率を出発地の全員について計算し直す。<code>travel.arrived</code> を積む</td></tr>
       <tr><td><code>travel.arrived</code></td><td>Apply</td><td>場所、行動のバージョン</td><td>バージョンが古ければ捨てる。居場所を書き換え、着いた場所の全員の率を計算し直す。続きの行動があれば <code>action.started</code>。続きの行動がなければ、着いた時刻に始まっていない固定ブロックがあれば <code>block.started</code> を、自由時間なら決めどきを積む（J-134、J-143）</td></tr>
       <tr><td><code>action.started</code></td><td>Apply</td><td>行動、場所、所要時間、理由（chosen / block / reflex / late）、行動のバージョン</td><td>行動中にし、率を切り替え、開始時の効果を当てる。<code>action.ended</code> を積む。効果に応じて <code>StartHandler</code>（受信箱、投稿）や <code>Consolidate</code>（睡眠、気絶）を出す。<code>Consolidate</code> を出すときは、このプランの期間の Planner がまだ動いていなければ、整理のあとに動く Planner の <code>StartHandler</code> も出す（D5 5.5）</td></tr>
       <tr><td><code>action.ended</code></td><td>Apply</td><td>行動、行動のバージョン</td><td>バージョンが古ければ捨てる。バージョンは上げない（J-131。出力のハンドラは、同じ時刻でこのバージョンを見て適用されるため）。終了時の効果を当て、率を戻す。同じ時刻にブロックの開始がなく、自由時間の中なら、決めどきを積む。反射の行動が終わったときに、固定・計画のブロックの途中なら、決めどき（予定の乱れ。遅刻 / 欠席）を積む（D5 5.7）</td></tr>
@@ -167,7 +167,7 @@
   <div class="table-wrap">
     <table>
       <tr><th>イベントタイプ</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
-      <tr><td><code>incident.occurred</code></td><td>ハンドラ（出来事の抽選）、投入</td><td>出来事の ID（その場の定義なら null）、対象、持続時間、解決済みの効果（対象の場所を含む。D3 3.7、3.8）、抽選の結果</td><td>効果を当てる。持続時間があれば <code>incident.resolved</code> を積む。影響を受けうるペルソナの実行中の行動を検査し、通らなければ中断して決めどきを積む。移動中に辺が伸びたら、到着を積み直す（VISION 9章）</td></tr>
+      <tr><td><code>incident.occurred</code></td><td>ハンドラ（出来事の抽選）、投入</td><td>出来事の ID（その場の定義なら null）、対象、持続時間、解決済みの効果（対象の場所を含む。D3 3.7、3.8）、抽選の結果</td><td>効果を当てる。持続時間があれば <code>incident.resolved</code> を積む。影響を受けうるペルソナの実行中の行動を検査し、通らなければ中断して決めどきを積む。移動中に区間が伸びたら、到着を積み直す（VISION 9章）</td></tr>
       <tr><td><code>incident.resolved</code></td><td>Apply</td><td>発生中の出来事の ID</td><td>効果を戻す。最短経路のキャッシュを作り直す</td></tr>
       <tr><td><code>place.added</code></td><td>ハンドラ（投稿する）、投入</td><td>場所（id、name、tags、links）、状態（採用済み / 候補）</td><td>guard（同じ名前がない）を確かめ、生えた場所に入れる。採用済みなら最短経路を作り直す</td></tr>
       <tr><td><code>place.adopted</code> / <code>retired</code></td><td>投入</td><td>場所 ID</td><td>候補を採用する / 廃止する。廃止した場所に誰かがいれば、その人の行動はそのまま終わらせ、次の決めどきから候補に出さない</td></tr>
@@ -245,7 +245,7 @@
       <text class="sub" x="150" y="40" text-anchor="middle">Decider の出力（橙）</text>
       <text class="sub" x="470" y="40" text-anchor="middle">ほかはすべて Apply の後続（青）</text>
     </svg>
-    <figcaption>公園で 45 分散歩する例。移動 15 分。出来事で辺が伸びれば、travel.arrived だけを積み直す</figcaption>
+    <figcaption>公園で 45 分散歩する例。移動 15 分。出来事で区間が伸びれば、travel.arrived だけを積み直す</figcaption>
   </figure>
 </section>
 
@@ -319,7 +319,7 @@
     <table>
       <tr><th>キー</th><th>対象</th><th>意味</th><th>戻し方</th></tr>
       <tr><td><code>close_place</code></td><td>ワールド</td><td>場所を閉鎖する。閉鎖中の場所は、候補にも経路の途中にもならない</td><td>解消で開く</td></tr>
-      <tr><td><code>slow_place</code></td><td>ワールド</td><td>その場所につながる辺の移動時間を増やす（<code>add</code> 分、または <code>factor</code> 倍）。道の工事や渋滞</td><td>解消で戻す</td></tr>
+      <tr><td><code>slow_place</code></td><td>ワールド</td><td>その場所につながる区間の移動時間を増やす（<code>add</code> 分、または <code>factor</code> 倍）。道の工事や渋滞</td><td>解消で戻す</td></tr>
       <tr><td><code>vital</code></td><td>ペルソナ</td><td>状態変数を増減する</td><td>戻さない</td></tr>
       <tr><td><code>condition</code></td><td>ペルソナ</td><td>状態（風邪など）を付ける</td><td>解消で外す</td></tr>
     </table>

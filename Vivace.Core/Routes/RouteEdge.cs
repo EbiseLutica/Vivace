@@ -3,7 +3,7 @@ using Vivace.Core.Domain;
 namespace Vivace.Core.Routes;
 
 /// <summary>
-/// 場所の間のつながり（無向の辺と移動時間（分））。
+/// 場所の間のつながり（無向の区間と移動時間（分））。
 /// </summary>
 /// <param name="A">片方の場所。</param>
 /// <param name="B">もう片方の場所。</param>

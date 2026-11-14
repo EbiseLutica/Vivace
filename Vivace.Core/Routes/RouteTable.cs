@@ -26,11 +26,11 @@ public sealed class RouteTable
     public ImmutableArray<PlaceId> Places => _places;
 
     /// <summary>
-    /// 場所の列と辺の列から、最短経路のテーブルを作る。辺の端が場所の列にないものは無視する。
+    /// 場所の列と区間の列から、最短経路のテーブルを作る。区間の端が場所の列にないものは無視する。
     /// </summary>
     /// <param name="places">使ってよい場所（閉鎖中のものは入れない）。</param>
-    /// <param name="edges">辺の列。同じ組が複数あれば、いちばん短いものを使う。</param>
-    /// <exception cref="ArgumentOutOfRangeException">移動時間が正でない辺がある。</exception>
+    /// <param name="edges">区間の列。同じ組が複数あれば、いちばん短いものを使う。</param>
+    /// <exception cref="ArgumentOutOfRangeException">移動時間が正でない区間がある。</exception>
     public static RouteTable Create(IEnumerable<PlaceId> places, IEnumerable<RouteEdge> edges)
     {
         var placeList = places.Distinct().OrderBy(place => place.Value, StringComparer.Ordinal).ToImmutableArray();
@@ -108,7 +108,7 @@ public sealed class RouteTable
         return _distance[i, j] >= Unreachable ? null : _distance[i, j];
     }
 
-    /// <summary>最短経路を辺の列で返す。つながらなければ null。出発と同じ場所なら空の列。</summary>
+    /// <summary>最短経路を区間の列で返す。つながらなければ null。出発と同じ場所なら空の列。</summary>
     /// <param name="from">出発地。</param>
     /// <param name="to">目的地。</param>
     public ImmutableArray<RouteStep>? Steps(PlaceId from, PlaceId to)

@@ -21,7 +21,7 @@ public enum DefinitionIssueCode
     /// <summary>参照先がない。</summary>
     MissingReference,
 
-    /// <summary>両側に書いた辺の時間が食い違う。</summary>
+    /// <summary>両側に書いた区間の時間が食い違う。</summary>
     EdgeMismatch,
 
     /// <summary>固定予定のブロックが重なる、または親の時間からはみ出す。</summary>
