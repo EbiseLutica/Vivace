@@ -50,9 +50,9 @@ public sealed class SimEngine : IAsyncDisposable
     private SimState _state;
     /// <summary>RunUntilAsync の中にいるか。ロックを取って読み書きする。</summary>
     private bool _looping;
-    /// <summary>決める側の仕事の出力が届くのを待つ仕事。キャンセルを持たせず、ループが待つ場面で使い回す。</summary>
+    /// <summary>決める側のジョブの出力が届くのを待つタスク。キャンセルを持たせず、ループが待つ場面で使い回す。</summary>
     private Task<bool>? _outputWait;
-    /// <summary>投入のコマンドが届くのを待つ仕事。キャンセルを持たせず、ループが待つ場面で使い回す。</summary>
+    /// <summary>投入のコマンドが届くのを待つタスク。キャンセルを持たせず、ループが待つ場面で使い回す。</summary>
     private Task<bool>? _commandWait;
     /// <summary>購読の一覧を守るロック。</summary>
     private readonly Lock _subscribersGate = new();
@@ -154,7 +154,7 @@ public sealed class SimEngine : IAsyncDisposable
     }
 
     /// <summary>
-    /// 時刻 until まで、イベントを適用し、決める側の仕事の結果を取り込む。until より後のイベントは、キューに残す。
+    /// 時刻 until まで、イベントを適用し、決める側のジョブの結果を取り込む。until より後のイベントは、キューに残す。
     /// </summary>
     /// <param name="until">進める先の時刻。</param>
     /// <param name="ct">キャンセル。</param>
@@ -184,7 +184,7 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>RunUntilAsync の本体。ループの各回の先頭で、届いたコマンドと仕事の出力を取り込む。</summary>
+    /// <summary>RunUntilAsync の本体。ループの各回の先頭で、届いたコマンドとジョブの出力を取り込む。</summary>
     private async Task LoopAsync(DateTimeOffset until, CancellationToken ct)
     {
         var cancelled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -237,8 +237,8 @@ public sealed class SimEngine : IAsyncDisposable
     }
 
     /// <summary>
-    /// レーンを止め、動いている仕事の終わりを待ってから、保存先を閉じる。仕事の結果は捨てる。
-    /// レーンの仕事の例外は、ここでは投げない（実行している間に RunUntilAsync が投げる）。
+    /// レーンを止め、動いているジョブの終わりを待ってから、保存先を閉じる。ジョブの結果は捨てる。
+    /// レーンのジョブの例外は、ここでは投げない（実行している間に RunUntilAsync が投げる）。
     /// </summary>
     public async ValueTask DisposeAsync()
     {
@@ -256,7 +256,7 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>決める側の仕事の実行の列。</summary>
+    /// <summary>決める側のジョブキュー。</summary>
     internal Lanes Lanes => _lanes;
 
     /// <summary>購読の列を読み、やめたら購読の一覧から外す。</summary>
@@ -317,12 +317,12 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>レーンの仕事が例外を投げていたら、エンジンを止めるために例外を投げる。</summary>
+    /// <summary>レーンのジョブが例外を投げていたら、エンジンを止めるために例外を投げる。</summary>
     private void ThrowIfLaneFailed()
     {
         if (_lanes.Failure.IsCompleted)
         {
-            throw new InvalidOperationException("決める側のレーンの仕事が失敗しました。", _lanes.Failure.Result);
+            throw new InvalidOperationException("決める側のレーンのジョブが失敗しました。", _lanes.Failure.Result);
         }
     }
 
@@ -369,7 +369,7 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>適用の後に動いている決める仕事のペルソナ。これから起動するシグナルの分も含める。</summary>
+    /// <summary>適用の後に動いている決めるジョブのペルソナ。これから起動するシグナルの分も含める。</summary>
     private ImmutableHashSet<PersonaId> BusyAfter(ImmutableArray<EngineSignal> signals) =>
         Busy().Union(signals.Select(signal => signal switch
         {
@@ -428,7 +428,7 @@ public sealed class SimEngine : IAsyncDisposable
     /// <param name="lane">レーンのキー。</param>
     internal static bool IsCancellable(string lane) => lane.StartsWith("decide:", StringComparison.Ordinal);
 
-    /// <summary>決める側の仕事を、レーンで起動する。仕事はスナップショット（起動の時点の状態）だけを読む。</summary>
+    /// <summary>決める側のジョブを、レーンで起動する。ジョブはスナップショット（起動の時点の状態）だけを読む。</summary>
     private void StartHandler(long key, PersonaId persona, DateTimeOffset horizon, string lane, Origin origin, Func<EventDraft> work)
     {
         _running[key] = new Running(key, persona, horizon, lane);
@@ -467,7 +467,7 @@ public sealed class SimEngine : IAsyncDisposable
         return new EventDraft(plan.Now, EventTypes.PlanCommitted, persona.World, persona.Id, new PlanCommittedPayload(planned), guard, plan.BatchSeq);
     }
 
-    /// <summary>終わった仕事の出力を、ぜんぶ受け取る。</summary>
+    /// <summary>終わったジョブの出力を、ぜんぶ受け取る。</summary>
     private void DrainOutputs()
     {
         while (_outputs.Reader.TryRead(out var output))
@@ -476,7 +476,7 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>仕事の出力を受け取り、積む時を待つ列に入れる。仕事の例外は外へ投げる。</summary>
+    /// <summary>ジョブの出力を受け取り、積む時を待つ列に入れる。ジョブの例外は外へ投げる。</summary>
     private void Receive(Output output)
     {
         _running.Remove(output.BatchSeq);
@@ -487,7 +487,7 @@ public sealed class SimEngine : IAsyncDisposable
 
         if (output.Error is { } error)
         {
-            throw new InvalidOperationException($"決める側の仕事が失敗しました（決めどき {output.BatchSeq}）: {error}");
+            throw new InvalidOperationException($"決める側のジョブが失敗しました（決めどき {output.BatchSeq}）: {error}");
         }
 
         _held.Add(output);
@@ -507,7 +507,7 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>決める側の仕事が動いている（実行中、または出力を待っている）ペルソナ。</summary>
+    /// <summary>決める側のジョブが動いている（実行中、または出力を待っている）ペルソナ。</summary>
     private ImmutableHashSet<PersonaId> Busy() =>
         _running.Values.Select(run => run.Persona).Concat(_held.Select(output => output.Persona)).ToImmutableHashSet();
 
@@ -520,12 +520,12 @@ public sealed class SimEngine : IAsyncDisposable
     /// <summary>キューの先頭の時刻を返す。空なら null。</summary>
     private DateTimeOffset? EarliestPending() => _queue.TryPeek(out var head, out _) ? head.Time : null;
 
-    /// <summary>実行中の決める仕事。</summary>
+    /// <summary>実行中の決めるジョブ。</summary>
     private sealed record Running(long Key, PersonaId Persona, DateTimeOffset Horizon, string Lane);
 
     /// <summary>実行中に届いた投入のコマンド。</summary>
     private sealed record InjectCommand(InjectRequest Request, TaskCompletionSource<InjectResult> Completion);
 
-    /// <summary>決める仕事の結果。</summary>
+    /// <summary>決めるジョブの結果。</summary>
     private sealed record Output(long BatchSeq, PersonaId Persona, DateTimeOffset Horizon, Origin Origin, ImmutableArray<EventDraft> Events, string? Error);
 }

@@ -337,7 +337,7 @@
   <p><strong>前提</strong>：3-3。</p>
   <p><strong>参照</strong>：<a href="design/5-decision.html#incidents">D5 5.8</a>、<a href="design/5-decision.html#routes">5.10</a>、<a href="design/2-events.html#incident-effects">D2 2.7</a>、<a href="design/2-events.html#injection">2.8</a>、<a href="design/1-execution.html#lanes">D1 1.5</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" disabled>ワールドごとのレーン：<code>StartHandler</code> と実行中の仕事が、ペルソナなしでも動くようにする</li>
+    <li><input type="checkbox" disabled>ワールドごとのレーン：<code>StartHandler</code> と実行中のジョブが、ペルソナなしでも動くようにする</li>
     <li><input type="checkbox" disabled><code>IncidentLottery</code>：<code>day.started</code> から起動する。用途は日付つきで毎日 0 番から（J-123）、定義の ID の順に引く。1日の上限は P-37</li>
     <li><input type="checkbox" disabled><code>incident.occurred</code> と解消の Apply：場所の閉鎖、移動時間の増加、状態変数の増減、状態の付与と解除</li>
     <li><input type="checkbox" disabled>移動中に辺が伸びたら、到着を積み直す。古い <code>travel.arrived</code> は、到着の時刻の一致で捨てる</li>

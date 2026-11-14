@@ -2,10 +2,10 @@ using Vivace.Core;
 
 namespace Vivace.Tests.Engine;
 
-/// <summary>レーンは、同じレーンの仕事を順番に、違うレーンの仕事を並列に動かす。仕事が例外を投げたレーンは閉じ、終わりは待てる。</summary>
+/// <summary>レーンは、同じレーンのジョブを順番に、違うレーンのジョブを並列に動かす。ジョブが例外を投げたレーンは閉じ、終わりは待てる。</summary>
 public class LanesTests
 {
-    /// <summary>同じレーンの2つ目の仕事は、1つ目が終わるまで始まらない。別のレーンは、待たずに動く。</summary>
+    /// <summary>同じレーンの2つ目のジョブは、1つ目が終わるまで始まらない。別のレーンは、待たずに動く。</summary>
     [Fact]
     public async Task JobsInOneLaneRunInOrderAndOtherLanesRunAlongside()
     {
@@ -50,7 +50,7 @@ public class LanesTests
         }
     }
 
-    /// <summary>止めたレーンに仕事を入れると、黙って捨てず、例外にする。</summary>
+    /// <summary>止めたレーンにジョブを入れると、黙って捨てず、例外にする。</summary>
     [Fact]
     public async Task PostingToCompletedLaneThrows()
     {
@@ -71,7 +71,7 @@ public class LanesTests
         Assert.Throws<InvalidOperationException>(() => lanes.Post("plan:b", () => Task.CompletedTask));
     }
 
-    /// <summary>仕事が例外を投げたレーンは閉じ、後に積んだ仕事を実行しない。終わりを待つと、その例外が出る。</summary>
+    /// <summary>ジョブが例外を投げたレーンは閉じ、後に積んだジョブを実行しない。終わりを待つと、その例外が出る。</summary>
     [Fact]
     public async Task FailingJobClosesLaneAndSurfacesOnCompletion()
     {
@@ -100,7 +100,7 @@ public class LanesTests
         Assert.Same(failure, rejected.InnerException);
     }
 
-    /// <summary>仕事が例外を投げると、終わりを待つ前でも、そのレーンへの投入は失敗する。ほかのレーンは動き続ける。</summary>
+    /// <summary>ジョブが例外を投げると、終わりを待つ前でも、そのレーンへの投入は失敗する。ほかのレーンは動き続ける。</summary>
     [Fact]
     public async Task FailedLaneRejectsPostsWhileOtherLanesKeepRunning()
     {
@@ -152,7 +152,7 @@ public class LanesTests
         Assert.Same(canceled, thrown);
     }
 
-    /// <summary>終わりを待つ処理は、実行中の仕事と、その後に積んである仕事が終わるまで完了しない。</summary>
+    /// <summary>終わりを待つ処理は、実行中のジョブと、その後に積んであるジョブが終わるまで完了しない。</summary>
     [Fact]
     public async Task CompletionWaitsForRunningJob()
     {

@@ -15,7 +15,7 @@ public static class Invariants
     /// <param name="ctx">規則のコンテキスト。</param>
     /// <param name="state">適用の後の状態。</param>
     /// <param name="previousTime">適用の前の位置の時刻。</param>
-    /// <param name="busy">決める側の仕事が動いている（実行中、または出力を待っている）ペルソナ。</param>
+    /// <param name="busy">決める側のジョブが動いている（実行中、または出力を待っている）ペルソナ。</param>
     /// <param name="pending">未適用のイベントを、ペルソナごとに引けるもの。</param>
     /// <param name="earliestPending">未適用のイベントの最小の時刻（なければ null）。</param>
     /// <exception cref="InvariantViolationException">いずれかが破れた。</exception>
@@ -46,7 +46,7 @@ public static class Invariants
             var events = pending[persona.Id].ToList();
             if (persona.Deciding && !events.Any(ev => ev.EventType == EventTypes.ActivityChosen))
             {
-                throw new InvariantViolationException($"決め中なのに、決める仕事が動いていません: {persona.Id}");
+                throw new InvariantViolationException($"決め中なのに、決めるジョブが動いていません: {persona.Id}");
             }
 
             if (persona.Activity is { } activity)
