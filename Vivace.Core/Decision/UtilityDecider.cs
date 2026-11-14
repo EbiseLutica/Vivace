@@ -12,7 +12,7 @@ namespace Vivace.Core.Decision;
 
 /// <summary>
 /// 自由時間の行動を、重みつきの抽選で決める。重みは、行動の基本の重み、好み、欲求の倍率、移動の手間などの積。
-/// 同じ写しと同じ乱数の位置なら、同じ結果になる。
+/// 同じスナップショットと同じ乱数の位置なら、同じ結果になる。
 /// </summary>
 public sealed class UtilityDecider : IDecider
 {

@@ -90,7 +90,7 @@ public class UtilityDeciderTests
         Assert.Equal(2.1, UtilityDecider.Weight(2.0, 1.0, 1.5, 1, 0), 9);
     }
 
-    /// <summary>自由時間の決定。候補は行動 ID と場所 ID の順で並び、同じ写しと同じ乱数の位置なら、結果は毎回同じ。</summary>
+    /// <summary>自由時間の決定。候補は行動 ID と場所 ID の順で並び、同じスナップショットと同じ乱数の位置なら、結果は毎回同じ。</summary>
     [Fact]
     public void DecisionIsDeterministicForSameStateAndSeed()
     {

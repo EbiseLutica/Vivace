@@ -68,7 +68,7 @@
       <tr><td>SQL の書き方</td><td>手書きの SQL（ORM なし）</td><td>テーブルは十数個、書き込みはエンジンの <code>StorageBatch</code> だけ（D4 4.2）。リフレクションに頼らないので、モバイル（NativeAOT）でも動く</td></tr>
       <tr><td>TOML</td><td><code>Tomlyn</code>（2.x、TOML 1.1）</td><td>構文木を持ち、未知のキーの警告に行と列を出せる（D7 7.2）。NativeAOT 対応をうたっている</td></tr>
       <tr><td>JSON</td><td><code>System.Text.Json</code> + ソース生成</td><td>BCL。ペイロードの record の読み書き（D3 3.9）。ソース生成で AOT でも動く</td></tr>
-      <tr><td>不変のコレクション</td><td><code>System.Collections.Immutable</code></td><td>BCL。状態を不変にして、写しを参照で渡す（D3 P-21）</td></tr>
+      <tr><td>不変のコレクション</td><td><code>System.Collections.Immutable</code></td><td>BCL。状態を不変にして、スナップショットを参照で渡す（D3 P-21）</td></tr>
       <tr><td>コマンドのキュー</td><td><code>System.Threading.Channels</code></td><td>BCL。エンジンを唯一の書き手にするアクター（D1 P-01）</td></tr>
       <tr><td>ハッシュ</td><td><code>System.Security.Cryptography.SHA256</code></td><td>BCL。乱数のシードの導出（D5 5.9）</td></tr>
       <tr><td>ログ</td><td><code>Microsoft.Extensions.Logging.Abstractions</code></td><td>コアは抽象だけに依存し、出力先はホストが選ぶ</td></tr>

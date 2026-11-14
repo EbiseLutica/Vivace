@@ -101,7 +101,7 @@
 
       <rect class="box good" x="250" y="130" width="200" height="50" rx="8"/>
       <text class="title" x="350" y="152" text-anchor="middle">SimState</text>
-      <text class="sub" x="350" y="170" text-anchor="middle">不変。写しは参照を渡す</text>
+      <text class="sub" x="350" y="170" text-anchor="middle">不変。参照で渡す</text>
       <path class="arrow" d="M350 90 V128"/>
       <text class="sub" x="356" y="112">Apply で置き換える</text>
 
@@ -135,7 +135,7 @@
       <text class="sub" x="487" y="280" text-anchor="middle">出来事の抽選</text>
       <path class="arrow" d="M470 90 V238"/>
       <path class="arrow" d="M500 238 V92"/>
-      <text class="sub" x="464" y="200" text-anchor="end">シグナル + 写し</text>
+      <text class="sub" x="464" y="200" text-anchor="end">シグナル + 状態</text>
       <text class="sub" x="506" y="200">出力</text>
 
       <rect class="box warn" x="560" y="240" width="180" height="50" rx="8"/>
@@ -145,11 +145,11 @@
       <path class="arrow" d="M732 240 V72"/>
       <text class="sub" x="726" y="225" text-anchor="end">到着</text>
     </svg>
-    <figcaption>状態を書き換えるのはエンジンだけ。決める側は写しを読み、出力をコマンドで返す</figcaption>
+    <figcaption>状態を書き換えるのはエンジンだけ。決める側はスナップショットを読み、出力をコマンドで返す</figcaption>
   </figure>
   <ul>
     <li><strong>エンジン</strong>は、1本のスレッドで動くアクター。外からのコマンド（投入、到着、送信結果、ハンドラの出力、定義の読み直し）と、時刻が来たイベントの適用を、1つずつ順に処理する。SQLite のイベントテーブルと状態のテーブルに書くのは、エンジンだけ</li>
-    <li><strong>決める側</strong>（Planner、Decider、効果のハンドラ、出来事の抽選）は、レーンの上で並列に動く。受け取るのは状態の写しと、契機のイベントの時刻（now）だけ</li>
+    <li><strong>決める側</strong>（Planner、Decider、効果のハンドラ、出来事の抽選）は、レーンの上で並列に動く。受け取るのは状態のスナップショットと、契機のイベントの時刻（now）だけ</li>
     <li><strong>配信役</strong>と<strong>記憶の整理</strong>は、エンジンからのシグナルで動く。配信役の結果はコマンドで戻り、記憶の整理はイベントの外のテーブルにだけ書く</li>
   </ul>
   <div class="callout">
@@ -212,7 +212,7 @@ record ApplyResult(
     <li><strong>適用する。</strong>Apply を呼び、新しい状態、イベントの状態の更新、適用番号、後続のイベント、付随するテーブル（受信箱、未送信の操作など）を、1つのトランザクションで書く</li>
     <li><strong>シグナルを実行する。</strong>コミットのあとで、ハンドラの起動、配信、記憶の整理の起動を行い、購読者に適用済みのイベントを流す</li>
   </ol>
-  <p>キューは、SQLite の未適用のイベントを、メモリの優先度つきキュー（<code>PriorityQueue</code>）に写したもの。決める側の出力は、契機の連番の順に、ホライズンが先頭の時刻以下になったときに積む（同じ時刻の出力の連番は、並列に動いても毎回同じ。J-137）。シグナルは、コミットのあとに実行する（D1 1.3。J-145）。起動時に読み込み、以後はエンジンが両方を同時に更新する。読むのはメモリのほうだけ。</p>
+  <p>キューは、SQLite の未適用のイベントを、メモリの優先度つきキュー（<code>PriorityQueue</code>）に読み込んだもの。決める側の出力は、契機の連番の順に、ホライズンが先頭の時刻以下になったときに積む（同じ時刻の出力の連番は、並列に動いても毎回同じ。J-137）。シグナルは、コミットのあとに実行する（D1 1.3。J-145）。起動時に読み込み、以後はエンジンが両方を同時に更新する。読むのはメモリのほうだけ。</p>
   <figure class="diagram">
     <svg viewBox="0 0 760 360" role="img" aria-label="決めどきの処理の流れ">
       <text class="title" x="110" y="28" text-anchor="middle">エンジン</text>
@@ -228,7 +228,7 @@ record ApplyResult(
       <text class="sub" x="420" y="64" text-anchor="middle">① 処理中にする、適用番号を振る（tx）</text>
 
       <path class="arrow" d="M110 90 V110 H378"/>
-      <text class="sub" x="244" y="104" text-anchor="middle">② StartHandler（写し、now、ホライズン）</text>
+      <text class="sub" x="244" y="104" text-anchor="middle">② StartHandler（スナップショット、now、ホライズン）</text>
 
       <rect class="box" x="300" y="128" width="160" height="40" rx="6"/>
       <text x="380" y="153" text-anchor="middle">③ 決める</text>
@@ -251,13 +251,13 @@ record ApplyResult(
       <path class="arrow" d="M190 298 H648"/>
       <text class="sub" x="420" y="292" text-anchor="middle">⑥ 1件ごとに1つの tx</text>
     </svg>
-    <figcaption>決めどきの処理。状態を書くのはエンジンだけで、レーンは写しを読むだけ</figcaption>
+    <figcaption>決めどきの処理。状態を書くのはエンジンだけで、レーンはスナップショットを読むだけ</figcaption>
   </figure>
 </section>
 
 <section id="lanes">
   <h2><span class="num">1.5</span>ハンドラとレーン</h2>
-  <p>決める側の処理を、ハンドラと呼ぶ。ハンドラは、シグナルで起動し、写しと now を受け取って、出力（新しいイベントの列）を返す。同じレーンのハンドラは順番に、違うレーンのハンドラは並列に動く。</p>
+  <p>決める側の処理を、ハンドラと呼ぶ。ハンドラは、シグナルで起動し、スナップショットと now を受け取って、出力（新しいイベントの列）を返す。同じレーンのハンドラは順番に、違うレーンのハンドラは並列に動く。</p>
   <div class="table-wrap">
     <table>
       <tr><th>ハンドラ</th><th>契機</th><th>レーン</th><th>ホライズン</th><th>LLM</th></tr>
@@ -311,7 +311,7 @@ record ApplyResult(
 
 <section id="guard">
   <h2><span class="num">1.7</span>適用前の検査</h2>
-  <p>決める側の出力は、写しを見て作ったものなので、適用するまでに前提が変わっているかもしれない。そこで、出力のイベントに「適用してよい条件」（guard）を付け、Apply が適用の直前に評価する。</p>
+  <p>決める側の出力は、スナップショットを見て作ったものなので、適用するまでに前提が変わっているかもしれない。そこで、出力のイベントに「適用してよい条件」（guard）を付け、Apply が適用の直前に評価する。</p>
   <div class="table-wrap">
     <table>
       <tr><th>guard</th><th>確かめること</th><th>主な使い手</th></tr>

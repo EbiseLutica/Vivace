@@ -428,7 +428,7 @@ public sealed class SimEngine : IAsyncDisposable
     /// <param name="lane">レーンのキー。</param>
     internal static bool IsCancellable(string lane) => lane.StartsWith("decide:", StringComparison.Ordinal);
 
-    /// <summary>決める側の仕事を、レーンで起動する。仕事は写し（起動の時点の状態）だけを読む。</summary>
+    /// <summary>決める側の仕事を、レーンで起動する。仕事はスナップショット（起動の時点の状態）だけを読む。</summary>
     private void StartHandler(long key, PersonaId persona, DateTimeOffset horizon, string lane, Origin origin, Func<EventDraft> work)
     {
         _running[key] = new Running(key, persona, horizon, lane);

@@ -67,7 +67,7 @@ public class EmptyIdTests
         AssertIssues(result, (code, new SourceLocation("personas/blank.toml", line, 1), message));
     }
 
-    /// <summary>テスト用の世界に、既存のファイルの1か所を書き換えた写しを、別のパスで足す。</summary>
+    /// <summary>テスト用の世界に、既存のファイルの1か所を書き換えたコピーを、別のパスで足す。</summary>
     private static List<DefinitionFile> WithCopies(string source, string from, string to, params string[] paths)
     {
         var files = DefinitionFixtures.Original();

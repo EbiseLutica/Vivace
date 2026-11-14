@@ -9,7 +9,7 @@ namespace Vivace.Tests.Definitions;
 /// <summary>テスト用の定義が、型の形で正しく読めることを確かめる。</summary>
 public class DefinitionLoaderTests
 {
-    /// <summary>テスト用の世界とペルソナが、ワールド、場所、ペルソナの型に写る。</summary>
+    /// <summary>テスト用の世界とペルソナが、ワールド、場所、ペルソナの型に変換される。</summary>
     [Fact]
     public void ReadsWorldPlacesAndPersonas()
     {

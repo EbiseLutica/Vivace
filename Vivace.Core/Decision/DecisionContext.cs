@@ -5,8 +5,8 @@ using Vivace.Core.Randomness;
 
 namespace Vivace.Core.Decision;
 
-/// <summary>決めどきのコンテキスト。写しと now と、決める側が引く乱数の列（位置は写しから始まる）。</summary>
-/// <param name="State">全体の状態の写し。</param>
+/// <summary>決めどきのコンテキスト。スナップショットと now と、決める側が引く乱数の列（位置はスナップショットから始まる）。</summary>
+/// <param name="State">全体の状態のスナップショット。</param>
 /// <param name="Persona">ペルソナ。</param>
 /// <param name="Now">決めどきの時刻（ホライズンになる）。</param>
 /// <param name="Reason">決めどきの理由。</param>

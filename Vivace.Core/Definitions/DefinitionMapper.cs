@@ -10,7 +10,7 @@ using Vivace.Core.Time;
 
 namespace Vivace.Core.Definitions;
 
-/// <summary>TOML のテーブルを定義の型に写す。問題があっても既定値で続け、エラーを全件集める。</summary>
+/// <summary>TOML のテーブルを定義の型に変換する。問題があっても既定値で続け、エラーを全件集める。</summary>
 internal static partial class DefinitionMapper
 {
     private static readonly Dictionary<string, VitalName> VitalKeys = new()
