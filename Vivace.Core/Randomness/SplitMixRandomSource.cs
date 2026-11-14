@@ -10,7 +10,7 @@ namespace Vivace.Core.Randomness;
 public sealed class SplitMixRandomSource : IRandomSource
 {
     /// <summary>列を開く。持ち主と用途が同じなら、同じ列になる。</summary>
-    /// <param name="worldSeed">ワールドの種。</param>
+    /// <param name="worldSeed">ワールドのシード。</param>
     /// <param name="owner">持ち主。</param>
     /// <param name="purpose">用途。</param>
     /// <param name="position">引き始める位置。</param>
@@ -18,7 +18,7 @@ public sealed class SplitMixRandomSource : IRandomSource
         new SplitMixRandom(DeriveSeed(worldSeed, owner, purpose), position);
 
     /// <summary>持ち主と用途から、シードを導く。</summary>
-    /// <param name="worldSeed">ワールドの種。</param>
+    /// <param name="worldSeed">ワールドのシード。</param>
     /// <param name="owner">持ち主。</param>
     /// <param name="purpose">用途。</param>
     public static ulong DeriveSeed(ulong worldSeed, string owner, string purpose)

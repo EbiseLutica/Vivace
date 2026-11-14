@@ -5,7 +5,7 @@ namespace Vivace.Core.Domain.State;
 /// <summary>世界の状態。</summary>
 /// <param name="Id">ワールドインスタンスの ID。</param>
 /// <param name="DefId">使っている定義の ID。</param>
-/// <param name="Seed">乱数のワールドの種。</param>
+/// <param name="Seed">乱数のワールドのシード。</param>
 /// <param name="Status">状態。</param>
 /// <param name="GeneratedPlaces">生えた場所（候補、採用、廃止）。</param>
 /// <param name="Terms">変換の辞書の、実行中の記録。</param>

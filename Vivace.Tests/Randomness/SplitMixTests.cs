@@ -19,7 +19,7 @@ public class SplitMixTests
         Assert.Equal(5UL, random.Position);
     }
 
-    /// <summary>シードの導出は、SHA-256("{ワールドの種}:{持ち主}:{用途}") の先頭 8 バイトをリトルエンディアンで読んだ値（既知の値で固定）。</summary>
+    /// <summary>シードの導出は、SHA-256("{ワールドのシード}:{持ち主}:{用途}") の先頭 8 バイトをリトルエンディアンで読んだ値（既知の値で固定）。</summary>
     [Theory]
     [InlineData(42UL, "kaori@tokyo", "decide", 17115192317731340520UL)]
     [InlineData(1234567UL, "world", "incident", 35876087154524244UL)]

@@ -34,7 +34,7 @@ public class DefinitionLookupTests
         };
     }
 
-    /// <summary>自由時間の決めどきを、香織の状態で行う。乱数は種 42 のワールドの位置 0。</summary>
+    /// <summary>自由時間の決めどきを、香織の状態で行う。乱数はシード 42 のワールドの位置 0。</summary>
     private static DeciderOutput Decide(SimState state)
     {
         var random = new SplitMixRandomSource().Open(42, Fixture.Kaori.Value, "decide", 0);

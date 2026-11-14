@@ -13,7 +13,7 @@ public sealed record InjectRequest(string EventType, EventPayload Payload, DateT
 {
     /// <summary>ワールドの生成の要求を作る。インスタンスの ID は適用のときに決める。</summary>
     /// <param name="defId">ワールドの定義 ID。</param>
-    /// <param name="seed">乱数のワールドの種。</param>
+    /// <param name="seed">乱数のワールドのシード。</param>
     /// <param name="origin">発生元。</param>
     /// <param name="at">時刻（UTC）。省略すると、エンジンが処理した時点の時計の時刻。</param>
     public static InjectRequest WorldCreated(WorldDefId defId, ulong seed, Origin origin, DateTimeOffset? at = null) =>

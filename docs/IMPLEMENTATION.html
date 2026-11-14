@@ -296,7 +296,7 @@
   <p><strong>参照</strong>：<a href="design/7-operations.html#validation">D7 7.2</a>、<a href="design/7-operations.html#cli">7.5</a></p>
   <ul class="tasks">
     <li><input type="checkbox" disabled><code>vivace validate &lt;dir&gt;</code>：定義のフォルダを読み、問題を1行ずつ出し、件数を出す。エラーがあれば 1 で終わり、なければ 0 で終わる</li>
-    <li><input type="checkbox" disabled><code>vivace dry-run &lt;dir&gt; --days N [--seed S] [--start ISO8601]</code>：既定の開始は <code>2026-11-01T23:00+09:00</code>、既定の種は <code>20261101</code>（Scenario と同じ値）。ワールドとペルソナの定義を ID の序数順に生成し、ペルソナはそれぞれの home に置く。開始から N 日まで回す</li>
+    <li><input type="checkbox" disabled><code>vivace dry-run &lt;dir&gt; --days N [--seed S] [--start ISO8601]</code>：既定の開始は <code>2026-11-01T23:00+09:00</code>、既定のシードは <code>20261101</code>（Scenario と同じ値）。ワールドとペルソナの定義を ID の序数順に生成し、ペルソナはそれぞれの home に置く。開始から N 日まで回す</li>
     <li><input type="checkbox" disabled><code>DryRunReport</code>：保存先の記録から、日ごと（ワールドの現地の日付）、人ごとの行動表を作る。末尾に、適用、捨てた、却下の件数を出す</li>
     <li><input type="checkbox" disabled>CLI の中身は、テストできるクラス（<code>ValidateCommand</code>、<code>DryRunCommand</code>）に分け、<code>Program.cs</code> は配線だけにする。<code>Vivace.Cli</code> は <code>Vivace.Testing</code> を参照する</li>
   </ul>
