@@ -53,6 +53,22 @@ public class ScaledClockTests
         Assert.Equal(Start.AddHours(1), clock.UtcNow);
     }
 
+    /// <summary>残りが実時間の 1 ミリ秒に満たないときも、待ちは 1 ミリ秒以上になり、時計が進むまで完了しない（空回りしない）。</summary>
+    [Fact]
+    public async Task WaitWithSubMillisecondRemainderCompletesAfterOneMillisecond()
+    {
+        var time = new FakeTimeProvider(Start);
+        var clock = new ScaledClock(Start, 60, time);
+        var target = Start.AddTicks(30);
+
+        var wait = clock.WaitUntilAsync(target, TestContext.Current.CancellationToken).AsTask();
+        Assert.False(wait.IsCompleted);
+
+        time.Advance(TimeSpan.FromMilliseconds(1));
+        await wait.WaitAsync(Bound, TestContext.Current.CancellationToken);
+        Assert.True(clock.UtcNow >= target);
+    }
+
     /// <summary>t がいまと同じか、いまより前なら、待たずに完了する。</summary>
     [Fact]
     public async Task WaitAtOrBeforeNowCompletesImmediately()

@@ -77,11 +77,11 @@ public sealed class ScaledClock : IClock
         }
     }
 
-    /// <summary>仮想の時刻の差を、実時間の待ちに直す。1回の上限を超えるときは上限にする。</summary>
+    /// <summary>仮想の時刻の差を、実時間の待ちに直す。切り上げて、最低 1 ミリ秒にする（0 の待ちで空回りしないように）。1回の上限を超えるときは上限にする。</summary>
     /// <param name="scaled">仮想の時刻の差。0 より大きい。</param>
     private TimeSpan ToRealDelay(TimeSpan scaled)
     {
-        var real = scaled.Ticks / _speed;
-        return real < MaxDelay.Ticks ? TimeSpan.FromTicks((long)real) : MaxDelay;
+        var real = Math.Ceiling(scaled.Ticks / _speed);
+        return real < MaxDelay.Ticks ? TimeSpan.FromTicks((long)Math.Max(real, TimeSpan.TicksPerMillisecond)) : MaxDelay;
     }
 }
