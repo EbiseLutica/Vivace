@@ -110,7 +110,7 @@ public static class EventTypes
     /// <summary>発話でない外向きの操作の決定。</summary>
     public const string OutboundOperation = "outbound.operation";
 
-    /// <summary>受信箱の捌きの結果。</summary>
+    /// <summary>受信箱の処理の結果。</summary>
     public const string InboxHandled = "inbox.handled";
 
     /// <summary>投稿の空振り。</summary>

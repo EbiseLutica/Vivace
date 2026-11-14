@@ -35,7 +35,7 @@
       <li><a href="#calls">6.2 呼び出しの一覧</a></li>
       <li><a href="#context">6.3 コンテキストの組み立て</a></li>
       <li><a href="#retrieval">6.4 記憶の選び方</a></li>
-      <li><a href="#inbox">6.5 受信箱を捌く</a></li>
+      <li><a href="#inbox">6.5 受信箱を処理する</a></li>
       <li><a href="#post">6.6 投稿する</a></li>
       <li><a href="#consolidate">6.7 記憶の整理</a></li>
       <li><a href="#safety">6.8 記憶の汚染を防ぐ</a></li>
@@ -84,8 +84,8 @@
     <table>
       <tr><th>目的</th><th>段</th><th>契機</th><th>出力</th><th>失敗したとき</th></tr>
       <tr><td><code>planner</code></td><td>Main</td><td>記憶の整理のあと（寝たとき）、または作り直す時刻（D5 5.5）</td><td>構造化：計画ブロックの列と要約（D5 5.5）</td><td>再生成 2 回、だめなら固定予定だけ</td></tr>
-      <tr><td><code>inbox.triage</code></td><td>Light</td><td>スマホを開く</td><td>構造化：通知ごとに 返信 / リアクション（絵文字）/ 何もしない</td><td>その回は何も捌かない（通知は残る）</td></tr>
-      <tr><td><code>inbox.reply</code></td><td>Main</td><td>返信すると決めた会話ごと</td><td>テキスト：返信の本文（校閲で却下されたら、理由つきで書き直す）</td><td>その会話だけ捌かずに残す</td></tr>
+      <tr><td><code>inbox.triage</code></td><td>Light</td><td>スマホを開く</td><td>構造化：通知ごとに 返信 / リアクション（絵文字）/ 何もしない</td><td>その回は何も処理しない（通知は残る）</td></tr>
+      <tr><td><code>inbox.reply</code></td><td>Main</td><td>返信すると決めた会話ごと</td><td>テキスト：返信の本文（校閲で却下されたら、理由つきで書き直す）</td><td>その会話だけ処理せずに残す</td></tr>
       <tr><td><code>inbox.review</code></td><td>Light</td><td>返信の下書きごと</td><td>構造化：通すか、却下の理由（6.10）</td><td>通さない（却下として扱う）</td></tr>
       <tr><td><code>post.topics</code></td><td>Light</td><td>投稿する</td><td>構造化：話題の候補（語と、種類の見立て）</td><td>自分の話題に切り替える</td></tr>
       <tr><td><code>post.judge</code></td><td>Light</td><td>辞書にない語ごと</td><td>構造化：通す / 変換する / 却下する、変換先、構造に載るか（場所 / 据え付けの道具 / 携行品 / その他）、理由</td><td>その語を却下として扱う（記録はしない）</td></tr>
@@ -153,23 +153,23 @@
 </section>
 
 <section id="inbox">
-  <h2><span class="num">6.5</span>受信箱を捌く</h2>
+  <h2><span class="num">6.5</span>受信箱を処理する</h2>
   <ol>
     <li>「スマホを開く」の開始の時点の受信箱から、未処理の通知を、元の到着時刻の古い順に最大 20 件取る</li>
-    <li>大分類（D3 3.7.1）ごとに捌く。
+    <li>大分類（D3 3.7.1）ごとに処理する。
       <ul>
         <li><strong>Message</strong>：<code>ConversationKey</code> が同じものは1つの会話にまとめる。会話ごとに <code>inbox.triage</code> に渡し、返信 / リアクション / 何もしない を決める。同じ会話に何通も来ていれば、返信は最後の1通にまとめて1回だけ</li>
         <li><strong>Reaction</strong>：LLM を使わない。見たものとして処理済みにする。誰がどの発言に反応したかは、記憶の整理の材料になる</li>
         <li><strong>Follow</strong>：LLM を使わない。フォローバックの方針（P-44）に従って、フォローし返すか決める。フォローできるチャンネル（能力 <code>follow</code>）だけが対象</li>
-        <li><strong>Other</strong>：プラグインの規則（<code>INotificationRule</code>、D4 4.7）に当たれば、規則で捌く。当たらなければ、何もせずに処理済みにする。規則が出せるのは発話ではない操作だけ</li>
+        <li><strong>Other</strong>：プラグインの規則（<code>INotificationRule</code>、D4 4.7）に当たれば、規則で処理する。当たらなければ、何もせずに処理済みにする。規則が出せるのは発話ではない操作だけ</li>
       </ul>
     </li>
     <li>返信するものは、会話ごとに <code>inbox.reply</code> で本文を作る。コンテキストには、本文、添付、それまでの会話（<code>Thread</code>）を入れる（6.3）。相手が持ち込んだ話題が世界観に合わなければ、「知らない」と答える（VISION 11章）。そのための判定は、投稿と同じ辞書と <code>post.judge</code> を使い、却下なら「知らない」と答えるよう指示する。作った本文は、送る前に校閲を通す（6.10）</li>
-    <li>出力を、行動の終了の時刻で返す。出力は、同じ時刻の <code>action.ended</code> より先に取り込まれ（D1 1.4）、<code>action.ended</code> はバージョンを上げないので（D2 2.3、J-131）、guard の行動のバージョンが通る。<code>outbound.speech</code>（返信）、<code>outbound.operation</code>（リアクション、フォロー）、<code>inbox.handled</code>（まとめて捌いた通知も、それぞれ処理済みにする）</li>
+    <li>出力を、行動の終了の時刻で返す。出力は、同じ時刻の <code>action.ended</code> より先に取り込まれ（D1 1.4）、<code>action.ended</code> はバージョンを上げないので（D2 2.3、J-131）、guard の行動のバージョンが通る。<code>outbound.speech</code>（返信）、<code>outbound.operation</code>（リアクション、フォロー）、<code>inbox.handled</code>（まとめて処理した通知も、それぞれ処理済みにする）</li>
   </ol>
   <div class="callout">
     <span class="label">決定 P-44　フォローバックの方針の持ち方</span>
-    VISION 付録「フォローバックの方針の持ち方」への案。フォローはコアが捌くので（D3 3.7.1）、方針もコアが読む。ペルソナ定義の <code>[sns]</code> の節に書き、フォローできるチャンネルすべてに効く。
+    VISION 付録「フォローバックの方針の持ち方」への案。フォローはコアが処理するので（D3 3.7.1）、方針もコアが読む。ペルソナ定義の <code>[sns]</code> の節に書き、フォローできるチャンネルすべてに効く。
 <pre><code>[sns]
 follow_back = "always"           # always | never</code></pre>
     既定は <code>always</code>（ebise は、フォローされたら必ずフォローし返していた）。チャンネルごとに変えたくなったら、そのときに上書きの書き方を足す。

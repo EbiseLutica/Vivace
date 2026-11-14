@@ -252,7 +252,7 @@ public sealed record LlmPolicy(
       <tr><td><code>UtilityDecider</code></td><td>候補の絞り込み、スコア、抽選</td><td>D5</td></tr>
       <tr><td><code>DayPlanner</code> / <code>PlanValidator</code></td><td>Planner の手順と、出力の検査・補正</td><td>D5、D6</td></tr>
       <tr><td><code>IncidentLottery</code></td><td>日の始まりの出来事の抽選</td><td>D5</td></tr>
-      <tr><td><code>InboxHandler</code> / <code>PostHandler</code></td><td>効果のハンドラ（受信箱を捌く、投稿する）</td><td>D6</td></tr>
+      <tr><td><code>InboxHandler</code> / <code>PostHandler</code></td><td>効果のハンドラ（受信箱を処理する、投稿する）</td><td>D6</td></tr>
       <tr><td><code>TopicPipeline</code></td><td>話題の抽出、辞書、判定、場所の生成</td><td>D6</td></tr>
       <tr><td><code>ContextBuilder</code> / <code>Diary</code></td><td>LLM に渡すコンテキストの組み立てと、日誌の整形</td><td>D6</td></tr>
       <tr><td><code>MemoryConsolidator</code> / <code>MemoryRetriever</code></td><td>記憶の整理ジョブと、コンテキストに入れる記憶の選び方</td><td>D6</td></tr>
@@ -322,7 +322,7 @@ public interface IPluginRegistry
 {
     void AddChannel(IChannel channel);
     void AddEffectHandler(IEffectHandler handler);             // handler = "misskey.xxx"
-    void AddNotificationRule(INotificationRule rule);          // 大分類が Other の通知を規則で捌く
+    void AddNotificationRule(INotificationRule rule);          // 大分類が Other の通知を規則で処理する
     void AddTool(ITool tool);
     void AddDefinitions(string resourceName, Func&lt;Stream&gt; open); // 同梱の行動の TOML
     void AddHolidayCalendar(string name, IHolidayCalendar calendar);
@@ -339,7 +339,7 @@ public interface IEffectHandler
 public interface INotificationRule
 {
     string Channel { get; }                                    // "misskey"
-    IReadOnlySet&lt;string&gt; ChannelTypes { get; }                 // 捌く種類（"renote"、"pollEnded" など）
+    IReadOnlySet&lt;string&gt; ChannelTypes { get; }                 // 処理する種類（"renote"、"pollEnded" など）
     RuleOutcome Handle(InboxItem item, RuleContext context);   // LLM は使わない
 }
 
@@ -351,7 +351,7 @@ public sealed record RuleOutcome(ImmutableArray&lt;OutboundOperation&gt; Operati
     <li>プラグインが守ること：エンジンの起動、停止、破棄、ドライランの時計（<code>RunUntilAsync</code>）には触らない。これらはホストの持ち物で、特にチャンネルの中から <code>StopAsync</code> を呼ぶと、エンジンがそのチャンネルの停止を待つので終わらなくなる。また、決める側のハンドラ（効果、規則、ツール）が判断に使うのは、コンテキストで渡されるスナップショットにする。生きている状態を読むと、決めた時点の前提とずれるから（D1 1.7）</li>
     <li><strong>通知の規則</strong>：受信箱のうち大分類が <code>Other</code> のアイテム（D3 3.7.1）だけが、規則に回る。コアが、チャンネルと種類（<code>ChannelType</code>）で引いて、該当する規則に渡す。同じチャンネルの同じ種類に規則が2つ登録されたら、起動時のエラーにする（どちらが動くかを登録順で決めないため）。当たる規則がなければ、何もせずに処理済みにする</li>
     <li>規則が出せるのは、リアクションやチャンネル固有の操作のような、発話ではない外向きの操作だけ。本文つきの返信は、LLM がペルソナの声で書く道（<code>Message</code>）に限る。規則が定型文を返せると、ペルソナが言っていないことが「言ったこと」に混ざるから</li>
-    <li>チャンネル自身が片付ける通知（リバーシの対局の申し込みなど）は、受信箱に積まなくていい。受信箱に入れるのは、ペルソナがスマホを開いたときに捌くべきものだけ</li>
+    <li>チャンネル自身が片付ける通知（リバーシの対局の申し込みなど）は、受信箱に積まなくていい。受信箱に入れるのは、ペルソナがスマホを開いたときに処理すべきものだけ</li>
     <li>プラグインが同梱する行動の ID は、プラグインの名前で始める（<code>misskey.open_phone</code>）</li>
     <li><strong>ペルソナと独立した機能</strong>：チャンネルのプラグインは、ペルソナのシミュレーションを通さない機能を、<code>IChannel.StartAsync</code> の中で動かしてよい（VISION 10章）。Misskey のリバーシは、ebise ではペルソナの機能だったが、Vivace では Misskey プラグインの中のゲーム機能として作る。対局はペルソナのアカウントで行ってよいが、ペルソナの行動、状態変数、イベント、記憶には関わらない（寝ている時間でも対局する）。シミュレーションに組み込むと複雑になりすぎるため。ただし、いまの状態はエンジン（<code>engine.View</code>）から読めるので、「睡眠中は対局を受けない」のような振る舞いは、プラグインの中で書ける（状態は読むだけで、変えない）</li>
   </ul>

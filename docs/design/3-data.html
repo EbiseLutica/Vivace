@@ -402,7 +402,7 @@ sealed record PersonaState(
 
 <section id="inbox-item">
   <h2><span class="num">3.7.1</span>受信箱のアイテム</h2>
-  <p>チャンネルは、届いた通知を、コアが読める形に訳して積む（<code>notification.arrived</code>）。コアは、この形だけを見て捌き方を決める（D6 6.5）。外のサービスの形（Misskey の JSON など）は、コアに持ち込まない。</p>
+  <p>チャンネルは、届いた通知を、コアが読める形に訳して積む（<code>notification.arrived</code>）。コアは、この形だけを見て扱い方を決める（D6 6.5）。外のサービスの形（Misskey の JSON など）は、コアに持ち込まない。</p>
 <pre><code>sealed record InboxItem(
     long Seq,                               // 到着のイベントの連番（ID を兼ねる）
     string Channel,                         // "misskey"
@@ -425,7 +425,7 @@ sealed record ThreadMessage(Sender Sender, bool IsSelf, string? Text, DateTimeOf
 sealed record Attachment(string Kind, string Url, string? Description);   // Kind は "image" など</code></pre>
   <div class="table-wrap">
     <table>
-      <tr><th>大分類</th><th>中身</th><th>コアの捌き方（D6 6.5）</th></tr>
+      <tr><th>大分類</th><th>中身</th><th>コアの扱い方（D6 6.5）</th></tr>
       <tr><td><code>Message</code></td><td>言葉で話しかけられたもの（メンション、返信、引用、DM）。本文、添付、それまでの会話を持つ</td><td>LLM が、返信 / リアクション / 何もしない を決める</td></tr>
       <tr><td><code>Reaction</code></td><td>自分の発言へのリアクション。絵文字と、どの発言へのものかを持つ</td><td>LLM を使わない</td></tr>
       <tr><td><code>Follow</code></td><td>フォローされた</td><td>LLM を使わず、フォローバックの方針で決める</td></tr>
@@ -435,7 +435,7 @@ sealed record Attachment(string Kind, string Url, string? Description);   // Kin
   <ul>
     <li>それまでの会話（<code>Thread</code>）は、チャンネルが到着のときに取って入れる。ノートへの返信なら返信チェーン、DM なら直近のメッセージ（ebise と同じ）。到着のイベントに記録されるので、決める側は外を取り直さずに読める。長い会話でも、直近 20 件までにする</li>
     <li>自分の発言かどうか（<code>IsSelf</code>）は、チャンネルが付ける。LLM には、自分の発言と相手の発言を分けて見せる</li>
-    <li><code>ConversationKey</code> が同じアイテムは、同じ会話として、まとめて捌く（D6 6.5）</li>
+    <li><code>ConversationKey</code> が同じアイテムは、同じ会話として、まとめて処理する（D6 6.5）</li>
     <li><code>notification.arrived</code> の適用で入り、<code>inbox.handled</code> の適用で外れる（D2 2.3）。到着の連番は、チャンネルの受け付けでは 0 で積み、適用のときに入れる（J-111）。外れたあとは、<code>inbox</code> のテーブルに、結果と一緒に残る（3.8）</li>
   </ul>
 </section>
