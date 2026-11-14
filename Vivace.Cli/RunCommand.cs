@@ -105,8 +105,13 @@ public static class RunCommand
                 code = 1;
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (run.IsCancellationRequested)
         {
+        }
+        catch (Exception ex)
+        {
+            output.WriteLine($"{ex.GetType().Name}: {ex.Message}");
+            code = 1;
         }
         finally
         {

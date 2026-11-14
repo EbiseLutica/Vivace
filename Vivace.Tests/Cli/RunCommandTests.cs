@@ -121,12 +121,44 @@ public class RunCommandTests
         using var folder = new DefinitionFolder(TestWorld.Files());
         var output = new StringWriter { NewLine = "\n" };
         using var stop = new CancellationTokenSource();
-        var clock = new StoppingClock(new VirtualClock(Scenario.Start), 3, stop);
+        var clock = new ActionClock(new VirtualClock(Scenario.Start), 3, stop.Cancel);
 
         var code = await RunCommand.RunAsync(folder.Path, clock, Scenario.WorldSeed, false, output, stop.Token);
 
         Assert.Equal(0, code);
         Assert.Matches(CountPattern, output.ToString());
+    }
+
+    /// <summary>時計が例外で止まったら、例外の型と文面を1行出し、件数の行を出して 1 を返す。</summary>
+    [Fact]
+    public async Task ClockErrorIsReportedAndExitsOne()
+    {
+        using var folder = new DefinitionFolder(TestWorld.Files());
+        var output = new StringWriter { NewLine = "\n" };
+        var clock = new ActionClock(new VirtualClock(Scenario.Start), 3, () => throw new InvalidOperationException("時計が止まった"));
+
+        var code = await RunCommand.RunAsync(folder.Path, clock, Scenario.WorldSeed, false, output, CancellationToken.None);
+
+        var text = output.ToString();
+        Assert.Equal(1, code);
+        Assert.Contains("InvalidOperationException: 時計が止まった\n", text, StringComparison.Ordinal);
+        Assert.Matches(CountPattern, text);
+    }
+
+    /// <summary>止めるためでないキャンセル（時計が投げた OperationCanceledException）は、正常終了ではなく 1 を返す。</summary>
+    [Fact]
+    public async Task CancellationNotFromStopIsAnError()
+    {
+        using var folder = new DefinitionFolder(TestWorld.Files());
+        var output = new StringWriter { NewLine = "\n" };
+        var clock = new ActionClock(new VirtualClock(Scenario.Start), 3, () => throw new OperationCanceledException("外から取り消された"));
+
+        var code = await RunCommand.RunAsync(folder.Path, clock, Scenario.WorldSeed, false, output, CancellationToken.None);
+
+        var text = output.ToString();
+        Assert.Equal(1, code);
+        Assert.Contains("OperationCanceledException: 外から取り消された\n", text, StringComparison.Ordinal);
+        Assert.Matches(CountPattern, text);
     }
 
     /// <summary>
@@ -174,8 +206,8 @@ public class RunCommandTests
         public ValueTask WaitUntilAsync(DateTimeOffset t, CancellationToken ct) => inner.WaitUntilAsync(t, ct);
     }
 
-    /// <summary>待ちの回数を数え、決まった回数に達したら止める（Ctrl+C の代わり）。時刻は仮想時計に任せる。</summary>
-    private sealed class StoppingClock(VirtualClock inner, int waitsBeforeStop, CancellationTokenSource stop) : IClock
+    /// <summary>待ちの回数を数え、決まった回数の待ちで処理を実行する（Ctrl+C や時計の故障の代わり）。時刻は仮想時計に任せる。</summary>
+    private sealed class ActionClock(VirtualClock inner, int waitsBeforeAction, Action action) : IClock
     {
         /// <summary>いままでの待ちの回数。</summary>
         private int _waits;
@@ -183,15 +215,15 @@ public class RunCommandTests
         /// <summary>いまの仮想の時刻。</summary>
         public DateTimeOffset UtcNow => inner.UtcNow;
 
-        /// <summary>待ちを数え、止める回数に達したらキャンセルしてから、仮想時計で待つ。</summary>
+        /// <summary>待ちを数え、決まった回数に達したら処理を実行してから、仮想時計で待つ。</summary>
         /// <param name="t">待つ先の時刻。</param>
         /// <param name="ct">キャンセル。</param>
         public ValueTask WaitUntilAsync(DateTimeOffset t, CancellationToken ct)
         {
             _waits++;
-            if (_waits >= waitsBeforeStop)
+            if (_waits == waitsBeforeAction)
             {
-                stop.Cancel();
+                action();
             }
 
             return inner.WaitUntilAsync(t, ct);
