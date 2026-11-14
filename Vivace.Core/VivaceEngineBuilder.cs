@@ -109,8 +109,8 @@ public sealed class VivaceEngineBuilder
     public VivaceEngine Build()
     {
         var definitions = LoadDefinitions();
-        var storage = _storage ?? throw new InvalidOperationException("保存先がない（UseStorage で指定する）");
-        var clock = _clock ?? throw new InvalidOperationException("時計がない（UseClock で指定する）");
+        var storage = _storage ?? throw new InvalidOperationException("ストレージが渡されていません。 UseStorage で指定してください。");
+        var clock = _clock ?? throw new InvalidOperationException("時計のインスタンスが渡されていません。 UseClock で指定してください。");
         return new VivaceEngine(SimEngine.Create(definitions, storage, _random ?? new SplitMixRandomSource(), clock, _decider, _holidays));
     }
 
@@ -124,14 +124,14 @@ public sealed class VivaceEngineBuilder
 
         if (_definitionDirectory is null)
         {
-            throw new InvalidOperationException("定義がない（UseDefinitions で指定する）");
+            throw new InvalidOperationException("定義がありません。 UseDefinitions で指定してください。");
         }
 
         var result = DefinitionLoader.LoadDirectory(_definitionDirectory);
         if (result.HasErrors || result.Definitions is null)
         {
             var errors = result.Issues.Where(issue => issue.Severity == IssueSeverity.Error).Select(issue => issue.ToString());
-            throw new InvalidOperationException("定義にエラーがある: " + string.Join("; ", errors));
+            throw new InvalidOperationException($"定義エラーです: {string.Join("; ", errors)}");
         }
 
         return result.Definitions;

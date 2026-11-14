@@ -18,7 +18,7 @@ public class VivaceEngineBuilderTests
 
         var error = Assert.Throws<InvalidOperationException>(builder.Build);
 
-        Assert.Equal("時計がない（UseClock で指定する）", error.Message);
+        Assert.Equal("時計のインスタンスが渡されていません。 UseClock で指定してください。", error.Message);
     }
 
     /// <summary>保存先がなければ、例外になる。</summary>
@@ -29,7 +29,7 @@ public class VivaceEngineBuilderTests
 
         var error = Assert.Throws<InvalidOperationException>(builder.Build);
 
-        Assert.Equal("保存先がない（UseStorage で指定する）", error.Message);
+        Assert.Equal("ストレージが渡されていません。 UseStorage で指定してください。", error.Message);
     }
 
     /// <summary>定義がなければ、例外になる。</summary>
@@ -40,7 +40,7 @@ public class VivaceEngineBuilderTests
 
         var error = Assert.Throws<InvalidOperationException>(builder.Build);
 
-        Assert.Equal("定義がない（UseDefinitions で指定する）", error.Message);
+        Assert.Equal("定義がありません。 UseDefinitions で指定してください。", error.Message);
     }
 
     /// <summary>定義のフォルダにエラーがあれば、例外になり、エラーの位置（ファイル）が分かる。</summary>
@@ -57,7 +57,7 @@ public class VivaceEngineBuilderTests
 
             var error = Assert.Throws<InvalidOperationException>(builder.Build);
 
-            Assert.StartsWith("定義にエラーがある: ", error.Message, StringComparison.Ordinal);
+            Assert.StartsWith("定義エラーです: ", error.Message, StringComparison.Ordinal);
             Assert.Contains("worlds/broken.toml", error.Message, StringComparison.Ordinal);
         }
         finally
