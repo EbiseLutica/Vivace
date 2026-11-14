@@ -296,9 +296,9 @@
   <p><strong>参照</strong>：<a href="design/7-operations.html#validation">D7 7.2</a>、<a href="design/7-operations.html#cli">7.5</a></p>
   <ul class="tasks">
     <li><input type="checkbox" checked disabled><code>vivace validate &lt;dir&gt;</code>：定義のフォルダを読み、問題を1行ずつ出し、件数を出す。エラーがあれば 1 で終わり、なければ 0 で終わる</li>
-    <li><input type="checkbox" disabled><code>vivace dry-run &lt;dir&gt; --days N [--seed S] [--start ISO8601]</code>：既定の開始は <code>2026-11-01T23:00+09:00</code>、既定のシードは <code>20261101</code>（Scenario と同じ値）。ワールドとペルソナの定義を ID の序数順に生成し、ペルソナはそれぞれの home に置く。開始から N 日まで回す</li>
-    <li><input type="checkbox" disabled><code>DryRunReport</code>：保存先の記録から、日ごと（ワールドの現地の日付）、人ごとの行動表を作る。末尾に、適用、捨てた、却下の件数を出す</li>
-    <li><input type="checkbox" disabled>CLI の中身は、テストできるクラス（<code>ValidateCommand</code>、<code>DryRunCommand</code>）に分け、<code>Program.cs</code> は配線だけにする。<code>Vivace.Cli</code> は <code>Vivace.Testing</code> を参照する</li>
+    <li><input type="checkbox" checked disabled><code>vivace dry-run &lt;dir&gt; --days N [--seed S] [--start ISO8601]</code>：既定の開始は <code>2026-11-01T23:00+09:00</code>、既定のシードは <code>20261101</code>（Scenario と同じ値）。ワールドとペルソナの定義を ID の序数順に生成し、ペルソナはそれぞれの home に置く。開始から N 日まで回す</li>
+    <li><input type="checkbox" checked disabled><code>DryRunReport</code>：保存先の記録から、日ごと（ワールドの現地の日付）、人ごとの行動表を作る。末尾に、適用、捨てた、却下の件数を出す</li>
+    <li><input type="checkbox" checked disabled>CLI の中身は、テストできるクラス（<code>ValidateCommand</code>、<code>DryRunCommand</code>）に分け、<code>Program.cs</code> は配線だけにする。<code>Vivace.Cli</code> は <code>Vivace.Testing</code> を参照する</li>
   </ul>
   <p><strong>範囲外</strong>：デーモン、<code>status</code> などデーモンと話すコマンド、<code>report</code>、<code>SystemClock</code> と <code>ScaledClock</code>（段階5）。</p>
   <p><strong>完了条件</strong>：<code>validate</code> は、テスト用の定義で問題 0 件と終了コード 0、壊した定義で位置つきのエラーと終了コード 1 を出すテストがある。<code>dry-run</code> は、テスト用の定義で2日回したレポートのスナップショットがある（中身を読んで確かめる）。<code>vivace dry-run --days 7</code> で、テスト用の町の2人の1週間が読める。</p>

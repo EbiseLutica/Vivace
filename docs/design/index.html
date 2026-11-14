@@ -18,7 +18,7 @@
     <span class="chip">2026-11-06 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
     <span class="chip fixed">案はすべて合意（57 件）</span>
-    <span class="chip fixed">枠の外の判断もすべて合意（164 件）</span>
+    <span class="chip fixed">枠の外の判断もすべて合意（165 件）</span>
   </div>
 </header>
 
@@ -173,7 +173,7 @@
 
 <section id="judgments">
   <h2><span class="num">0.5</span>枠の外の判断</h2>
-  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-164）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
+  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-165）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
   <h3>VISION の解釈で決めたもの</h3>
   <p>VISION から導いたつもりで、実際には読み方を1つに決めたもの。いちばん見落としやすいので、先に見てほしい。</p>
   <div class="table-wrap">
@@ -320,6 +320,7 @@
       <tr><td>J-162</td><td><code>vivace validate</code> の出力と終了コード：問題は読み込みの並びのまま、1行ずつ「位置: 重大度 コード: 文面」で出し、最後に件数を出す。エラーがあれば 1、なければ 0。定義のフォルダがないときは、その旨を出して 1 <span class="chip fixed">合意</span></td><td><a href="7-operations.html#validation">D7 7.2</a></td></tr>
       <tr><td>J-163</td><td><code>vivace dry-run</code> の既定の開始とシードは、テスト用の <code>Scenario.Start</code> と <code>Scenario.WorldSeed</code> を共有する（値を2か所に書かない）。定義にあるワールドは、ID の序数順にすべて生成し、<code>--seed</code> の値を全ワールドに使う（ワールドごとの種は定義にないため）。投入の発生元は管理者 <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
       <tr><td>J-164</td><td>行動表の形：日は現地の日付で区切り、行の開始の日に入れる（日をまたぐ行も開始の日）。日の中は人を ID の序数順に、行は開始の順に並べる。理由の表記は 予定、自由、反射、遅刻。終わりの記録（<code>action.ended</code> か <code>travel.arrived</code>）がない行は、終わりを「未終了」にする <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
+      <tr><td>J-165</td><td><code>vivace dry-run</code> の祝日のカレンダーは既定（祝日なし）。テスト用の <code>TestHolidays</code> は、テストの定義に合わせた値なので使わない。実際の祝日の提供は、祝日のカレンダーを作るときに決める <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>
