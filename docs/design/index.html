@@ -18,7 +18,7 @@
     <span class="chip">2026-11-06 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
     <span class="chip fixed">案はすべて合意（57 件）</span>
-    <span class="chip fixed">枠の外の判断もすべて合意（167 件）</span>
+    <span class="chip fixed">枠の外の判断もすべて合意（168 件）</span>
   </div>
 </header>
 
@@ -173,7 +173,7 @@
 
 <section id="judgments">
   <h2><span class="num">0.5</span>枠の外の判断</h2>
-  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-167）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
+  <p>案の枠に入れずに、本文に直接書いた判断。案（0.4）が「ほかを左右するもの」「VISION にない概念」なのに対し、ここは「VISION の読み方」「仕組みの細部」「調整前提の数値」。どれも独断なので、気になるものは番号（J-01〜J-168）で返事してほしい。合意したものには <span class="chip fixed">合意</span> の印を付ける。</p>
   <h3>VISION の解釈で決めたもの</h3>
   <p>VISION から導いたつもりで、実際には読み方を1つに決めたもの。いちばん見落としやすいので、先に見てほしい。</p>
   <div class="table-wrap">
@@ -323,6 +323,7 @@
       <tr><td>J-165</td><td><code>vivace dry-run</code> の祝日は既定（祝日なし）で回す。テスト用の <code>TestHolidays</code> は使わない。ワールド定義の <code>calendar.holidays</code> に提供元の名前（例: <code>jp</code>）があり、CLI がその提供元を用意できないときは、行動表の前に「testville: 祝日のカレンダー jp は未対応のため、祝日なしで回した」の1行を出す（ワールドは ID の序数順）。黙って無視しない <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
       <tr><td>J-166</td><td>行動表の日付の区切りは、ワールドごとの時差で行う。行の時差は、その行の開始のイベントが持つワールド（記録の <code>WorldId</code>）から引き、人の所属の現在の状態には依らない。破棄された人の行も、正しい現地の日付に切れるようにする <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
       <tr><td>J-167</td><td><code>vivace dry-run</code> の日数の上限は数値で決めず、開始から日数を足した終わりの時刻が計算できるかで判定する。計算できなければ、日本語のエラーで 1 を返し、回さない <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
+      <tr><td>J-168</td><td><code>vivace dry-run</code> の <code>--start</code> は、オフセットが必須の ISO 8601 だけを受ける（<code>+09:00</code> の形と <code>Z</code>。オフセットのない時刻、日付だけ、ISO 8601 でないものは拒否）。既定の値は、同じ形の文字列（<code>2026-11-01T23:00+09:00</code>）で、ヘルプにもそのまま出す。<code>--days</code> の省略は、日本語のエラーで止める <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>
