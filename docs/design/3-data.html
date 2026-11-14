@@ -369,7 +369,7 @@ sealed record PersonaState(
     Location Location,                                  // 場所 ID、または移動中（経路と出発時刻）
     Activity? Activity, long ActivityVersion,           // 実行中の行動（D1 1.8）
     Activity? Overlay,                                  // 固定ブロック中にスマホを使っている間だけ（開く、投稿する）
-    Vitals Vitals,                                      // 4変数の基準時刻・値・率と、状態変数の版
+    Vitals Vitals,                                      // 4変数の基準時刻・値・率と、状態変数のバージョン
     ImmutableArray&lt;AttachedCondition&gt; Conditions,
     DayPlan? Plan, long PlanVersion,
     ImmutableDictionary&lt;string, ActionUsage&gt; Usage,    // 行動ごとの前回の開始、今日の回数、連続回数
@@ -579,7 +579,7 @@ CREATE TABLE memory_cursors (
     <li>ペルソナの行は、変わるたびに行ごと書き直す。1行は数 KB で、前提の規模なら十分に軽い</li>
     <li>キューの順序（時刻、段、連番）は、メモリの上で並べる（D1 1.4）。段は列に持たないので、SQL では並べない</li>
     <li>イベントは消さない。1人あたり1日 150 件ほどとして、10 人で年 55 万件。SQLite で問題のない量</li>
-    <li>スキーマの版は <code>PRAGMA user_version</code> で持つ。マイグレーションは、アセンブリに埋め込んだ番号つきの SQL で、起動時に足りない分を1つのトランザクションで当てる</li>
+    <li>スキーマのバージョンは <code>PRAGMA user_version</code> で持つ。マイグレーションは、アセンブリに埋め込んだ番号つきの SQL で、起動時に足りない分を1つのトランザクションで当てる</li>
     <li>接続の設定は <code>journal_mode=WAL</code>、<code>synchronous=NORMAL</code>、<code>busy_timeout=5000</code>、<code>foreign_keys=ON</code></li>
   </ul>
   <div class="callout">
@@ -596,8 +596,8 @@ CREATE TABLE memory_cursors (
   <h2><span class="num">3.9</span>JSON とバージョン</h2>
   <ul>
     <li>イベントのペイロードは、イベントタイプごとの record にし、<code>System.Text.Json</code> で読み書きする。イベントタイプは列（<code>event_type</code>）で持つので、JSON の中には型の印を入れない</li>
-    <li>ペイロードには <code>"v": 1</code> のように、イベントタイプごとの版を入れる。項目の名前は PascalCase で持ち、JSON の名前の付け方は、シリアライザの段階で決める（J-110）。項目を足すときは、版を上げずに省略可能な項目として足す。意味を変えるときだけ版を上げ、読み込み時に古い版を新しい形に変換する</li>
-    <li>知らないイベントタイプのイベント（新しい版で書かれたもの）を読んだら、起動を止める。黙って捨てると、状態がずれるから</li>
+    <li>ペイロードには <code>"v": 1</code> のように、イベントタイプごとのバージョンを入れる。項目の名前は PascalCase で持ち、JSON の名前の付け方は、シリアライザの段階で決める（J-110）。項目を足すときは、バージョンを上げずに省略可能な項目として足す。意味を変えるときだけバージョンを上げ、読み込み時に古いバージョンを新しい形に変換する</li>
+    <li>知らないイベントタイプのイベント（新しいバージョンで書かれたもの）を読んだら、起動を止める。黙って捨てると、状態がずれるから</li>
     <li>チャンネルが解釈する中身（返信先のノート ID など）は、コアが中を見ない JSON として持つ（VISION 10章）。不変の <code>JsonElement</code> として持ち、可変の JSON を状態に入れない（P-21。J-122）</li>
   </ul>
 </section>

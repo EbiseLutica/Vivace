@@ -281,16 +281,16 @@ travel(p)  = exp( −移動時間（分） / 30 )</code></pre>
       <text class="sub" x="220" y="80" text-anchor="middle">行動の開始（率が変わる）</text>
       <text class="sub" x="360" y="186" text-anchor="middle">急変動（差分を足す）</text>
       <text class="sub" x="500" y="128" text-anchor="middle">率が変わる</text>
-      <text class="sub" x="578" y="210" text-anchor="middle">到達の予測（版つき）</text>
+      <text class="sub" x="578" y="210" text-anchor="middle">到達の予測（バージョンつき）</text>
       <text class="sub" x="140" y="212" text-anchor="middle">区間ごとに一次式</text>
     </svg>
-    <figcaption>値は折れ線。率が変わるたびに、しきい値に達する時刻を計算し直し、版を上げて積む</figcaption>
+    <figcaption>値は折れ線。率が変わるたびに、しきい値に達する時刻を計算し直し、バージョンを上げて積む</figcaption>
   </figure>
   <ul>
     <li><strong>クランプ</strong>：読んだ値は範囲で切る。範囲の端に着いたら、基準を端の値と到達の時刻に置き直す（その先の率は効かない）</li>
     <li><strong>到達の予測</strong>：率がしきい値に向かうときだけ、<code>t = 基準時刻 + (しきい値 − 値) / 率</code> を計算し、ミリ秒に切り上げて <code>vital.threshold</code> を積む。すでにしきい値の向こうにいるときは積まない（越えた瞬間にだけ反射する）</li>
     <li><strong>決定性</strong>：Apply の計算は、四則演算と比較だけで書く。<code>Math.Pow</code> や <code>Math.Exp</code> は、CPU によって結果の末尾がずれうるので、Apply では使わない（<code>repeat_decay</code> の累乗は、掛け算の繰り返しで書く）。Decider の <code>exp</code> は決める側なので使ってよい（結果はイベントに記録される）</li>
-    <li><strong>居合わせ</strong>：<code>travel.started</code> と <code>travel.arrived</code> の Apply で、出た場所と着いた場所にいる全員の社交欲求の率を計算し直す。率が変わった人は、状態変数の版が上がる</li>
+    <li><strong>居合わせ</strong>：<code>travel.started</code> と <code>travel.arrived</code> の Apply で、出た場所と着いた場所にいる全員の社交欲求の率を計算し直す。率が変わった人は、状態変数のバージョンが上がる</li>
   </ul>
   <h3>寝不足</h3>
   <p>効果に <code>sleep.debt</code> を持つ行動（睡眠）が終わったとき、実際に眠った長さを、ペルソナの <code>sleep_target</code>（既定 7 時間）と比べる。</p>
@@ -307,11 +307,11 @@ h = 0 なら  健康度 += 5</code></pre>
   </div>
 </section>
 
-<p><strong>急変動</strong>（J-146）：状態変数の急な増減や設定（<code>Change</code>）も、率の切り替えと同じく版を上げる（VISION 6 章）。版で、古い予測（決めどき、閾値）を捨てる。</p>
+<p><strong>急変動</strong>（J-146）：状態変数の急な増減や設定（<code>Change</code>）も、率の切り替えと同じくバージョンを上げる（VISION 6 章）。バージョンで、古い予測（決めどき、閾値）を捨てる。</p>
 <section id="reflex">
   <h2><span class="num">5.7</span>反射</h2>
   <ul>
-    <li><code>vital.threshold</code> の Apply が、実行中の行動（と副行動）を打ち切り、行動の版を上げ、反射の行動を <code>action.started</code>（理由 <code>reflex</code>）で同じ時刻に積む。Decider は通らない</li>
+    <li><code>vital.threshold</code> の Apply が、実行中の行動（と副行動）を打ち切り、行動のバージョンを上げ、反射の行動を <code>action.started</code>（理由 <code>reflex</code>）で同じ時刻に積む。Decider は通らない</li>
     <li>反射の行動は、所要時間が固定のもの。<code>core.faint</code> は 2 時間、<code>core.go_home_rest</code> は家までの移動と、3 時間の休息</li>
     <li>反射の行動は、固定・計画のブロックの開始で打ち切らない。気絶している最中に授業の時刻が来ても、授業には出ない（ほかの行動は、ブロックの開始で終わる。D1 1.8）</li>
     <li>反射の行動が終わった時点で、固定・計画のブロックの途中なら、予定の乱れへの対応（5.4）と同じく、遅刻するか欠席するかを決める。ブロックの途中で反射が起きた場合（授業中に早退した）も、ブロックの前から反射が続いていた場合（気絶したまま授業の時刻になった）も、同じ扱いにする。欠席なら、ブロックの残りは自由時間として Decider が決める</li>
@@ -366,7 +366,7 @@ NextInt    = 乗算と棄却による偏りのない方法（Lemire）。64 ビ�
 <section id="routes">
   <h2><span class="num">5.10</span>最短経路と移動</h2>
   <ul>
-    <li>場所の数は数十〜百程度なので、全点対の最短経路を Floyd–Warshall で求め、経路の復元用の表と一緒に持つ。作り直すのは、グラフの版（<code>GraphVersion</code>）か定義が変わったとき</li>
+    <li>場所の数は数十〜百程度なので、全点対の最短経路を Floyd–Warshall で求め、経路の復元用の表と一緒に持つ。作り直すのは、グラフのバージョン（<code>GraphVersion</code>）か定義が変わったとき</li>
     <li>閉鎖中の場所は、行き先にも経路の途中にもしない。<code>slow_place</code> は、その場所につながる辺の時間を変えた表で計算する</li>
     <li>移動の経路は、出発時に辺の列として確定させ、<code>travel.started</code> に記録する。辺は（出発、到着、移動時間）で持つ。同じ長さの経路が複数あれば、場所の ID の順で最初に見つかったものを選び、場所の渡す順には依らない（J-121、J-126）。途中で辺が伸びたら、いまどの辺の上にいるかを出発時刻と各辺の時間から計算し、残りの時間を新しい値で積み直す</li>
   </ul>

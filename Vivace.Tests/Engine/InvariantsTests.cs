@@ -10,7 +10,7 @@ namespace Vivace.Tests.Engine;
 
 /// <summary>
 /// 「各ペルソナに次の自分のイベントがある」の検査を、わざと壊した状態で確かめる。
-/// 行動中は同じ版の行動の終わり、移動中は到着、決め中は決める仕事、自由時間の手空きは決めどきが、それぞれ予定されていなければならない。
+/// 行動中は同じバージョンの行動の終わり、移動中は到着、決め中は決める仕事、自由時間の手空きは決めどきが、それぞれ予定されていなければならない。
 /// </summary>
 public class InvariantsTests
 {
@@ -50,7 +50,7 @@ public class InvariantsTests
         Invariants.Check(Fixture.Context, state, state.Cursor.Time, busySet, lookup, null);
     }
 
-    /// <summary>行動中なのに同じ版の行動の終わりを積まなかった状態は検出される。別の版の終わりでは足りない。</summary>
+    /// <summary>行動中なのに同じバージョンの行動の終わりを積まなかった状態は検出される。別のバージョンの終わりでは足りない。</summary>
     [Fact]
     public void MissingActionEndOfSameVersionIsDetected()
     {

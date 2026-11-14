@@ -248,7 +248,7 @@ public sealed record LlmPolicy(
       <tr><td><code>Dispatcher</code></td><td>配信役。未送信の操作を送り、結果をコマンドで返す</td><td>VISION 10章</td></tr>
       <tr><td><code>InjectionValidator</code></td><td>投入の窓口。要求を検査し、キューに入れる下書きにする</td><td>D2 2.8</td></tr>
       <tr><td><code>DefinitionLoader</code> / <code>DefinitionValidator</code></td><td>TOML の読み込みと検証。エディタからも呼べる</td><td>D3、D7</td></tr>
-      <tr><td><code>RouteTable</code></td><td>最短経路の表（グラフの版ごとにキャッシュ）</td><td>D5</td></tr>
+      <tr><td><code>RouteTable</code></td><td>最短経路の表（グラフのバージョンごとにキャッシュ）</td><td>D5</td></tr>
       <tr><td><code>UtilityDecider</code></td><td>候補の絞り込み、スコア、抽選</td><td>D5</td></tr>
       <tr><td><code>DayPlanner</code> / <code>PlanValidator</code></td><td>Planner の手順と、出力の検査・補正</td><td>D5、D6</td></tr>
       <tr><td><code>IncidentLottery</code></td><td>日の始まりの出来事の抽選</td><td>D5</td></tr>

@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 namespace Vivace.Core.Domain.State;
 
 /// <summary>1日のプラン（ホライズンからの範囲）。</summary>
-/// <param name="Version">プランの版。古いものを捨てる判定に使う。</param>
+/// <param name="Version">プランのバージョン。古いものを捨てる判定に使う。</param>
 /// <param name="HorizonStart">範囲の開始。</param>
 /// <param name="HorizonEnd">範囲の終了。</param>
 /// <param name="NextRebuildAt">次に作り直す時刻。</param>

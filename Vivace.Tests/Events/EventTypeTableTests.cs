@@ -63,7 +63,7 @@ public class EventTypeTableTests
         }
     }
 
-    /// <summary>すべてのイベントタイプに、ペイロードの型（EventPayload の派生）が付き、版は 1 から始まる。</summary>
+    /// <summary>すべてのイベントタイプに、ペイロードの型（EventPayload の派生）が付き、バージョンは 1 から始まる。</summary>
     [Fact]
     public void EveryEventTypeHasItsPayloadType()
     {

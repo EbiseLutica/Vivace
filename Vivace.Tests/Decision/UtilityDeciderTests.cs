@@ -140,7 +140,7 @@ public class UtilityDeciderTests
         Assert.Equal(new PlaceId("kaori_room"), result.Payload.Place);
     }
 
-    /// <summary>出力の guard は、決めたときの行動の版、行動の実行の可否、乱数の位置を確かめる。却下されたら決め直す。</summary>
+    /// <summary>出力の guard は、決めたときの行動のバージョン、行動の実行の可否、乱数の位置を確かめる。却下されたら決め直す。</summary>
     [Fact]
     public void OutputGuardChecksVersionFeasibilityAndRng()
     {

@@ -62,7 +62,7 @@ public class ActivityRulesTests
         Assert.Empty(result.FollowUps);
     }
 
-    /// <summary>版が古い行動の終わりは捨てる。行動の終わりでは版は上がらない。</summary>
+    /// <summary>バージョンが古い行動の終わりは捨てる。行動の終わりではバージョンは上がらない。</summary>
     [Fact]
     public void StaleActionEndedIsSkippedAndEndDoesNotBumpVersion()
     {
@@ -125,7 +125,7 @@ public class ActivityRulesTests
         var result = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, Choice("read_book", KaoriRoom, 30, 0, 3), Fixture.Kaori, guard, 10));
 
         Assert.Equal(EventStatus.Rejected, result.Status);
-        Assert.Equal("行動の版が違う", result.Reason);
+        Assert.Equal("行動のバージョンが違う", result.Reason);
         Assert.False(result.State.Personas[Fixture.Kaori].Deciding);
         Assert.Equal(new DecisionRequestedPayload(DecisionReason.Retry, null), Assert.Single(result.FollowUps).Payload);
     }
@@ -143,7 +143,7 @@ public class ActivityRulesTests
         Assert.Equal("乱数の位置が違う", result.Reason);
     }
 
-    /// <summary>行動の決定の適用。同じ場所なら、行動の開始を同じ時刻に積み、版と乱数の位置を進める。</summary>
+    /// <summary>行動の決定の適用。同じ場所なら、行動の開始を同じ時刻に積み、バージョンと乱数の位置を進める。</summary>
     [Fact]
     public void ChosenActivityInPlaceStartsActionAndAdvancesRng()
     {
@@ -188,7 +188,7 @@ public class ActivityRulesTests
         Assert.Equal(new ActionStartedPayload("watch_tv", HomeLiving, TimeSpan.FromMinutes(35), ActivityReason.Chosen, 1, null), Assert.Single(arrived.FollowUps).Payload);
     }
 
-    /// <summary>移動の開始は、版が古ければ捨てる。</summary>
+    /// <summary>移動の開始は、バージョンが古ければ捨てる。</summary>
     [Fact]
     public void StaleTravelIsSkipped()
     {

@@ -56,7 +56,7 @@ public static class Invariants
                     && end.ActivityVersion == persona.ActivityVersion);
                 if (!ended)
                 {
-                    throw new InvariantViolationException($"行動中なのに、同じ版の行動の終わりが予定されていません: {persona.Id}");
+                    throw new InvariantViolationException($"行動中なのに、同じバージョンの行動の終わりが予定されていません: {persona.Id}");
                 }
 
                 continue;

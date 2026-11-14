@@ -52,7 +52,7 @@ public sealed class EventApplier
                 case ActivityVersionCheck version:
                     if (persona is null || persona.ActivityVersion != version.Expected)
                     {
-                        return "行動の版が違う";
+                        return "行動のバージョンが違う";
                     }
 
                     break;
@@ -73,7 +73,7 @@ public sealed class EventApplier
                 case PlanVersionCheck plan:
                     if (persona is null || persona.PlanVersion != plan.Expected)
                     {
-                        return "プランの版が違う";
+                        return "プランのバージョンが違う";
                     }
 
                     break;

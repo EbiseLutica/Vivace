@@ -196,7 +196,7 @@ record ApplyResult(
   </div>
   <div class="callout">
     <span class="label">決定 P-03　割り込まれた行動のハンドラは取り消す</span>
-    「投稿する」の文面を作っている途中に、反射で行動が打ち切られたら、そのハンドラはもう要らない。Apply が行動の版番号を上げるときに <code>CancelHandler</code> を出し、エンジンはそのハンドラを <code>CancellationToken</code> で止めて、ホライズンの待ちからも外す。止めきれずに出力が返ってきても、版番号の検査（1.7）で弾かれるので、取り消しは最適化にすぎない。
+    「投稿する」の文面を作っている途中に、反射で行動が打ち切られたら、そのハンドラはもう要らない。Apply が行動のバージョン番号を上げるときに <code>CancelHandler</code> を出し、エンジンはそのハンドラを <code>CancellationToken</code> で止めて、ホライズンの待ちからも外す。止めきれずに出力が返ってきても、バージョン番号の検査（1.7）で弾かれるので、取り消しは最適化にすぎない。
   </div>
 </section>
 
@@ -315,10 +315,10 @@ record ApplyResult(
   <div class="table-wrap">
     <table>
       <tr><th>guard</th><th>確かめること</th><th>主な使い手</th></tr>
-      <tr><td><code>activityVersion</code></td><td>ペルソナの行動の版番号が、決めたときと同じ</td><td>Decider、効果のハンドラ、予定の乱れへの対応</td></tr>
+      <tr><td><code>activityVersion</code></td><td>ペルソナの行動のバージョン番号が、決めたときと同じ</td><td>Decider、効果のハンドラ、予定の乱れへの対応</td></tr>
       <tr><td><code>feasible</code></td><td>選んだ行動と場所が、いまの状態でも実行できる（requires、到達性、帰還できること、制限）</td><td>Decider</td></tr>
       <tr><td><code>rngCursor</code></td><td>乱数の列の位置が、決めたときと同じ</td><td>位置を持つ用途（<code>decide</code>、<code>sns</code>）の出力</td></tr>
-      <tr><td><code>planVersion</code></td><td>ペルソナのプランの版番号が、決めたときと同じ</td><td>Planner</td></tr>
+      <tr><td><code>planVersion</code></td><td>ペルソナのプランのバージョン番号が、決めたときと同じ</td><td>Planner</td></tr>
       <tr><td><code>termUnset</code></td><td>変換の辞書に、その語がまだない（または同じ変換）</td><td>変換の記録</td></tr>
       <tr><td><code>placeUnset</code></td><td>同じ名前の場所が、まだない</td><td>場所の追加</td></tr>
     </table>
@@ -349,7 +349,7 @@ record ApplyResult(
 
       <rect class="box" x="320" y="100" width="130" height="48" rx="8"/>
       <text class="title" x="385" y="122" text-anchor="middle">skipped</text>
-      <text class="sub" x="385" y="139" text-anchor="middle">版が古いので捨てた</text>
+      <text class="sub" x="385" y="139" text-anchor="middle">古いバージョン</text>
 
       <rect class="box bad" x="320" y="180" width="130" height="48" rx="8"/>
       <text class="title" x="385" y="202" text-anchor="middle">rejected</text>
@@ -413,12 +413,12 @@ record ApplyResult(
       <path class="arrow dash" d="M298 205 C 200 235, 110 225, 105 150"/>
       <text class="sub" x="40" y="200">終了・中断</text>
     </svg>
-    <figcaption>ペルソナの行動の状態。行動の版番号が上がるのは、決めたとき（<code>activity.chosen</code>）と、割り込みで打ち切られたとき。行動の終わり（<code>action.ended</code>）では上げない（J-131）</figcaption>
+    <figcaption>ペルソナの行動の状態。行動のバージョン番号が上がるのは、決めたとき（<code>activity.chosen</code>）と、割り込みで打ち切られたとき。行動の終わり（<code>action.ended</code>）では上げない（J-131）</figcaption>
   </figure>
   <ul>
     <li>行動中のまま、固定ブロックの開始で次の行動に移ることもある（ブロックの開始が、前の行動を終わらせる）。着いて待っているとき、出来事で予定が押したとき、ブロックの中でスマホを使っているときに起きる。ただし、反射の行動（気絶、早退して休む）は打ち切らない（D5 5.7）</li>
     <li>反射と出来事は、どの状態からでも割り込める。移動中に辺が伸びたときだけは中断せず、到着を積み直す（VISION 9章）</li>
-    <li>行動の中身（どの行動を、どの場所で、いつまで）と、その版番号は、ペルソナインスタンスの状態に持つ（D3）</li>
+    <li>行動の中身（どの行動を、どの場所で、いつまで）と、そのバージョン番号は、ペルソナインスタンスの状態に持つ（D3）</li>
   </ul>
 
   <h3>外向きの操作</h3>

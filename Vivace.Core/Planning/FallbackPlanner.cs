@@ -23,7 +23,7 @@ public static class FallbackPlanner
     /// <param name="definitions">定義。</param>
     /// <param name="persona">ペルソナの状態。</param>
     /// <param name="now">契機の時刻。</param>
-    /// <param name="version">新しいプランの版。</param>
+    /// <param name="version">新しいプランのバージョン。</param>
     /// <param name="holidays">祝日の暦。省略すると祝日のない暦。</param>
     public static DayPlan Plan(DefinitionPack definitions, PersonaState persona, DateTimeOffset now, long version, IHolidayCalendar? holidays = null)
     {

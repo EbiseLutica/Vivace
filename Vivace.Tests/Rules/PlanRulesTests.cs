@@ -41,7 +41,7 @@ public class PlanRulesTests
     private static SimEvent BlockStarted(long seq, DateTimeOffset time, string? block, long version = 1) =>
         Fixture.Event(seq, time, EventTypes.BlockStarted, new BlockStartedPayload(block, version), Fixture.Kaori);
 
-    /// <summary>プランの確定は、版を上げ、これから始まるブロックと、次の作り直しの時刻を積む。</summary>
+    /// <summary>プランの確定は、バージョンを上げ、これから始まるブロックと、次の作り直しの時刻を積む。</summary>
     [Fact]
     public void PlanCommittedSchedulesBlockStartsAndNextRebuild()
     {
@@ -81,7 +81,7 @@ public class PlanRulesTests
         Assert.Equal(new DecisionRequestedPayload(DecisionReason.Free, null), Assert.Single(result.FollowUps).Payload);
     }
 
-    /// <summary>プランにないブロックの開始（ID がない、または時刻がずれている）は捨てる。版ではなく、いまのプランに入っているかで見る。</summary>
+    /// <summary>プランにないブロックの開始（ID がない、または時刻がずれている）は捨てる。バージョンではなく、いまのプランに入っているかで見る。</summary>
     [Fact]
     public void UnknownOrMovedBlockStartIsSkipped()
     {
@@ -139,7 +139,7 @@ public class PlanRulesTests
         Assert.Equal(new PendingAction("watch_tv", HomeLiving, TimeSpan.FromHours(1).Subtract(TimeSpan.FromMinutes(1)), ActivityReason.Block, "tv@2026-11-01"), travel.Next);
     }
 
-    /// <summary>固定ブロックの開始は、いまの行動を打ち切る。行動の版が上がり、ハンドラの取り消しを依頼する。</summary>
+    /// <summary>固定ブロックの開始は、いまの行動を打ち切る。行動のバージョンが上がり、ハンドラの取り消しを依頼する。</summary>
     [Fact]
     public void BlockStartCutsRunningActivity()
     {

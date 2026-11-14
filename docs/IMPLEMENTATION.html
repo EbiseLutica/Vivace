@@ -78,7 +78,7 @@
     <li><strong>LLM は代わりの出力から</strong>：ハンドラは失敗時の出力（<a href="design/6-llm.html#calls">D6 6.2</a>）を先に作る。固定予定だけのプランは、段階2 でもう要る</li>
     <li><strong>テストは段階と一緒に</strong>：<a href="design/7-operations.html#testing">D7 7.4</a> の層を、段階ごとに足す。不変条件の検査は段階2 から常に回す</li>
     <li><strong>落とし穴はその場で直す</strong>：見つけたら設計書を直し、判断を J-xx の一覧に足す。止まって相談するのは、VISION の考え方が変わるものだけ</li>
-    <li><strong>稼働データができるまでは作り直す</strong>：段階8 の運転を始めるまでは、スキーマもペイロードも最初の版を書き換えてよい。マイグレーションを積み上げない</li>
+    <li><strong>稼働データができるまでは作り直す</strong>：段階8 の運転を始めるまでは、スキーマもペイロードも最初のバージョンを書き換えてよい。マイグレーションを積み上げない</li>
   </ul>
 </section>
 
@@ -306,7 +306,7 @@
   <h4 id="phase3-3">3-3 状態変数の反射</h4>
   <p><strong>参照</strong>：<a href="design/5-decision.html#vitals">D5 5.6</a>、<a href="design/5-decision.html#reflex">5.7</a>、<a href="design/2-events.html#types">D2 2.3</a>、<a href="design/2-events.html#chain">2.4</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" disabled>しきい値の到達の予測：率から到達の時刻を求めて <code>vital.threshold</code> を積む。状態変数の版で、古い予測を捨てる</li>
+    <li><input type="checkbox" disabled>しきい値の到達の予測：率から到達の時刻を求めて <code>vital.threshold</code> を積む。状態変数のバージョンで、古い予測を捨てる</li>
     <li><input type="checkbox" disabled><code>vital.threshold</code> の Apply：いまの行動を打ち切り、反射の行動を始める</li>
     <li><input type="checkbox" disabled>寝不足</li>
     <li><input type="checkbox" disabled>居合わせと社交欲求の率：段階2 の実装を D5 5.6 と照らし、足りない分を足す</li>
@@ -371,7 +371,7 @@
   <p><strong>参照</strong>：<a href="design/1-execution.html#tx">D1 1.9</a>、<a href="design/1-execution.html#startup">1.11</a>、<a href="design/1-execution.html#reload">1.12</a>、<a href="design/3-data.html#sqlite">D3 3.8</a>、<a href="design/3-data.html#json">3.9</a>、<a href="design/7-operations.html#testing">D7 7.4</a></p>
   <ul class="tasks">
     <li><input type="checkbox" disabled><code>Vivace.Storage.Sqlite</code>：スキーマ、接続の設定、<code>StorageBatch</code> のコミット、<code>IEventLog</code></li>
-    <li><input type="checkbox" disabled>ペイロードの JSON（ソース生成、版、知らないイベントタイプでの停止）</li>
+    <li><input type="checkbox" disabled>ペイロードの JSON（ソース生成、バージョン、知らないイベントタイプでの停止）</li>
     <li><input type="checkbox" disabled>起動と停止の手順、ハンドラの復元</li>
     <li><input type="checkbox" disabled>追いつき、<code>persona.gap</code>、14 日の上限</li>
     <li><input type="checkbox" disabled>定義の読み直し（<code>ReloadDefinitionsAsync</code>）</li>

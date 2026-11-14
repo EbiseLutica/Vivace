@@ -6,5 +6,5 @@ namespace Vivace.Core.Events.Payloads;
 /// <summary>体の反応。しきい値を越えた。</summary>
 /// <param name="Vital">状態変数。</param>
 /// <param name="Threshold">しきい値。</param>
-/// <param name="StateVersion">状態変数の版。</param>
+/// <param name="StateVersion">状態変数のバージョン。</param>
 public sealed record VitalThresholdPayload(VitalName Vital, double Threshold, long StateVersion) : EventPayload(1);

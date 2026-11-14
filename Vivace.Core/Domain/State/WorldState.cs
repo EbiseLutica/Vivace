@@ -10,7 +10,7 @@ namespace Vivace.Core.Domain.State;
 /// <param name="GeneratedPlaces">生えた場所（候補、採用、廃止）。</param>
 /// <param name="Terms">変換の辞書の、実行中の記録。</param>
 /// <param name="Incidents">発生中の出来事。キーは発生のイベントの連番。</param>
-/// <param name="GraphVersion">場所のグラフが変わるたびに上がる版。</param>
+/// <param name="GraphVersion">場所のグラフが変わるたびに上がるバージョン。</param>
 public sealed record WorldState(
     WorldId Id,
     WorldDefId DefId,

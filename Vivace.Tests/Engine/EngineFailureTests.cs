@@ -79,7 +79,7 @@ public class EngineFailureTests
         var rejected = engine.Log.Where(entry => entry.Status == EventStatus.Rejected).ToList();
         var single = Assert.Single(rejected);
         Assert.Equal(EventTypes.ActivityChosen, single.Event.EventType);
-        Assert.Equal("行動の版が違う", single.Reason);
+        Assert.Equal("行動のバージョンが違う", single.Reason);
         Assert.Contains(engine.Log, entry => entry.Status == EventStatus.Applied && entry.Event.EventType == EventTypes.ActivityChosen);
     }
 

@@ -13,7 +13,7 @@ using Vivace.Testing;
 
 namespace Vivace.Tests.Rules;
 
-/// <summary>睡眠の率、次の行動の候補、繰り返しの減衰、状態変数の版の再発防止。</summary>
+/// <summary>睡眠の率、次の行動の候補、繰り返しの減衰、状態変数のバージョンの再発防止。</summary>
 public class RegressionRulesTests
 {
     private static readonly PlaceId KaoriRoom = new("kaori_room");
@@ -107,7 +107,7 @@ public class RegressionRulesTests
         Assert.Equal(new StartPlannerSignal(12, Fixture.Kaori, sleepAt), Assert.Single(sleep.Signals));
     }
 
-    /// <summary>状態変数を急に変えても、版が上がる。古い予測を捨てるため。</summary>
+    /// <summary>状態変数を急に変えても、バージョンが上がる。古い予測を捨てるため。</summary>
     [Fact]
     public void AbruptVitalChangeBumpsVersion()
     {
