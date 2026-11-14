@@ -95,10 +95,13 @@ public class SystemClockTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => wait.WaitAsync(Bound, TestContext.Current.CancellationToken));
     }
 
-    /// <summary>TimeProvider に null を渡すと、ArgumentNullException になる。</summary>
+    /// <summary>TimeProvider を省略（null）すると、TimeProvider.System の時刻を読む。</summary>
     [Fact]
-    public void NullTimeProviderThrows()
+    public void OmittedTimeProviderUsesSystemTime()
     {
-        Assert.Throws<ArgumentNullException>(() => new SystemClock(null!));
+        var before = DateTimeOffset.UtcNow;
+        var clock = new SystemClock(null);
+
+        Assert.InRange(clock.UtcNow, before, DateTimeOffset.UtcNow);
     }
 }

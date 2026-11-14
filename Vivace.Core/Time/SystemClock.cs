@@ -11,17 +11,11 @@ public sealed class SystemClock : IClock
     /// <summary>時刻と待ちの元になる時計。</summary>
     private readonly TimeProvider _timeProvider;
 
-    /// <summary>TimeProvider.System を使う実時間の時計を作る。</summary>
-    public SystemClock()
-        : this(TimeProvider.System)
+    /// <summary>実時間の時計を作る。時刻と待ちの元は、指定の TimeProvider。省略（null）すると TimeProvider.System。テストでは差し替える。</summary>
+    /// <param name="timeProvider">時刻と待ちの元になる時計。省略すると TimeProvider.System。</param>
+    public SystemClock(TimeProvider? timeProvider = null)
     {
-    }
-
-    /// <summary>指定の TimeProvider を使う実時間の時計を作る。テストでは差し替える。</summary>
-    /// <param name="timeProvider">時刻と待ちの元になる時計。</param>
-    public SystemClock(TimeProvider timeProvider)
-    {
-        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     /// <summary>いまの UTC の時刻。</summary>
