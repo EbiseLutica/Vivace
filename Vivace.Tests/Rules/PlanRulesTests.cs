@@ -169,7 +169,7 @@ public class PlanRulesTests
         Assert.Equal(EventStatus.Skipped, Fixture.Apply(plan, Fixture.Event(12, Fixture.Now.AddHours(21), EventTypes.PlanDue, new PlanDuePayload(0), Fixture.Kaori)).Status);
     }
 
-    /// <summary>移動中に記憶の整理のブロック（睡眠）が始まると、Planner を一度だけ起こす。期間の印はブロック ID で、同じブロックでは起こさない。</summary>
+    /// <summary>移動中に記憶の整理のブロック（睡眠）が始まると、Planner を一度だけ起こす。期間のキーはブロック ID で、同じブロックでは起こさない。</summary>
     [Fact]
     public void ConsolidatingBlockWhileTravelingWakesPlannerOnce()
     {
@@ -199,7 +199,7 @@ public class PlanRulesTests
         Assert.Empty(second.Signals);
     }
 
-    /// <summary>在室で記憶の整理のブロックを満たせないとき、いまの行動を打ち切り、Planner を起こす。期間の印と、最後に始めたブロックは、そのブロック ID になる。</summary>
+    /// <summary>在室で記憶の整理のブロックを満たせないとき、いまの行動を打ち切り、Planner を起こす。期間のキーと、最後に始めたブロックは、そのブロック ID になる。</summary>
     [Fact]
     public void InfeasibleConsolidatingBlockCutsActivityAndWakesPlanner()
     {

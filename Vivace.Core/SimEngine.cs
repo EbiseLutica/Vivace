@@ -41,7 +41,7 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly Channel<Output> _outputs = Channel.CreateUnbounded<Output>();
     /// <summary>走っている間に届いた投入のコマンド。各周の先頭で取り出す。</summary>
     private readonly Channel<InjectCommand> _commands = Channel.CreateUnbounded<InjectCommand>();
-    /// <summary>走っているかどうかの印と、投入のコマンドの受け付けを守るロック。</summary>
+    /// <summary>走っているかどうかのフラグと、投入のコマンドの受け付けを守るロック。</summary>
     private readonly Lock _gate = new();
     private readonly List<LoggedEvent> _log = [];
     private long _nextSeq;

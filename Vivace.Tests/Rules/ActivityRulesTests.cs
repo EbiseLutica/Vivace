@@ -102,7 +102,7 @@ public class ActivityRulesTests
         Assert.Empty(Fixture.Apply(Fixture.WithKaori(), sameTime).Signals);
     }
 
-    /// <summary>決めどきの要求は、決めどきの印を立て、Decider の起動を依頼する。決め中にもう一度要求すると捨てる。</summary>
+    /// <summary>決めどきの要求は、決め中のフラグを立て、Decider の起動を依頼する。決め中にもう一度要求すると捨てる。</summary>
     [Fact]
     public void DecisionRequestIsRecordedOnceAndStartsDecider()
     {
@@ -115,7 +115,7 @@ public class ActivityRulesTests
         Assert.Empty(second.Signals);
     }
 
-    /// <summary>決め直しの出力が guard で却下されると、決め中の印を下ろし、決め直しを積む。</summary>
+    /// <summary>決め直しの出力が guard で却下されると、決め中のフラグを下ろし、決め直しを積む。</summary>
     [Fact]
     public void StaleDecisionIsRejectedAndRequestedAgain()
     {

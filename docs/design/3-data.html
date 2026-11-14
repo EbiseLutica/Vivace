@@ -378,7 +378,7 @@ sealed record PersonaState(
     ImmutableList&lt;InboxItem&gt; Inbox,                    // 未処理の通知だけ
     ImmutableList&lt;OutboundOp&gt; Outbound,                // 未送信の操作だけ
     DateTimeOffset? LastWake,                           // 日誌の範囲の起点（VISION 13章）。睡眠の終わりで設定する（J-145）
-    bool Deciding, string? LastBlockId, string? PlannedFor);  // 決め中の印、最後に始めたブロック、Planner を起こした期間のキー（J-133、J-135、J-141）</code></pre>
+    bool Deciding, string? LastBlockId, string? PlannedFor);  // 決め中のフラグ、最後に始めたブロック、Planner を起こした期間のキー（J-133、J-135、J-141）</code></pre>
   <ul>
     <li>ID は <code>readonly record struct</code> で型を分ける（<code>PersonaId</code>、<code>WorldId</code>、<code>PlaceId</code>）。文字列の取り違えをコンパイラで防ぐ</li>
     <li>ワールドとペルソナは、定義の ID にも型を作る（<code>WorldDefId</code>、<code>PersonaDefId</code>）。<code>DefinitionPack</code> の辞書のキーと、状態とペイロードが持つ定義の ID は、この型にする。作り直したインスタンス（P-22 の <code>#2</code>）の ID は定義の ID と一致しないので、定義はインスタンスの ID でなく <code>DefId</code> から引く（J-150）</li>

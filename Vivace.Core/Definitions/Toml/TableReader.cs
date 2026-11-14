@@ -36,7 +36,7 @@ internal sealed class TableReader(TomlTable table, List<DefinitionIssue> issues)
         return [];
     }
 
-    /// <summary>キーの値を、生のまま引く。読んだものとして印を付ける。</summary>
+    /// <summary>キーの値を、生のまま引く。読んだものとして記録する。</summary>
     /// <param name="key">キー。</param>
     /// <param name="node">見つかった値。</param>
     public bool TryNode(string key, out TomlNode node)

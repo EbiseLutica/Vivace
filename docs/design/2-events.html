@@ -128,7 +128,7 @@
   <div class="table-wrap">
     <table>
       <tr><th>イベントタイプ</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
-      <tr><td><code>decision.requested</code></td><td>Apply</td><td>ペルソナ、理由（下表）、ブロック ID</td><td>状態は <code>processing</code> にする（決め中の印 <code>Deciding</code> を立てる。P-07、J-133）。<code>StartHandler</code> を出す（D1 1.8）。決め中に来たものは捨てる</td></tr>
+      <tr><td><code>decision.requested</code></td><td>Apply</td><td>ペルソナ、理由（下表）、ブロック ID</td><td>状態は <code>processing</code> にする（決め中のフラグ <code>Deciding</code> を立てる。P-07、J-133）。<code>StartHandler</code> を出す（D1 1.8）。決め中に来たものは捨てる</td></tr>
       <tr><td><code>activity.chosen</code></td><td>ハンドラ（Decider）</td><td>行動、場所、経路、移動時間、所要時間、副行動か、乱数の範囲、候補の要約（痕跡）</td><td>guard（行動の版、実行できること、乱数の位置）を確かめる。行動の版を上げ、乱数の位置を進める。場所が違えば <code>travel.started</code>、同じなら <code>action.started</code> を同じ時刻に積む。所要時間 0 の <code>core.idle</code>（何もしない）は、乱数の位置だけを進め、版を上げず、後続を積まない（J-129）。待ちが 0 以下の次の予定の場所へ向かう行動は、移動だけで終わり、到着で決めどきを積み直す。同じ場所なら何も積まない（J-143）</td></tr>
       <tr><td><code>block.responded</code></td><td>ハンドラ（予定の乱れへの対応）</td><td>ブロック ID、選んだもの（遅刻 / 欠席 / 待つ）</td><td>遅刻は、ブロックの場所への移動を始める。欠席は、そのブロックを自由時間として扱い、決めどきを積む。待つは、出来事の解消かブロックの終わりの早いほうまで待機し、そこで開始時の確認をやり直す</td></tr>
       <tr><td><code>travel.started</code></td><td>Apply</td><td>出発地、目的地、経路（辺の列）、到着の時刻、行動の版</td><td>移動中にする。居合わせが変わるので、社交欲求の率を出発地の全員について計算し直す。<code>travel.arrived</code> を積む</td></tr>
@@ -283,7 +283,7 @@
       <tr><td><code>core.go_home_rest</code></td><td>早退して家で休む。家（ペルソナ定義の <code>home</code>）へ移動して、休む</td><td>はい</td></tr>
     </table>
   </div>
-  <p><code>schedule_only</code> は、行動の定義に書ける印で、ユーザーの行動にも使える（D3 3.6）。付いた行動は、固定予定のブロックと反射からだけ始まり、Decider と Planner の候補にならない。昼寝のように、自由時間に選ばれてよい休む行動は、印を付けず、記憶の整理も起こさない別の行動として書く。</p>
+  <p><code>schedule_only</code> は、行動の定義に書けるフラグで、ユーザーの行動にも使える（D3 3.6）。付いた行動は、固定予定のブロックと反射からだけ始まり、Decider と Planner の候補にならない。昼寝のように、自由時間に選ばれてよい休む行動は、フラグを付けず、記憶の整理も起こさない別の行動として書く。</p>
   <div class="callout">
     <span class="label">決定 P-14　行動の効果の語彙</span>
     上の3表で確定させる。率は「足す」ではなく「置き換える」にする。睡眠中は気力が減らない、のような表現が、打ち消しの数値を書かずに済むから。社交欲求の既定の率は、居合わせ（一人か、同席か）で変わる（D5）。行動が <code>rate.social</code> を書けば、居合わせに関係なく、その率を使う。

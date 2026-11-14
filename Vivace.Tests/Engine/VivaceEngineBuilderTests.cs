@@ -68,7 +68,7 @@ public class VivaceEngineBuilderTests
 
     /// <summary>
     /// テスト用の定義のフォルダから組んだエンジンで、ワールドと香織を投入して 1 時間回すと、両方が生きていて、
-    /// 適用の位置は回した範囲（開始から 1 時間）に収まる。DryRun の印も残る。
+    /// 適用の位置は回した範囲（開始から 1 時間）に収まる。DryRun のフラグも残る。
     /// </summary>
     [Fact]
     public async Task BuiltEngineFromDirectoryRuns()

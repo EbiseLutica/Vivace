@@ -246,7 +246,7 @@
     <li><input type="checkbox" checked disabled>後続のイベントの生成（3-1 の <code>FollowUpEvents</code>）は、<code>NewEvent</code> の static のファクトリメソッドにする</li>
     <li><input type="checkbox" checked disabled>3-1 で分けた共有の処理（<code>PersonaAccess</code>、<code>Rebalancing</code>、<code>PeriodKeys</code>）と、既存の <code>VitalRules</code>、<code>ActionRules</code>、<code>PlanRules</code> を、上の形に移す。Decider と Planner の呼び出しも合わせる</li>
     <li><input type="checkbox" checked disabled>居合わせ（同じ場所にほかの人がいるか。移動中はどこにもいない）の判定は、<code>SimState</code> のメソッドにして、社交欲求の率（<code>VitalRules.IsTogether</code>）と Decider の予測の両方から使う。いまの居場所で見るものと、候補の場所で見るものの2つ</li>
-    <li><input type="checkbox" checked disabled>Planner を同じ期間で一度だけ起こす手順（<code>PlannedFor</code> を比べ、印を付け、<code>StartPlanner</code> を出す）は、規則の側のヘルパーにまとめ、<code>ActionStartedRule</code>、<code>BlockStartedRule</code>、<code>PlanDueRule</code> から使う</li>
+    <li><input type="checkbox" checked disabled>Planner を同じ期間で一度だけ起こす手順（<code>PlannedFor</code> を比べて書き換え、<code>StartPlanner</code> を出す）は、規則の側のヘルパーにまとめ、<code>ActionStartedRule</code>、<code>BlockStartedRule</code>、<code>PlanDueRule</code> から使う</li>
   </ul>
   <p><strong>範囲外</strong>：振る舞いの変更、Apply を純粋な関数とする形（状態を返し、副作用はシグナルで返す）の変更、ルールの表の形の変更。</p>
   <p><strong>完了条件</strong>：既存のテストがすべて通り、<code>.verified.txt</code> の差分がない。</p>

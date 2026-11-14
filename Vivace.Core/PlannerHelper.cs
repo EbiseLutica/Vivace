@@ -13,7 +13,7 @@ internal static class PlannerHelper
         "time:" + time.ToUniversalTime().ToString("o", CultureInfo.InvariantCulture);
 
     /// <summary>
-    /// 期間 periodKey の Planner を起こす。同じ期間で動いていれば null。動いていなければ、期間の印を付けたペルソナと、Planner の起動を返す。
+    /// 期間 periodKey の Planner を起こす。同じ期間で動いていれば null。動いていなければ、期間のキーを記録したペルソナと、Planner の起動を返す。
     /// </summary>
     /// <param name="persona">ペルソナ。</param>
     /// <param name="periodKey">期間のキー。</param>
