@@ -44,7 +44,7 @@ public static class EventLineFormatter
             case ActionStartedPayload started:
                 return ReportText.ActionBody(started);
             case ActionEndedPayload ended:
-                return string.IsNullOrEmpty(ended.ActionId) ? "行動の終わり" : $"終わり {ended.ActionId}";
+                return $"終わり {ended.ActionId}";
             case TravelStartedPayload travel:
                 return ReportText.TravelBody(travel);
             case TravelArrivedPayload arrived:
