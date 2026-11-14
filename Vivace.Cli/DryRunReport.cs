@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Text;
 using Vivace.Core;
 using Vivace.Core.Domain;
-using Vivace.Core.Domain.State;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Storage;
 using Vivace.Core.Time;
@@ -61,11 +60,7 @@ public static class DryRunReport
             builder.Append('\n');
         }
 
-        var applied = list.Count(entry => entry.Status == EventStatus.Applied);
-        var skipped = list.Count(entry => entry.Status == EventStatus.Skipped);
-        var rejected = list.Count(entry => entry.Status == EventStatus.Rejected);
-        builder.Append("適用 ").Append(Number(applied)).Append(" 件、捨てた ").Append(Number(skipped))
-            .Append(" 件、却下 ").Append(Number(rejected)).Append(" 件\n");
+        builder.Append(ReportText.CountLine(list));
         return builder.ToString();
     }
 
@@ -88,7 +83,7 @@ public static class DryRunReport
             {
                 case ActionStartedPayload started:
                     CloseAt(persona, ev.Time, rows, open);
-                    open[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.Action, $"[{ReasonLabel(started.Reason)}] {started.ActionId} @{started.Place.Value}");
+                    open[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.Action, ReportText.ActionBody(started));
                     break;
                 case ActionEndedPayload when open.TryGetValue(persona, out var action) && action.Kind == RowKind.Action:
                     rows.Add(action with { End = ev.Time });
@@ -96,7 +91,7 @@ public static class DryRunReport
                     break;
                 case TravelStartedPayload travel:
                     CloseAt(persona, ev.Time, rows, open);
-                    open[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.Travel, $"移動 {travel.From.Value} → {travel.To.Value}");
+                    open[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.Travel, ReportText.TravelBody(travel));
                     break;
                 case TravelArrivedPayload when open.TryGetValue(persona, out var trip) && trip.Kind == RowKind.Travel:
                     rows.Add(trip with { End = ev.Time });
@@ -142,19 +137,6 @@ public static class DryRunReport
     /// <summary>UTC の時刻を、現地の "HH:mm" にする。</summary>
     private static string TimeOf(DateTimeOffset utc, TimeSpan offset) =>
         LocalTimeHelper.ToLocal(utc, offset).Time.ToString("HH:mm", CultureInfo.InvariantCulture);
-
-    /// <summary>行動の理由の表記。</summary>
-    private static string ReasonLabel(ActivityReason reason) => reason switch
-    {
-        ActivityReason.Block => "予定",
-        ActivityReason.Chosen => "自由",
-        ActivityReason.Reflex => "反射",
-        ActivityReason.Late => "遅刻",
-        _ => throw new ArgumentOutOfRangeException(nameof(reason), reason, null),
-    };
-
-    /// <summary>整数の表記（カルチャに依らない）。</summary>
-    private static string Number(int value) => value.ToString(CultureInfo.InvariantCulture);
 
     /// <summary>行の種類。行動と移動は、それぞれの終わりの記録で閉じる。</summary>
     private enum RowKind
