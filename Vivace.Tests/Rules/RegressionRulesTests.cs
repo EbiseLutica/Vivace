@@ -18,7 +18,7 @@ public class RegressionRulesTests
 {
     private static readonly PlaceId KaoriRoom = new("kaori_room");
 
-    /// <summary>睡眠の開始が Planner を起こすとき、睡眠の率（気力 0）が残る。期間の鍵は、睡眠のブロック ID で持つ。</summary>
+    /// <summary>睡眠の開始が Planner を起こすとき、睡眠の率（気力 0）が残る。期間のキーは、睡眠のブロック ID で持つ。</summary>
     [Fact]
     public void ConsolidatingSleepKeepsSleepRatesAndPeriodKey()
     {

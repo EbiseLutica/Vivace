@@ -137,7 +137,7 @@ public class LanesTests
         await Assert.ThrowsAsync<InvalidOperationException>(lanes.CompleteAsync);
     }
 
-    /// <summary>取り消しの例外で閉じたレーンも、その例外をそのまま出す。複数のレーンが閉じたら、鍵の序数の順で最初のレーンの例外を出す。</summary>
+    /// <summary>取り消しの例外で閉じたレーンも、その例外をそのまま出す。複数のレーンが閉じたら、キーの序数の順で最初のレーンの例外を出す。</summary>
     [Fact]
     public async Task CompletionSurfacesFirstFaultInKeyOrder()
     {

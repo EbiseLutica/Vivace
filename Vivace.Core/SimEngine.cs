@@ -425,7 +425,7 @@ public sealed class SimEngine : IAsyncDisposable
     }
 
     /// <summary>取り消しの対象になるレーンか。決める側のレーンだけを止め、Planner は止めない。</summary>
-    /// <param name="lane">レーンの鍵。</param>
+    /// <param name="lane">レーンのキー。</param>
     internal static bool IsCancellable(string lane) => lane.StartsWith("decide:", StringComparison.Ordinal);
 
     /// <summary>決める側の仕事を、レーンで起動する。仕事は写し（起動の時点の状態）だけを読む。</summary>

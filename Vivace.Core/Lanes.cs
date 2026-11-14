@@ -4,14 +4,14 @@ using System.Threading.Channels;
 namespace Vivace.Core;
 
 /// <summary>
-/// 決める側の仕事の実行の列。同じレーンの仕事は順番に、違うレーンの仕事は並列に動く。鍵は "decide:{ペルソナ}"、"plan:{ペルソナ}"、"world:{ワールド}"。
+/// 決める側の仕事の実行の列。同じレーンの仕事は順番に、違うレーンの仕事は並列に動く。キーは "decide:{ペルソナ}"、"plan:{ペルソナ}"、"world:{ワールド}"。
 /// 仕事が例外を投げたレーンは閉じ、残りの仕事を実行しない。
 /// </summary>
 public sealed class Lanes
 {
     /// <summary>レーンの作成と、終わりの印を守るロック。</summary>
     private readonly Lock _gate = new();
-    /// <summary>鍵ごとのレーン。</summary>
+    /// <summary>キーごとのレーン。</summary>
     private readonly Dictionary<string, Lane> _lanes = new(StringComparer.Ordinal);
     /// <summary>CompleteAsync を呼んだか。</summary>
     private bool _completed;
@@ -22,7 +22,7 @@ public sealed class Lanes
     public Task<Exception> Failure => _failure.Task;
 
     /// <summary>レーンの末尾に仕事を積む。閉じたレーンと、終わらせた後の Lanes には積めない。</summary>
-    /// <param name="lane">レーンの鍵。</param>
+    /// <param name="lane">レーンのキー。</param>
     /// <param name="work">仕事。</param>
     /// <exception cref="InvalidOperationException">レーンが閉じているか、終わらせた後に新しいレーンへ積もうとした。仕事の例外で閉じたときは、その例外を内側に持つ。</exception>
     public void Post(string lane, Func<Task> work)
@@ -52,7 +52,7 @@ public sealed class Lanes
 
     /// <summary>
     /// これ以上の仕事を受けず、積んである仕事が終わるまで待つ。
-    /// 仕事の例外で閉じたレーンがあれば、鍵の序数の順で最初のレーンの例外を投げる。
+    /// 仕事の例外で閉じたレーンがあれば、キーの序数の順で最初のレーンの例外を投げる。
     /// </summary>
     public async Task CompleteAsync()
     {

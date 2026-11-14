@@ -554,7 +554,7 @@ public static class DefinitionValidator
     {
         private readonly Dictionary<string, ResolvedDay> _byKey = new(StringComparer.Ordinal);
 
-        /// <summary>日付の区分の鍵。例外日の前後は日付そのもの、それ以外は（期間、曜日）。</summary>
+        /// <summary>日付の区分のキー。例外日の前後は日付そのもの、それ以外は（期間、曜日）。</summary>
         public string KeyOf(DateOnly date) => specials.Contains(date)
             ? "date:" + date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
             : FixedScheduleResolver.PeriodOf(persona.Schedule.Periods, date) + "|" + ((int)date.DayOfWeek).ToString(CultureInfo.InvariantCulture);

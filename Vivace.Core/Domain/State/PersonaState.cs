@@ -23,7 +23,7 @@ namespace Vivace.Core.Domain.State;
 /// <param name="LastWake">日誌の範囲の起点（最後に起きた時刻）。</param>
 /// <param name="Deciding">決めどきの処理中かどうか。決めどきの二重の積みを防ぐ。</param>
 /// <param name="LastBlockId">最後に始めたブロックの ID。同じブロックは一度だけ始める。</param>
-/// <param name="PlannedFor">Planner を起こした期間の鍵（記憶の整理の行動のブロック ID、または時刻）。同じ期間では一度だけ動く。</param>
+/// <param name="PlannedFor">Planner を起こした期間のキー（記憶の整理の行動のブロック ID、または時刻）。同じ期間では一度だけ動く。</param>
 public sealed record PersonaState(
     PersonaId Id,
     PersonaDefId DefId,

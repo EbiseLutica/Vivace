@@ -378,10 +378,10 @@ sealed record PersonaState(
     ImmutableList&lt;InboxItem&gt; Inbox,                    // 未処理の通知だけ
     ImmutableList&lt;OutboundOp&gt; Outbound,                // 未送信の操作だけ
     DateTimeOffset? LastWake,                           // 日誌の範囲の起点（VISION 13章）。睡眠の終わりで設定する（J-145）
-    bool Deciding, string? LastBlockId, string? PlannedFor);  // 決め中の印、最後に始めたブロック、Planner を起こした期間の鍵（J-133、J-135、J-141）</code></pre>
+    bool Deciding, string? LastBlockId, string? PlannedFor);  // 決め中の印、最後に始めたブロック、Planner を起こした期間のキー（J-133、J-135、J-141）</code></pre>
   <ul>
     <li>ID は <code>readonly record struct</code> で型を分ける（<code>PersonaId</code>、<code>WorldId</code>、<code>PlaceId</code>）。文字列の取り違えをコンパイラで防ぐ</li>
-    <li>ワールドとペルソナは、定義の ID にも型を作る（<code>WorldDefId</code>、<code>PersonaDefId</code>）。<code>DefinitionPack</code> の辞書の鍵と、状態とペイロードが持つ定義の ID は、この型にする。作り直したインスタンス（P-22 の <code>#2</code>）の ID は定義の ID と一致しないので、定義はインスタンスの ID でなく <code>DefId</code> から引く（J-150）</li>
+    <li>ワールドとペルソナは、定義の ID にも型を作る（<code>WorldDefId</code>、<code>PersonaDefId</code>）。<code>DefinitionPack</code> の辞書のキーと、状態とペイロードが持つ定義の ID は、この型にする。作り直したインスタンス（P-22 の <code>#2</code>）の ID は定義の ID と一致しないので、定義はインスタンスの ID でなく <code>DefId</code> から引く（J-150）</li>
     <li>ワールドやペルソナの状態のような、項目の多いものは <code>sealed record</code>（参照型）にする。参照が同じかどうかだけで「変わったか」がわかり（変わった行だけを SQLite に書くため）、辞書から取り出したり写しを渡したりするたびの丸ごとのコピーも起きない。<code>default</code> で中身の空な状態が作られることもない。ID、イベントの並びの位置、状態変数1本ぶん（値、基準時刻、率）のような小さな値は、<code>readonly record struct</code> にする</li>
     <li>受信箱は、ペルソナインスタンスの状態に持つ（VISION 2章）。アイテムの形は下の「受信箱のアイテム」</li>
     <li>プランのブロック（<code>PlanBlock</code>）は、開始、終了（UTC）、種類（固定、計画、自由）、行動、場所に加えて、電話の指定、間隔、同行、同行者が抜けたときの扱いを、プランを作ったときの固定予定から写して持つ。ID は固定と計画のブロックだけが持ち、自由時間は null（J-124。変更は次のプランから。D1 1.12）</li>
@@ -410,7 +410,7 @@ sealed record PersonaState(
     string ChannelType,                     // チャンネル独自の種類（"mention"、"reply"、"quote"、"chat" など）
     Sender Sender,                          // 送り主
     Audience Audience,                      // public / dm / 記憶にしない（VISION 13章）
-    string? ConversationKey,                // 同じ会話を見分ける鍵（スレッドの根元、DM の相手など）
+    string? ConversationKey,                // 同じ会話を見分けるキー（スレッドの根元、DM の相手など）
     string? Text,                           // 本文（Message）
     ImmutableArray&lt;Attachment&gt; Attachments, // 添付（画像の URL など。Message）
     ImmutableArray&lt;ThreadMessage&gt; Thread,  // それまでの会話（古い順。Message）
