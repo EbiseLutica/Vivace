@@ -14,10 +14,10 @@ public static class WorldSetup
     /// <param name="engine">投入先のエンジン。</param>
     /// <param name="definitions">定義。</param>
     /// <param name="seed">ワールドのシード（すべてのワールドに同じ値を使う）。</param>
-    /// <param name="at">生成の時刻。</param>
+    /// <param name="at">生成の時刻。null なら、エンジンが処理した時点の時計の時刻。</param>
     /// <param name="output">拒否の理由を書く先。</param>
     /// <param name="ct">キャンセル。</param>
-    public static async Task<bool> InjectAsync(VivaceEngine engine, DefinitionPack definitions, ulong seed, DateTimeOffset at, TextWriter output, CancellationToken ct)
+    public static async Task<bool> InjectAsync(VivaceEngine engine, DefinitionPack definitions, ulong seed, DateTimeOffset? at, TextWriter output, CancellationToken ct)
     {
         foreach (var world in definitions.Worlds.Values.OrderBy(w => w.Id.Value, StringComparer.Ordinal))
         {
