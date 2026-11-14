@@ -35,7 +35,7 @@ public static class EventTypes
     /// <summary>変換の辞書への記録。</summary>
     public const string TermRecorded = "term.recorded";
 
-    /// <summary>状態変数の調整（窓口から）。</summary>
+    /// <summary>状態変数の調整（外からの投入）。</summary>
     public const string VitalAdjusted = "vital.adjusted";
 
     /// <summary>状態の付与。</summary>

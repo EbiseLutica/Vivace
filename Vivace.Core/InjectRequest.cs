@@ -4,7 +4,7 @@ using Vivace.Core.Events.Payloads;
 
 namespace Vivace.Core;
 
-/// <summary>投入の窓口への要求。投入するイベントの型と中身、時刻の指定、発生元を持つ。</summary>
+/// <summary>投入 API への要求。投入するイベントの型と中身、時刻の指定、発生元を持つ。</summary>
 /// <param name="EventType">イベントタイプの名前。</param>
 /// <param name="Payload">中身。</param>
 /// <param name="At">時刻（UTC）。null なら、エンジンが処理した時点の時計の時刻。</param>

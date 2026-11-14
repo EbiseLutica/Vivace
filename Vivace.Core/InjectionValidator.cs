@@ -5,7 +5,7 @@ using Vivace.Core.Events;
 namespace Vivace.Core;
 
 /// <summary>
-/// 投入の窓口の検査。時刻を決め、どの型にも共通の検査をしてから、その型のルールに検査を任せ、通ったらキューに入れるドラフトを作る。
+/// 投入 API の検査。時刻を決め、どの型にも共通の検査をしてから、その型のルールに検査を任せ、通ったらキューに入れるドラフトを作る。
 /// </summary>
 public sealed class InjectionValidator
 {

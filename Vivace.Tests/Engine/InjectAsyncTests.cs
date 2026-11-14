@@ -7,7 +7,7 @@ using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Engine;
 
-/// <summary>エンジンの投入の窓口。実行中でないときはその場で、実行中はループの中で処理する。</summary>
+/// <summary>エンジンの投入 API。実行中でないときはその場で、実行中はループの中で処理する。</summary>
 public class InjectAsyncTests
 {
     private static readonly (PersonaDefId, PlaceId)[] KaoriOnly = [(new PersonaDefId("kaori"), new PlaceId("kaori_room"))];

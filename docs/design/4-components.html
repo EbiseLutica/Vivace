@@ -246,7 +246,7 @@ public sealed record LlmPolicy(
       <tr><td><code>EventApplier</code> / <code>IEventRule</code></td><td>Apply のエントリポイントと、イベントタイプごとのルール。エントリポイントは適用前の検査（guard）を評価してから、ルールを引いて呼ぶ。エントリポイントはインスタンスで、不変の規則のコンテキストとルールのテーブルだけを持つ。副作用を持たない</td><td>D2</td></tr>
       <tr><td><code>Lanes</code></td><td>レーンごとの直列の実行と、LLM の同時実行数の制限</td><td>D1 1.5</td></tr>
       <tr><td><code>Dispatcher</code></td><td>配信役。未送信の操作を送り、結果をコマンドで返す</td><td>VISION 10章</td></tr>
-      <tr><td><code>InjectionValidator</code></td><td>投入の窓口。要求を検査し、キューに入れるドラフトにする</td><td>D2 2.8</td></tr>
+      <tr><td><code>InjectionValidator</code></td><td>投入 API。要求を検査し、キューに入れるドラフトにする</td><td>D2 2.8</td></tr>
       <tr><td><code>DefinitionLoader</code> / <code>DefinitionValidator</code></td><td>TOML の読み込みと検証。エディタからも呼べる</td><td>D3、D7</td></tr>
       <tr><td><code>RouteTable</code></td><td>最短経路のテーブル（グラフのバージョンごとにキャッシュ）</td><td>D5</td></tr>
       <tr><td><code>UtilityDecider</code></td><td>候補の絞り込み、スコア、抽選</td><td>D5</td></tr>
@@ -274,7 +274,7 @@ public sealed record LlmPolicy(
 
 await engine.StartAsync(ct);                    // 起動と追いつき（D1 1.11）
 
-InjectResult r = await engine.InjectAsync(request, ct);       // 投入の窓口
+InjectResult r = await engine.InjectAsync(request, ct);       // 投入 API
 SimState view = engine.View;                                 // いまの状態（不変）
 IAsyncEnumerable&lt;LoggedEvent&gt; feed = engine.Subscribe(ct);   // 適用済みのイベントの購読
 IEventLog log = engine.Events;                               // ログの検索
@@ -302,7 +302,7 @@ ValidationReport report = DefinitionLoader.Validate("defs/", plugins);</code></p
     <li><code>View</code> は、いまは <code>SimState</code>（不変の状態）そのものを返す。読み取り用の <code>StateView</code>（4.5）は、ビューアや実行レポートを作るときに、要るものだけを足す（J-158）</li>
     <li>プラグインにも、このエンジンそのものを渡す（4.7）。ホストに使えてプラグインに使えない API は作らない</li>
     <li>DI コンテナには依存しない。ASP.NET Core などから使うときのための <code>services.AddVivace(...)</code> は、API 層を作るときに別のパッケージで足す</li>
-    <li><code>InjectAsync</code> は、要求（<code>InjectRequest</code>）を窓口で検査し、受け付けたら連番を、拒否なら理由を返す（D2 2.8）。<code>RunUntilAsync</code> の外では、ロック（<code>System.Threading.Lock</code>）を取ってその場で処理する。中では、コマンドを <code>Channel</code> に入れ、ループが各回の先頭で取り出す。ループが決める側の出力を待っている間も、コマンドが届けば起きて処理する。<code>RunUntilAsync</code> を抜けるときは、残ったコマンドをすべて処理してから、外の扱いに戻す。検査は、処理する時点（ループの中では取り出した時点）の状態とキューと時計の時刻で行う。時計の待ちは、いまはコマンドで起きない（<code>SystemClock</code> を作るときに D1 1.4 に合わせる、J-157）</li>
+    <li><code>InjectAsync</code> は、要求（<code>InjectRequest</code>）を投入 API で検査し、受け付けたら連番を、拒否なら理由を返す（D2 2.8）。<code>RunUntilAsync</code> の外では、ロック（<code>System.Threading.Lock</code>）を取ってその場で処理する。中では、コマンドを <code>Channel</code> に入れ、ループが各回の先頭で取り出す。ループが決める側の出力を待っている間も、コマンドが届けば起きて処理する。<code>RunUntilAsync</code> を抜けるときは、残ったコマンドをすべて処理してから、外の扱いに戻す。検査は、処理する時点（ループの中では取り出した時点）の状態とキューと時計の時刻で行う。時計の待ちは、いまはコマンドで起きない（<code>SystemClock</code> を作るときに D1 1.4 に合わせる、J-157）</li>
   </ul>
   <div class="callout">
     <span class="label">決定 P-27　公開 API はビルダーとエンジンの1クラス</span>

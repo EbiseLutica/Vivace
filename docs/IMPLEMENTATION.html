@@ -255,7 +255,7 @@
   <p>1つの定義から生成するインスタンスは1つだけ（VISION 2章）なので、ペルソナのインスタンス ID からワールド ID を外す。あわせて、定義の ID に型を作り、インスタンスの ID から定義を引けないようにする。公開 API と CLI（3-2）で ID が外に見える前に、形を決める。</p>
   <p><strong>参照</strong>：<a href="design/3-data.html#domain">D3 3.7（P-22、J-150）</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" checked disabled>定義の ID の型（<code>WorldDefId</code>、<code>PersonaDefId</code>）を作り、<code>Definitions</code> の辞書のキー、状態とペイロードの <code>DefId</code>、ペルソナ定義の居住ワールド、投入の窓口の引数をこの型にする。インスタンスの ID の中身を剥がして定義を引いているところ（<code>defs.Worlds[persona.World.Value]</code> など）は、インスタンスの <code>DefId</code> から引く形にする。振る舞いは変えず、<code>.verified.txt</code> の差分がないことを確かめる</li>
+    <li><input type="checkbox" checked disabled>定義の ID の型（<code>WorldDefId</code>、<code>PersonaDefId</code>）を作り、<code>Definitions</code> の辞書のキー、状態とペイロードの <code>DefId</code>、ペルソナ定義の居住ワールド、投入 API の引数をこの型にする。インスタンスの ID の中身を剥がして定義を引いているところ（<code>defs.Worlds[persona.World.Value]</code> など）は、インスタンスの <code>DefId</code> から引く形にする。振る舞いは変えず、<code>.verified.txt</code> の差分がないことを確かめる</li>
     <li><input type="checkbox" checked disabled>ペルソナの生成で、インスタンス ID を「定義 ID@ワールド ID」から定義 ID にする</li>
     <li><input type="checkbox" checked disabled>テストで、古い形の ID を書いているところを直す。乱数列はインスタンス ID から派生させるので、ID が変わると乱数を引いた結果も変わる。スナップショットは更新し、変わった理由が ID の形と乱数列の違いで説明できることを確かめる</li>
   </ul>
@@ -275,8 +275,8 @@
   <p><strong>範囲外</strong>：振る舞いの変更、公開範囲（必要になってから public にする。バージョン 0 で、API を変えてよい段階のため）。</p>
   <p><strong>完了条件</strong>：既存のテストがすべて通り、<code>.verified.txt</code> の差分がない。設計書とコードの名前が一致する。</p>
 
-  <h4 id="phase3-2b">3-2b 公開 API と投入の窓口</h4>
-  <p>外から投入し、適用の記録を購読し、ビルダーで組めるようにする。投入の窓口は、ルールのテーブルにある型（<code>world.created</code>、<code>persona.created</code>）だけを検査して受け付け、ほかの型は「未対応」で拒否する。型ごとの検査は、その型のルールを作る PR（3-3〜3-8）で足す。</p>
+  <h4 id="phase3-2b">3-2b 公開 API と投入 API</h4>
+  <p>外から投入し、適用の記録を購読し、ビルダーで組めるようにする。投入 API は、ルールのテーブルにある型（<code>world.created</code>、<code>persona.created</code>）だけを検査して受け付け、ほかの型は「未対応」で拒否する。型ごとの検査は、その型のルールを作る PR（3-3〜3-8）で足す。</p>
   <p><strong>参照</strong>：<a href="design/4-components.html#api">D4 4.6</a>、<a href="design/2-events.html#injection">D2 2.8</a>、<a href="design/1-execution.html#clock">D1 1.10</a></p>
   <ul class="tasks">
     <li><input type="checkbox" checked disabled><code>InjectRequest</code>（投入するイベントと時刻の指定。指定がなければ、エンジンが処理した時点の時計の時刻）と <code>InjectResult</code>（受け付けたら連番、拒否なら理由。<code>Accepted</code> を持つ）</li>
@@ -286,10 +286,10 @@
     <li><input type="checkbox" checked disabled><code>View</code>（いまの <code>SimState</code> を返す）</li>
     <li><input type="checkbox" checked disabled><code>VivaceEngine.Create()</code> とビルダー（<code>VivaceEngineBuilder</code>）：<code>UseDefinitions</code>、<code>UseStorage</code>、<code>UseClock</code>、<code>UseDecider</code>、<code>UseHolidays</code>、<code>UseRandom</code>、<code>DryRun()</code>。<code>Build()</code> は、定義のエラー、保存先なし、時計なしを例外にする</li>
     <li><input type="checkbox" checked disabled><code>Scenario.CreateAsync</code> にして <code>InjectAsync</code> を使い、テストの呼び出し側を合わせる</li>
-    <li><input type="checkbox" checked disabled>設計書：窓口の受け付ける型、キューにある生成の扱い、<code>View</code> の形、購読の容量、ビルダーの必須項目を、D2 2.8 と D4 4.6 の本文に書き、<code>index.html</code> に J-154 から番号を振って載せる（合意の印）</li>
+    <li><input type="checkbox" checked disabled>設計書：投入 API の受け付ける型、キューにある生成の扱い、<code>View</code> の形、購読の容量、ビルダーの必須項目を、D2 2.8 と D4 4.6 の本文に書き、<code>index.html</code> に J-154 から番号を振って載せる（合意の印）</li>
   </ul>
   <p><strong>範囲外</strong>：ルールのない型の検査、<code>SystemClock</code>（段階5）、デーモン、LLM、プラグイン、チャンネル。</p>
-  <p><strong>完了条件</strong>：窓口の検査（過去の時刻、未対応の型、定義がない、ワールドがない、キューの <code>world.created</code> で通る、要求より後のキューの <code>world.created</code> は拒否）のテストがある。実行中の <code>InjectAsync</code> で、投入した <code>persona.created</code> が投入した時刻以降に適用されるテストがある。<code>Subscribe</code> の順と適用の記録（連番と ApplyNo）が一致する。遅い購読者が切断され、エンジンは最後まで回る。ビルダーが例外を投げる。既存のテストと <code>.verified.txt</code> の差分がない。</p>
+  <p><strong>完了条件</strong>：投入 API の検査（過去の時刻、未対応の型、定義がない、ワールドがない、キューの <code>world.created</code> で通る、要求より後のキューの <code>world.created</code> は拒否）のテストがある。実行中の <code>InjectAsync</code> で、投入した <code>persona.created</code> が投入した時刻以降に適用されるテストがある。<code>Subscribe</code> の順と適用の記録（連番と ApplyNo）が一致する。遅い購読者が切断され、エンジンは最後まで回る。ビルダーが例外を投げる。既存のテストと <code>.verified.txt</code> の差分がない。</p>
 
   <h4 id="phase3-2c">3-2c CLI の validate と dry-run</h4>
   <p>定義を読んで確かめる <code>vivace validate</code> と、仮想時計で回して1週間を読める形で出す <code>vivace dry-run</code> を作る。以後の PR の振る舞いの変化は、この <code>dry-run</code> で見せる。</p>

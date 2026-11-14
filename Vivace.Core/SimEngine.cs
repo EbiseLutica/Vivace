@@ -26,7 +26,7 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly RuleContext _ctx;
     /// <summary>イベントの適用のエントリポイント。</summary>
     private readonly EventApplier _applier;
-    /// <summary>投入の窓口の検査。</summary>
+    /// <summary>投入 API の検査。</summary>
     private readonly InjectionValidator _validator;
     private readonly IDecider _decider;
     private readonly IStorage _storage;
@@ -97,7 +97,7 @@ public sealed class SimEngine : IAsyncDisposable
     public IReadOnlyList<LoggedEvent> Log => _log;
 
     /// <summary>
-    /// 投入の窓口。要求を検査し、通ればキューに入れて連番を、通らなければ拒否の理由を返す。
+    /// 投入 API。要求を検査し、通ればキューに入れて連番を、通らなければ拒否の理由を返す。
     /// 実行中でなければその場で処理し、実行中は、ループが次の回の先頭で処理する。
     /// 検査は、処理する時点の状態とキューと時計の時刻で行う。
     /// </summary>

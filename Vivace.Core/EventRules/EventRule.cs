@@ -26,7 +26,7 @@ internal abstract class EventRule<TPayload> : IEventRule
     public string? CheckInjection(RuleContext ctx, SimState state, IEnumerable<SimEvent> pending, EventPayload payload, DateTimeOffset at) =>
         payload is TPayload typed ? CheckInjection(ctx, state, pending, typed, at) : "中身の型が違う";
 
-    /// <summary>窓口から投入されるイベントを、ペイロードを型つきで受け取って検査する。既定は投入を受け付けない。</summary>
+    /// <summary>投入 API から入るイベントを、ペイロードを型つきで受け取って検査する。既定は投入を受け付けない。</summary>
     /// <param name="ctx">規則のコンテキスト。</param>
     /// <param name="state">いまの状態。</param>
     /// <param name="pending">未適用のイベント。</param>

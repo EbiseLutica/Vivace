@@ -8,7 +8,7 @@ using Vivace.Testing;
 
 namespace Vivace.Tests.Injection;
 
-/// <summary>投入の窓口の検査。共通の検査（時刻、型）と、ワールドとペルソナの生成の検査を確かめる。</summary>
+/// <summary>投入 API の検査。共通の検査（時刻、型）と、ワールドとペルソナの生成の検査を確かめる。</summary>
 public class InjectionValidatorTests
 {
     private static readonly PersonaDefId KaoriDef = new("kaori");

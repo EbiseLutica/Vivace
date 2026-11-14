@@ -16,7 +16,7 @@ internal interface IEventRule
     /// <param name="ev">適用するイベント。</param>
     ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev);
 
-    /// <summary>窓口から投入されるイベントを検査する。通らなければ拒否の理由を返す。</summary>
+    /// <summary>投入 API から入るイベントを検査する。通らなければ拒否の理由を返す。</summary>
     /// <param name="ctx">規則のコンテキスト。</param>
     /// <param name="state">いまの状態。</param>
     /// <param name="pending">未適用のイベント。</param>
