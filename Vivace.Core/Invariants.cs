@@ -81,7 +81,7 @@ public static class Invariants
                     or EventTypes.TravelStarted
                     || ev.Payload is BlockStartedPayload { BlockId: null }))
             {
-                throw new InvariantViolationException($"自由時間なのに、決めどきが予定されていません（手空き）: {persona.Id}");
+                throw new InvariantViolationException($"自由時間なのに、決めどきが予定されていません（アイドル）: {persona.Id}");
             }
         }
     }
