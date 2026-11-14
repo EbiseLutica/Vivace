@@ -113,7 +113,7 @@ public static class EventTypes
     /// <summary>受信箱の処理の結果。</summary>
     public const string InboxHandled = "inbox.handled";
 
-    /// <summary>投稿の空振り。</summary>
+    /// <summary>投稿のスキップ。</summary>
     public const string PostSkipped = "post.skipped";
 
     private static readonly ImmutableArray<EventTypeInfo> Table = ImmutableArray.Create(

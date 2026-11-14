@@ -78,7 +78,7 @@
     <li><strong>行動</strong>：ペルソナの <code>use</code> に当たる行動から、<code>schedule_only</code> の行動（D3 3.6）と、<code>forbid</code> に当たる行動を外す。<code>forbid</code> は2か所にある。ペルソナ定義の <code>prefs</code>（その人がしないこと）と、いま付いている状態（風邪のときは外に出ない、など。D2 2.7）</li>
     <li><strong>場所</strong>：ワールドの場所（定義の場所 + 採用済みの生えた場所）から、閉鎖中のものを外す。場所を固定するブロックの中なら、その場所だけ</li>
     <li><strong>requires</strong>：場所のタグ、携行品、チャンネル（つながっていて、圏外でない）を満たす組だけ残す</li>
-    <li><strong>制限</strong>：クールダウン、1日の回数、時刻の範囲（開始時刻で判定）。投稿は、チャンネルの頻度制限と空振りのクールダウンも重ねる</li>
+    <li><strong>制限</strong>：クールダウン、1日の回数、時刻の範囲（開始時刻で判定）。投稿は、チャンネルの頻度制限とスキップのクールダウンも重ねる</li>
     <li><strong>所要時間</strong>：残った組ごとに、行動 ID と場所 ID の順に並べてから乱数で引く（<code>core.go_to_next</code> は所要時間を引かない。D2 2.5、J-112）（並びを固定して、結果を再現できるようにする）</li>
     <li><strong>帰還できるか</strong>：VISION 5章の式で、次のブロックの開始に間に合うものだけ残す。次のブロックは、プランの中で次に来る固定か計画のブロック。なければ、プランの終わり</li>
     <li><strong>次の予定の場所へ向かう</strong>：<code>core.go_to_next</code> を必ず足す。これで候補は空にならない（VISION 5章）。所要時間は持たず、着いたあとの待ちは次の予定の開始まで。なければプランの終わり（J-112）。だから <code>core.go_to_next</code> は <code>forbid</code> の対象にしない。ペルソナ定義で明示的に外そうとしたら、読み込みのエラー（D7 7.2）にする。付いている状態の <code>forbid</code> に当たったときは、無視して候補に残し、ログに警告を出す（本来は当たってほしくないので、気づけるようにする。状態の <code>forbid</code> は行動タグでも書けて、何に当たるかを前もって全部は確かめられないため、エラーにはしない）</li>
@@ -353,7 +353,7 @@ NextInt    = 乗算と棄却による偏りのない方法（Lemire）。64 ビ�
   <ul>
     <li>出来事の抽選（D5 5.8）は1日1回なので、位置を持たない。用途を <code>incident/{現地の日付}</code> にして、毎日 0 番から引く。ワールド向けもペルソナ向けも同じ。何も起きなかった日は出力が 0 件でも、翌日は別の列になる（J-123）。位置を保存するのは <code>decide</code> と <code>sns</code> の用途だけ</li>
     <li>SplitMix64 は、i 番目の値を i から直接計算できる（カウンタ方式）。だから、保存するのは「引いた回数」だけでよい（VISION 4章「引いた回数のカウンタを、状態として保存する」とそのまま合う。出来事の抽選を除く。J-123）。状態の中では、用途ごとの位置を <code>Rng</code> に持つ（D3 3.7）</li>
-    <li>決める側は、スナップショットの位置から引き始め、出力に「どの列の、どこからどこまで引いたか」を記録する。その範囲は <code>RngDraws</code>（持ち主、用途、引き始めと引き終わりの位置）で持つ。対象は、行動の決定（<code>activity.chosen</code>）、予定の乱れへの対応（<code>block.responded</code>）、外向きの発話（<code>outbound.speech</code>）、受信箱の処理（<code>inbox.handled</code>）、場所の追加（<code>place.added</code>）、投稿の空振り（<code>post.skipped</code>）（J-120）。Apply は、位置が同じことを guard で確かめてから進める（D1 1.7）</li>
+    <li>決める側は、スナップショットの位置から引き始め、出力に「どの列の、どこからどこまで引いたか」を記録する。その範囲は <code>RngDraws</code>（持ち主、用途、引き始めと引き終わりの位置）で持つ。対象は、行動の決定（<code>activity.chosen</code>）、予定の乱れへの対応（<code>block.responded</code>）、外向きの発話（<code>outbound.speech</code>）、受信箱の処理（<code>inbox.handled</code>）、場所の追加（<code>place.added</code>）、投稿のスキップ（<code>post.skipped</code>）（J-120）。Apply は、位置が同じことを guard で確かめてから進める（D1 1.7）</li>
     <li><code>string.GetHashCode()</code> と <code>System.Random</code> は使わない（VISION 4章）。SHA-256 と SplitMix64 は、どの環境でも同じ値になる</li>
   </ul>
   <div class="callout">

@@ -96,7 +96,7 @@
       <tr><td>予定ブロックの interruptible が要るか（10章）</td><td>P-33 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
       <tr><td>長い固定ブロックの途中の「スマホを開く機会」（10章）</td><td>P-32 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#special">D5 5.4</a></td></tr>
       <tr><td>フォローバックの方針の持ち方（10章）</td><td>P-44 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
-      <tr><td>空振りのクールダウンの細部（11章）</td><td>P-45 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
+      <tr><td>スキップのクールダウンの細部（11章）</td><td>P-45 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
       <tr><td>新しい場所のつなぎ方の細部（11章）</td><td>P-46 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
       <tr><td>記憶力の調整方式（13章）</td><td>P-47 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
       <tr><td>同行で片方が欠席したときの扱い（14章）</td><td>P-40 <span class="chip fixed">合意</span></td><td><a href="5-decision.html#together">D5 5.11</a></td></tr>
@@ -154,7 +154,7 @@
       <tr><td>P-42</td><td>モデルは Main と Light の2段 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#tiers">D6 6.1</a></td></tr>
       <tr><td>P-43</td><td>記憶の検索に埋め込みを使わない <span class="chip fixed">合意</span></td><td><a href="6-llm.html#retrieval">D6 6.4</a></td></tr>
       <tr><td>P-44</td><td>フォローバックの方針は、コアが読む（ペルソナ定義の <code>[sns]</code>） <span class="chip fixed">合意</span></td><td><a href="6-llm.html#inbox">D6 6.5</a></td></tr>
-      <tr><td>P-45</td><td>空振りのクールダウンは 30 分 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
+      <tr><td>P-45</td><td>スキップのクールダウンは 30 分 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
       <tr><td>P-46</td><td>新しい場所のつなぎ方の細部 <span class="chip fixed">合意</span></td><td><a href="6-llm.html#post">D6 6.6</a></td></tr>
       <tr><td>P-47</td><td>記憶力は、半減期の倍率で調整する <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
       <tr><td>P-48</td><td>記憶の整理の層とカーソル <span class="chip fixed">合意</span></td><td><a href="6-llm.html#consolidate">D6 6.7</a></td></tr>
@@ -277,7 +277,7 @@
       <tr><td>J-117</td><td>同行の時刻、場所、行動は、同じ日の両者の解決結果で比べ、一致しなければ警告する。片側判定は例外日のブロックも見る <span class="chip fixed">合意</span></td><td><a href="5-decision.html#together">D5 5.11</a></td></tr>
       <tr><td>J-118</td><td>数は有限で範囲内に書く。確率は 0〜1、状態変数の初期値と反射や状態のしきい値は 0〜100、社交欲求の下限と上限は −100〜100、率と増減（行動、状態、出来事）は −1000〜1000、復元は気力、健康度、退屈度が 0〜100、社交欲求が −100〜100、重みと好みは 0 以上、<code>repeat_decay</code> は 0 より大きく 1 以下、<code>max_per_day</code> は int の範囲。社交欲求にはしきい値がない（D5 5.6）ので、反射と状態のしきい値に書けない。出来事の対象と効果の組み合わせは D2 2.7 の表のとおり。slow_place は場所（place か place_tag）のどちらか一方と、add か factor の少なくとも一方 <span class="chip fixed">合意</span></td><td><a href="2-events.html#incident-effects">D2 2.7</a>、<a href="3-data.html#action-def">D3 3.6</a></td></tr>
       <tr><td>J-119</td><td>出来事の発生は、解決済みの効果（対象の場所を含む）をペイロードと発生中の出来事に持つ。その場の定義は <code>DefId</code> を null にする。移動時間と閉鎖の両方を残せる <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a>、<a href="3-data.html#sqlite">3.8</a>、<a href="2-events.html#types">D2 2.3</a></td></tr>
-      <tr><td>J-120</td><td>乱数を引いた出力は、引いた範囲（<code>RngDraws</code>）を持つ。対象は、行動の決定、予定の乱れへの対応、外向きの発話、受信箱の処理、場所の追加、投稿の空振り。「何もしない」を選んだときは副行動 <code>core.idle</code> を所要時間 0 で記録する（J-129） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#rng">D5 5.9</a>、<a href="5-decision.html#special">D5 5.4</a></td></tr>
+      <tr><td>J-120</td><td>乱数を引いた出力は、引いた範囲（<code>RngDraws</code>）を持つ。対象は、行動の決定、予定の乱れへの対応、外向きの発話、受信箱の処理、場所の追加、投稿のスキップ。「何もしない」を選んだときは副行動 <code>core.idle</code> を所要時間 0 で記録する（J-129） <span class="chip fixed">合意</span></td><td><a href="5-decision.html#rng">D5 5.9</a>、<a href="5-decision.html#special">D5 5.4</a></td></tr>
       <tr><td>J-121</td><td>移動の経路は、移動時間つきの辺の列（From、To、Minutes）で持つ。経路の同点は場所の ID の順で選ぶ <span class="chip fixed">合意</span></td><td><a href="5-decision.html#routes">D5 5.10</a></td></tr>
       <tr><td>J-122</td><td>チャンネルの設定とペイロードの中身は、不変の <code>JsonElement</code> で持つ（可変の JSON を状態に入れない。P-21） <span class="chip fixed">合意</span></td><td><a href="3-data.html#json">D3 3.9</a></td></tr>
       <tr><td>J-124</td><td>プランのブロックは、電話の指定、間隔、同行、同行者が抜けたときの扱いを、プランを作ったときの固定予定からコピーして持つ。<code>BlockId</code> は自由時間だけ null（固定と計画のブロックは非 null） <span class="chip fixed">合意</span></td><td><a href="3-data.html#domain">D3 3.7</a></td></tr>
