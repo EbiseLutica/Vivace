@@ -23,19 +23,19 @@ public static class Invariants
     {
         if (state.Cursor.Time < previousTime)
         {
-            throw new InvariantViolationException($"時刻が戻った: {previousTime:o} -> {state.Cursor.Time:o}");
+            throw new InvariantViolationException($"時刻が戻りました: {previousTime:o} -> {state.Cursor.Time:o}");
         }
 
         if (earliestPending is { } earliest && earliest < state.Cursor.Time)
         {
-            throw new InvariantViolationException($"未適用のイベントが現在位置より前にある: {earliest:o} < {state.Cursor.Time:o}");
+            throw new InvariantViolationException($"未適用のイベントが現在位置より前にあります: {earliest:o} < {state.Cursor.Time:o}");
         }
 
         foreach (var persona in state.Personas.Values.Where(p => p.Status == PersonaStatus.Alive))
         {
             if (!VitalRules.InRange(persona, ctx.Defs))
             {
-                throw new InvariantViolationException($"状態変数が範囲の外: {persona.Id}");
+                throw new InvariantViolationException($"状態変数が範囲の外です: {persona.Id}");
             }
 
             if (busy.Contains(persona.Id))
@@ -46,7 +46,7 @@ public static class Invariants
             var events = pending[persona.Id].ToList();
             if (persona.Deciding && !events.Any(ev => ev.EventType == EventTypes.ActivityChosen))
             {
-                throw new InvariantViolationException($"決め中なのに、決める仕事が動いていない: {persona.Id}");
+                throw new InvariantViolationException($"決め中なのに、決める仕事が動いていません: {persona.Id}");
             }
 
             if (persona.Activity is { } activity)
@@ -56,7 +56,7 @@ public static class Invariants
                     && end.ActivityVersion == persona.ActivityVersion);
                 if (!ended)
                 {
-                    throw new InvariantViolationException($"行動中なのに、同じ版の行動の終わりが予定されていない: {persona.Id}");
+                    throw new InvariantViolationException($"行動中なのに、同じ版の行動の終わりが予定されていません: {persona.Id}");
                 }
 
                 continue;
@@ -64,12 +64,12 @@ public static class Invariants
 
             if (persona.Location is Traveling && !events.Any(ev => ev.EventType == EventTypes.TravelArrived))
             {
-                throw new InvariantViolationException($"移動中なのに、到着が予定されていない: {persona.Id}");
+                throw new InvariantViolationException($"移動中なのに、到着が予定されていません: {persona.Id}");
             }
 
             if (persona.Location is AtPlace && events.Count == 0)
             {
-                throw new InvariantViolationException($"次の自分のイベントがない（止まっている）: {persona.Id}");
+                throw new InvariantViolationException($"次の自分のイベントがありません（止まっています）: {persona.Id}");
             }
 
             if (persona.Location is AtPlace
@@ -81,7 +81,7 @@ public static class Invariants
                     or EventTypes.TravelStarted
                     || ev.Payload is BlockStartedPayload { BlockId: null }))
             {
-                throw new InvariantViolationException($"自由時間なのに、決めどきが予定されていない（手空き）: {persona.Id}");
+                throw new InvariantViolationException($"自由時間なのに、決めどきが予定されていません（手空き）: {persona.Id}");
             }
         }
     }
@@ -93,7 +93,7 @@ public static class Invariants
     {
         if (streak > MaxAppliedAtOneInstant)
         {
-            throw new InvariantViolationException($"時刻が進まないまま、{streak} 件を超えて適用が続いた");
+            throw new InvariantViolationException($"時刻が進まないまま、{streak} 件を超えて適用が続きました。");
         }
     }
 }

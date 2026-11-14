@@ -75,7 +75,7 @@ public static class Scenario
         var result = await engine.InjectAsync(request, CancellationToken.None);
         if (!result.Accepted)
         {
-            throw new InvalidOperationException($"シナリオの投入が拒否された（{request.EventType}）: {result.Reason}");
+            throw new InvalidOperationException($"シナリオの投入が拒否されました（{request.EventType}）: {result.Reason}");
         }
     }
 }

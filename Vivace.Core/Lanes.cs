@@ -33,7 +33,7 @@ public sealed class Lanes
             {
                 if (!target.Jobs.Writer.TryWrite(work))
                 {
-                    throw new InvalidOperationException($"レーン {lane} が止まっていて、仕事を受けられない", target.Fault);
+                    throw new InvalidOperationException($"レーン {lane} が止まっていて、仕事を受けられません。", target.Fault);
                 }
 
                 return;
@@ -41,7 +41,7 @@ public sealed class Lanes
 
             if (_completed)
             {
-                throw new InvalidOperationException($"レーンは終わっていて、レーン {lane} を作れない");
+                throw new InvalidOperationException($"レーンは終わっていて、レーン {lane} を作れません。");
             }
 
             target = new Lane(ex => _failure.TrySetResult(ex));

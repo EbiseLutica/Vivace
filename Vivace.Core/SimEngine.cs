@@ -164,7 +164,7 @@ public sealed class SimEngine : IAsyncDisposable
         {
             if (_looping)
             {
-                throw new InvalidOperationException("RunUntilAsync はすでに走っている");
+                throw new InvalidOperationException("RunUntilAsync はすでに走っています。");
             }
 
             _looping = true;
@@ -289,7 +289,7 @@ public sealed class SimEngine : IAsyncDisposable
             {
                 if (!_subscribers[i].Writer.TryWrite(logged))
                 {
-                    _subscribers[i].Writer.TryComplete(new InvalidOperationException("購読が追いつかず、溜まった件数が容量を超えたので切断した"));
+                    _subscribers[i].Writer.TryComplete(new InvalidOperationException("購読が追いつかず、溜まった件数が容量を超えたので切断しました。"));
                     _subscribers.RemoveAt(i);
                 }
             }
@@ -322,7 +322,7 @@ public sealed class SimEngine : IAsyncDisposable
     {
         if (_lanes.Failure.IsCompleted)
         {
-            throw new InvalidOperationException("決める側のレーンの仕事が失敗した", _lanes.Failure.Result);
+            throw new InvalidOperationException("決める側のレーンの仕事が失敗しました。", _lanes.Failure.Result);
         }
     }
 
@@ -487,7 +487,7 @@ public sealed class SimEngine : IAsyncDisposable
 
         if (output.Error is { } error)
         {
-            throw new InvalidOperationException($"決める側の仕事が失敗した（決めどき {output.BatchSeq}）: {error}");
+            throw new InvalidOperationException($"決める側の仕事が失敗しました（決めどき {output.BatchSeq}）: {error}");
         }
 
         _held.Add(output);
