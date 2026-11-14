@@ -18,7 +18,7 @@ public static class DryRunReport
     private static readonly string[] Weekdays = ["日", "月", "火", "水", "木", "金", "土"];
 
     /// <summary>終わりの記録がない行の、終わりの表記。</summary>
-    private const string Unfinished = "--:--";
+    private const string Unfinished = "未終了";
 
     /// <summary>記録から行動表と件数を組み立てる。改行は LF。</summary>
     /// <param name="records">保存先の記録（追加された順）。</param>

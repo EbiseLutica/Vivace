@@ -50,7 +50,7 @@ public class DryRunReportTests
             + "kaori\n"
             + "  07:00-07:30 [予定] eat_breakfast @kaori_room\n"
             + "  08:10-08:25 移動 kaori_room → school\n"
-            + "  08:25---:-- [自由] study @school\n"
+            + "  08:25-未終了 [自由] study @school\n"
             + "shiori\n"
             + "  07:30-07:50 [自由] read @home_living\n"
             + "\n"

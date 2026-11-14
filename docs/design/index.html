@@ -319,7 +319,7 @@
       <tr><td>J-161</td><td>ビルダー（<code>VivaceEngineBuilder</code>）では、定義、保存先、時計を必須にし、欠けていれば <code>Build()</code> が例外を投げる。定義のフォルダにエラーがあるときも例外にする。実時間の時計（<code>SystemClock</code>）を作る段階5 までは、時計の既定を置かない。<code>DryRun()</code> は、チャンネルと配信役ができるまではフラグだけを持つ。省略できるのは、決定（既定は効用による決定）、祝日のカレンダー（既定は祝日なし）、乱数（既定は SplitMix） <span class="chip fixed">合意</span></td><td><a href="4-components.html#api">D4 4.6</a></td></tr>
       <tr><td>J-162</td><td><code>vivace validate</code> の出力と終了コード：問題は読み込みの並びのまま、1行ずつ「位置: 重大度 コード: 文面」で出し、最後に件数を出す。エラーがあれば 1、なければ 0。定義のフォルダがないときは、その旨を出して 1 <span class="chip fixed">合意</span></td><td><a href="7-operations.html#validation">D7 7.2</a></td></tr>
       <tr><td>J-163</td><td><code>vivace dry-run</code> の既定の開始とシードは、テスト用の <code>Scenario.Start</code> と <code>Scenario.WorldSeed</code> を共有する（値を2か所に書かない）。定義にあるワールドは、ID の序数順にすべて生成し、<code>--seed</code> の値を全ワールドに使う（ワールドごとの種は定義にないため）。投入の発生元は管理者 <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
-      <tr><td>J-164</td><td>行動表の形：日は現地の日付で区切り、行の開始の日に入れる（日をまたぐ行も開始の日）。日の中は人を ID の序数順に、行は開始の順に並べる。理由の表記は 予定、自由、反射、遅刻。終わりの記録（<code>action.ended</code> か <code>travel.arrived</code>）がない行は終わりを <code>--:--</code> にする <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
+      <tr><td>J-164</td><td>行動表の形：日は現地の日付で区切り、行の開始の日に入れる（日をまたぐ行も開始の日）。日の中は人を ID の序数順に、行は開始の順に並べる。理由の表記は 予定、自由、反射、遅刻。終わりの記録（<code>action.ended</code> か <code>travel.arrived</code>）がない行は、終わりを「未終了」にする <span class="chip fixed">合意</span></td><td><a href="7-operations.html#cli">D7 7.5</a></td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>
