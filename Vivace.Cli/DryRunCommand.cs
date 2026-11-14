@@ -24,7 +24,7 @@ public static class DryRunCommand
     {
         if (!TryEndOf(start, days, out var until))
         {
-            output.WriteLine("--days が大きすぎて、終わりの時刻を計算できません。");
+            output.WriteLine("開始と日数から終わりの時刻を計算できません。");
             return 1;
         }
 
@@ -80,12 +80,13 @@ public static class DryRunCommand
         return 0;
     }
 
-    /// <summary>開始から days 日後の時刻を求める。範囲を超えて計算できなければ false。</summary>
+    /// <summary>開始から days 日後の時刻を求める。その1日後まで計算できなければ false（日付の計算が範囲の端で落ちないように）。</summary>
     private static bool TryEndOf(DateTimeOffset start, int days, out DateTimeOffset until)
     {
         try
         {
             until = start.AddDays(days);
+            _ = until.AddDays(1);
             return true;
         }
         catch (ArgumentOutOfRangeException)

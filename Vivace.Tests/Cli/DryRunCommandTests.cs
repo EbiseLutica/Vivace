@@ -90,6 +90,20 @@ public class DryRunCommandTests
         var code = await DryRunCommand.RunAsync(folder.Path, int.MaxValue, Scenario.WorldSeed, Scenario.Start, output, CancellationToken.None);
 
         Assert.Equal(1, code);
-        Assert.Equal("--days が大きすぎて、終わりの時刻を計算できません。\n", output.ToString());
+        Assert.Equal("開始と日数から終わりの時刻を計算できません。\n", output.ToString());
+    }
+
+    /// <summary>開始が日付の範囲の端で、終わりの1日後が計算できなければ、--days が小さくても 1 を返す。</summary>
+    [Fact]
+    public async Task StartNearDateRangeEndExitsOne()
+    {
+        using var folder = new DefinitionFolder(TestWorld.Files());
+        var output = new StringWriter { NewLine = "\n" };
+        var nearEnd = new DateTimeOffset(9999, 12, 30, 0, 0, 0, TimeSpan.Zero);
+
+        var code = await DryRunCommand.RunAsync(folder.Path, 1, Scenario.WorldSeed, nearEnd, output, CancellationToken.None);
+
+        Assert.Equal(1, code);
+        Assert.Equal("開始と日数から終わりの時刻を計算できません。\n", output.ToString());
     }
 }
