@@ -110,9 +110,12 @@ public sealed class VivaceEngineBuilder
     {
         var definitions = LoadDefinitions();
         var storage = _storage ?? throw new InvalidOperationException("ストレージが渡されていません。 UseStorage で指定してください。");
-        var clock = _clock ?? new SystemClock();
+        var clock = ResolveClock();
         return new VivaceEngine(SimEngine.Create(definitions, storage, _random ?? new SplitMixRandomSource(), clock, _decider, _holidays));
     }
+
+    /// <summary>使う時計を返す。渡されていなければ、実時間の SystemClock。</summary>
+    internal IClock ResolveClock() => _clock ?? new SystemClock();
 
     /// <summary>指定された定義を返す。フォルダなら読み込み、エラーがあれば例外にする。</summary>
     private DefinitionPack LoadDefinitions()

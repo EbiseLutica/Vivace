@@ -10,12 +10,16 @@ namespace Vivace.Tests.Engine;
 /// <summary>公開 API のビルダー。必須のもの（定義、保存先）が欠けると例外になり、そろえば組んだエンジンが動く。時計は省略できる。</summary>
 public class VivaceEngineBuilderTests
 {
-    /// <summary>時計を省略すると、実時間の SystemClock で組まれ、例外にならない。</summary>
+    /// <summary>時計を省略すると、実時間の SystemClock が使われ、例外にならない。渡せば、そのまま使われる。</summary>
     [Fact]
-    public async Task BuildWithoutClockUsesSystemClock()
+    public async Task ClockDefaultsToSystemClockAndUsesGivenClock()
     {
-        await using var engine = VivaceEngine.Create().UseDefinitions(TestWorld.LoadOrThrow()).UseStorage(new InMemoryStorage()).Build();
+        Assert.IsType<SystemClock>(VivaceEngine.Create().ResolveClock());
 
+        var clock = new VirtualClock(Scenario.Start);
+        Assert.Same(clock, VivaceEngine.Create().UseClock(clock).ResolveClock());
+
+        await using var engine = VivaceEngine.Create().UseDefinitions(TestWorld.LoadOrThrow()).UseStorage(new InMemoryStorage()).Build();
         Assert.NotNull(engine);
     }
 
