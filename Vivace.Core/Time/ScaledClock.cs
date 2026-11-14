@@ -5,8 +5,8 @@ namespace Vivace.Core.Time;
 /// </summary>
 public sealed class ScaledClock : IClock
 {
-    /// <summary>1回の待ちの上限。長い待ちはこの単位に分け、起きるたびに時刻を読み直す。</summary>
-    private static readonly TimeSpan MaxDelay = TimeSpan.FromDays(1);
+    /// <summary>1回の待ちの上限。長い待ちはこの単位に分け、起きるたびに時刻を読み直す。壁時計が飛んでも、遅れは1回の待ちの上限まで。</summary>
+    private static readonly TimeSpan MaxDelay = TimeSpan.FromMinutes(1);
 
     /// <summary>実時間の経過を読む時計。</summary>
     private readonly TimeProvider _timeProvider;
