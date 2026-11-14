@@ -125,7 +125,7 @@ generated_places = "auto"        # auto | review（VISION 11章）
 not_exist = "魔法や超常現象は存在しない。"   # 存在しないものの一覧（任意）
 
 [calendar]
-holidays = "jp"                  # 祝日の暦の提供元（P-18）。省略時は祝日なし
+holidays = "jp"                  # 祝日のカレンダーの提供元（P-18）。省略時は祝日なし
 events = { "12-24" = "クリスマスイブ", "10-31" = "ハロウィン" }   # 年中行事（Planner への手がかり）
 
 [[term]]                         # 変換の辞書の初期値
@@ -150,12 +150,12 @@ links = { street_home = 1 }</code></pre>
     <li>場所のタグのうち、どの行動の requires にも出てこないものは、読み込み時に警告する（効果がないので）。出来事の <code>slow_place</code>、<code>close_place</code> の <code>place_tag</code> も要求とみなす（J-107）</li>
   </ul>
   <div class="callout">
-    <span class="label">決定 P-18　祝日と年中行事は、ワールドの暦に持つ</span>
+    <span class="label">決定 P-18　祝日と年中行事は、ワールドのカレンダーに持つ</span>
     ebise は、内閣府の祝日 CSV を取得して、学校の休みを判定していた。魔界に日本の祝日はないので、祝日はワールドが決めるものにする。<code>calendar.holidays</code> は提供元の名前で、コアは <code>IHolidayCalendar</code> の口だけを持ち、日本の祝日は別のパッケージ（または同梱のデータ）で提供する。年中行事は、ワールド定義に直接書く。
   </div>
 </section>
 
-<p><strong>暦</strong>（J-140）：祝日の暦は、エンジンの作成時に渡す（<code>IHolidayCalendar</code>、P-18）。段階2 のテストの暦は、2026-11-03 だけを祝日にする。日本の暦は段階8。</p>
+<p><strong>カレンダー</strong>（J-140）：祝日のカレンダーは、エンジンの作成時に渡す（<code>IHolidayCalendar</code>、P-18）。段階2 のテストのカレンダーは、2026-11-03 だけを祝日にする。日本のカレンダーは段階8。</p>
 <section id="persona-def">
   <h2><span class="num">3.4</span>ペルソナ定義</h2>
 <pre><code>id = "kaori"
@@ -296,7 +296,7 @@ place = "home_living"</code></pre>
   </div>
 </section>
 
-<p><strong>暦</strong>（J-140）：固定予定の解決（プラン、学校の休み）は、エンジンに渡した暦を使う。隙間の警告（検証）は、祝日を考えずに全日を見る。</p>
+<p><strong>カレンダー</strong>（J-140）：固定予定の解決（プラン、学校の休み）は、エンジンに渡したカレンダーを使う。隙間の警告（検証）は、祝日を考えずに全日を見る。</p>
 <section id="action-def">
   <h2><span class="num">3.6</span>行動と出来事の定義</h2>
 <pre><code>[[action]]
