@@ -84,7 +84,7 @@ public class EventLineFormatterTests
         var day = new DayStartedPayload(new DateOnly(2026, 11, 1));
         var world = new WorldCreatedPayload(new WorldDefId("testville"), 1);
 
-        Assert.Equal("11-02 07:00 テストの町で 11月01日（日）が始まった", Format(Logged(At(22, 0), EventTypes.DayStarted, day, null, Town), all: true));
+        Assert.Equal("11-02 07:00 テストの町で 11月1日（日）が始まった", Format(Logged(At(22, 0), EventTypes.DayStarted, day, null, Town), all: true));
         Assert.Equal("11-02 07:00 テストの町ができた", Format(Logged(At(22, 0), EventTypes.WorldCreated, world, null, null), all: true));
     }
 

@@ -108,7 +108,7 @@ public class RunCommandTests
 
         var text = output.ToString();
         Assert.Equal(0, code);
-        Assert.Contains("11-01 23:00 テストの町で 11月01日（日）が始まった\n", text, StringComparison.Ordinal);
+        Assert.Contains("11-01 23:00 テストの町で 11月1日（日）が始まった\n", text, StringComparison.Ordinal);
         Assert.Contains("11-01 23:00 香織は香織の部屋で「次の予定の場所へ向かう」（自由）\n", text, StringComparison.Ordinal);
         Assert.Matches(CountPattern, text);
     }

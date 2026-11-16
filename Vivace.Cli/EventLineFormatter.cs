@@ -129,8 +129,8 @@ public static class EventLineFormatter
         : ev.WorldId is { } world ? names.World(world)
         : "-";
 
-    /// <summary>日付の表記。"11月16日（月）" の形。</summary>
+    /// <summary>日付の表記。"11月16日（月）"、ゼロ埋めしない（"11月1日（日）"）の形。</summary>
     /// <param name="date">日付。</param>
     private static string DateLabel(DateOnly date) =>
-        string.Create(CultureInfo.InvariantCulture, $"{date.Month:00}月{date.Day:00}日（{ReportText.Weekday(date)}）");
+        string.Create(CultureInfo.InvariantCulture, $"{date.Month}月{date.Day}日（{ReportText.Weekday(date)}）");
 }
