@@ -58,7 +58,7 @@ public static class DryRunCommand
             world => definitions.Worlds[world.DefId].UtcOffset);
         WorldSetup.WriteHolidayNotices(definitions, output);
 
-        output.Write(DryRunReport.Render(storage.Events, offsets));
+        output.Write(DryRunReport.Render(storage.Events, new DisplayNames(definitions), offsets));
         return 0;
     }
 
