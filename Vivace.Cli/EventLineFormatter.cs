@@ -85,7 +85,7 @@ public static class EventLineFormatter
         switch (ev.Payload)
         {
             case DayStartedPayload day when WorldOf(ev, names) is { } world:
-                return $"{names.World(world)}で {DateLabel(day.Date)}が始まった";
+                return $"{names.World(world)}で{DateLabel(day.Date)}が始まった";
             case WorldCreatedPayload created:
                 return $"{names.World(new WorldId(created.DefId.Value))}ができた";
             case PersonaCreatedPayload created:
@@ -119,7 +119,7 @@ public static class EventLineFormatter
             : $"{who}の予定を{verb}";
     }
 
-    /// <summary>文にできないイベントの表記。</summary>人（またはワールド）があれば前に付け、イベントタイプの名前を括弧で書く。</summary>
+    /// <summary>文にできないイベントの表記。人（またはワールド）があれば前に付け、イベントタイプの名前を括弧で書く。</summary>
     /// <param name="ev">イベント。</param>
     /// <param name="names">表示名を引く表。</param>
     private static string UntypedLabel(SimEvent ev, DisplayNames names) =>

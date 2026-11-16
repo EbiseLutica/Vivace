@@ -93,14 +93,14 @@ public class EventLineFormatterTests
         Assert.Equal("11-02 07:30 香織は「本を読む」を終えた", Format(Logged(At(22, 30), EventTypes.ActionEnded, ended, Kaori), all: true));
     }
 
-    /// <summary>--all の日と世界の文。日付は "11月01日（日）" の形、ワールドは定義の名前。</summary>
+    /// <summary>--all の日と世界の文。日付は "11月1日（日）" の形、ワールドは定義の名前。</summary>
     [Fact]
     public void AllModeWritesDayAndWorldSentences()
     {
         var day = new DayStartedPayload(new DateOnly(2026, 11, 1));
         var world = new WorldCreatedPayload(new WorldDefId("testville"), 1);
 
-        Assert.Equal("11-02 07:00 テストの町で 11月1日（日）が始まった", Format(Logged(At(22, 0), EventTypes.DayStarted, day, null, Town), all: true));
+        Assert.Equal("11-02 07:00 テストの町で11月1日（日）が始まった", Format(Logged(At(22, 0), EventTypes.DayStarted, day, null, Town), all: true));
         Assert.Equal("11-02 07:00 テストの町ができた", Format(Logged(At(22, 0), EventTypes.WorldCreated, world, null, null), all: true));
     }
 
