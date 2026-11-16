@@ -128,13 +128,12 @@ public static class EventLineFormatter
             : $"{PersonaOrWorld(ev, names)}（{ev.EventType}）";
 
     /// <summary>
-    /// イベントのワールド。記録になければ、人（ID か生成のペイロードの定義）のワールド、ワールドの生成ならペイロードのワールド。時差と場所の名前に使う。
+    /// イベントのワールド。記録になければ、ワールドの生成はペイロードのワールド、人の生成はペイロードの人の定義のワールド。時差と場所の名前に使う。
     /// </summary>
     /// <param name="ev">イベント。</param>
     /// <param name="names">表示名を引く表。</param>
     private static WorldId? WorldOf(SimEvent ev, DisplayNames names) =>
         ev.WorldId
-        ?? (ev.PersonaId is { } persona ? names.WorldOf(persona) : null)
         ?? ev.Payload switch
         {
             WorldCreatedPayload created => new WorldId(created.DefId.Value),
