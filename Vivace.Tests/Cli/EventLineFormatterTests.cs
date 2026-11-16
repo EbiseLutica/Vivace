@@ -5,12 +5,14 @@ using Vivace.Core.Domain.State;
 using Vivace.Core.Events;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Storage;
+using Vivace.Testing;
 
 namespace Vivace.Tests.Cli;
 
-/// <summary>流れる出力の1行。手で書いた小さな記録から、既定の4種の書式、時差での日付の繰り上がり、既定で出さないイベント、人のないイベントを確かめる。</summary>
+/// <summary>流れる出力の1行。手で書いた小さな記録と、テスト用の定義の名前から、既定の文、時差での日付の繰り上がり、既定で出さないイベント、--all の文、名前のないものの ID を確かめる。</summary>
 public class EventLineFormatterTests
 {
+    private static readonly DisplayNames Names = new(TestWorld.LoadOrThrow());
     private static readonly PersonaId Kaori = new("kaori");
     private static readonly PlaceId KaoriRoom = new("kaori_room");
     private static readonly PlaceId School = new("school_2a");
@@ -18,7 +20,7 @@ public class EventLineFormatterTests
     private static readonly Dictionary<WorldId, TimeSpan> Offsets = new() { [Town] = TimeSpan.FromHours(9) };
 
     /// <summary>
-    /// 行動と移動の開始と終わりは、現地の時刻の行になる。UTC 22:00 は、時差 +09:00 で翌日の 07:00。
+    /// 行動と移動の開始と終わりは、現地の時刻の文になる。UTC 22:00 は、時差 +09:00 で翌日の 07:00。
     /// </summary>
     [Fact]
     public void DefaultModeShowsActionAndTravelStartAndEnd()
@@ -28,10 +30,10 @@ public class EventLineFormatterTests
         var travel = new TravelStartedPayload(KaoriRoom, School, [], At(23, 10), 2);
         var arrived = new TravelArrivedPayload(School, 2);
 
-        Assert.Equal("11-02 07:00 kaori [予定] attend_class @school_2a", Format(Logged(At(22, 0), EventTypes.ActionStarted, started, Kaori)));
-        Assert.Equal("11-02 07:30 kaori 終わり attend_class", Format(Logged(At(22, 30), EventTypes.ActionEnded, ended, Kaori)));
-        Assert.Equal("11-02 08:10 kaori 移動 kaori_room → school_2a", Format(Logged(At(23, 10), EventTypes.TravelStarted, travel, Kaori)));
-        Assert.Equal("11-02 08:25 kaori 到着 school_2a", Format(Logged(At(23, 25), EventTypes.TravelArrived, arrived, Kaori)));
+        Assert.Equal("11-02 07:00 香織は2年A組の教室で「授業を受ける」（予定）", Format(Logged(At(22, 0), EventTypes.ActionStarted, started, Kaori)));
+        Assert.Equal("11-02 07:30 香織は「授業を受ける」を終えた", Format(Logged(At(22, 30), EventTypes.ActionEnded, ended, Kaori)));
+        Assert.Equal("11-02 08:10 香織は香織の部屋から2年A組の教室へ向かった", Format(Logged(At(23, 10), EventTypes.TravelStarted, travel, Kaori)));
+        Assert.Equal("11-02 08:25 香織は2年A組の教室に着いた", Format(Logged(At(23, 25), EventTypes.TravelArrived, arrived, Kaori)));
     }
 
     /// <summary>
@@ -40,10 +42,10 @@ public class EventLineFormatterTests
     [Fact]
     public void LocalDateRollsOverAtLocalMidnight()
     {
-        var ended = new ActionEndedPayload("read", 1);
+        var ended = new ActionEndedPayload("read_book", 1);
 
-        Assert.Equal("11-01 23:59 kaori 終わり read", Format(Logged(At(14, 59), EventTypes.ActionEnded, ended, Kaori)));
-        Assert.Equal("11-02 00:00 kaori 終わり read", Format(Logged(At(15, 0), EventTypes.ActionEnded, ended, Kaori)));
+        Assert.Equal("11-01 23:59 香織は「本を読む」を終えた", Format(Logged(At(14, 59), EventTypes.ActionEnded, ended, Kaori)));
+        Assert.Equal("11-02 00:00 香織は「本を読む」を終えた", Format(Logged(At(15, 0), EventTypes.ActionEnded, ended, Kaori)));
     }
 
     /// <summary>既定では、行動と移動の4種以外は出さず、null を返す。</summary>
@@ -55,34 +57,62 @@ public class EventLineFormatterTests
         Assert.Null(Format(Logged(At(22, 0), EventTypes.PersonaCreated, created, Kaori)));
     }
 
-    /// <summary>--all では、行動と移動の4種は既定と同じ書式、それ以外はイベントタイプの名前だけになる。</summary>
+    /// <summary>--all では、人が読んで意味のあるイベントを文にする。文にできないものは、人の名前と括弧のイベントタイプにする。</summary>
     [Fact]
-    public void AllModePrintsEventTypeNameForOtherEvents()
+    public void AllModeWritesReadableSentencesAndTypeNamesForTheRest()
     {
         var created = new PersonaCreatedPayload(new PersonaDefId("kaori"), KaoriRoom);
-        var ended = new ActionEndedPayload("read", 1);
+        var due = new PlanDuePayload(3);
 
-        Assert.Equal("11-02 07:00 kaori persona.created", Format(Logged(At(22, 0), EventTypes.PersonaCreated, created, Kaori), all: true));
-        Assert.Equal("11-02 07:30 kaori 終わり read", Format(Logged(At(22, 30), EventTypes.ActionEnded, ended, Kaori), all: true));
+        Assert.Equal("11-02 07:00 香織が香織の部屋に現れた", Format(Logged(At(22, 0), EventTypes.PersonaCreated, created, Kaori), all: true));
+        Assert.Equal("11-02 07:00 香織（plan.due）", Format(Logged(At(22, 0), EventTypes.PlanDue, due, Kaori), all: true));
     }
 
-    /// <summary>人のない記録は、人の欄にワールド ID を書く。ワールドもなければ "-"、そのときの時刻は UTC。</summary>
+    /// <summary>--all でも、行動と移動は既定と同じ文になる。</summary>
     [Fact]
-    public void EventWithoutPersonaShowsWorldOrDash()
+    public void AllModeKeepsActionSentence()
+    {
+        var ended = new ActionEndedPayload("read_book", 1);
+
+        Assert.Equal("11-02 07:30 香織は「本を読む」を終えた", Format(Logged(At(22, 30), EventTypes.ActionEnded, ended, Kaori), all: true));
+    }
+
+    /// <summary>--all の日と世界の文。日付は "11月01日（日）" の形、ワールドは定義の名前。</summary>
+    [Fact]
+    public void AllModeWritesDayAndWorldSentences()
+    {
+        var day = new DayStartedPayload(new DateOnly(2026, 11, 1));
+        var world = new WorldCreatedPayload(new WorldDefId("testville"), 1);
+
+        Assert.Equal("11-02 07:00 テストの町で 11月01日（日）が始まった", Format(Logged(At(22, 0), EventTypes.DayStarted, day, null, Town), all: true));
+        Assert.Equal("11-01 22:00 テストの町ができた", Format(Logged(At(22, 0), EventTypes.WorldCreated, world, null, null), all: true));
+    }
+
+    /// <summary>人もワールドもない記録は、括弧のイベントタイプだけ。そのときの時刻は UTC。</summary>
+    [Fact]
+    public void EventWithoutPersonaOrWorldShowsTypeOnly()
     {
         var day = new DayStartedPayload(new DateOnly(2026, 11, 1));
 
-        Assert.Equal("11-02 07:00 testville day.started", Format(Logged(At(22, 0), EventTypes.DayStarted, day, null, Town), all: true));
-        Assert.Equal("11-01 22:00 - day.started", Format(Logged(At(22, 0), EventTypes.DayStarted, day, null, null), all: true));
+        Assert.Equal("11-01 22:00 （day.started）", Format(Logged(At(22, 0), EventTypes.DayStarted, day, null, null), all: true));
+    }
+
+    /// <summary>名前のない行動の ID は、ID のまま文に入る（落ちない）。</summary>
+    [Fact]
+    public void UnknownActionIdStaysAsIs()
+    {
+        var started = new ActionStartedPayload("no_such", School, TimeSpan.FromMinutes(30), ActivityReason.Chosen, 1, null);
+
+        Assert.Equal("11-02 07:00 香織は2年A組の教室で「no_such」（自由）", Format(Logged(At(22, 0), EventTypes.ActionStarted, started, Kaori)));
     }
 
     /// <summary>2026-11-01 の、UTC の時刻を作る。</summary>
     private static DateTimeOffset At(int hour, int minute) =>
         new(2026, 11, 1, hour, minute, 0, TimeSpan.Zero);
 
-    /// <summary>テスト用の時差で1行にする。</summary>
+    /// <summary>テスト用の時差と名前で1行にする。</summary>
     private static string? Format(LoggedEvent logged, bool all = false) =>
-        EventLineFormatter.Format(logged, Offsets, all);
+        EventLineFormatter.Format(logged, Names, Offsets, all);
 
     /// <summary>ワールドが testville の適用の記録を作る。</summary>
     private static LoggedEvent Logged(DateTimeOffset time, string type, EventPayload payload, PersonaId? persona) =>

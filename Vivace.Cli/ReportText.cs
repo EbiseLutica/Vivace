@@ -9,6 +9,9 @@ namespace Vivace.Cli;
 /// <summary>行動表と流れる出力で共通の表記。理由、行動と移動の本文、適用、捨てた、却下の件数。</summary>
 public static class ReportText
 {
+    /// <summary>曜日の表記。DayOfWeek の値（日曜が 0）で引く。</summary>
+    private static readonly string[] Weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+
     /// <summary>行動の理由の表記。</summary>
     /// <param name="reason">理由。</param>
     public static string ReasonLabel(ActivityReason reason) => reason switch
@@ -19,6 +22,12 @@ public static class ReportText
         ActivityReason.Late => "遅刻",
         _ => throw new ArgumentOutOfRangeException(nameof(reason), reason, null),
     };
+
+    /// <summary>
+    /// 曜日の表記（一字）。DayOfWeek の値（日曜が 0）で引く。
+    /// </summary>
+    /// <param name="date">日付。</param>
+    public static string Weekday(DateOnly date) => Weekdays[(int)date.DayOfWeek];
 
     /// <summary>行動の開始の本文。"[予定] attend_class @school_2a" の形。</summary>
     /// <param name="started">行動の開始。</param>

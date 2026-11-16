@@ -96,7 +96,7 @@ public static class RunCommand
         var feed = subscriberCapacity is { } capacity
             ? engine.Subscribe(capacity, CancellationToken.None)
             : engine.Subscribe(CancellationToken.None);
-        var printing = PrintAsync(feed, Offsets(definitions), all, output, run);
+        var printing = PrintAsync(feed, new DisplayNames(definitions), Offsets(definitions), all, output, run);
 
         var code = 0;
         try
@@ -132,12 +132,14 @@ public static class RunCommand
     /// 購読を読み、既定の書式で1行ずつ書く。購読があふれたら、理由を書いて run を止め、true を返す。
     /// </summary>
     /// <param name="feed">適用済みのイベントの購読。</param>
+    /// <param name="names">表示名を引く表。</param>
     /// <param name="offsets">ワールド ID ごとの現地の時差。</param>
     /// <param name="all">すべてのイベントを出すかどうか。</param>
     /// <param name="output">出力先。</param>
     /// <param name="run">止めるためのキャンセル元。</param>
     private static async Task<bool> PrintAsync(
         IAsyncEnumerable<LoggedEvent> feed,
+        DisplayNames names,
         IReadOnlyDictionary<WorldId, TimeSpan> offsets,
         bool all,
         TextWriter output,
@@ -147,7 +149,7 @@ public static class RunCommand
         {
             await foreach (var logged in feed)
             {
-                if (EventLineFormatter.Format(logged, offsets, all) is { } line)
+                if (EventLineFormatter.Format(logged, names, offsets, all) is { } line)
                 {
                     output.WriteLine(line);
                 }

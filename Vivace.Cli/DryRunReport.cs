@@ -13,9 +13,6 @@ namespace Vivace.Cli;
 /// </summary>
 public static class DryRunReport
 {
-    /// <summary>曜日の表記。DayOfWeek の値（日曜が 0）で引く。</summary>
-    private static readonly string[] Weekdays = ["日", "月", "火", "水", "木", "金", "土"];
-
     /// <summary>終わりの記録がない行の、終わりの表記。</summary>
     private const string Unfinished = "未終了";
 
@@ -38,7 +35,7 @@ public static class DryRunReport
             }
 
             builder.Append(date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))
-                .Append('（').Append(Weekdays[(int)date.DayOfWeek]).Append("）\n");
+                .Append('（').Append(ReportText.Weekday(date)).Append("）\n");
             foreach (var persona in personas)
             {
                 var personaRows = rows.Where(row => row.Persona == persona && LocalDate(row, utcOffsets) == date).ToList();
