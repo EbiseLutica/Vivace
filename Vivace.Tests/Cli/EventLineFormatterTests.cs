@@ -62,10 +62,26 @@ public class EventLineFormatterTests
     public void AllModeWritesReadableSentencesAndTypeNamesForTheRest()
     {
         var created = new PersonaCreatedPayload(new PersonaDefId("kaori"), KaoriRoom);
-        var due = new PlanDuePayload(3);
+        var other = new PersonaDestroyedPayload();
 
         Assert.Equal("11-02 07:00 香織が香織の部屋に現れた", Format(Logged(At(22, 0), EventTypes.PersonaCreated, created, Kaori), all: true));
-        Assert.Equal("11-02 07:00 香織（plan.due）", Format(Logged(At(22, 0), EventTypes.PlanDue, due, Kaori), all: true));
+        Assert.Equal("11-02 07:00 香織（persona.destroyed）", Format(Logged(At(22, 0), EventTypes.PersonaDestroyed, other, Kaori), all: true));
+    }
+
+    /// <summary>
+    /// プランの確定は、版が1なら「立てた」、2以上は「立て直した」。固定予定だけのプランは「固定予定だけで」と書く。作り直しの時刻は「立て直す時刻」。
+    /// </summary>
+    [Fact]
+    public void PlanCommittedAndDueSentences()
+    {
+        var first = new DayPlan(1, At(22, 0), At(23, 0), At(23, 0), PlanSource.Llm, [], null);
+        var rebuilt = first with { Version = 2 };
+        var fallback = first with { Source = PlanSource.Fallback };
+
+        Assert.Equal("11-02 07:00 香織の予定を立てた", Format(Logged(At(22, 0), EventTypes.PlanCommitted, new PlanCommittedPayload(first), Kaori), all: true));
+        Assert.Equal("11-02 07:00 香織の予定を立て直した", Format(Logged(At(22, 0), EventTypes.PlanCommitted, new PlanCommittedPayload(rebuilt), Kaori), all: true));
+        Assert.Equal("11-02 07:00 香織は固定予定だけで予定を立てた", Format(Logged(At(22, 0), EventTypes.PlanCommitted, new PlanCommittedPayload(fallback), Kaori), all: true));
+        Assert.Equal("11-02 07:00 香織の予定を立て直す時刻になった", Format(Logged(At(22, 0), EventTypes.PlanDue, new PlanDuePayload(1), Kaori), all: true));
     }
 
     /// <summary>--all でも、行動と移動は既定と同じ文になる。</summary>

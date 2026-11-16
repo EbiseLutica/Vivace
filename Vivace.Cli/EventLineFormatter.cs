@@ -1,5 +1,6 @@
 using System.Globalization;
 using Vivace.Core.Domain;
+using Vivace.Core.Domain.State;
 using Vivace.Core.Events;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Storage;
@@ -89,8 +90,10 @@ public static class EventLineFormatter
                 return $"{names.World(new WorldId(created.DefId.Value))}ができた";
             case PersonaCreatedPayload created:
                 return $"{names.Persona(new PersonaId(created.DefId.Value))}が{names.Place(created.Home, WorldOf(ev, names))}に現れた";
-            case PlanCommittedPayload:
-                return $"{who}の予定が決まった";
+            case PlanCommittedPayload committed:
+                return PlanSentence(committed.Plan, who);
+            case PlanDuePayload:
+                return $"{who}の予定を立て直す時刻になった";
             case ActivityChosenPayload chosen:
                 return $"{who}は「{names.Action(chosen.ActionId)}」を選んだ";
             case BlockStartedPayload block when ev.PersonaId is { } persona && block.BlockId is { } blockId
@@ -101,7 +104,20 @@ public static class EventLineFormatter
         }
     }
 
-    /// <summary>文にできないイベントの表記。人（またはワールド）があれば前に付け、イベントタイプの名前を括弧で書く。</summary>
+    /// <summary>
+    /// プランの確定の文。版が1なら「立てた」、2以上は作り直しなので「立て直した」。固定予定だけのプラン（Planner の代わり）は、そう書く。
+    /// </summary>
+    /// <param name="plan">確定したプラン。</param>
+    /// <param name="who">人の表示名。</param>
+    private static string PlanSentence(DayPlan plan, string who)
+    {
+        var verb = plan.Version > 1 ? "立て直した" : "立てた";
+        return plan.Source == PlanSource.Fallback
+            ? $"{who}は固定予定だけで予定を{verb}"
+            : $"{who}の予定を{verb}";
+    }
+
+    /// <summary>文にできないイベントの表記。</summary>人（またはワールド）があれば前に付け、イベントタイプの名前を括弧で書く。</summary>
     /// <param name="ev">イベント。</param>
     /// <param name="names">表示名を引く表。</param>
     private static string UntypedLabel(SimEvent ev, DisplayNames names) =>
