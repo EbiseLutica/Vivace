@@ -59,5 +59,6 @@ dryRun.SetAction((parseResult, ct) =>
         ct);
 });
 rootCommand.Subcommands.Add(dryRun);
+rootCommand.Subcommands.Add(RunCommand.Create());
 
 return await rootCommand.Parse(args).InvokeAsync();

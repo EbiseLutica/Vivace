@@ -31,6 +31,11 @@ public sealed class VivaceEngine : IAsyncDisposable
     /// <param name="ct">購読をやめるキャンセル。</param>
     public IAsyncEnumerable<LoggedEvent> Subscribe(CancellationToken ct) => _engine.Subscribe(ct);
 
+    /// <summary>容量を指定して購読する（テストと CLI の内部用）。</summary>
+    /// <param name="capacity">読まれずに溜めておける件数。</param>
+    /// <param name="ct">購読をやめるキャンセル。</param>
+    internal IAsyncEnumerable<LoggedEvent> Subscribe(int capacity, CancellationToken ct) => _engine.Subscribe(capacity, ct);
+
     /// <summary>時刻 until まで回す。</summary>
     /// <param name="until">進める先の時刻。</param>
     /// <param name="ct">キャンセル。</param>

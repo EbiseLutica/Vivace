@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Vivace.Tests" />
+    <InternalsVisibleTo Include="vivace" />
   </ItemGroup>
 
 </Project>

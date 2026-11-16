@@ -7,7 +7,7 @@ using Vivace.Core.Time;
 
 namespace Vivace.Core;
 
-/// <summary>エンジンを組むビルダー。定義、保存先、時計は必須で、ほかは省略すると既定のものを使う。</summary>
+/// <summary>エンジンを組むビルダー。定義と保存先は必須で、ほかは省略すると既定のものを使う（時計は実時間の SystemClock）。</summary>
 public sealed class VivaceEngineBuilder
 {
     /// <summary>定義のフォルダ。定義そのものを渡したときは null。</summary>
@@ -19,7 +19,7 @@ public sealed class VivaceEngineBuilder
     /// <summary>保存先。</summary>
     private IStorage? _storage;
 
-    /// <summary>時計。</summary>
+    /// <summary>時計。省略すると実時間の SystemClock。</summary>
     private IClock? _clock;
 
     /// <summary>自由時間の決定。省略すると効用による決定。</summary>
@@ -97,7 +97,7 @@ public sealed class VivaceEngineBuilder
         return this;
     }
 
-    /// <summary>ドライラン（外に何も出さない）として組む。</summary>
+    /// <summary>ドライラン（外に何も出さない）として組む。早送りにするには、UseClock で VirtualClock を渡す（省くと実時間になる）。</summary>
     public VivaceEngineBuilder DryRun()
     {
         IsDryRun = true;
@@ -105,14 +105,17 @@ public sealed class VivaceEngineBuilder
     }
 
     /// <summary>エンジンを組む。</summary>
-    /// <exception cref="InvalidOperationException">定義がない、定義にエラーがある、保存先がない、時計がない。</exception>
+    /// <exception cref="InvalidOperationException">定義がない、定義にエラーがある、保存先がない。</exception>
     public VivaceEngine Build()
     {
         var definitions = LoadDefinitions();
         var storage = _storage ?? throw new InvalidOperationException("ストレージが渡されていません。 UseStorage で指定してください。");
-        var clock = _clock ?? throw new InvalidOperationException("時計のインスタンスが渡されていません。 UseClock で指定してください。");
+        var clock = ResolveClock();
         return new VivaceEngine(SimEngine.Create(definitions, storage, _random ?? new SplitMixRandomSource(), clock, _decider, _holidays));
     }
+
+    /// <summary>使う時計を返す。渡されていなければ、実時間の SystemClock。</summary>
+    internal IClock ResolveClock() => _clock ?? new SystemClock();
 
     /// <summary>指定された定義を返す。フォルダなら読み込み、エラーがあれば例外にする。</summary>
     private DefinitionPack LoadDefinitions()
