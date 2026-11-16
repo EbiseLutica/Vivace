@@ -27,7 +27,7 @@ public static class EventLineFormatter
             return null;
         }
 
-        var offset = ev.WorldId is { } world && utcOffsets.TryGetValue(world, out var found) ? found : TimeSpan.Zero;
+        var offset = WorldOf(ev, names) is { } world && utcOffsets.TryGetValue(world, out var found) ? found : TimeSpan.Zero;
         var (date, time) = LocalTimeHelper.ToLocal(ev.Time, offset);
         return string.Create(
             CultureInfo.InvariantCulture,
@@ -63,13 +63,13 @@ public static class EventLineFormatter
         switch (ev.Payload)
         {
             case ActionStartedPayload started:
-                return $"{who}は{names.Place(started.Place, ev.WorldId)}で「{names.Action(started.ActionId)}」（{ReportText.ReasonLabel(started.Reason)}）";
+                return $"{who}は{names.Place(started.Place, WorldOf(ev, names))}で「{names.Action(started.ActionId)}」（{ReportText.ReasonLabel(started.Reason)}）";
             case ActionEndedPayload ended:
                 return $"{who}は「{names.Action(ended.ActionId)}」を終えた";
             case TravelStartedPayload travel:
-                return $"{who}は{names.Place(travel.From, ev.WorldId)}から{names.Place(travel.To, ev.WorldId)}へ向かった";
+                return $"{who}は{names.Place(travel.From, WorldOf(ev, names))}から{names.Place(travel.To, WorldOf(ev, names))}へ向かった";
             case TravelArrivedPayload arrived:
-                return $"{who}は{names.Place(arrived.Place, ev.WorldId)}に着いた";
+                return $"{who}は{names.Place(arrived.Place, WorldOf(ev, names))}に着いた";
             default:
                 return null;
         }
@@ -83,12 +83,12 @@ public static class EventLineFormatter
         var who = PersonaOrWorld(ev, names);
         switch (ev.Payload)
         {
-            case DayStartedPayload day when ev.WorldId is { } world:
+            case DayStartedPayload day when WorldOf(ev, names) is { } world:
                 return $"{names.World(world)}で {DateLabel(day.Date)}が始まった";
             case WorldCreatedPayload created:
                 return $"{names.World(new WorldId(created.DefId.Value))}ができた";
             case PersonaCreatedPayload created:
-                return $"{names.Persona(new PersonaId(created.DefId.Value))}が{names.Place(created.Home, ev.WorldId)}に現れた";
+                return $"{names.Persona(new PersonaId(created.DefId.Value))}が{names.Place(created.Home, WorldOf(ev, names))}に現れた";
             case PlanCommittedPayload:
                 return $"{who}の予定が決まった";
             case ActivityChosenPayload chosen:
@@ -105,6 +105,21 @@ public static class EventLineFormatter
         ev.PersonaId is null && ev.WorldId is null
             ? $"（{ev.EventType}）"
             : $"{PersonaOrWorld(ev, names)}（{ev.EventType}）";
+
+    /// <summary>
+    /// イベントのワールド。記録になければ、人（ID か生成のペイロードの定義）のワールド、ワールドの生成ならペイロードのワールド。時差と場所の名前に使う。
+    /// </summary>
+    /// <param name="ev">イベント。</param>
+    /// <param name="names">表示名を引く表。</param>
+    private static WorldId? WorldOf(SimEvent ev, DisplayNames names) =>
+        ev.WorldId
+        ?? (ev.PersonaId is { } persona ? names.WorldOf(persona) : null)
+        ?? ev.Payload switch
+        {
+            WorldCreatedPayload created => new WorldId(created.DefId.Value),
+            PersonaCreatedPayload created => names.WorldOf(new PersonaId(created.DefId.Value)),
+            _ => null,
+        };
 
     /// <summary>人の表示名。人がなければワールドの表示名。どちらもなければ "-"。</summary>
     /// <param name="ev">イベント。</param>

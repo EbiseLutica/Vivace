@@ -25,6 +25,14 @@ public class DisplayNamesTests
         Assert.Equal("テストの町", Names.World(Town));
     }
 
+    /// <summary>ペルソナのワールドは定義のワールドで、名前のないペルソナは null。</summary>
+    [Fact]
+    public void WorldOfPersonaUsesDefinitionWorld()
+    {
+        Assert.Equal(Town, Names.WorldOf(new PersonaId("kaori")));
+        Assert.Null(Names.WorldOf(new PersonaId("nobody")));
+    }
+
     /// <summary>場所は、ワールドが分かればそのワールドの場所の名前で引く。</summary>
     [Fact]
     public void PlaceUsesNameOfItsWorld()

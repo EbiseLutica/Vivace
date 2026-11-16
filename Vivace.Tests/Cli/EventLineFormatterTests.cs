@@ -85,7 +85,18 @@ public class EventLineFormatterTests
         var world = new WorldCreatedPayload(new WorldDefId("testville"), 1);
 
         Assert.Equal("11-02 07:00 テストの町で 11月01日（日）が始まった", Format(Logged(At(22, 0), EventTypes.DayStarted, day, null, Town), all: true));
-        Assert.Equal("11-01 22:00 テストの町ができた", Format(Logged(At(22, 0), EventTypes.WorldCreated, world, null, null), all: true));
+        Assert.Equal("11-02 07:00 テストの町ができた", Format(Logged(At(22, 0), EventTypes.WorldCreated, world, null, null), all: true));
+    }
+
+    /// <summary>
+    /// 記録にワールドがなくても、人の定義のワールドの時差で現地の時刻にする。UTC 22:00 の生成は、testville の +09:00 で 11-02 07:00。
+    /// </summary>
+    [Fact]
+    public void RecordWithoutWorldUsesPersonaWorldOffset()
+    {
+        var created = new PersonaCreatedPayload(new PersonaDefId("kaori"), KaoriRoom);
+
+        Assert.Equal("11-02 07:00 香織が香織の部屋に現れた", Format(Logged(At(22, 0), EventTypes.PersonaCreated, created, null, null), all: true));
     }
 
     /// <summary>人もワールドもない記録は、括弧のイベントタイプだけ。そのときの時刻は UTC。</summary>

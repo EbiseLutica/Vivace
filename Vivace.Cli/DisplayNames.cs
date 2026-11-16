@@ -42,6 +42,11 @@ public sealed class DisplayNames(DefinitionPack definitions)
         return id.Value;
     }
 
+    /// <summary>ペルソナが住むワールドの ID（ペルソナの定義のワールド）。定義がなければ null。</summary>
+    /// <param name="id">ペルソナの ID。</param>
+    public WorldId? WorldOf(PersonaId id) =>
+        definitions.Personas.TryGetValue(new PersonaDefId(id.Value), out var def) ? new WorldId(def.World.Value) : null;
+
     /// <summary>行動の定義 ID の表示名（行動の display）。</summary>
     /// <param name="actionId">行動の定義 ID。</param>
     public string Action(string actionId) =>
