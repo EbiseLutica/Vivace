@@ -1,3 +1,4 @@
+using System.Globalization;
 using Vivace.Core.Definitions.Model;
 using Vivace.Core.Domain;
 
@@ -48,23 +49,35 @@ public sealed class DisplayNames(DefinitionPack definitions)
         definitions.Personas.TryGetValue(new PersonaDefId(id.Value), out var def) ? new WorldId(def.World.Value) : null;
 
     /// <summary>
-    /// 固定・計画のブロックの行動の表示名。ブロック ID（定義 ID、同じ日の2回目以降は ".N"、"@日付" が続く）からペルソナの定義のブロックを引き、行動は親のブロックから引き継ぐ。引けなければ null。
+    /// 固定・計画のブロックの行動の表示名。ブロック ID（定義 ID、同じ日の2回目以降は ".N"、"@日付" が続く）の日付にある例外日のブロックを先に引き、なければ通常のブロックを引く。通常のブロックの行動は親から引き継ぎ、例外のブロックは引き継がない。引けなければ null。
     /// </summary>
     /// <param name="persona">ペルソナの ID。</param>
     /// <param name="blockId">ブロックの ID。</param>
     public string? BlockAction(PersonaId persona, string blockId)
     {
         var at = blockId.LastIndexOf('@');
-        if (at < 0 || !definitions.Personas.TryGetValue(new PersonaDefId(persona.Value), out var def))
+        if (at < 0
+            || !definitions.Personas.TryGetValue(new PersonaDefId(persona.Value), out var def)
+            || !DateOnly.TryParseExact(blockId[(at + 1)..], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
         {
             return null;
         }
 
-        var blocks = def.Schedule.Blocks.Concat(def.Schedule.Exceptions.SelectMany(exception => exception.Blocks)).ToList();
         var defId = StripRepeat(blockId[..at]);
-        var actionId = ActionOf(blocks.FirstOrDefault(block => block.Id == defId), blocks);
-        return actionId is not null && definitions.Actions.TryGetValue(actionId, out var action) ? action.Display : null;
+        var schedule = def.Schedule;
+        var onDate = schedule.Exceptions.FirstOrDefault(exception => exception.Date == date)?.Blocks.FirstOrDefault(block => block.Id == defId);
+        if (onDate is not null)
+        {
+            return ActionDisplay(onDate.Action);
+        }
+
+        return ActionDisplay(ActionOf(schedule.Blocks.FirstOrDefault(block => block.Id == defId), schedule.Blocks));
     }
+
+    /// <summary>行動の定義 ID を表示名にする。ID がなければ null。</summary>
+    /// <param name="actionId">行動の定義 ID。</param>
+    private string? ActionDisplay(string? actionId) =>
+        actionId is not null && definitions.Actions.TryGetValue(actionId, out var action) ? action.Display : null;
 
     /// <summary>行動の定義 ID の表示名（行動の display）。</summary>
     /// <param name="actionId">行動の定義 ID。</param>
