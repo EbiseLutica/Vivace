@@ -99,6 +99,8 @@ public static class EventLineFormatter
             case BlockStartedPayload block when ev.PersonaId is { } persona && block.BlockId is { } blockId
                 && names.BlockAction(persona, blockId) is { } action:
                 return $"{who}の予定「{action}」が始まった";
+            case BlockStartedPayload { BlockId: null } when ev.PersonaId is not null:
+                return $"{who}の自由な時間が始まった";
             default:
                 return null;
         }

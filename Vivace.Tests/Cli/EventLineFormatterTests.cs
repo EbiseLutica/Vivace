@@ -133,7 +133,7 @@ public class EventLineFormatterTests
         Assert.Equal("11-02 07:00 香織の予定「授業を受ける」が始まった", Format(Logged(At(22, 0), EventTypes.BlockStarted, new BlockStartedPayload("school@2026-11-02", 1), Kaori), all: true));
         Assert.Equal("11-02 07:00 香織の予定「授業を受ける」が始まった", Format(Logged(At(22, 0), EventTypes.BlockStarted, new BlockStartedPayload("school.2@2026-11-02", 1), Kaori), all: true));
         Assert.Equal("11-02 07:00 香織（block.started）", Format(Logged(At(22, 0), EventTypes.BlockStarted, new BlockStartedPayload("no_such@2026-11-02", 1), Kaori), all: true));
-        Assert.Equal("11-02 07:00 香織（block.started）", Format(Logged(At(22, 0), EventTypes.BlockStarted, new BlockStartedPayload(null, 1), Kaori), all: true));
+        Assert.Equal("11-02 07:00 香織の自由な時間が始まった", Format(Logged(At(22, 0), EventTypes.BlockStarted, new BlockStartedPayload(null, 1), Kaori), all: true));
     }
 
     /// <summary>名前のない行動の ID は、ID のまま文に入る（落ちない）。</summary>
