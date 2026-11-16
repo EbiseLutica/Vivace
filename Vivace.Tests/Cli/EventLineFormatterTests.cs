@@ -108,6 +108,18 @@ public class EventLineFormatterTests
         Assert.Equal("11-01 22:00 （day.started）", Format(Logged(At(22, 0), EventTypes.DayStarted, day, null, null), all: true));
     }
 
+    /// <summary>
+    /// 固定予定のブロックの開始は、ブロックの行動の名前で「予定」の文にする。同じ日の2回目は ".2" が付くが同じ行動。引けなければ括弧のイベントタイプ。
+    /// </summary>
+    [Fact]
+    public void BlockStartedNamesTheBlocksActivity()
+    {
+        Assert.Equal("11-02 07:00 香織の予定「授業を受ける」が始まった", Format(Logged(At(22, 0), EventTypes.BlockStarted, new BlockStartedPayload("school@2026-11-02", 1), Kaori), all: true));
+        Assert.Equal("11-02 07:00 香織の予定「授業を受ける」が始まった", Format(Logged(At(22, 0), EventTypes.BlockStarted, new BlockStartedPayload("school.2@2026-11-02", 1), Kaori), all: true));
+        Assert.Equal("11-02 07:00 香織（block.started）", Format(Logged(At(22, 0), EventTypes.BlockStarted, new BlockStartedPayload("no_such@2026-11-02", 1), Kaori), all: true));
+        Assert.Equal("11-02 07:00 香織（block.started）", Format(Logged(At(22, 0), EventTypes.BlockStarted, new BlockStartedPayload(null, 1), Kaori), all: true));
+    }
+
     /// <summary>名前のない行動の ID は、ID のまま文に入る（落ちない）。</summary>
     [Fact]
     public void UnknownActionIdStaysAsIs()

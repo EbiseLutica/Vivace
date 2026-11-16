@@ -56,6 +56,22 @@ public class DisplayNamesTests
         Assert.Equal("次の予定の場所へ向かう", Names.Action("core.go_to_next"));
     }
 
+    /// <summary>
+    /// ブロックの行動は、ペルソナの定義のブロックから引く。同じ日の2回目の ".N" は外し、行動の書いていないブロックは親から引き継ぐ。引けなければ null。
+    /// </summary>
+    [Fact]
+    public void BlockActionFindsActivityOfPersonaBlock()
+    {
+        var kaori = new PersonaId("kaori");
+
+        Assert.Equal("授業を受ける", Names.BlockAction(kaori, "school@2026-11-02"));
+        Assert.Equal("授業を受ける", Names.BlockAction(kaori, "school.3@2026-11-02"));
+        Assert.Equal("眠る", Names.BlockAction(kaori, "sleep_weekday@2026-11-02"));
+        Assert.Null(Names.BlockAction(kaori, "no_such@2026-11-02"));
+        Assert.Null(Names.BlockAction(kaori, "school"));
+        Assert.Null(Names.BlockAction(new PersonaId("nobody"), "school@2026-11-02"));
+    }
+
     /// <summary>名前のない ID は、ID をそのまま返す（落ちない）。</summary>
     [Fact]
     public void UnknownIdsReturnThemselves()

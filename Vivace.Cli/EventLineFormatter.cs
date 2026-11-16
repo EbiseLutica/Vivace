@@ -93,6 +93,9 @@ public static class EventLineFormatter
                 return $"{who}の予定が決まった";
             case ActivityChosenPayload chosen:
                 return $"{who}は「{names.Action(chosen.ActionId)}」を選んだ";
+            case BlockStartedPayload block when ev.PersonaId is { } persona && block.BlockId is { } blockId
+                && names.BlockAction(persona, blockId) is { } action:
+                return $"{who}の予定「{action}」が始まった";
             default:
                 return null;
         }
