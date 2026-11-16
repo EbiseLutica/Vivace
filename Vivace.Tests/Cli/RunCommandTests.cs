@@ -90,9 +90,9 @@ public class RunCommandTests
         var text = output.ToString();
         Assert.Equal(0, code);
         Assert.StartsWith("testville: 祝日のカレンダー jp は未対応のため、祝日なしで回した\n", text, StringComparison.Ordinal);
-        Assert.Contains("11-01 23:00 kaori [自由] core.go_to_next @kaori_room\n", text, StringComparison.Ordinal);
-        Assert.Contains("11-01 23:45 kaori [予定] core.sleep @kaori_room\n", text, StringComparison.Ordinal);
-        Assert.Contains("11-02 07:50 kaori 移動 kaori_room → school_2a\n", text, StringComparison.Ordinal);
+        Assert.Contains("11-01 23:00 香織は香織の部屋で「次の予定の場所へ向かう」（自由）\n", text, StringComparison.Ordinal);
+        Assert.Contains("11-01 23:45 香織は香織の部屋で「眠る」（予定）\n", text, StringComparison.Ordinal);
+        Assert.Contains("11-02 07:50 香織は香織の部屋から2年A組の教室へ向かった\n", text, StringComparison.Ordinal);
         Assert.DoesNotContain("day.started", text, StringComparison.Ordinal);
         Assert.Matches(CountPattern, text);
     }
@@ -108,8 +108,8 @@ public class RunCommandTests
 
         var text = output.ToString();
         Assert.Equal(0, code);
-        Assert.Contains("11-01 23:00 testville day.started\n", text, StringComparison.Ordinal);
-        Assert.Contains("11-01 23:00 kaori [自由] core.go_to_next @kaori_room\n", text, StringComparison.Ordinal);
+        Assert.Contains("11-01 23:00 テストの町で11月1日（日）が始まった\n", text, StringComparison.Ordinal);
+        Assert.Contains("11-01 23:00 香織は香織の部屋で「次の予定の場所へ向かう」（自由）\n", text, StringComparison.Ordinal);
         Assert.Matches(CountPattern, text);
     }
 

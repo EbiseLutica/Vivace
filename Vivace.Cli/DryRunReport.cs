@@ -13,19 +13,17 @@ namespace Vivace.Cli;
 /// </summary>
 public static class DryRunReport
 {
-    /// <summary>曜日の表記。DayOfWeek の値（日曜が 0）で引く。</summary>
-    private static readonly string[] Weekdays = ["日", "月", "火", "水", "木", "金", "土"];
-
     /// <summary>終わりの記録がない行の、終わりの表記。</summary>
     private const string Unfinished = "未終了";
 
     /// <summary>記録から行動表と件数を組み立てる。改行は LF。</summary>
     /// <param name="records">保存先の記録（追加された順）。</param>
+    /// <param name="names">表示名を引く表。人、場所、行動は名前で書く。</param>
     /// <param name="utcOffsets">ワールドごとの現地の時差。記録にないワールドは UTC とみなす。</param>
-    public static string Render(IEnumerable<LoggedEvent> records, IReadOnlyDictionary<WorldId, TimeSpan> utcOffsets)
+    public static string Render(IEnumerable<LoggedEvent> records, DisplayNames names, IReadOnlyDictionary<WorldId, TimeSpan> utcOffsets)
     {
         var list = records.ToList();
-        var rows = BuildRows(list.Where(entry => entry.Status == EventStatus.Applied));
+        var rows = BuildRows(list.Where(entry => entry.Status == EventStatus.Applied), names);
         var dates = rows.Select(row => LocalDate(row, utcOffsets)).Distinct().Order().ToList();
         var personas = rows.Select(row => row.Persona).Distinct().OrderBy(id => id.Value, StringComparer.Ordinal).ToList();
 
@@ -38,7 +36,7 @@ public static class DryRunReport
             }
 
             builder.Append(date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))
-                .Append('（').Append(Weekdays[(int)date.DayOfWeek]).Append("）\n");
+                .Append('（').Append(ReportText.Weekday(date)).Append("）\n");
             foreach (var persona in personas)
             {
                 var personaRows = rows.Where(row => row.Persona == persona && LocalDate(row, utcOffsets) == date).ToList();
@@ -47,7 +45,7 @@ public static class DryRunReport
                     continue;
                 }
 
-                builder.Append(persona.Value).Append('\n');
+                builder.Append(names.Persona(persona)).Append('\n');
                 foreach (var row in personaRows)
                 {
                     builder.Append("  ").Append(FormatRow(row, utcOffsets)).Append('\n');
@@ -67,7 +65,7 @@ public static class DryRunReport
     /// <summary>
     /// 適用されたイベントから、行動と移動の行を作る。同じ人の終わりの記録で閉じる。途中で次の行が始まったら、その開始の時刻で閉じる。
     /// </summary>
-    private static List<Row> BuildRows(IEnumerable<LoggedEvent> applied)
+    private static List<Row> BuildRows(IEnumerable<LoggedEvent> applied, DisplayNames names)
     {
         var rows = new List<Row>();
         var open = new Dictionary<PersonaId, Row>();
@@ -83,7 +81,7 @@ public static class DryRunReport
             {
                 case ActionStartedPayload started:
                     CloseAt(persona, ev.Time, rows, open);
-                    open[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.Action, ReportText.ActionBody(started));
+                    open[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.Action, ReportText.ActionRow(started, names, ev.WorldId));
                     break;
                 case ActionEndedPayload when open.TryGetValue(persona, out var action) && action.Kind == RowKind.Action:
                     rows.Add(action with { End = ev.Time });
@@ -91,7 +89,7 @@ public static class DryRunReport
                     break;
                 case TravelStartedPayload travel:
                     CloseAt(persona, ev.Time, rows, open);
-                    open[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.Travel, ReportText.TravelBody(travel));
+                    open[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.Travel, ReportText.TravelRow(travel, names, ev.WorldId));
                     break;
                 case TravelArrivedPayload when open.TryGetValue(persona, out var trip) && trip.Kind == RowKind.Travel:
                     rows.Add(trip with { End = ev.Time });
