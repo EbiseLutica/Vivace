@@ -122,7 +122,7 @@ public class SnsPostHandlerTests
 
     /// <summary>テスト用の起動のシグナル。</summary>
     private static StartEffectSignal Effect() =>
-        new(10, Fixture.Kaori, Fixture.Now.AddMinutes(8), SnsPostHandler.Name, "post_sns", KaoriRoom, 0);
+        new(10, Fixture.Kaori, Fixture.Now.AddMinutes(8), "post_sns", KaoriRoom, 0);
 
     /// <summary>香織の発話を1件適用した状態。</summary>
     private static SimState Speech(SimState state, string body) =>

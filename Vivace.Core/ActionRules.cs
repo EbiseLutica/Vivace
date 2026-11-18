@@ -21,7 +21,7 @@ public static class ActionRules
     /// <summary>嫌い（dislike）の倍率。</summary>
     public const double DislikeFactor = 0.4;
 
-    /// <summary>投稿をスキップしたあと、投稿の行動を候補にしない時間（D5 P-45）。</summary>
+    /// <summary>投稿をスキップしたあと、投稿の行動を候補にしない時間。</summary>
     public static readonly TimeSpan SkipCooldown = TimeSpan.FromMinutes(30);
 
     /// <summary>

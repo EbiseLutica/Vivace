@@ -13,7 +13,7 @@ using Vivace.Core.Time;
 namespace Vivace.Core.Handlers;
 
 /// <summary>
-/// 投稿の効果（sns.post）。ペルソナの声で独り言を1つ作る。成功なら発話、LLM の失敗、例外、空の本文ならスキップにする。
+/// 投稿の効果（sns.post）。ペルソナの声で独り言を1つ作る。空の本文はスキップにする。例外は、エンジンが代わりの出力にする。
 /// </summary>
 internal static class SnsPostHandler
 {
@@ -23,7 +23,7 @@ internal static class SnsPostHandler
     /// <summary>LLM の目的。</summary>
     public const string Purpose = "post.compose";
 
-    /// <summary>投稿のチャンネル。チャンネルの実装が入るまでは、コンソールの固定の名前。</summary>
+    /// <summary>投稿のチャンネルの名前（コンソール）。</summary>
     public const string Channel = "console";
 
     /// <summary>チャンネルの中身。コンソールは追加の情報を持たない。</summary>
@@ -70,11 +70,6 @@ internal static class SnsPostHandler
     /// <summary>
     /// 文面の呼び出し。システムの指示にはペルソナと世界の lore、メッセージには時刻、行動、場所、直近の投稿を置く。
     /// </summary>
-    /// <param name="personaDef">ペルソナの定義。</param>
-    /// <param name="world">ワールドの定義。</param>
-    /// <param name="persona">ペルソナの状態。</param>
-    /// <param name="action">行動の定義。</param>
-    /// <param name="effect">起動のシグナル（時刻と場所）。</param>
     private static LlmRequest Request(PersonaDef personaDef, WorldDef world, PersonaState persona, ActionDef action, StartEffectSignal effect)
     {
         var (date, time) = LocalTimeHelper.ToLocal(effect.Horizon, world.UtcOffset);

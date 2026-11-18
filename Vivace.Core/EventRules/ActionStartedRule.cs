@@ -94,10 +94,6 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
     }
 
     /// <summary>行動の効果のハンドラ（effects.handler）を起動するシグナル。効果がなければ空。行動の終わりを出力の時刻にする。</summary>
-    /// <param name="ev">行動の開始のイベント。</param>
-    /// <param name="action">行動の定義。</param>
-    /// <param name="persona">ペルソナの状態。</param>
-    /// <param name="payload">行動の開始の中身。</param>
     private static ImmutableArray<EngineSignal> EffectSignals(SimEvent ev, ActionDef action, PersonaState persona, ActionStartedPayload payload)
     {
         if (action.Effects.Handler != SnsPostHandler.Name)
@@ -105,6 +101,6 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
             return ImmutableArray<EngineSignal>.Empty;
         }
 
-        return [new StartEffectSignal(ev.Seq, persona.Id, ev.Time + payload.Duration, SnsPostHandler.Name, payload.ActionId, payload.Place, payload.ActivityVersion)];
+        return [new StartEffectSignal(ev.Seq, persona.Id, ev.Time + payload.Duration, payload.ActionId, payload.Place, payload.ActivityVersion)];
     }
 }

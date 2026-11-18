@@ -87,7 +87,6 @@ public sealed class UtilityDecider : IDecider
     }
 
     /// <summary>決定タイミングのペルソナの場所。場所にいないときは例外。</summary>
-    /// <param name="persona">ペルソナの状態。</param>
     internal static PlaceId DecisionPlace(PersonaState persona) =>
         persona.Location is AtPlace at
             ? at.Place

@@ -10,7 +10,7 @@ namespace Vivace.Core.Decision;
 /// </summary>
 internal static class DecisionFallback
 {
-    /// <summary>自由時間の代わりの決定（core.go_to_next）を作る。乱数は引かない。</summary>
+    /// <summary>自由時間の代わりの決定（core.go_to_next）を作る。</summary>
     /// <param name="ctx">規則のコンテキスト。</param>
     /// <param name="state">全体の状態。</param>
     /// <param name="persona">ペルソナの状態。場所にいること。</param>

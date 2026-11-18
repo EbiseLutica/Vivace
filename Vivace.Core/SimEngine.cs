@@ -420,7 +420,7 @@ public sealed class SimEngine : IAsyncDisposable
                 var planSnapshot = _state;
                 StartHandler(plan.BatchSeq, plan.Persona, plan.Now, $"plan:{plan.Persona}", origin, () => Task.FromResult(Plan(plan, planSnapshot)), null);
                 break;
-            case StartEffectSignal { Handler: SnsPostHandler.Name } effect:
+            case StartEffectSignal effect:
                 var effectSnapshot = _state;
                 StartHandler(effect.BatchSeq, effect.Persona, effect.Horizon, $"decide:{effect.Persona}", origin, () => SnsPostHandler.RunAsync(_ctx, _llm, effectSnapshot, effect), () => SnsPostHandler.Skipped(effectSnapshot, effect));
                 break;
@@ -441,7 +441,7 @@ public sealed class SimEngine : IAsyncDisposable
 
     /// <summary>
     /// 決める側のジョブを、レーンで起動する。ジョブはスナップショット（起動の時点の状態）だけを読む。
-    /// fallback があれば、ジョブの例外は代わりの出力にする（D7 7.1）。なければ、例外はレーンを閉じ、エンジンを止める。
+    /// fallback があれば、ジョブの例外は代わりの出力にする。なければ、例外はレーンを閉じ、エンジンを止める。
     /// </summary>
     private void StartHandler(long key, PersonaId persona, DateTimeOffset horizon, string lane, Origin origin, Func<Task<EventDraft>> work, Func<EventDraft>? fallback)
     {
@@ -473,9 +473,7 @@ public sealed class SimEngine : IAsyncDisposable
         return ActivityChosenDraft(decide, persona, output);
     }
 
-    /// <summary>Decider が例外で失敗したときの代わりの出力を、イベントにする。自由時間は core.go_to_next、スマホを開く機会は何もしない。</summary>
-    /// <param name="decide">起動のシグナル。</param>
-    /// <param name="snapshot">起動の時点の状態。</param>
+    /// <summary>Decider が例外で失敗したときの代わりの出力を、イベントにする。</summary>
     private EventDraft FallbackDraft(StartDeciderSignal decide, SimState snapshot)
     {
         var persona = snapshot.Personas[decide.Persona];
@@ -486,9 +484,6 @@ public sealed class SimEngine : IAsyncDisposable
     }
 
     /// <summary>決める側の出力を、行動の決定のイベントにする。</summary>
-    /// <param name="decide">起動のシグナル。</param>
-    /// <param name="persona">ペルソナの状態。</param>
-    /// <param name="output">決めた行動と、適用してよい条件。</param>
     private static EventDraft ActivityChosenDraft(StartDeciderSignal decide, PersonaState persona, DeciderOutput output) =>
         new(decide.Now, EventTypes.ActivityChosen, persona.World, persona.Id, output.Payload, output.Guard, decide.BatchSeq);
 

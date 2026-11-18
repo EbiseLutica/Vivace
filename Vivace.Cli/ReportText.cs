@@ -53,7 +53,7 @@ public static class ReportText
 
     /// <summary>投稿をやめた理由の表記。</summary>
     /// <param name="reason">理由。</param>
-    public static string PostSkipLabel(PostSkippedPayload.PostSkipReason reason) => reason switch
+    private static string PostSkipLabel(PostSkippedPayload.PostSkipReason reason) => reason switch
     {
         PostSkippedPayload.PostSkipReason.AllRejected => "話題がなかった",
         PostSkippedPayload.PostSkipReason.GenerationFailed => "生成の失敗",

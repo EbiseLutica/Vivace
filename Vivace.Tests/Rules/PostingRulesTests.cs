@@ -60,9 +60,12 @@ public class PostingRulesTests
     public void PostingForMissingPersonaIsSkipped()
     {
         var speech = Fixture.Apply(Fixture.WithKaori(), Speech(10, Fixture.Now, "独り言", persona: Fixture.Shiori));
+        var skipped = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(11, Fixture.Now, EventTypes.PostSkipped, new PostSkippedPayload(PostSkippedPayload.PostSkipReason.AllRejected, null), Fixture.Shiori));
 
         Assert.Equal(EventStatus.Skipped, speech.Status);
         Assert.Equal("ペルソナがない", speech.Reason);
+        Assert.Equal(EventStatus.Skipped, skipped.Status);
+        Assert.Equal("ペルソナがない", skipped.Reason);
     }
 
     /// <summary>投稿の発話を作る。送信の中身は空でよい（Apply は本文と時刻だけを見る）。</summary>

@@ -33,7 +33,6 @@ public class EffectStartRulesTests
         Assert.Equal(10, signal.BatchSeq);
         Assert.Equal(Fixture.Kaori, signal.Persona);
         Assert.Equal(Fixture.Now.AddMinutes(8), signal.Horizon);
-        Assert.Equal("sns.post", signal.Handler);
         Assert.Equal(0, signal.ActivityVersion);
     }
 

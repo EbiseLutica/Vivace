@@ -1,6 +1,6 @@
 namespace Vivace.Core.Llm;
 
-/// <summary>LLM の呼び出し。最小版は本文を返すだけ（構造化出力、ツール、再試行は、必要になったときに足す）。</summary>
+/// <summary>LLM の呼び出し。本文を返す。</summary>
 public interface ILlmClient
 {
     /// <summary>1回の呼び出しをして、本文を返す。失敗は例外で伝える。</summary>
