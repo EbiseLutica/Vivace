@@ -108,6 +108,7 @@ public sealed class EventApplier
             new PlanCommittedRule(),
             new PlanDueRule(),
             new BlockStartedRule(),
+            new PhoneOpportunityRule(),
             new DecisionRequestedRule(),
             new ActivityChosenRule(),
             new TravelStartedRule(),

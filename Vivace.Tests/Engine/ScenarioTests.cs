@@ -42,6 +42,7 @@ public class ScenarioTests
             EventTypes.PlanCommitted,
             EventTypes.PlanDue,
             EventTypes.BlockStarted,
+            EventTypes.PhoneOpportunity,
             EventTypes.DecisionRequested,
             EventTypes.ActivityChosen,
             EventTypes.TravelStarted,

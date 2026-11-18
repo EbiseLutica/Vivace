@@ -31,6 +31,12 @@ public sealed class UtilityDecider : IDecider
     /// <summary>次の予定の場所へ向かう行動の ID。移動があるときは移動だけ（所要時間 0）、その場所にいるときは次の予定まで待つ。</summary>
     public const string GoToNext = "core.go_to_next";
 
+    /// <summary>スマホを開く機会で何もしない行動の ID。所要時間 0。</summary>
+    public const string Idle = "core.idle";
+
+    /// <summary>投稿の行動の効果（sns.post）。</summary>
+    public const string PostHandler = "sns.post";
+
     /// <inheritdoc />
     public DeciderOutput Decide(DecisionContext context)
     {
@@ -46,6 +52,11 @@ public sealed class UtilityDecider : IDecider
         var personaDef = defs.Personas[persona.DefId];
         var worldDefId = state.Worlds[persona.World].DefId;
         var worldDef = defs.Worlds[worldDefId];
+        if (context.Reason == DecisionReason.Phone)
+        {
+            return DecidePhone(context, persona, personaDef, worldDef, at.Place);
+        }
+
         var routes = context.Rules.Routes.For(worldDefId);
         var plan = persona.Plan;
         var next = plan?.NextFixedAfter(now);
@@ -63,24 +74,7 @@ public sealed class UtilityDecider : IDecider
             weights = WeightsOf(feasible, state, persona, personaDef, now);
         }
 
-        var total = weights.Sum();
-        var chosenIndex = feasible.FindIndex(entry => entry.Option.GoToNext);
-        if (total > 0)
-        {
-            var draw = random.NextDouble() * total;
-            var cumulative = 0.0;
-            chosenIndex = weights.Length - 1;
-            for (var i = 0; i < weights.Length; i++)
-            {
-                cumulative += weights[i];
-                if (draw < cumulative)
-                {
-                    chosenIndex = i;
-                    break;
-                }
-            }
-        }
-
+        var chosenIndex = weights.Sum() > 0 ? Pick(weights, random) : feasible.FindIndex(entry => entry.Option.GoToNext);
         var chosen = feasible[chosenIndex];
         var place = chosen.Option.Place;
         var route = chosen.Option.Minutes == 0
@@ -96,6 +90,66 @@ public sealed class UtilityDecider : IDecider
             ],
             RejectAction.Redecide);
         return new DeciderOutput(payload, guard);
+    }
+
+    /// <summary>スマホを開く機会の決定。候補は、いまの場所での投稿（ブロックの残りで切る）と、何もしない（重み 1.0、所要時間 0）だけ。</summary>
+    private static DeciderOutput DecidePhone(DecisionContext context, PersonaState persona, PersonaDef personaDef, WorldDef worldDef, PlaceId here)
+    {
+        var now = context.Now;
+        var random = context.Random;
+        var from = random.Position;
+        var remaining = context.BlockId is { } blockId && persona.Plan?.CurrentBlock(blockId, now) is { } block
+            ? block.End - now
+            : TimeSpan.Zero;
+
+        var entries = new List<(Option Option, TimeSpan Duration)>();
+        foreach (var option in PhonePosts(context.Rules.Defs, persona, personaDef, worldDef, here, now, remaining))
+        {
+            var duration = DurationOf(option, random);
+            entries.Add((option, duration > remaining ? remaining : duration));
+        }
+
+        var weights = WeightsOf(entries, context.State, persona, personaDef, now).Append(1.0).ToArray();
+        entries.Add((new Option(Idle, here, 0, 1.0, null, TimeSpan.Zero), TimeSpan.Zero));
+        var chosen = entries[Pick(weights, random)];
+        var draws = new RngDraws(persona.Id.Value, "decide", from, random.Position);
+        var payload = new ActivityChosenPayload(chosen.Option.ActionId, here, ImmutableArray<RouteStep>.Empty, 0, Positive(chosen.Duration), true, draws);
+        var checks = new List<GuardCheck> { new ActivityVersionCheck(persona.ActivityVersion), new RngCursorCheck(persona.Id.Value, "decide", from) };
+        if (chosen.Option.Action is not null)
+        {
+            checks.Insert(1, new FeasibleCheck(chosen.Option.ActionId, here));
+        }
+
+        return new DeciderOutput(payload, new Guard(checks.ToImmutableArray(), RejectAction.Redecide));
+    }
+
+    /// <summary>スマホを開く機会で候補になる、いまの場所での投稿の行動。ブロックの残りがなければ空。</summary>
+    private static List<Option> PhonePosts(DefinitionPack defs, PersonaState persona, PersonaDef personaDef, WorldDef worldDef, PlaceId here, DateTimeOffset now, TimeSpan remaining)
+    {
+        var options = new List<Option>();
+        if (remaining <= TimeSpan.Zero || worldDef.Places.FirstOrDefault(p => p.Id == here.Value) is not { } placeDef)
+        {
+            return options;
+        }
+
+        foreach (var action in defs.Actions.Values.OrderBy(a => a.Id, StringComparer.Ordinal))
+        {
+            if (action.Effects.Handler != PostHandler || action.ScheduleOnly || action.Duration is null || !ActionRules.IsUsable(personaDef, action.Id))
+            {
+                continue;
+            }
+
+            if (ActionRules.PreferenceFactor(personaDef, action) is not { } preference
+                || !ActionRules.PlaceAllows(action, personaDef, placeDef)
+                || !ActionRules.WithinLimits(action, persona.Usage.GetValueOrDefault(action.Id), now, worldDef.UtcOffset))
+            {
+                continue;
+            }
+
+            options.Add(new Option(action.Id, here, 0, preference, action, null));
+        }
+
+        return options;
     }
 
     /// <summary>候補（行動と場所の組）。</summary>
@@ -139,6 +193,11 @@ public sealed class UtilityDecider : IDecider
             foreach (var place in worldDef.Places.OrderBy(p => p.Id, StringComparer.Ordinal))
             {
                 var placeId = new PlaceId(place.Id);
+                if (action.Requires.PlaceTags.IsEmpty && placeId != here)
+                {
+                    continue;
+                }
+
                 if (!ActionRules.PlaceAllows(action, personaDef, place) || routes.Minutes(here, placeId) is not { } minutes)
                 {
                     continue;
@@ -207,6 +266,23 @@ public sealed class UtilityDecider : IDecider
             Need(state, persona, personaDef, now, entry.Option.Action, entry.Option.Place, entry.Option.Minutes, Positive(entry.Duration), ConsecutiveOf(persona, entry.Option.ActionId)),
             ConsecutiveOf(persona, entry.Option.ActionId),
             entry.Option.Minutes)).ToArray();
+
+    /// <summary>重みに比例して1つを引き、その位置を返す。重みの合計は正であること。</summary>
+    private static int Pick(double[] weights, IRandom random)
+    {
+        var draw = random.NextDouble() * weights.Sum();
+        var cumulative = 0.0;
+        for (var i = 0; i < weights.Length; i++)
+        {
+            cumulative += weights[i];
+            if (draw < cumulative)
+            {
+                return i;
+            }
+        }
+
+        return weights.Length - 1;
+    }
 
     /// <summary>負の長さを 0 に切り上げる。</summary>
     private static TimeSpan Positive(TimeSpan duration) => duration < TimeSpan.Zero ? TimeSpan.Zero : duration;

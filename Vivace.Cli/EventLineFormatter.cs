@@ -63,8 +63,12 @@ public static class EventLineFormatter
         var who = PersonaOrWorld(ev, names);
         switch (ev.Payload)
         {
+            case ActionStartedPayload { IsSubAction: true } subStarted:
+                return $"{who}は（スマホ）「{names.Action(subStarted.ActionId)}」を始めた";
             case ActionStartedPayload started:
                 return $"{who}は{names.Place(started.Place, WorldOf(ev, names))}で「{names.Action(started.ActionId)}」（{ReportText.ReasonLabel(started.Reason)}）";
+            case ActionEndedPayload { IsSubAction: true } subEnded:
+                return $"{who}は（スマホ）「{names.Action(subEnded.ActionId)}」を終えた";
             case ActionEndedPayload ended:
                 return $"{who}は「{names.Action(ended.ActionId)}」を終えた";
             case TravelStartedPayload travel:

@@ -110,6 +110,36 @@ public class DryRunReportTests
             text);
     }
 
+    /// <summary>
+    /// 副行動の行は、主の行動の下に1段深く、「（スマホ）」つきで出る。副行動の終わりの記録がないまま主が終われば、主の終わりの時刻で閉じる。
+    /// UTC の 22:00 は現地の 07:00（11-02）。
+    /// </summary>
+    [Fact]
+    public void SubActionRowIsNestedUnderMainRow()
+    {
+        var records = new[]
+        {
+            Logged(1, At(22, 0), new ActionStartedPayload("attend_class", School, TimeSpan.FromMinutes(60), ActivityReason.Block, 1, "b@1"), Kaori),
+            Logged(2, At(22, 20), new ActionStartedPayload("post_sns", School, TimeSpan.FromMinutes(8), ActivityReason.Chosen, 1, null, true), Kaori),
+            Logged(3, At(22, 28), new ActionEndedPayload("post_sns", 1, true), Kaori),
+            Logged(4, At(22, 50), new ActionStartedPayload("post_sns", School, TimeSpan.FromMinutes(10), ActivityReason.Chosen, 1, null, true), Kaori),
+            Logged(5, At(23, 0), new ActionEndedPayload("attend_class", 1), Kaori),
+        };
+        var offsets = new Dictionary<WorldId, TimeSpan> { [Town] = TimeSpan.FromHours(9) };
+
+        var text = DryRunReport.Render(records, Names, offsets);
+
+        Assert.Equal(
+            "2026-11-02（月）\n"
+            + "香織\n"
+            + "  07:00-08:00 授業を受ける＠2年A組の教室（予定）\n"
+            + "    07:20-07:28 （スマホ）SNS に投稿する\n"
+            + "    07:50-08:00 （スマホ）SNS に投稿する\n"
+            + "\n"
+            + "適用 5 件、捨てた 0 件、却下 0 件\n",
+            text);
+    }
+
     /// <summary>行動がひとつもなければ、表は空で件数だけを出す。</summary>
     [Fact]
     public void EmptyRecordsRenderOnlyCounts()

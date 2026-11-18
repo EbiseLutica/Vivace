@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Vivace.Core.Domain.State;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
@@ -25,6 +26,11 @@ internal sealed class ActivityChosenRule : EventRule<ActivityChosenPayload>
 
         var from = ((AtPlace)persona.Location).Place;
         var rng = payload.Draws is { } draws ? persona.Rng.SetItem(draws.Purpose, draws.To) : persona.Rng;
+        if (payload.IsSubAction)
+        {
+            return ApplySub(ev, persona, rng, payload, state);
+        }
+
         var updated = persona with { Deciding = false, ActivityVersion = persona.ActivityVersion + 1, Rng = rng };
         var next = state.WithPersona(updated);
         if (payload.Duration <= TimeSpan.Zero)
@@ -42,5 +48,18 @@ internal sealed class ActivityChosenRule : EventRule<ActivityChosenPayload>
             : EventDraft.TravelStarted(ev.Time, updated, from, payload.Place, payload.Route, ev.Time.AddMinutes(payload.TravelMinutes),
                 new PendingAction(payload.ActionId, payload.Place, payload.Duration, ActivityReason.Chosen, null));
         return ApplyResult.Applied(next, [followUp]);
+    }
+
+    /// <summary>副行動の決定を当てる。行動のバージョンは上げない。何もしない（所要時間 0）は、乱数の位置だけを進める。</summary>
+    private static ApplyResult ApplySub(SimEvent ev, PersonaState persona, ImmutableDictionary<string, ulong> rng, ActivityChosenPayload payload, SimState state)
+    {
+        var updated = persona with { Deciding = false, Rng = rng };
+        var next = state.WithPersona(updated);
+        if (payload.Duration <= TimeSpan.Zero)
+        {
+            return ApplyResult.Applied(next);
+        }
+
+        return ApplyResult.Applied(next, [EventDraft.ActionStarted(ev.Time, updated, payload.ActionId, payload.Place, payload.Duration, ActivityReason.Chosen, null, isSubAction: true)]);
     }
 }

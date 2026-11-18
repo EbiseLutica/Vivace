@@ -21,6 +21,11 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
             return ApplyResult.Skipped(state, "ペルソナがない");
         }
 
+        if (payload.IsSubAction)
+        {
+            return StartSub(ctx, state, ev, persona, payload);
+        }
+
         if (payload.ActivityVersion != persona.ActivityVersion || persona.Activity is not null)
         {
             return ApplyResult.Skipped(state, "古い決定か、行動中");
@@ -41,6 +46,7 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
         var started = persona.StartUsage(payload.ActionId, now, localDate) with
         {
             Activity = new Activity(payload.ActionId, payload.Place, now, now + payload.Duration, payload.Reason, payload.BlockId),
+            Overlay = null,
         };
         foreach (var (vital, delta) in action.Effects.OnStart)
         {
@@ -58,5 +64,29 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
         var next = VitalRules.Rebalance(ctx, state.WithPersona(started), now, started.Id);
         var followUps = ImmutableArray.Create(EventDraft.Next(now + payload.Duration, EventTypes.ActionEnded, started, new ActionEndedPayload(payload.ActionId, payload.ActivityVersion)));
         return ApplyResult.Applied(next, followUps, signals);
+    }
+
+    /// <summary>副行動を Overlay に入れて終了を積む。主の行動、率、バージョン、利用の記録は変えない。</summary>
+    private static ApplyResult StartSub(RuleContext ctx, SimState state, SimEvent ev, PersonaState persona, ActionStartedPayload payload)
+    {
+        if (payload.ActivityVersion != persona.ActivityVersion || persona.Activity is null || persona.Overlay is not null)
+        {
+            return ApplyResult.Skipped(state, "古い決定か、主の行動がないか、副行動の途中");
+        }
+
+        if (persona.Location is not AtPlace at || at.Place != payload.Place)
+        {
+            return ApplyResult.Skipped(state, "居場所が違う");
+        }
+
+        if (payload.Duration <= TimeSpan.Zero || !ctx.Defs.Actions.ContainsKey(payload.ActionId))
+        {
+            return ApplyResult.Skipped(state, "所要時間か行動がおかしい");
+        }
+
+        var now = ev.Time;
+        var overlay = new Activity(payload.ActionId, payload.Place, now, now + payload.Duration, payload.Reason, null);
+        var followUp = EventDraft.Next(now + payload.Duration, EventTypes.ActionEnded, persona, new ActionEndedPayload(payload.ActionId, payload.ActivityVersion, true));
+        return ApplyResult.Applied(state.WithPersona(persona with { Overlay = overlay }), [followUp]);
     }
 }

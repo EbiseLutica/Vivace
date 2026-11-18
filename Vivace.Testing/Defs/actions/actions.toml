@@ -44,6 +44,16 @@ requires.place_tags = ["sofa"]
 effects.rate.boredom = -5
 
 [[action]]
+id = "post_sns"
+display = "SNS に投稿する"
+description = "スマホで独り言を投稿する。投稿の中身は、まだ作られていない（この行動は走るだけ）。"
+duration = ["3m", "10m"]
+phone = "open"
+requires.items = ["smartphone"]
+limits.cooldown = "60m"
+effects.handler = "sns.post"
+
+[[action]]
 id = "attend_class"
 display = "授業を受ける"
 description = "授業を受ける。固定予定と反射からだけ始まる。"

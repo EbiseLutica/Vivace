@@ -33,7 +33,7 @@ internal sealed class TravelStartedRule : EventRule<TravelStartedPayload>
             return ApplyResult.Skipped(state, "到着が過去");
         }
 
-        var moving = persona with { Location = new Traveling(payload.From, payload.To, payload.Route, ev.Time, payload.ArrivesAt, payload.Next) };
+        var moving = persona with { Location = new Traveling(payload.From, payload.To, payload.Route, ev.Time, payload.ArrivesAt, payload.Next), Overlay = null };
         var next = VitalRules.Rebalance(ctx, state.WithPersona(moving), ev.Time, moving.Id, payload.From);
         return ApplyResult.Applied(next, [EventDraft.Next(payload.ArrivesAt, EventTypes.TravelArrived, persona, new TravelArrivedPayload(payload.To, payload.ActivityVersion))]);
     }

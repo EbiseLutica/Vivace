@@ -37,6 +37,12 @@ public static class ReportText
     public static string ActionRow(ActionStartedPayload started, DisplayNames names, WorldId? world) =>
         $"{names.Action(started.ActionId)}＠{names.Place(started.Place, world)}（{ReasonLabel(started.Reason)}）";
 
+    /// <summary>副行動の行の本文。"（スマホ）SNS に投稿する" の形。場所は主の行動の行に書くので、書かない。</summary>
+    /// <param name="started">副行動の開始。</param>
+    /// <param name="names">表示名を引く表。</param>
+    public static string SubActionRow(ActionStartedPayload started, DisplayNames names) =>
+        $"（スマホ）{names.Action(started.ActionId)}";
+
     /// <summary>移動の行の本文。"移動 香織の部屋 → 2年A組の教室" の形。</summary>
     /// <param name="travel">移動の開始。</param>
     /// <param name="names">表示名を引く表。</param>

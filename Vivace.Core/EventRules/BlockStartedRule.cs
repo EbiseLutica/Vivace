@@ -60,7 +60,7 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
 
         var cut = persona.Activity is not null || persona.Deciding;
         var current = cut
-            ? persona with { Activity = null, Deciding = false, ActivityVersion = persona.ActivityVersion + 1 }
+            ? persona with { Activity = null, Overlay = null, Deciding = false, ActivityVersion = persona.ActivityVersion + 1 }
             : persona;
         var signals = cut ? ImmutableArray.Create<EngineSignal>(new CancelHandlerSignal(persona.Id)) : ImmutableArray<EngineSignal>.Empty;
         var place = block.Place ?? from.Place;
@@ -79,7 +79,10 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
         }
         else if (minutes == 0)
         {
-            followUps = [EventDraft.ActionStarted(now, current, block.ActionId, place, block.End - now, ActivityReason.Block, blockId)];
+            var started = EventDraft.ActionStarted(now, current, block.ActionId, place, block.End - now, ActivityReason.Block, blockId);
+            followUps = block.Phone == PhonePolicy.Open
+                ? ImmutableArray.Create(started, EventDraft.PhoneOpportunity(now, current, blockId))
+                : ImmutableArray.Create(started);
         }
         else
         {
