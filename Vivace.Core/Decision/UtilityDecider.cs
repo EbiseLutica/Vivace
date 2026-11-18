@@ -56,19 +56,15 @@ public sealed class UtilityDecider : IDecider
         var options = Candidates(defs, persona, personaDef, worldDef, at.Place, now, routes, next, deadline);
         var drawn = options.Select(option => (Option: option, Duration: option.FixedDuration ?? DurationOf(option, random))).ToList();
         var feasible = drawn.Where(entry => IsFeasible(entry.Option, entry.Duration, now, deadline, next, routes)).ToList();
-        if (feasible.Any(entry => !entry.Option.GoToNext))
+        var weights = WeightsOf(feasible, state, persona, personaDef, now);
+        if (feasible.Where((entry, i) => !entry.Option.GoToNext && weights[i] > 0).Any())
         {
             feasible = feasible.Where(entry => !entry.Option.Waits).ToList();
+            weights = WeightsOf(feasible, state, persona, personaDef, now);
         }
 
-        var weights = feasible.Select(entry => Weight(
-            entry.Option.Action?.Weight ?? 1.0,
-            entry.Option.Preference,
-            Need(state, persona, personaDef, now, entry.Option.Action, entry.Option.Place, entry.Option.Minutes, Positive(entry.Duration), ConsecutiveOf(persona, entry.Option.ActionId)),
-            ConsecutiveOf(persona, entry.Option.ActionId),
-            entry.Option.Minutes)).ToArray();
         var total = weights.Sum();
-        var chosenIndex = Math.Max(0, feasible.FindIndex(entry => entry.Option.GoToNext));
+        var chosenIndex = feasible.FindIndex(entry => entry.Option.GoToNext);
         if (total > 0)
         {
             var draw = random.NextDouble() * total;
@@ -197,6 +193,20 @@ public sealed class UtilityDecider : IDecider
         return duration > TimeSpan.Zero
             && now.AddMinutes(option.Minutes) + duration + TimeSpan.FromMinutes(back) <= deadline;
     }
+
+    /// <summary>候補ごとの重みを、候補の並びのまま返す。</summary>
+    /// <param name="entries">重みを出す候補と所要時間。</param>
+    /// <param name="state">全体の状態。</param>
+    /// <param name="persona">ペルソナの状態。</param>
+    /// <param name="personaDef">ペルソナの定義。</param>
+    /// <param name="now">いまの時刻。</param>
+    private static double[] WeightsOf(List<(Option Option, TimeSpan Duration)> entries, SimState state, PersonaState persona, PersonaDef personaDef, DateTimeOffset now) =>
+        entries.Select(entry => Weight(
+            entry.Option.Action?.Weight ?? 1.0,
+            entry.Option.Preference,
+            Need(state, persona, personaDef, now, entry.Option.Action, entry.Option.Place, entry.Option.Minutes, Positive(entry.Duration), ConsecutiveOf(persona, entry.Option.ActionId)),
+            ConsecutiveOf(persona, entry.Option.ActionId),
+            entry.Option.Minutes)).ToArray();
 
     /// <summary>負の長さを 0 に切り上げる。</summary>
     private static TimeSpan Positive(TimeSpan duration) => duration < TimeSpan.Zero ? TimeSpan.Zero : duration;
