@@ -61,7 +61,7 @@ internal sealed class PersonaCreatedRule : EventRule<PersonaCreatedPayload>
             0,
             ImmutableDictionary<string, ActionUsage>.Empty,
             ImmutableDictionary<string, ulong>.Empty,
-            new PostingState(null, null, null),
+            new PostingState(null, null, null, ImmutableList<RecentPost>.Empty),
             ImmutableList<InboxItem>.Empty,
             ImmutableList<OutboundOp>.Empty,
             null,
