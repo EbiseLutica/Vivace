@@ -24,7 +24,7 @@ public static class Fixture
     /// <summary>香織のインスタンス ID。</summary>
     public static readonly PersonaId Kaori = new("kaori");
 
-    /// <summary>栞のインスタンス ID。</summary>
+    /// <summary>詩織のインスタンス ID。</summary>
     public static readonly PersonaId Shiori = new("shiori");
 
     private static readonly Lazy<RuleContext> Shared = new(() =>
@@ -50,7 +50,7 @@ public static class Fixture
     public static SimState WithKaori() =>
         Apply(WithWorld(), Event(2, Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("kaori"), new PlaceId("kaori_room")), null)).State;
 
-    /// <summary>ワールドと香織と栞（家は home_living）を作った状態。</summary>
+    /// <summary>ワールドと香織と詩織（家は home_living）を作った状態。</summary>
     public static SimState WithBoth() =>
         Apply(WithKaori(), Event(3, Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("shiori"), new PlaceId("home_living")), null)).State;
 

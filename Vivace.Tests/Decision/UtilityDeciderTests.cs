@@ -140,6 +140,30 @@ public class UtilityDeciderTests
         Assert.Equal(new PlaceId("kaori_room"), result.Payload.Place);
     }
 
+    /// <summary>
+    /// 次の予定の場所と違う場所にいて、次の予定の場所へ向かう行動が選ばれたら、移動だけ（所要時間 0）。着いたあとは決め直す。
+    /// 学校にいて、3 時間後に家の場所の予定がある。
+    /// </summary>
+    [Fact]
+    public void GoToNextWhileMovingIsMoveOnly()
+    {
+        var state = FreeDayWithFixedBlockAt(Fixture.Now.AddHours(3));
+        state = Fixture.With(state, state.Personas[Fixture.Kaori] with { Location = new AtPlace(new PlaceId("school_2a")) });
+
+        var chosen = Enumerable.Range(0, 40)
+            .Select(position => Decide(state, (ulong)position))
+            .Where(output => output.Payload.ActionId == UtilityDecider.GoToNext)
+            .ToList();
+
+        Assert.NotEmpty(chosen);
+        foreach (var output in chosen)
+        {
+            Assert.Equal(KaoriRoom, output.Payload.Place);
+            Assert.Equal(19, output.Payload.TravelMinutes);
+            Assert.Equal(TimeSpan.Zero, output.Payload.Duration);
+        }
+    }
+
     /// <summary>出力の guard は、決めたときの行動のバージョン、行動の実行の可否、乱数の位置を確かめる。却下されたら再決定する。</summary>
     [Fact]
     public void OutputGuardChecksVersionFeasibilityAndRng()

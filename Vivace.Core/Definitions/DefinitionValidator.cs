@@ -107,7 +107,7 @@ public static class DefinitionValidator
     /// <summary>行動の定義の整合性を見る。</summary>
     private static void ValidateAction(ActionDef action, HashSet<string> reflexActions, List<DefinitionIssue> issues)
     {
-        // core.go_to_next は所要時間を持たない。着いたあとの待ちは次の予定で決まる。
+        // core.go_to_next は所要時間を持たない。移動か、次の予定までの待ちかは Decider が決める。
         if (action.Duration is null && !action.ScheduleOnly && !reflexActions.Contains(action.Id) && action.Id != "core.go_to_next")
         {
             Add(issues, DefinitionIssueCode.MissingRequired, action.Source.Location,

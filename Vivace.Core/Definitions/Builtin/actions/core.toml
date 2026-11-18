@@ -4,7 +4,7 @@
 [[action]]
 id = "core.go_to_next"
 display = "次の予定の場所へ向かう"
-description = "次の予定の場所へ向かい、着いたら次の予定まで待つ。"
+description = "次の予定の場所へ向かう。着いたら決め直す。次の予定の場所にいて、ほかにできることがなければ、次の予定まで待つ。"
 phone = "closed"
 
 [[action]]
