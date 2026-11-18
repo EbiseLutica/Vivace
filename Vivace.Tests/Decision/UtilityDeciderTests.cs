@@ -127,17 +127,16 @@ public class UtilityDeciderTests
         }
     }
 
-    /// <summary>次の予定までに戻れない候補は残さない。次の予定が 10 分後なら、読書（30 分）は選べず、次の予定の場所へ向かうだけになる。</summary>
+    /// <summary>次の予定までに戻れない候補は残さない。次の予定が 10 分後なら、読書（30 分以上）は選べず、10 分以内に終わる候補か、次の予定の場所へ向かう行動だけになる。</summary>
     [Fact]
     public void CandidatesMustFitBeforeNextBlock()
     {
         var state = FreeDayWithFixedBlockAt(Fixture.Now.AddMinutes(10));
 
-        var result = Decide(state, 0);
+        var outputs = Enumerable.Range(0, 40).Select(position => Decide(state, (ulong)position)).ToList();
 
-        Assert.Equal(UtilityDecider.GoToNext, result.Payload.ActionId);
-        Assert.Equal(TimeSpan.FromMinutes(10), result.Payload.Duration);
-        Assert.Equal(new PlaceId("kaori_room"), result.Payload.Place);
+        Assert.All(outputs, output => Assert.True(output.Payload.Duration <= TimeSpan.FromMinutes(10)));
+        Assert.DoesNotContain(outputs, output => output.Payload.ActionId == "read_book");
     }
 
     /// <summary>

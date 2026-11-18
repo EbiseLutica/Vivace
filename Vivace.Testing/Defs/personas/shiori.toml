@@ -9,7 +9,7 @@ lore = """
 items = ["smartphone"]
 
 [actions]
-use = ["core.*", "eat_lunch", "attend_class", "walk_park", "cafe", "watch_tv"]
+use = ["core.*", "eat_lunch", "attend_class", "walk_park", "cafe", "watch_tv", "post_sns"]
 
 [[schedule.period]]
 id = "summer"
@@ -46,6 +46,7 @@ to = "13:00"
 action = "eat_lunch"
 place = "school_2a"
 phone = "open"
+phone_every = "20m"
 with = ["kaori"]
 
 [[schedule.exception]]

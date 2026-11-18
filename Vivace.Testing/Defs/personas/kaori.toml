@@ -12,7 +12,7 @@ items = ["smartphone", "book"]
 tools = []
 
 [actions]
-use = ["core.*", "walk_park", "read_book", "cafe", "watch_tv", "attend_class", "eat_lunch"]
+use = ["core.*", "walk_park", "read_book", "cafe", "watch_tv", "attend_class", "eat_lunch", "post_sns"]
 prefs = { read_book = "like", "tag:outdoor" = "dislike", cafe = 1.5 }
 
 [vitals]
