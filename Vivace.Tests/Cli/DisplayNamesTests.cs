@@ -16,7 +16,7 @@ public class DisplayNamesTests
     public void PersonaUsesDefinitionName()
     {
         Assert.Equal("香織", Names.Persona(new PersonaId("kaori")));
-        Assert.Equal("栞", Names.Persona(new PersonaId("shiori")));
+        Assert.Equal("詩織", Names.Persona(new PersonaId("shiori")));
     }
 
     /// <summary>ワールドは定義の名前で引く。</summary>

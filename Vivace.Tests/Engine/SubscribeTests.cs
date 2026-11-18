@@ -33,7 +33,7 @@ public class SubscribeTests
 
     /// <summary>
     /// 読まない購読（容量 4）は、5 件目で切断される。それまでの 4 件は、ワールドの生成（連番 1）、
-    /// その日の始まり（連番 4。ステージが先）、香織（2）、栞（3）。エンジンは最後まで回り、ほかの購読は全件を受け取る。
+    /// その日の始まり（連番 4。ステージが先）、香織（2）、詩織（3）。エンジンは最後まで回り、ほかの購読は全件を受け取る。
     /// </summary>
     [Fact]
     public async Task SlowSubscriberIsDisconnectedAndEngineKeepsRunning()
