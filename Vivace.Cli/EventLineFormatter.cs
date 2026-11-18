@@ -12,7 +12,7 @@ namespace Vivace.Cli;
 public static class EventLineFormatter
 {
     /// <summary>
-    /// 適用されたイベントを1行にする。既定では行動と移動の開始と終わりだけを文にし、それ以外は null を返す。
+    /// 適用されたイベントを1行にする。既定では行動と移動の開始と終わり、投稿、投稿のスキップだけを文にし、それ以外は null を返す。
     /// all のときは、人が読んで意味のあるイベントも文にし、ほかは人（またはワールド）とイベントタイプの名前を括弧で書く。
     /// </summary>
     /// <param name="logged">適用の記録。</param>
@@ -75,6 +75,10 @@ public static class EventLineFormatter
                 return $"{who}は{names.Place(travel.From, WorldOf(ev, names))}から{names.Place(travel.To, WorldOf(ev, names))}へ向かった";
             case TravelArrivedPayload arrived:
                 return $"{who}は{names.Place(arrived.Place, WorldOf(ev, names))}に着いた";
+            case OutboundSpeechPayload { Kind: OutboundSpeechPayload.OutboundPostKind.Post } post:
+                return $"{who}{ReportText.PostRow(post)}";
+            case PostSkippedPayload skipped:
+                return $"{who}{ReportText.PostSkipRow(skipped)}";
             default:
                 return null;
         }

@@ -101,6 +101,12 @@ public static class DryRunReport
                     CloseAt(persona, ev.Time, rows, open, openSub);
                     open[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.Travel, ReportText.TravelRow(travel, names, ev.WorldId));
                     break;
+                case OutboundSpeechPayload { Kind: OutboundSpeechPayload.OutboundPostKind.Post } post:
+                    rows.Add(new Row(persona, ev.WorldId, ev.Time, ev.Time, RowKind.Point, ReportText.PostRow(post)));
+                    break;
+                case PostSkippedPayload skipped:
+                    rows.Add(new Row(persona, ev.WorldId, ev.Time, ev.Time, RowKind.Point, ReportText.PostSkipRow(skipped)));
+                    break;
                 case TravelArrivedPayload when open.TryGetValue(persona, out var trip) && trip.Kind == RowKind.Travel:
                     rows.Add(trip with { End = ev.Time });
                     open.Remove(persona);
@@ -145,6 +151,11 @@ public static class DryRunReport
     {
         var offset = OffsetOf(row, utcOffsets);
         var start = TimeOf(row.Start, offset);
+        if (row.Kind == RowKind.Point)
+        {
+            return $"{start} {row.Body}";
+        }
+
         var end = row.End is { } finished ? TimeOf(finished, offset) : Unfinished;
         return $"{start}-{end} {row.Body}";
     }
@@ -172,6 +183,9 @@ public static class DryRunReport
 
         /// <summary>副行動。その action.ended で閉じる。</summary>
         SubAction,
+
+        /// <summary>時点の行（投稿、投稿のスキップ）。開始の時刻だけを書く。</summary>
+        Point,
     }
 
     /// <summary>表の1行。End が null なら、記録の終わりまで続いている（未終了）。</summary>

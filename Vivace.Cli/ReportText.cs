@@ -43,6 +43,24 @@ public static class ReportText
     public static string SubActionRow(ActionStartedPayload started, DisplayNames names) =>
         $"（スマホ）{names.Action(started.ActionId)}";
 
+    /// <summary>投稿の行の本文。"（投稿）今日の授業眠い" の形。</summary>
+    /// <param name="post">投稿の発話。</param>
+    public static string PostRow(OutboundSpeechPayload post) => $"（投稿）{post.Body}";
+
+    /// <summary>投稿をやめた行の本文。"（投稿をやめた：生成の失敗）" の形。</summary>
+    /// <param name="skipped">投稿のスキップ。</param>
+    public static string PostSkipRow(PostSkippedPayload skipped) => $"（投稿をやめた：{PostSkipLabel(skipped.Reason)}）";
+
+    /// <summary>投稿をやめた理由の表記。</summary>
+    /// <param name="reason">理由。</param>
+    public static string PostSkipLabel(PostSkippedPayload.PostSkipReason reason) => reason switch
+    {
+        PostSkippedPayload.PostSkipReason.AllRejected => "話題がなかった",
+        PostSkippedPayload.PostSkipReason.GenerationFailed => "生成の失敗",
+        PostSkippedPayload.PostSkipReason.Deadline => "締め切り",
+        _ => throw new ArgumentOutOfRangeException(nameof(reason), reason, null),
+    };
+
     /// <summary>移動の行の本文。"移動 香織の部屋 → 2年A組の教室" の形。</summary>
     /// <param name="travel">移動の開始。</param>
     /// <param name="names">表示名を引く表。</param>
