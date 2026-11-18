@@ -37,9 +37,6 @@ public sealed class UtilityDecider : IDecider
     /// <summary>投稿の行動の効果（sns.post）。</summary>
     public const string PostHandler = "sns.post";
 
-    /// <summary>投稿をスキップしたあと、投稿を候補に入れない時間。</summary>
-    public static readonly TimeSpan SkipCooldown = TimeSpan.FromMinutes(30);
-
     /// <inheritdoc />
     public DeciderOutput Decide(DecisionContext context)
     {
@@ -165,7 +162,7 @@ public sealed class UtilityDecider : IDecider
         return new DeciderOutput(payload, new Guard(checks.ToImmutableArray(), RejectAction.Redecide));
     }
 
-    /// <summary>スマホを開く機会で候補になる投稿の行動。場所は動かさず、締め切りとスキップのクールダウンで絞る。</summary>
+    /// <summary>スマホを開く機会で候補になる投稿の行動。場所は動かさず、行動の制限で絞る。</summary>
     /// <param name="defs">定義。</param>
     /// <param name="persona">ペルソナの状態。</param>
     /// <param name="personaDef">ペルソナの定義。</param>
@@ -176,8 +173,7 @@ public sealed class UtilityDecider : IDecider
     private static List<Option> PhonePosts(DefinitionPack defs, PersonaState persona, PersonaDef personaDef, WorldDef worldDef, PlaceId here, DateTimeOffset now, TimeSpan remaining)
     {
         var options = new List<Option>();
-        var skipped = persona.Posting.LastSkippedAt is { } last && now - last < SkipCooldown;
-        if (remaining <= TimeSpan.Zero || skipped || worldDef.Places.FirstOrDefault(p => p.Id == here.Value) is not { } placeDef)
+        if (remaining <= TimeSpan.Zero || worldDef.Places.FirstOrDefault(p => p.Id == here.Value) is not { } placeDef)
         {
             return options;
         }

@@ -11,7 +11,7 @@ using Vivace.Tests.Support;
 namespace Vivace.Tests.Decision;
 
 /// <summary>
-/// スマホを開く機会の決定。候補は「投稿する」（sns.post）と「何もしない」だけ。投稿はブロックの残りで切り、スキップのクールダウンで外す。
+/// スマホを開く機会の決定。候補は「投稿する」（sns.post）と「何もしない」だけ。投稿はブロックの残りで切る。
 /// </summary>
 public class PhoneDeciderTests
 {
@@ -20,10 +20,8 @@ public class PhoneDeciderTests
     private const string Post = "post_sns";
     private const int Positions = 40;
 
-    /// <summary>
-    /// 読書の固定ブロック（残りが length）の中で、読書を始めた香織の状態。posting を渡せば、投稿の状態を差し替える。
-    /// </summary>
-    private static SimState InBlock(TimeSpan length, PostingState? posting = null)
+    /// <summary>読書の固定ブロック（残りが length）の中で、読書を始めた香織の状態。</summary>
+    private static SimState InBlock(TimeSpan length)
     {
         var plan = new DayPlan(
             1,
@@ -36,13 +34,7 @@ public class PhoneDeciderTests
         var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
         var state = Fixture.Apply(Fixture.WithKaori(), committed).State;
         var started = Fixture.Event(11, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", KaoriRoom, length, ActivityReason.Block, 0, Block), Fixture.Kaori);
-        state = Fixture.Apply(state, started).State;
-        if (posting is not null)
-        {
-            state = Fixture.With(state, state.Personas[Fixture.Kaori] with { Posting = posting });
-        }
-
-        return state;
+        return Fixture.Apply(state, started).State;
     }
 
     /// <summary>位置を指定して、スマホを開く機会の決定を1回する。</summary>
@@ -94,17 +86,6 @@ public class PhoneDeciderTests
 
         Assert.Contains(outputs, output => output.Payload.ActionId == Post);
         Assert.All(outputs.Where(output => output.Payload.ActionId == Post), output => Assert.Equal(TimeSpan.FromMinutes(2), output.Payload.Duration));
-    }
-
-    /// <summary>スキップのクールダウン（30 分）の中は投稿を外す。10 分前は外れ、31 分前は候補に戻る。</summary>
-    [Fact]
-    public void SkipCooldownRemovesPost()
-    {
-        var recent = InBlock(TimeSpan.FromHours(1), new PostingState(null, Fixture.Now.AddMinutes(-10), null));
-        var old = InBlock(TimeSpan.FromHours(1), new PostingState(null, Fixture.Now.AddMinutes(-31), null));
-
-        Assert.All(Outputs(recent), output => Assert.Equal(UtilityDecider.Idle, output.Payload.ActionId));
-        Assert.Contains(Outputs(old), output => output.Payload.ActionId == Post);
     }
 
     /// <summary>行動の制限（投稿のクールダウン 60 分）は、副行動の投稿にも効く。10 分前に投稿を始めていれば外れ、61 分前なら候補に戻る。</summary>
