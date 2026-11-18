@@ -37,7 +37,7 @@ public sealed class UtilityDecider : IDecider
     /// <summary>投稿の行動の効果（sns.post）。</summary>
     public const string PostHandler = "sns.post";
 
-    /// <summary>投稿をスキップしたあと、投稿を候補に入れない時間（D6 P-45）。</summary>
+    /// <summary>投稿をスキップしたあと、投稿を候補に入れない時間。</summary>
     public static readonly TimeSpan SkipCooldown = TimeSpan.FromMinutes(30);
 
     /// <inheritdoc />

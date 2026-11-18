@@ -26,9 +26,9 @@ internal sealed class DecisionRequestedRule : EventRule<DecisionRequestedPayload
 
         if (payload.Reason == DecisionReason.Phone)
         {
-            if (persona.Location is not AtPlace || persona.Overlay is not null || persona.Activity is not { } activity || activity.BlockId != payload.BlockId)
+            if (persona.Overlay is not null || persona.Activity is not { } activity || activity.BlockId != payload.BlockId)
             {
-                return ApplyResult.Skipped(state, "ブロックの行動中でない、移動中、または副行動の途中");
+                return ApplyResult.Skipped(state, "ブロックの行動中でない、または副行動の途中");
             }
         }
         else if (persona.Activity is not null || persona.Location is not AtPlace)

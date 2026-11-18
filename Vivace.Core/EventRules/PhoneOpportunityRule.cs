@@ -34,7 +34,8 @@ internal sealed class PhoneOpportunityRule : EventRule<PhoneOpportunityPayload>
         }
 
         var request = EventDraft.DecisionRequested(ev.Time, persona, DecisionReason.Phone, payload.BlockId);
-        if (block.PhoneEvery is { } every && ev.Time + every < block.End)
+        var inBlock = persona.Activity?.BlockId == payload.BlockId || persona.LastBlockId == payload.BlockId;
+        if (inBlock && block.PhoneEvery is { } every && ev.Time + every < block.End)
         {
             var later = EventDraft.Next(ev.Time + every, EventTypes.PhoneOpportunity, persona, new PhoneOpportunityPayload(payload.BlockId));
             return ApplyResult.Applied(state, [request, later]);

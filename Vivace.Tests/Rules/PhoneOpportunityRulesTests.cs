@@ -34,6 +34,13 @@ public class PhoneOpportunityRulesTests
         return Fixture.Apply(Fixture.WithKaori(), committed).State;
     }
 
+    /// <summary>プランを確定し、ブロックを始めた香織の状態（ブロックを始めた印がつく）。</summary>
+    private static SimState WithBlockStarted(PhonePolicy phone, TimeSpan? every)
+    {
+        var started = Fixture.Event(11, Fixture.Now, EventTypes.BlockStarted, new BlockStartedPayload(Block, 1), Fixture.Kaori);
+        return Fixture.Apply(WithPlan(phone, every), started).State;
+    }
+
     /// <summary>スマホを開く機会のイベント（ブロックの ID つき）。</summary>
     private static SimEvent Opportunity(long seq, DateTimeOffset at) =>
         Fixture.Event(seq, at, EventTypes.PhoneOpportunity, new PhoneOpportunityPayload(Block), Fixture.Kaori);
@@ -65,7 +72,7 @@ public class PhoneOpportunityRulesTests
     [Fact]
     public void PhoneEverySchedulesNextOpportunity()
     {
-        var result = Fixture.Apply(WithPlan(PhonePolicy.Open, TimeSpan.FromMinutes(20)), Opportunity(11, Fixture.Now));
+        var result = Fixture.Apply(WithBlockStarted(PhonePolicy.Open, TimeSpan.FromMinutes(20)), Opportunity(11, Fixture.Now));
 
         Assert.Equal(2, result.FollowUps.Length);
         var next = result.FollowUps.Single(e => e.EventType == EventTypes.PhoneOpportunity);
@@ -77,7 +84,17 @@ public class PhoneOpportunityRulesTests
     [Fact]
     public void PhoneEveryStopsAtBlockEnd()
     {
-        var result = Fixture.Apply(WithPlan(PhonePolicy.Open, TimeSpan.FromMinutes(20)), Opportunity(11, Fixture.Now.AddMinutes(40)));
+        var result = Fixture.Apply(WithBlockStarted(PhonePolicy.Open, TimeSpan.FromMinutes(20)), Opportunity(11, Fixture.Now.AddMinutes(40)));
+
+        var request = Assert.Single(result.FollowUps);
+        Assert.Equal(EventTypes.DecisionRequested, request.EventType);
+    }
+
+    /// <summary>ブロックを始めていなければ（行動の印がなければ）、機会の決定タイミングは積むが、次の機会は積まない。</summary>
+    [Fact]
+    public void NoNextOpportunityBeforeBlockIsStarted()
+    {
+        var result = Fixture.Apply(WithPlan(PhonePolicy.Open, TimeSpan.FromMinutes(20)), Opportunity(11, Fixture.Now));
 
         var request = Assert.Single(result.FollowUps);
         Assert.Equal(EventTypes.DecisionRequested, request.EventType);
