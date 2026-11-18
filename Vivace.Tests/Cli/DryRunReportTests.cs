@@ -140,6 +140,33 @@ public class DryRunReportTests
             text);
     }
 
+    /// <summary>副行動の投稿のスキップは、副行動の字下げで、副行動の行の直後に出す。</summary>
+    [Fact]
+    public void SubPostSkipIsIndentedLikeItsSubAction()
+    {
+        var records = new[]
+        {
+            Logged(1, At(22, 0), new ActionStartedPayload("attend_class", School, TimeSpan.FromMinutes(60), ActivityReason.Block, 1, "b@1"), Kaori),
+            Logged(2, At(22, 20), new ActionStartedPayload("post_sns", School, TimeSpan.FromMinutes(8), ActivityReason.Chosen, 1, null, true), Kaori),
+            Logged(3, At(22, 28), new ActionEndedPayload("post_sns", 1, true), Kaori),
+            Logged(4, At(22, 28), new PostSkippedPayload(PostSkippedPayload.PostSkipReason.GenerationFailed, null), Kaori),
+            Logged(5, At(23, 0), new ActionEndedPayload("attend_class", 1), Kaori),
+        };
+        var offsets = new Dictionary<WorldId, TimeSpan> { [Town] = TimeSpan.FromHours(9) };
+
+        var text = DryRunReport.Render(records, Names, offsets);
+
+        Assert.Equal(
+            "2026-11-02（月）\n"
+            + "香織\n"
+            + "  07:00-08:00 授業を受ける＠2年A組の教室（予定）\n"
+            + "    07:20-07:28 （スマホ）SNS に投稿する\n"
+            + "    07:28 （投稿をやめた：生成の失敗）\n"
+            + "\n"
+            + "適用 5 件、捨てた 0 件、却下 0 件\n",
+            text);
+    }
+
     /// <summary>投稿と投稿のスキップは、その時刻に1行の時点の行として出す（副行動の行とは別の行）。</summary>
     [Fact]
     public void PostingRowsAreShownAtTheirTime()
@@ -159,7 +186,7 @@ public class DryRunReportTests
             "2026-11-02（月）\n"
             + "香織\n"
             + "    07:20-07:28 （スマホ）SNS に投稿する\n"
-            + "  07:28 （投稿）今日の授業眠い\n"
+            + "    07:28 （投稿）今日の授業眠い\n"
             + "  07:50 （投稿をやめた：話題がなかった）\n"
             + "\n"
             + "適用 4 件、捨てた 0 件、却下 0 件\n",
