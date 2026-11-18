@@ -22,16 +22,18 @@ public class GoToNextWeightTests
 {
     private const int Positions = 40;
 
-    /// <summary>好みを定義で 1000 倍にすると、乱数の位置を変えても、ほぼ必ず次の予定の場所へ向かう行動が選ばれる。</summary>
+    /// <summary>
+    /// 次の予定の場所にいて、ほかに実行できる候補があるなら、好みを 1000 倍にしても、次の予定の場所へ向かう行動は候補に残らず選ばれない。
+    /// </summary>
     [Fact]
-    public void StronglyLikedGoToNextIsChosenAlmostAlways()
+    public void StronglyLikedGoToNextIsNotChosenWhileOtherActionsFit()
     {
         var context = ContextFor(WithPreference("1000.0"));
         var state = FreeDay(context);
 
         var chosen = Choices(context, state);
 
-        Assert.True(chosen.Count(id => id == UtilityDecider.GoToNext) >= Positions - 2, $"選ばれた回数: {chosen.Count(id => id == UtilityDecider.GoToNext)}");
+        Assert.DoesNotContain(UtilityDecider.GoToNext, chosen);
     }
 
     /// <summary>好みを書かなければ、同じ位置の範囲で、次の予定の場所へ向かう行動以外も選ばれる（重みが 1.0 のまま、ほかと同じ扱い）。</summary>

@@ -129,7 +129,7 @@
     <table>
       <tr><th>イベントタイプ</th><th>出す者</th><th>主な中身</th><th>Apply</th></tr>
       <tr><td><code>decision.requested</code></td><td>Apply</td><td>ペルソナ、理由（下表）、ブロック ID</td><td>状態は <code>processing</code> にする（決定中のフラグ <code>Deciding</code> を立てる。P-07、J-133）。<code>StartHandler</code> を出す（D1 1.8）。決定中に来たものは捨てる</td></tr>
-      <tr><td><code>activity.chosen</code></td><td>ハンドラ（Decider）</td><td>行動、場所、経路、移動時間、所要時間、副行動か、乱数の範囲、候補の要約（痕跡）</td><td>guard（行動のバージョン、実行できること、乱数の位置）を確かめる。行動のバージョンを上げ、乱数の位置を進める。場所が違えば <code>travel.started</code>、同じなら <code>action.started</code> を同じ時刻に積む。所要時間 0 の <code>core.idle</code>（何もしない）は、乱数の位置だけを進め、バージョンを上げず、後続を積まない（J-129）。待ちが 0 以下の次の予定の場所へ向かう行動は、移動だけで終わり、到着で決定タイミングを積み直す。同じ場所なら何も積まない（J-143）</td></tr>
+      <tr><td><code>activity.chosen</code></td><td>ハンドラ（Decider）</td><td>行動、場所、経路、移動時間、所要時間、副行動か、乱数の範囲、候補の要約（痕跡）</td><td>guard（行動のバージョン、実行できること、乱数の位置）を確かめる。行動のバージョンを上げ、乱数の位置を進める。場所が違えば <code>travel.started</code>、同じなら <code>action.started</code> を同じ時刻に積む。所要時間 0 の <code>core.idle</code>（何もしない）は、乱数の位置だけを進め、バージョンを上げず、後続を積まない（J-129）。次の予定の場所へ向かう行動で移動があるときは、移動だけで終わり、到着で決定タイミングを積み直す（J-143）。同じ場所で待ちが 0 以下なら、何も積まない</td></tr>
       <tr><td><code>block.responded</code></td><td>ハンドラ（予定の乱れへの対応）</td><td>ブロック ID、選んだもの（遅刻 / 欠席 / 待つ）</td><td>遅刻は、ブロックの場所への移動を始める。欠席は、そのブロックを自由時間として扱い、決定タイミングを積む。待つは、出来事の解消かブロックの終わりの早いほうまで待機し、そこで開始時の確認をやり直す</td></tr>
       <tr><td><code>travel.started</code></td><td>Apply</td><td>出発地、目的地、経路（区間の列）、到着の時刻、行動のバージョン</td><td>移動中にする。居合わせが変わるので、社交欲求の率を出発地の全員について計算し直す。<code>travel.arrived</code> を積む</td></tr>
       <tr><td><code>travel.arrived</code></td><td>Apply</td><td>場所、行動のバージョン</td><td>バージョンが古ければ捨てる。居場所を書き換え、着いた場所の全員の率を計算し直す。続きの行動があれば <code>action.started</code>。続きの行動がなければ、着いた時刻に始まっていない固定ブロックがあれば <code>block.started</code> を、自由時間なら決定タイミングを積む（J-134、J-143）</td></tr>
@@ -276,7 +276,7 @@
   <div class="table-wrap">
     <table>
       <tr><th>ID</th><th>中身</th><th><code>schedule_only</code></th></tr>
-      <tr><td><code>core.go_to_next</code></td><td>次の予定の場所へ向かい、着いたら待つ。条件が成り立つ限り、いつでも候補に入る（VISION 5章）。所要時間は持たず、待ちは次の予定の開始まで。なければプランの終わり（J-112）</td><td>いいえ（Decider が必ず足す）</td></tr>
+      <tr><td><code>core.go_to_next</code></td><td>次の予定の場所へ向かう。条件が成り立つ限り、候補に入る（VISION 5章）。移動があれば移動だけで、着いたら決め直す。移動がなければ、ほかに実行できる候補がないときだけ、次の予定の開始まで（なければプランの終わり）その場で待つ（D5 5.2、J-112、J-143）</td><td>いいえ（Decider が必ず足す）</td></tr>
       <tr><td><code>core.idle</code></td><td>何もしない（スマホを開く機会の「ブロックを続ける」、待機）。スマホは開ける（J-100）</td><td>はい</td></tr>
       <tr><td><code>core.sleep</code></td><td>睡眠。<code>rate.energy = 0</code>、<code>restore.energy = 100</code>、<code>sleep = { consolidate = true, debt = true }</code></td><td>はい</td></tr>
       <tr><td><code>core.faint</code></td><td>気絶。所要時間は固定。<code>restore.energy = 50</code>、<code>sleep = { consolidate = true, debt = false }</code></td><td>はい</td></tr>

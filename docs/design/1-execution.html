@@ -396,27 +396,21 @@ record ApplyResult(
       <text class="title" x="380" y="184" text-anchor="middle">行動中</text>
       <text class="sub" x="380" y="203" text-anchor="middle">行動、場所、終了の時刻</text>
 
-      <rect class="box" x="580" y="90" width="150" height="56" rx="8"/>
-      <text class="title" x="655" y="114" text-anchor="middle">待機中</text>
-      <text class="sub" x="655" y="133" text-anchor="middle">着いて、次の予定を待つ</text>
-
       <path class="arrow" d="M180 104 L298 56"/>
       <text class="sub" x="180" y="66">別の場所を選んだ</text>
       <path class="arrow" d="M180 132 L298 180"/>
       <text class="sub" x="250" y="146">同じ場所を選んだ</text>
       <path class="arrow" d="M380 76 V158"/>
       <text class="sub" x="388" y="122">到着</text>
-      <path class="arrow" d="M460 56 L578 104"/>
-      <text class="sub" x="500" y="66">次の予定の場所へ</text>
-      <path class="arrow" d="M578 132 L462 182"/>
-      <text class="sub" x="540" y="182">ブロックの開始</text>
+      <path class="arrow dash" d="M300 30 C 230 2, 120 40, 105 88"/>
+      <text class="sub" x="110" y="22">移動だけ：着いて決め直す</text>
       <path class="arrow dash" d="M298 205 C 200 235, 110 225, 105 150"/>
       <text class="sub" x="40" y="200">終了・中断</text>
     </svg>
     <figcaption>ペルソナの行動の状態。行動のバージョン番号が上がるのは、決めたとき（<code>activity.chosen</code>）と、割り込みで打ち切られたとき。行動の終わり（<code>action.ended</code>）では上げない（J-131）</figcaption>
   </figure>
   <ul>
-    <li>行動中のまま、固定ブロックの開始で次の行動に移ることもある（ブロックの開始が、前の行動を終わらせる）。着いて待っているとき、出来事で予定が押したとき、ブロックの中でスマホを使っているときに起きる。ただし、反射の行動（気絶、早退して休む）は打ち切らない（D5 5.7）</li>
+    <li>行動中のまま、固定ブロックの開始で次の行動に移ることもある（ブロックの開始が、前の行動を終わらせる）。次の予定まで待っているとき、出来事で予定が押したとき、ブロックの中でスマホを使っているときに起きる。ただし、反射の行動（気絶、早退して休む）は打ち切らない（D5 5.7）</li>
     <li>反射と出来事は、どの状態からでも割り込める。移動中に区間が伸びたときだけは中断せず、到着を積み直す（VISION 9章）</li>
     <li>行動の中身（どの行動を、どの場所で、いつまで）と、そのバージョン番号は、ペルソナインスタンスの状態に持つ（D3）</li>
   </ul>
