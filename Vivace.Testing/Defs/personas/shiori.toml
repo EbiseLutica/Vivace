@@ -9,7 +9,7 @@ lore = """
 items = ["smartphone"]
 
 [actions]
-use = ["core.*", "eat_lunch", "attend_class"]
+use = ["core.*", "eat_lunch", "attend_class", "walk_park", "cafe", "watch_tv"]
 
 [[schedule.period]]
 id = "summer"
