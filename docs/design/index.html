@@ -18,7 +18,7 @@
     <span class="chip">2026-11-06 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
     <span class="chip fixed">案はすべて合意（57 件）</span>
-    <span class="chip">枠の外の判断は出どころつき（168 件）</span>
+    <span class="chip">枠の外の判断は出どころつき（169 件）</span>
   </div>
 </header>
 
@@ -330,6 +330,7 @@
       <tr><td>J-166</td><td>行動表の日付の区切りは、ワールドごとの時差で行う。行の時差は、その行の開始のイベントが持つワールド（記録の <code>WorldId</code>）から引く。ワールド ID から定義 ID を引く表は、保存先の最後の状態から作る。破棄されたワールドも、状態に <code>Status</code> つきで残る。破棄された人やワールドの行も、正しい現地の日付に切れるようにする</td><td><a href="7-operations.html#cli">D7 7.5</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/17">PR #17</a>）</td></tr>
       <tr><td>J-167</td><td><code>vivace dry-run</code> の日数の上限は数値で決めず、開始から日数を足した終わりの時刻が計算でき、さらにその1日後も計算できるかで判定する（日付の計算が範囲の端で落ちないように。開始が範囲の端でも、--days のせいとは限らない）。計算できなければ「開始と日数から終わりの時刻を計算できません。」の日本語のエラーで 1 を返し、回さない</td><td><a href="7-operations.html#cli">D7 7.5</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/17">PR #17</a>）</td></tr>
       <tr><td>J-168</td><td><code>vivace dry-run</code> の <code>--start</code> は、オフセットが必須の ISO 8601 だけを受ける（<code>+09:00</code> の形と <code>Z</code>。オフセットのない時刻、日付だけ、ISO 8601 でないものは拒否）。既定の値は、同じ形の文字列（<code>2026-11-01T23:00+09:00</code>）で、ヘルプにもそのまま出す。<code>--days</code> の省略は、日本語のエラーで止める</td><td><a href="7-operations.html#cli">D7 7.5</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/17">PR #17</a>）</td></tr>
+      <tr><td>J-169</td><td>自由時間の候補で、<code>requires</code> に場所のタグがない行動は、いまの場所だけを候補にする。移動してまでする理由がなく、場所の数だけ候補と重みが増えるのを防ぐ。場所を固定するブロックの中の扱いは変えない（D5 5.2）</td><td><a href="5-decision.html#candidates">D5 5.2</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/23">PR #23</a>）</td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>

@@ -262,6 +262,11 @@ public sealed class UtilityDecider : IDecider
             foreach (var place in worldDef.Places.OrderBy(p => p.Id, StringComparer.Ordinal))
             {
                 var placeId = new PlaceId(place.Id);
+                if (action.Requires.PlaceTags.IsEmpty && placeId != here)
+                {
+                    continue;
+                }
+
                 if (!ActionRules.PlaceAllows(action, personaDef, place) || routes.Minutes(here, placeId) is not { } minutes)
                 {
                     continue;
