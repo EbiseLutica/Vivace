@@ -18,13 +18,13 @@ public class PhoneOpportunityRulesTests
     private const string Block = "reading@2026-11-01";
 
     /// <summary>1時間の読書の固定ブロック（14:00 から 15:00、香織の部屋）。スマホの設定と間隔を指定する。</summary>
-    private static DayPlan Plan(PhonePolicy phone, TimeSpan? every) => new(
+    private static DayPlan Plan(PhonePolicy phone, TimeSpan? every, PlaceId? place = null) => new(
         1,
         Fixture.Now,
         Fixture.Now.AddHours(24),
         Fixture.Now.AddHours(21),
         PlanSource.Fallback,
-        [new PlanBlock(Block, BlockKind.Fixed, Fixture.Now, Fixture.Now.AddHours(1), "read_book", KaoriRoom, phone, every, [], PartnerAbsentPolicy.Continue)],
+        [new PlanBlock(Block, BlockKind.Fixed, Fixture.Now, Fixture.Now.AddHours(1), "read_book", place ?? KaoriRoom, phone, every, [], PartnerAbsentPolicy.Continue)],
         null);
 
     /// <summary>プランを確定した香織の状態。</summary>
@@ -127,5 +127,27 @@ public class PhoneOpportunityRulesTests
 
         var only = Assert.Single(result.FollowUps);
         Assert.Equal(EventTypes.ActionStarted, only.EventType);
+    }
+
+    /// <summary>移動のあとに始まるブロックは、到着で行動を始めるとき、スマホが開けるなら、同じ時刻に機会も積む（家で始まるブロックへ、10 分歩いて着く）。</summary>
+    [Fact]
+    public void ArrivalIntoOpenBlockAlsoSchedulesOpportunity()
+    {
+        var home = new PlaceId("home_living");
+        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(Plan(PhonePolicy.Open, null, home)), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
+        var pending = new PendingAction("read_book", home, TimeSpan.FromMinutes(50), ActivityReason.Block, Block);
+        var travel = Fixture.Event(11, Fixture.Now, EventTypes.TravelStarted, new TravelStartedPayload(KaoriRoom, home, ImmutableArray<RouteStep>.Empty, Fixture.Now.AddMinutes(10), 0, pending), Fixture.Kaori);
+        var moving = Fixture.Apply(Fixture.Apply(Fixture.WithKaori(), committed).State, travel).State;
+        var arrived = Fixture.Event(12, Fixture.Now.AddMinutes(10), EventTypes.TravelArrived, new TravelArrivedPayload(home, 0), Fixture.Kaori);
+
+        var result = Fixture.Apply(moving, arrived);
+
+        Assert.Equal(EventStatus.Applied, result.Status);
+        Assert.Equal(2, result.FollowUps.Length);
+        var started = Assert.Single(result.FollowUps, e => e.EventType == EventTypes.ActionStarted);
+        Assert.Equal(new ActionStartedPayload("read_book", home, TimeSpan.FromMinutes(50), ActivityReason.Block, 0, Block), started.Payload);
+        var opportunity = Assert.Single(result.FollowUps, e => e.EventType == EventTypes.PhoneOpportunity);
+        Assert.Equal(new PhoneOpportunityPayload(Block), opportunity.Payload);
+        Assert.Equal(Fixture.Now.AddMinutes(10), opportunity.Time);
     }
 }

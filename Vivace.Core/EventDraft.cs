@@ -41,6 +41,13 @@ public sealed record EventDraft(
     internal static EventDraft DecisionRequested(DateTimeOffset now, PersonaState persona, DecisionReason reason, string? blockId) =>
         Next(now, EventTypes.DecisionRequested, persona, new DecisionRequestedPayload(reason, blockId));
 
+    /// <summary>スマホを開く機会のイベントを作る。</summary>
+    /// <param name="now">時刻。</param>
+    /// <param name="persona">ペルソナ。</param>
+    /// <param name="blockId">ブロックの ID。</param>
+    internal static EventDraft PhoneOpportunity(DateTimeOffset now, PersonaState persona, string blockId) =>
+        Next(now, EventTypes.PhoneOpportunity, persona, new PhoneOpportunityPayload(blockId));
+
     /// <summary>行動の開始のイベントを作る。</summary>
     /// <param name="now">時刻。</param>
     /// <param name="persona">ペルソナ。</param>

@@ -1,3 +1,4 @@
+using Vivace.Core.Domain;
 using System.Collections.Immutable;
 using Vivace.Core.Domain.State;
 using Vivace.Core.Events.Payloads;
@@ -34,7 +35,10 @@ internal sealed class TravelArrivedRule : EventRule<TravelArrivedPayload>
         var followUps = ImmutableArray<EventDraft>.Empty;
         if (travel.Next is { } pending)
         {
-            followUps = ImmutableArray.Create(EventDraft.ActionStarted(ev.Time, arrived, pending.ActionId, pending.Place, pending.Duration, pending.Reason, pending.BlockId));
+            var started = EventDraft.ActionStarted(ev.Time, arrived, pending.ActionId, pending.Place, pending.Duration, pending.Reason, pending.BlockId);
+            followUps = OpportunityFor(arrived, pending.BlockId, ev.Time) is { } opportunity
+                ? ImmutableArray.Create(started, opportunity)
+                : ImmutableArray.Create(started);
         }
         else if (CoveringFixedBlock(arrived, ev.Time) is { } block)
         {
@@ -47,6 +51,15 @@ internal sealed class TravelArrivedRule : EventRule<TravelArrivedPayload>
 
         return ApplyResult.Applied(next, followUps);
     }
+
+    /// <summary>移動のあとに始まるブロックの行動で、ブロックがスマホを開けるなら、同じ時刻のスマホを開く機会を返す。</summary>
+    /// <param name="persona">着いたペルソナ。</param>
+    /// <param name="blockId">始まる行動のブロックの ID。ブロックの行動でなければ null。</param>
+    /// <param name="now">到着の時刻。</param>
+    private static EventDraft? OpportunityFor(PersonaState persona, string? blockId, DateTimeOffset now) =>
+        blockId is { } id && persona.Plan?.CurrentBlock(id, now) is { Phone: PhonePolicy.Open }
+            ? EventDraft.PhoneOpportunity(now, persona, id)
+            : null;
 
     /// <summary>到着の時刻に、まだ始めていない固定・計画のブロックがあれば、それを返す（移動中に始まったブロックの取りこぼしを防ぐ）。</summary>
     private static PlanBlock? CoveringFixedBlock(PersonaState persona, DateTimeOffset now) =>
