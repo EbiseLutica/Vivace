@@ -49,6 +49,7 @@
       <li><a href="#m6">M6 以降 困った順に足す</a></li>
       <li class="part">決めること</li>
       <li><a href="#gaps">いま見えている設計の穴</a></li>
+      <li><a href="#issues">見つかった課題</a></li>
       <li><a href="#next">最初の一手</a></li>
       <li class="part">関連</li>
       <li><a href="design/index.html">詳細設計</a></li>
@@ -158,7 +159,8 @@
     <li><strong>コードの書き方</strong>：<code>CLAUDE.md</code> の「コード」に従う（1ファイルに1つの型、ドキュメントコメント、決定性）</li>
     <li><strong>テスト</strong>：期待値は手で計算できる小さな例で固定し、実装から作らない。わざと壊して、テストが落ちることを確かめる。スナップショットを更新したら、変わった理由を PR に書く。LLM を使う部分は <code>ScriptedLlm</code> で回し、本物の LLM はテストに入れない</li>
     <li><strong>設計書</strong>：設計の一部だけを作るのは、設計書を直さず、この文書の「範囲外」に書く。設計書の本文と食い違う判断をしたときだけ、正の章の本文を直し、<code>docs/design/index.html</code> の「枠の外の判断」に J-xx の番号と出どころ（エージェント（PR #N））を付けて載せる。合意の印は付けない。PR の本文には、ユーザーに見てほしい判断だけを多くても3件書く。<code>docs/VISION.html</code> の考え方が変わるものは、実装を止めずに無難な形で進め、PR の先頭に書く</li>
-    <li><strong>数値の調整</strong>：気づいた不自然な数値は、PR の本文に書くだけにして、値は変えない</li>
+    <li><strong>数値の調整</strong>：気づいた不自然な数値は、値を変えずに、PR の本文と、この文書の<a href="#issues">見つかった課題</a>に書く</li>
+    <li><strong>見つかった課題</strong>：作業、レビュー、運転で見つけて、その PR で直さない課題は、PR の本文やチャットにだけ残さず、<a href="#issues">見つかった課題</a>に足す。どの節目で扱うかが決まっているものは、その節目の項目に足す。片付けたら行を消す</li>
   </ul>
 </section>
 
@@ -270,9 +272,24 @@
   </div>
 </section>
 
+<section id="issues">
+  <h2>見つかった課題</h2>
+  <p>作業、レビュー、運転で見つけて、まだ直していない課題。設計書どうしの食い違いは、上の<a href="#gaps">設計の穴</a>に書く。扱う時期の節目に入るときに見て、片付けたら行を消す。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>課題</th><th>見つけた所</th><th>起きること</th><th>扱う時期</th></tr>
+      <tr><td>Decider の例外で、エンジンが止まったまま返らない</td><td>PR #22 のレビュー</td><td>候補が空になって範囲外の例外が出る変異を入れると、テストの実行が6分以上返らなかった。例外がレーンから外に伝わらず、待ち続けていると見られる。運転中なら、落ちたことに気づけない</td><td>M2（LLM のハンドラの失敗を扱うときに、合わせて確かめる）</td></tr>
+      <tr><td>実機の Ctrl+C で、件数の行が出るかを確かめていない</td><td>PR #19</td><td>件数の行は、テストのキャンセルでしか確かめていない。System.CommandLine は、Ctrl+C のあと既定で2秒しか待たないので、ハンドラが遅いと件数の行を出す前に打ち切られる</td><td>M2（LLM の待ちが入るので、そのときに確かめる）</td></tr>
+      <tr><td><code>DryRun()</code> で時計を省くと、実時間の時計になる</td><td>PR #18 のレビュー</td><td>ドライランは早送りの時計（<code>VirtualClock</code>）のはずだが、いまはドキュメントコメントに書いただけで、検査していない。CLI の dry-run は時計を明示しているので、実害はない</td><td>M2（チャンネルを作り、<code>DryRun()</code> に中身ができるとき）</td></tr>
+      <tr><td>同じ行動が続きやすい</td><td>PR #22 の dry-run</td><td>詩織が夕方に「テレビを見る」を3回、「喫茶店でひと休み」を2回続けた。香織の「本を読む」が、終わった同じ分にまた始まる。続けた回数による重みの下げ方（<code>RepeatFactor</code>）が弱いと見られる</td><td>M2 以降（投稿で同じことばかり言うように見えてきたら）</td></tr>
+      <tr><td>生えた場所の名前が出ない</td><td>PR #21</td><td>流れる出力と行動表は、定義にない場所（生えた場所）を ID のまま出す</td><td>場所の生成を作るとき（M6 以降）</td></tr>
+    </table>
+  </div>
+</section>
+
 <section id="next">
   <h2>最初の一手</h2>
-  <p>M1 の <code>SystemClock</code> と <code>ScaledClock</code> から進める。</p>
+  <p>M2 の LLM の PoC から進める。</p>
 </section>
 
 </main>
