@@ -283,9 +283,10 @@
       <tr><td><code>DryRun()</code> で時計を省くと、実時間の時計になる</td><td>PR #18 のレビュー</td><td>ドライランは早送りの時計（<code>VirtualClock</code>）のはずだが、いまはドキュメントコメントに書いただけで、検査していない。CLI の dry-run は時計を明示しているので、実害はない</td><td>M2（チャンネルを作り、<code>DryRun()</code> に中身ができるとき）</td></tr>
       <tr><td>同じ行動が続きやすい</td><td>PR #22 の dry-run</td><td>詩織が夕方に「テレビを見る」を3回、「喫茶店でひと休み」を2回続けた。香織の「本を読む」が、終わった同じ分にまた始まる。続けた回数による重みの下げ方（<code>RepeatFactor</code>）が弱いと見られる</td><td>M2 以降（投稿で同じことばかり言うように見えてきたら）</td></tr>
       <tr><td>生えた場所の名前が出ない</td><td>PR #21</td><td>流れる出力と行動表は、定義にない場所（生えた場所）を ID のまま出す</td><td>場所の生成を作るとき（M6 以降）</td></tr>
-      <tr><td>副行動の投稿は、行動の制限の基準にならない</td><td>PR（M2 の副行動）</td><td>副行動は利用の記録を付けないので、<code>cooldown</code> と <code>max_per_day</code> の基準にならない。スマホを開く機会からの投稿は、主の投稿の記録しか見ない。sns.post を作るときは、<code>PostingState.LastPostAt</code> を基準にし、副行動の投稿もそれを使う想定</td><td>M2 の次の PR（sns.post を作るとき）</td></tr>
-      <tr><td>投稿が自由時間の主の行動として選ばれやすい</td><td>PR（M2 のテスト用の町、<code>post_sns</code>）</td><td>投稿の行動は効果を書いていないので、欲求で選ばれにくくなる理由がない。60 分の制限で、主の行動としての投稿は1時間に1回までに抑えたが、その分の機会は残る。投稿の場所は、いまの場所だけ（D5 5.2、J-169）</td><td>M2 の次の PR（sns.post の効果と、投稿の制限を決めるとき）</td></tr>
-      <tr><td>スキップのクールダウンが働かない</td><td>PR（M2 の Decider）</td><td><code>PostingState.LastSkippedAt</code> を書くのは <code>post.skipped</code> で、まだ作っていない。クールダウンのテストは、状態を直接置いて確かめている</td><td>M2 の <code>post.skipped</code> を作るとき</td></tr>
+      <tr><td>副行動の投稿は、行動の制限の基準にならない</td><td>PR #23</td><td>副行動は利用の記録を付けないので、<code>cooldown</code> と <code>max_per_day</code> の基準にならない。スマホを開く機会からの投稿は、主の投稿の記録しか見ない。sns.post を作るときは、<code>PostingState.LastPostAt</code> を基準にし、副行動の投稿もそれを使う想定</td><td>M2 の次の PR（sns.post を作るとき）</td></tr>
+      <tr><td>投稿が自由時間の主の行動として選ばれやすい</td><td>PR #23 の dry-run</td><td>投稿の行動は効果を書いていないので、欲求で選ばれにくくなる理由がない。60 分の制限で、主の行動としての投稿は1時間に1回までに抑えたが、その分の機会は残る。投稿の場所は、いまの場所だけ（D5 5.2、J-169）</td><td>M2 の次の PR（sns.post の効果と、投稿の制限を決めるとき）</td></tr>
+      <tr><td>スキップのクールダウンが働かない</td><td>PR #23</td><td><code>PostingState.LastSkippedAt</code> を書くのは <code>post.skipped</code> で、まだ作っていない。クールダウンのテストは、状態を直接置いて確かめている</td><td>M2 の <code>post.skipped</code> を作るとき</td></tr>
+      <tr><td>次の予定の場所へ1分だけ行って戻る</td><td>PR #23 の dry-run</td><td>香織が 11-03 の 21:51 に居間から自分の部屋へ移動し、着いた 21:52 にすぐ居間へ戻った。次の予定の場所へ向かう行動（<code>core.go_to_next</code>）が移動だけで終わり、着いて決め直したときに、元の場所の行動が選ばれる（J-143）。予定の開始までまだ2時間ある</td><td>M2 以降（行き来が目立ってきたら）</td></tr>
     </table>
   </div>
 </section>
