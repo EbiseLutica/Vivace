@@ -48,6 +48,17 @@ public class PhoneDeciderTests
     private static List<DeciderOutput> Outputs(SimState state) =>
         Enumerable.Range(0, Positions).Select(position => Decide(state, (ulong)position)).ToList();
 
+    /// <summary>投稿をスキップした直後は、スマホを開く機会に投稿を候補にしない。何もしないだけになる。</summary>
+    [Fact]
+    public void SkipJustBeforeLeavesOnlyIdle()
+    {
+        var skipped = Fixture.Apply(InBlock(TimeSpan.FromHours(1)), Fixture.Event(20, Fixture.Now, EventTypes.PostSkipped, new PostSkippedPayload(PostSkippedPayload.PostSkipReason.AllRejected, null), Fixture.Kaori)).State;
+
+        var outputs = Outputs(skipped);
+
+        Assert.All(outputs, output => Assert.Equal(UtilityDecider.Idle, output.Payload.ActionId));
+    }
+
     /// <summary>候補は投稿と何もしないだけ。どちらも副行動として、いまの場所のまま（移動なし）。何もしないは所要時間 0。</summary>
     [Fact]
     public void CandidatesAreOnlyPostAndIdle()

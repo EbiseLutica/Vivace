@@ -139,7 +139,8 @@ public sealed class UtilityDecider : IDecider
 
             if (ActionRules.PreferenceFactor(personaDef, action) is not { } preference
                 || !ActionRules.PlaceAllows(action, personaDef, placeDef)
-                || !ActionRules.WithinLimits(action, persona.Usage.GetValueOrDefault(action.Id), now, worldDef.UtcOffset))
+                || !ActionRules.WithinLimits(action, persona.Usage.GetValueOrDefault(action.Id), now, worldDef.UtcOffset)
+                || !ActionRules.WithinPostingLimits(action, persona.Posting, now))
             {
                 continue;
             }
@@ -201,7 +202,8 @@ public sealed class UtilityDecider : IDecider
                     continue;
                 }
 
-                if (!ActionRules.WithinLimits(action, persona.Usage.GetValueOrDefault(action.Id), now.AddMinutes(minutes), worldDef.UtcOffset))
+                if (!ActionRules.WithinLimits(action, persona.Usage.GetValueOrDefault(action.Id), now.AddMinutes(minutes), worldDef.UtcOffset)
+                    || !ActionRules.WithinPostingLimits(action, persona.Posting, now.AddMinutes(minutes)))
                 {
                     continue;
                 }

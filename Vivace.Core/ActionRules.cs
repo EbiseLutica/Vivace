@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using Vivace.Core.Definitions.Model;
 using Vivace.Core.Domain.State;
 using Vivace.Core.Domain;
+using Vivace.Core.Handlers;
 using Vivace.Core.Time;
 
 namespace Vivace.Core;
@@ -19,6 +20,9 @@ public static class ActionRules
 
     /// <summary>嫌い（dislike）の倍率。</summary>
     public const double DislikeFactor = 0.4;
+
+    /// <summary>投稿をスキップしたあと、投稿の行動を候補にしない時間（D5 P-45）。</summary>
+    public static readonly TimeSpan SkipCooldown = TimeSpan.FromMinutes(30);
 
     /// <summary>
     /// ペルソナが使える行動か。使う行動の一覧（<c>use</c>）の、完全一致かワイルドカード（"core.*"）に当たるかで見る。
@@ -167,12 +171,37 @@ public static class ActionRules
             || PreferenceFactor(personaDef, action) is null
             || world.Places.FirstOrDefault(p => p.Id == place.Value) is not { } placeDef
             || !PlaceAllows(action, personaDef, placeDef)
-            || !WithinLimits(action, persona.Usage.GetValueOrDefault(actionId), now.AddMinutes(minutes.Value), world.UtcOffset))
+            || !WithinLimits(action, persona.Usage.GetValueOrDefault(actionId), now.AddMinutes(minutes.Value), world.UtcOffset)
+            || !WithinPostingLimits(action, persona.Posting, now.AddMinutes(minutes.Value)))
         {
             return false;
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// 投稿の行動（効果が sns.post）の、投稿の状態による制限を満たすか。最後のスキップから SkipCooldown 以内、
+    /// または最後の投稿から行動の cooldown 以内なら満たさない。主の行動と副行動（スマホを開く機会）で同じに見る。投稿以外は常に満たす。
+    /// </summary>
+    /// <param name="action">行動の定義。</param>
+    /// <param name="posting">投稿の状態。</param>
+    /// <param name="now">候補の行動を始める時刻。</param>
+    public static bool WithinPostingLimits(ActionDef action, PostingState posting, DateTimeOffset now)
+    {
+        if (action.Effects.Handler != SnsPostHandler.Name)
+        {
+            return true;
+        }
+
+        if (posting.LastSkippedAt is { } skipped && now - skipped < SkipCooldown)
+        {
+            return false;
+        }
+
+        return action.Limits.Cooldown is not { } cooldown
+            || posting.LastPostAt is not { } last
+            || now - last >= cooldown;
     }
 
     /// <summary>繰り返しの減衰の係数。直前に同じ行動を k 回続けていたら、decay の k 乗になる。</summary>
