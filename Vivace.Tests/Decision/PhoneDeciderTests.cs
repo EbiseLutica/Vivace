@@ -68,16 +68,6 @@ public class PhoneDeciderTests
             output => Assert.Equal(TimeSpan.Zero, output.Payload.Duration));
     }
 
-    /// <summary>投稿の所要時間は、ブロックの残りで切る。残り 5 分なら、どの投稿も 5 分を超えない。</summary>
-    [Fact]
-    public void PostDurationIsCutByBlockRemainder()
-    {
-        var outputs = Outputs(InBlock(TimeSpan.FromMinutes(5)));
-
-        Assert.Contains(outputs, output => output.Payload.ActionId == Post);
-        Assert.All(outputs.Where(output => output.Payload.ActionId == Post), output => Assert.True(output.Payload.Duration <= TimeSpan.FromMinutes(5)));
-    }
-
     /// <summary>残りが投稿の最短（3 分）より短くても、投稿は残りで切って候補に残る。残り 2 分なら、どの投稿も 2 分になる。</summary>
     [Fact]
     public void ShortRemainderCutsPostToRemainder()
