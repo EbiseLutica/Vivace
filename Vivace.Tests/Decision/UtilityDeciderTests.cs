@@ -159,7 +159,7 @@ public class UtilityDeciderTests
         foreach (var output in chosen)
         {
             Assert.Equal(KaoriRoom, output.Payload.Place);
-            Assert.True(output.Payload.TravelMinutes > 0);
+            Assert.Equal(19, output.Payload.TravelMinutes);
             Assert.Equal(TimeSpan.Zero, output.Payload.Duration);
         }
     }
