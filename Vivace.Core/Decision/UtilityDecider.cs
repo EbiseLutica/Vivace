@@ -49,14 +49,14 @@ public sealed class UtilityDecider : IDecider
             throw new InvalidOperationException("決定タイミングは、ペルソナが場所にいるときにしか起きません。");
         }
 
-        if (context.Reason == DecisionReason.Phone)
-        {
-            return DecidePhone(context, at.Place);
-        }
-
         var personaDef = defs.Personas[persona.DefId];
         var worldDefId = state.Worlds[persona.World].DefId;
         var worldDef = defs.Worlds[worldDefId];
+        if (context.Reason == DecisionReason.Phone)
+        {
+            return DecidePhone(context, persona, personaDef, worldDef, at.Place);
+        }
+
         var routes = context.Rules.Routes.For(worldDefId);
         var plan = persona.Plan;
         var next = plan?.NextFixedAfter(now);
@@ -74,24 +74,7 @@ public sealed class UtilityDecider : IDecider
             weights = WeightsOf(feasible, state, persona, personaDef, now);
         }
 
-        var total = weights.Sum();
-        var chosenIndex = feasible.FindIndex(entry => entry.Option.GoToNext);
-        if (total > 0)
-        {
-            var draw = random.NextDouble() * total;
-            var cumulative = 0.0;
-            chosenIndex = weights.Length - 1;
-            for (var i = 0; i < weights.Length; i++)
-            {
-                cumulative += weights[i];
-                if (draw < cumulative)
-                {
-                    chosenIndex = i;
-                    break;
-                }
-            }
-        }
-
+        var chosenIndex = weights.Sum() > 0 ? Pick(weights, random) : feasible.FindIndex(entry => entry.Option.GoToNext);
         var chosen = feasible[chosenIndex];
         var place = chosen.Option.Place;
         var route = chosen.Option.Minutes == 0
@@ -109,19 +92,10 @@ public sealed class UtilityDecider : IDecider
         return new DeciderOutput(payload, guard);
     }
 
-    /// <summary>
-    /// スマホを開く機会の決定。候補は「投稿する」（sns.post の行動。場所は動かさず、ブロックの残りで切る）と「何もしない」（core.idle、重み 1.0、所要時間 0）だけ。
-    /// </summary>
-    /// <param name="context">決定タイミングのコンテキスト（理由は Phone）。</param>
-    /// <param name="here">いまの場所。</param>
-    private static DeciderOutput DecidePhone(DecisionContext context, PlaceId here)
+    /// <summary>スマホを開く機会の決定。候補は、いまの場所での投稿（ブロックの残りで切る）と、何もしない（重み 1.0、所要時間 0）だけ。</summary>
+    private static DeciderOutput DecidePhone(DecisionContext context, PersonaState persona, PersonaDef personaDef, WorldDef worldDef, PlaceId here)
     {
-        var defs = context.Rules.Defs;
-        var state = context.State;
         var now = context.Now;
-        var persona = state.Personas[context.Persona];
-        var personaDef = defs.Personas[persona.DefId];
-        var worldDef = defs.Worlds[state.Worlds[persona.World].DefId];
         var random = context.Random;
         var from = random.Position;
         var remaining = context.BlockId is { } blockId && persona.Plan?.CurrentBlock(blockId, now) is { } block
@@ -129,28 +103,15 @@ public sealed class UtilityDecider : IDecider
             : TimeSpan.Zero;
 
         var entries = new List<(Option Option, TimeSpan Duration)>();
-        foreach (var option in PhonePosts(defs, persona, personaDef, worldDef, here, now, remaining))
+        foreach (var option in PhonePosts(context.Rules.Defs, persona, personaDef, worldDef, here, now, remaining))
         {
             var duration = DurationOf(option, random);
             entries.Add((option, duration > remaining ? remaining : duration));
         }
 
+        var weights = WeightsOf(entries, context.State, persona, personaDef, now).Append(1.0).ToArray();
         entries.Add((new Option(Idle, here, 0, 1.0, null, TimeSpan.Zero), TimeSpan.Zero));
-        var weights = entries.Select(entry => PhoneWeight(entry.Option, entry.Duration, state, persona, personaDef, now)).ToArray();
-        var draw = random.NextDouble() * weights.Sum();
-        var cumulative = 0.0;
-        var chosenIndex = entries.Count - 1;
-        for (var i = 0; i < weights.Length; i++)
-        {
-            cumulative += weights[i];
-            if (draw < cumulative)
-            {
-                chosenIndex = i;
-                break;
-            }
-        }
-
-        var chosen = entries[chosenIndex];
+        var chosen = entries[Pick(weights, random)];
         var draws = new RngDraws(persona.Id.Value, "decide", from, random.Position);
         var payload = new ActivityChosenPayload(chosen.Option.ActionId, here, ImmutableArray<RouteStep>.Empty, 0, Positive(chosen.Duration), true, draws);
         var checks = new List<GuardCheck> { new ActivityVersionCheck(persona.ActivityVersion), new RngCursorCheck(persona.Id.Value, "decide", from) };
@@ -196,25 +157,6 @@ public sealed class UtilityDecider : IDecider
         }
 
         return options;
-    }
-
-    /// <summary>スマホを開く機会の候補の重み。何もしないは 1.0。投稿は、基本の重み × 好み × 欲求（移動はなし）。</summary>
-    /// <param name="option">候補。</param>
-    /// <param name="duration">切ったあとの所要時間。</param>
-    /// <param name="state">全体の状態。</param>
-    /// <param name="persona">ペルソナの状態。</param>
-    /// <param name="personaDef">ペルソナの定義。</param>
-    /// <param name="now">いまの時刻。</param>
-    private static double PhoneWeight(Option option, TimeSpan duration, SimState state, PersonaState persona, PersonaDef personaDef, DateTimeOffset now)
-    {
-        if (option.Action is null)
-        {
-            return 1.0;
-        }
-
-        var consecutive = ConsecutiveOf(persona, option.ActionId);
-        var need = Need(state, persona, personaDef, now, option.Action, option.Place, 0, Positive(duration), consecutive);
-        return Weight(option.Action.Weight, option.Preference, need, consecutive, 0);
     }
 
     /// <summary>候補（行動と場所の組）。</summary>
@@ -331,6 +273,23 @@ public sealed class UtilityDecider : IDecider
             Need(state, persona, personaDef, now, entry.Option.Action, entry.Option.Place, entry.Option.Minutes, Positive(entry.Duration), ConsecutiveOf(persona, entry.Option.ActionId)),
             ConsecutiveOf(persona, entry.Option.ActionId),
             entry.Option.Minutes)).ToArray();
+
+    /// <summary>重みに比例して1つを引き、その位置を返す。重みの合計は正であること。</summary>
+    private static int Pick(double[] weights, IRandom random)
+    {
+        var draw = random.NextDouble() * weights.Sum();
+        var cumulative = 0.0;
+        for (var i = 0; i < weights.Length; i++)
+        {
+            cumulative += weights[i];
+            if (draw < cumulative)
+            {
+                return i;
+            }
+        }
+
+        return weights.Length - 1;
+    }
 
     /// <summary>負の長さを 0 に切り上げる。</summary>
     private static TimeSpan Positive(TimeSpan duration) => duration < TimeSpan.Zero ? TimeSpan.Zero : duration;
