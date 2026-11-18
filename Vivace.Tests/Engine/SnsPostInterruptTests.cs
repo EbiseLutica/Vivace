@@ -43,15 +43,27 @@ public class SnsPostInterruptTests
         }
     }
 
-    /// <summary>応答の前に少し待つ LLM。待っている間に、同じ時刻の割り込みを適用させる。</summary>
-    private sealed class SlowLlm(ILlmClient inner) : ILlmClient
+    /// <summary>
+    /// 香織の 23:50 に出す投稿の文面だけ、門が開くまで応答しない LLM。ほかの呼び出しは中の LLM に任せる。
+    /// 取り消されなかった呼び出しは、ホライズンでエンジンを待たせ続ける。
+    /// </summary>
+    private sealed class GatedLlm(ILlmClient inner) : ILlmClient
     {
-        /// <summary>待ってから、中の LLM に任せる。</summary>
-        /// <param name="request">呼び出しの内容。</param>
-        /// <param name="ct">キャンセル。</param>
+        /// <summary>応答を止めている門。</summary>
+        private readonly TaskCompletionSource _gate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        /// <summary>止めていた応答を返させる。</summary>
+        public void Open() => _gate.TrySetResult();
+
+        /// <summary>止める呼び出しなら門が開くまで待ち、中の LLM に任せる。</summary>
         public async Task<LlmResult<string>> GenerateTextAsync(LlmRequest request, CancellationToken ct)
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(300), ct);
+            if (request.System.Contains("人物：香織", StringComparison.Ordinal)
+                && request.Messages.Any(message => message.Content.Contains("23:50", StringComparison.Ordinal)))
+            {
+                await _gate.Task;
+            }
+
             return await inner.GenerateTextAsync(request, ct);
         }
     }
@@ -63,10 +75,17 @@ public class SnsPostInterruptTests
     [Fact]
     public async Task SleepInterruptingAPostLeavesNoOutputAndNoRecord()
     {
-        var llm = new SlowLlm(new ScriptedLlm().Reply("post.compose", Body));
+        var llm = new GatedLlm(new ScriptedLlm().Reply("post.compose", Body));
         await using var engine = await Scenario.CreateAsync(decider: new PostingDecider(), llm: llm);
-
-        await engine.RunUntilAsync(Scenario.Start.AddMinutes(50), CancellationToken.None);
+        try
+        {
+            await engine.RunUntilAsync(Scenario.Start.AddMinutes(50), CancellationToken.None)
+                .WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+        }
+        finally
+        {
+            llm.Open();
+        }
 
         var interrupted = Assert.Single(engine.Log, entry => entry.Status == EventStatus.Applied
             && entry.Event.PersonaId == Kaori
