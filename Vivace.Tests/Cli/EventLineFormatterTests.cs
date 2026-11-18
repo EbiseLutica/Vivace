@@ -48,6 +48,17 @@ public class EventLineFormatterTests
         Assert.Equal("11-02 00:00 香織は「本を読む」を終えた", Format(Logged(At(15, 0), EventTypes.ActionEnded, ended, Kaori)));
     }
 
+    /// <summary>副行動（スマホを開く、投稿する）の開始と終わりは、「（スマホ）」を付けた文になり、主の行動の文と見分けられる。UTC 22:20 は現地の 07:20。</summary>
+    [Fact]
+    public void SubActionLinesAreMarkedWithPhone()
+    {
+        var started = new ActionStartedPayload("post_sns", KaoriRoom, TimeSpan.FromMinutes(8), ActivityReason.Chosen, 1, null, true);
+        var ended = new ActionEndedPayload("post_sns", 1, true);
+
+        Assert.Equal("11-02 07:20 香織は（スマホ）「SNS に投稿する」を始めた", Format(Logged(At(22, 20), EventTypes.ActionStarted, started, Kaori)));
+        Assert.Equal("11-02 07:28 香織は（スマホ）「SNS に投稿する」を終えた", Format(Logged(At(22, 28), EventTypes.ActionEnded, ended, Kaori)));
+    }
+
     /// <summary>既定では、行動と移動の4種以外は出さず、null を返す。</summary>
     [Fact]
     public void DefaultModeSkipsOtherEvents()

@@ -48,7 +48,8 @@ public static class DryRunReport
                 builder.Append(names.Persona(persona)).Append('\n');
                 foreach (var row in personaRows)
                 {
-                    builder.Append("  ").Append(FormatRow(row, utcOffsets)).Append('\n');
+                    var indent = row.Kind == RowKind.SubAction ? "    " : "  ";
+                    builder.Append(indent).Append(FormatRow(row, utcOffsets)).Append('\n');
                 }
             }
         }
@@ -64,11 +65,13 @@ public static class DryRunReport
 
     /// <summary>
     /// 適用されたイベントから、行動と移動の行を作る。同じ人の終わりの記録で閉じる。途中で次の行が始まったら、その開始の時刻で閉じる。
+    /// 副行動の行は、主の行動の下に1段深く並べる（開始の時刻が同じなら、主の行動が先）。
     /// </summary>
     private static List<Row> BuildRows(IEnumerable<LoggedEvent> applied, DisplayNames names)
     {
         var rows = new List<Row>();
         var open = new Dictionary<PersonaId, Row>();
+        var openSub = new Dictionary<PersonaId, Row>();
         foreach (var logged in applied)
         {
             var ev = logged.Event;
@@ -79,16 +82,23 @@ public static class DryRunReport
 
             switch (ev.Payload)
             {
+                case ActionStartedPayload { IsSubAction: true } subStarted:
+                    openSub[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.SubAction, ReportText.SubActionRow(subStarted, names));
+                    break;
                 case ActionStartedPayload started:
-                    CloseAt(persona, ev.Time, rows, open);
+                    CloseAt(persona, ev.Time, rows, open, openSub);
                     open[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.Action, ReportText.ActionRow(started, names, ev.WorldId));
                     break;
-                case ActionEndedPayload when open.TryGetValue(persona, out var action) && action.Kind == RowKind.Action:
+                case ActionEndedPayload { IsSubAction: true } when openSub.Remove(persona, out var sub):
+                    rows.Add(sub with { End = ev.Time });
+                    break;
+                case ActionEndedPayload { IsSubAction: false } when open.TryGetValue(persona, out var action) && action.Kind == RowKind.Action:
+                    CloseSub(persona, ev.Time, rows, openSub);
                     rows.Add(action with { End = ev.Time });
                     open.Remove(persona);
                     break;
                 case TravelStartedPayload travel:
-                    CloseAt(persona, ev.Time, rows, open);
+                    CloseAt(persona, ev.Time, rows, open, openSub);
                     open[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.Travel, ReportText.TravelRow(travel, names, ev.WorldId));
                     break;
                 case TravelArrivedPayload when open.TryGetValue(persona, out var trip) && trip.Kind == RowKind.Travel:
@@ -103,13 +113,28 @@ public static class DryRunReport
             rows.Add(open[persona]);
         }
 
-        return rows;
+        foreach (var persona in openSub.Keys.OrderBy(id => id.Value, StringComparer.Ordinal).ToList())
+        {
+            rows.Add(openSub[persona]);
+        }
+
+        return rows.OrderBy(row => row.Start).ThenBy(row => row.Kind == RowKind.SubAction).ToList();
     }
 
-    /// <summary>人の開いている行があれば、時刻 at で閉じて行の列に移す。</summary>
-    private static void CloseAt(PersonaId persona, DateTimeOffset at, List<Row> rows, Dictionary<PersonaId, Row> open)
+    /// <summary>人の開いている行（主と副）があれば、時刻 at で閉じて行の列に移す。</summary>
+    private static void CloseAt(PersonaId persona, DateTimeOffset at, List<Row> rows, Dictionary<PersonaId, Row> open, Dictionary<PersonaId, Row> openSub)
     {
+        CloseSub(persona, at, rows, openSub);
         if (open.Remove(persona, out var pending))
+        {
+            rows.Add(pending with { End = at });
+        }
+    }
+
+    /// <summary>人の開いている副行動があれば、時刻 at で閉じて行の列に移す。</summary>
+    private static void CloseSub(PersonaId persona, DateTimeOffset at, List<Row> rows, Dictionary<PersonaId, Row> openSub)
+    {
+        if (openSub.Remove(persona, out var pending))
         {
             rows.Add(pending with { End = at });
         }
@@ -144,6 +169,9 @@ public static class DryRunReport
 
         /// <summary>移動。travel.arrived で閉じる。</summary>
         Travel,
+
+        /// <summary>副行動（スマホを開く、投稿する）。その action.ended で閉じる。主の行動の下に1段深く出す。</summary>
+        SubAction,
     }
 
     /// <summary>表の1行。End が null なら、記録の終わりまで続いている（未終了）。</summary>
