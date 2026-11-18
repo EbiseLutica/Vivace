@@ -38,12 +38,24 @@ public static class Invariants
                 throw new InvariantViolationException($"状態変数が範囲の外です: {persona.Id}");
             }
 
+            if (persona.Overlay is not null && (persona.Activity is null || persona.Location is Traveling))
+            {
+                throw new InvariantViolationException($"副行動の途中なのに、主の行動がないか、移動中です: {persona.Id}");
+            }
+
             if (busy.Contains(persona.Id))
             {
                 continue;
             }
 
             var events = pending[persona.Id].ToList();
+            if (persona.Overlay is { } overlay && !events.Any(ev => ev.Payload is ActionEndedPayload { IsSubAction: true } end
+                && end.ActionId == overlay.ActionId
+                && ev.Time == overlay.EndsAt))
+            {
+                throw new InvariantViolationException($"副行動の途中なのに、副行動の終わりが予定されていません: {persona.Id}");
+            }
+
             if (persona.Deciding && !events.Any(ev => ev.EventType == EventTypes.ActivityChosen))
             {
                 throw new InvariantViolationException($"決定中なのに、決めるジョブが動いていません: {persona.Id}");
@@ -52,6 +64,7 @@ public static class Invariants
             if (persona.Activity is { } activity)
             {
                 var ended = events.Any(ev => ev.Payload is ActionEndedPayload end
+                    && !end.IsSubAction
                     && end.ActionId == activity.ActionId
                     && end.ActivityVersion == persona.ActivityVersion);
                 if (!ended)

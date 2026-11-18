@@ -19,6 +19,11 @@ internal sealed class ActionEndedRule : EventRule<ActionEndedPayload>
             return ApplyResult.Skipped(state, "ペルソナがない");
         }
 
+        if (payload.IsSubAction)
+        {
+            return EndSub(state, persona, ev, payload);
+        }
+
         if (persona.Activity is not { } activity || activity.ActionId != payload.ActionId || payload.ActivityVersion != persona.ActivityVersion)
         {
             return ApplyResult.Skipped(state, "古い行動の終わり");
@@ -26,7 +31,7 @@ internal sealed class ActionEndedRule : EventRule<ActionEndedPayload>
 
         var now = ev.Time;
         var action = ctx.Defs.Actions[payload.ActionId];
-        var ended = persona with { Activity = null };
+        var ended = persona with { Activity = null, Overlay = null };
         var priorRuns = persona.Usage.TryGetValue(payload.ActionId, out var usage) ? usage.Consecutive - 1 : 0;
         foreach (var (vital, delta) in action.Effects.OnEnd)
         {
@@ -68,5 +73,22 @@ internal sealed class ActionEndedRule : EventRule<ActionEndedPayload>
         }
 
         return ApplyResult.Applied(next, followUps);
+    }
+
+    /// <summary>
+    /// 副行動を終える。Overlay が同じ行動で同じ終わりの時刻なら外す。効果は当てず、決定タイミングも積まない。
+    /// </summary>
+    /// <param name="state">適用の前の状態。</param>
+    /// <param name="persona">ペルソナ。</param>
+    /// <param name="ev">適用するイベント。</param>
+    /// <param name="payload">副行動の終わり。</param>
+    private static ApplyResult EndSub(SimState state, PersonaState persona, SimEvent ev, ActionEndedPayload payload)
+    {
+        if (persona.Overlay is not { } overlay || overlay.ActionId != payload.ActionId || overlay.EndsAt != ev.Time)
+        {
+            return ApplyResult.Skipped(state, "古い副行動の終わり");
+        }
+
+        return ApplyResult.Applied(state.WithPersona(persona with { Overlay = null }));
     }
 }
