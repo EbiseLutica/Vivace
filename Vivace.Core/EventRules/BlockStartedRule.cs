@@ -79,7 +79,10 @@ internal sealed class BlockStartedRule : EventRule<BlockStartedPayload>
         }
         else if (minutes == 0)
         {
-            followUps = [EventDraft.ActionStarted(now, current, block.ActionId, place, block.End - now, ActivityReason.Block, blockId)];
+            var started = EventDraft.ActionStarted(now, current, block.ActionId, place, block.End - now, ActivityReason.Block, blockId);
+            followUps = block.Phone == PhonePolicy.Open
+                ? ImmutableArray.Create(started, EventDraft.Next(now, EventTypes.PhoneOpportunity, current, new PhoneOpportunityPayload(blockId)))
+                : ImmutableArray.Create(started);
         }
         else
         {

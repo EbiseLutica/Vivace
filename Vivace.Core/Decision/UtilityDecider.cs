@@ -31,6 +31,15 @@ public sealed class UtilityDecider : IDecider
     /// <summary>次の予定の場所へ向かう行動の ID。移動があるときは移動だけ（所要時間 0）、その場所にいるときは次の予定まで待つ。</summary>
     public const string GoToNext = "core.go_to_next";
 
+    /// <summary>何もしない（スマホを開く機会で「ブロックを続ける」）の行動の ID。所要時間 0。</summary>
+    public const string Idle = "core.idle";
+
+    /// <summary>投稿の行動の効果（sns.post）。</summary>
+    public const string PostHandler = "sns.post";
+
+    /// <summary>投稿をスキップしたあと、投稿を候補に入れない時間（D6 P-45）。</summary>
+    public static readonly TimeSpan SkipCooldown = TimeSpan.FromMinutes(30);
+
     /// <inheritdoc />
     public DeciderOutput Decide(DecisionContext context)
     {
@@ -41,6 +50,11 @@ public sealed class UtilityDecider : IDecider
         if (persona.Location is not AtPlace at)
         {
             throw new InvalidOperationException("決定タイミングは、ペルソナが場所にいるときにしか起きません。");
+        }
+
+        if (context.Reason == DecisionReason.Phone)
+        {
+            return DecidePhone(context, at.Place);
         }
 
         var personaDef = defs.Personas[persona.DefId];
@@ -96,6 +110,115 @@ public sealed class UtilityDecider : IDecider
             ],
             RejectAction.Redecide);
         return new DeciderOutput(payload, guard);
+    }
+
+    /// <summary>
+    /// スマホを開く機会の決定。候補は「投稿する」（sns.post の行動。場所は動かさず、ブロックの残りで切る）と「何もしない」（core.idle、重み 1.0、所要時間 0）だけ。
+    /// </summary>
+    /// <param name="context">決定タイミングのコンテキスト（理由は Phone）。</param>
+    /// <param name="here">いまの場所。</param>
+    private static DeciderOutput DecidePhone(DecisionContext context, PlaceId here)
+    {
+        var defs = context.Rules.Defs;
+        var state = context.State;
+        var now = context.Now;
+        var persona = state.Personas[context.Persona];
+        var personaDef = defs.Personas[persona.DefId];
+        var worldDef = defs.Worlds[state.Worlds[persona.World].DefId];
+        var random = context.Random;
+        var from = random.Position;
+        var remaining = context.BlockId is { } blockId && persona.Plan?.CurrentBlock(blockId, now) is { } block
+            ? block.End - now
+            : TimeSpan.Zero;
+
+        var entries = new List<(Option Option, TimeSpan Duration)>();
+        foreach (var option in PhonePosts(defs, persona, personaDef, worldDef, here, now, remaining))
+        {
+            var duration = DurationOf(option, random);
+            entries.Add((option, duration > remaining ? remaining : duration));
+        }
+
+        entries.Add((new Option(Idle, here, 0, 1.0, null, TimeSpan.Zero), TimeSpan.Zero));
+        var weights = entries.Select(entry => PhoneWeight(entry.Option, entry.Duration, state, persona, personaDef, now)).ToArray();
+        var draw = random.NextDouble() * weights.Sum();
+        var cumulative = 0.0;
+        var chosenIndex = entries.Count - 1;
+        for (var i = 0; i < weights.Length; i++)
+        {
+            cumulative += weights[i];
+            if (draw < cumulative)
+            {
+                chosenIndex = i;
+                break;
+            }
+        }
+
+        var chosen = entries[chosenIndex];
+        var draws = new RngDraws(persona.Id.Value, "decide", from, random.Position);
+        var payload = new ActivityChosenPayload(chosen.Option.ActionId, here, ImmutableArray<RouteStep>.Empty, 0, Positive(chosen.Duration), true, draws);
+        var checks = new List<GuardCheck> { new ActivityVersionCheck(persona.ActivityVersion), new RngCursorCheck(persona.Id.Value, "decide", from) };
+        if (chosen.Option.Action is not null)
+        {
+            checks.Insert(1, new FeasibleCheck(chosen.Option.ActionId, here));
+        }
+
+        return new DeciderOutput(payload, new Guard(checks.ToImmutableArray(), RejectAction.Redecide));
+    }
+
+    /// <summary>スマホを開く機会で候補になる投稿の行動。場所は動かさず、締め切りとスキップのクールダウンで絞る。</summary>
+    /// <param name="defs">定義。</param>
+    /// <param name="persona">ペルソナの状態。</param>
+    /// <param name="personaDef">ペルソナの定義。</param>
+    /// <param name="worldDef">ワールドの定義。</param>
+    /// <param name="here">いまの場所。</param>
+    /// <param name="now">いまの時刻。</param>
+    /// <param name="remaining">ブロックの残り。0 以下なら投稿は候補にならない。</param>
+    private static List<Option> PhonePosts(DefinitionPack defs, PersonaState persona, PersonaDef personaDef, WorldDef worldDef, PlaceId here, DateTimeOffset now, TimeSpan remaining)
+    {
+        var options = new List<Option>();
+        var skipped = persona.Posting.LastSkippedAt is { } last && now - last < SkipCooldown;
+        if (remaining <= TimeSpan.Zero || skipped || worldDef.Places.FirstOrDefault(p => p.Id == here.Value) is not { } placeDef)
+        {
+            return options;
+        }
+
+        foreach (var action in defs.Actions.Values.OrderBy(a => a.Id, StringComparer.Ordinal))
+        {
+            if (action.Effects.Handler != PostHandler || action.ScheduleOnly || action.Duration is null || !ActionRules.IsUsable(personaDef, action.Id))
+            {
+                continue;
+            }
+
+            if (ActionRules.PreferenceFactor(personaDef, action) is not { } preference
+                || !ActionRules.PlaceAllows(action, personaDef, placeDef)
+                || !ActionRules.WithinLimits(action, persona.Usage.GetValueOrDefault(action.Id), now, worldDef.UtcOffset))
+            {
+                continue;
+            }
+
+            options.Add(new Option(action.Id, here, 0, preference, action, null));
+        }
+
+        return options;
+    }
+
+    /// <summary>スマホを開く機会の候補の重み。何もしないは 1.0。投稿は、基本の重み × 好み × 欲求（移動はなし）。</summary>
+    /// <param name="option">候補。</param>
+    /// <param name="duration">切ったあとの所要時間。</param>
+    /// <param name="state">全体の状態。</param>
+    /// <param name="persona">ペルソナの状態。</param>
+    /// <param name="personaDef">ペルソナの定義。</param>
+    /// <param name="now">いまの時刻。</param>
+    private static double PhoneWeight(Option option, TimeSpan duration, SimState state, PersonaState persona, PersonaDef personaDef, DateTimeOffset now)
+    {
+        if (option.Action is null)
+        {
+            return 1.0;
+        }
+
+        var consecutive = ConsecutiveOf(persona, option.ActionId);
+        var need = Need(state, persona, personaDef, now, option.Action, option.Place, 0, Positive(duration), consecutive);
+        return Weight(option.Action.Weight, option.Preference, need, consecutive, 0);
     }
 
     /// <summary>候補（行動と場所の組）。</summary>

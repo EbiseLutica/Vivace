@@ -16,6 +16,7 @@ public class RuleTableTests
         "plan.committed",
         "plan.due",
         "block.started",
+        "phone.opportunity",
         "decision.requested",
         "activity.chosen",
         "travel.started",
@@ -24,7 +25,7 @@ public class RuleTableTests
         "action.ended",
     ];
 
-    /// <summary>テーブルのキーは段階2 の12タイプちょうどで、余りも不足もない。</summary>
+    /// <summary>テーブルのキーは段階2 の13タイプちょうどで、余りも不足もない。</summary>
     [Fact]
     public void TableHasExactlyTheStage2EventTypes()
     {

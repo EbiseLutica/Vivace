@@ -242,7 +242,7 @@ public class PlanRulesTests
     [Fact]
     public void UnsupportedEventTypeThrows()
     {
-        var ev = Fixture.Event(10, Fixture.Now, EventTypes.PhoneOpportunity, new PhoneOpportunityPayload("reading@2026-11-01"), Fixture.Kaori);
+        var ev = Fixture.Event(10, Fixture.Now, EventTypes.PostSkipped, new PostSkippedPayload(PostSkippedPayload.PostSkipReason.AllRejected, null), Fixture.Kaori);
 
         Assert.Throws<NotSupportedException>(() => Fixture.Apply(Fixture.WithKaori(), ev));
     }

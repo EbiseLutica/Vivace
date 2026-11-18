@@ -1,0 +1,109 @@
+using Vivace.Core.Decision;
+using Vivace.Core.Domain.State;
+using Vivace.Core.Domain;
+using Vivace.Core.Events.Guards;
+using Vivace.Core.Events.Payloads;
+using Vivace.Core.Events;
+using Vivace.Core.Randomness;
+using Vivace.Core;
+using Vivace.Tests.Support;
+
+namespace Vivace.Tests.Decision;
+
+/// <summary>
+/// スマホを開く機会の決定。候補は「投稿する」（sns.post）と「何もしない」だけ。投稿はブロックの残りで切り、スキップのクールダウンで外す。
+/// </summary>
+public class PhoneDeciderTests
+{
+    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private const string Block = "reading@2026-11-01";
+    private const string Post = "post_sns";
+    private const int Positions = 40;
+
+    /// <summary>
+    /// 読書の固定ブロック（残りが length）の中で、読書を始めた香織の状態。posting を渡せば、投稿の状態を差し替える。
+    /// </summary>
+    private static SimState InBlock(TimeSpan length, PostingState? posting = null)
+    {
+        var plan = new DayPlan(
+            1,
+            Fixture.Now,
+            Fixture.Now.AddHours(24),
+            Fixture.Now.AddHours(21),
+            PlanSource.Fallback,
+            [new PlanBlock(Block, BlockKind.Fixed, Fixture.Now, Fixture.Now + length, "read_book", KaoriRoom, PhonePolicy.Open, null, [], PartnerAbsentPolicy.Continue)],
+            null);
+        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
+        var state = Fixture.Apply(Fixture.WithKaori(), committed).State;
+        var started = Fixture.Event(11, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", KaoriRoom, length, ActivityReason.Block, 0, Block), Fixture.Kaori);
+        state = Fixture.Apply(state, started).State;
+        if (posting is not null)
+        {
+            state = Fixture.With(state, state.Personas[Fixture.Kaori] with { Posting = posting });
+        }
+
+        return state;
+    }
+
+    /// <summary>位置を指定して、スマホを開く機会の決定を1回する。</summary>
+    private static DeciderOutput Decide(SimState state, ulong position)
+    {
+        var random = new SplitMixRandomSource().Open(state.Worlds[Fixture.World].Seed, Fixture.Kaori.Value, "decide", position);
+        return new UtilityDecider().Decide(new DecisionContext(state, Fixture.Kaori, Fixture.Now, DecisionReason.Phone, Block, Fixture.Context, random));
+    }
+
+    /// <summary>位置を変えて、決定を集める。</summary>
+    private static List<DeciderOutput> Outputs(SimState state) =>
+        Enumerable.Range(0, Positions).Select(position => Decide(state, (ulong)position)).ToList();
+
+    /// <summary>候補は投稿と何もしないだけ。どちらも副行動として、いまの場所のまま（移動なし）。何もしないは所要時間 0。</summary>
+    [Fact]
+    public void CandidatesAreOnlyPostAndIdle()
+    {
+        var outputs = Outputs(InBlock(TimeSpan.FromHours(1)));
+
+        Assert.All(outputs, output => Assert.Contains(output.Payload.ActionId, new[] { Post, UtilityDecider.Idle }));
+        Assert.Contains(outputs, output => output.Payload.ActionId == Post);
+        Assert.All(outputs, output =>
+        {
+            Assert.True(output.Payload.IsSubAction);
+            Assert.Equal(KaoriRoom, output.Payload.Place);
+            Assert.Equal(0, output.Payload.TravelMinutes);
+            Assert.True(output.Payload.Route.IsEmpty);
+        });
+        Assert.All(
+            outputs.Where(output => output.Payload.ActionId == UtilityDecider.Idle),
+            output => Assert.Equal(TimeSpan.Zero, output.Payload.Duration));
+    }
+
+    /// <summary>投稿の所要時間は、ブロックの残りで切る。残り 5 分なら、どの投稿も 5 分を超えない。</summary>
+    [Fact]
+    public void PostDurationIsCutByBlockRemainder()
+    {
+        var outputs = Outputs(InBlock(TimeSpan.FromMinutes(5)));
+
+        Assert.Contains(outputs, output => output.Payload.ActionId == Post);
+        Assert.All(outputs.Where(output => output.Payload.ActionId == Post), output => Assert.True(output.Payload.Duration <= TimeSpan.FromMinutes(5)));
+    }
+
+    /// <summary>残りが投稿の最短（3 分）より短くても、投稿は残りで切って候補に残る。残り 2 分なら、どの投稿も 2 分になる。</summary>
+    [Fact]
+    public void ShortRemainderCutsPostToRemainder()
+    {
+        var outputs = Outputs(InBlock(TimeSpan.FromMinutes(2)));
+
+        Assert.Contains(outputs, output => output.Payload.ActionId == Post);
+        Assert.All(outputs.Where(output => output.Payload.ActionId == Post), output => Assert.Equal(TimeSpan.FromMinutes(2), output.Payload.Duration));
+    }
+
+    /// <summary>スキップのクールダウン（30 分）の中は投稿を外す。10 分前は外れ、31 分前は候補に戻る。</summary>
+    [Fact]
+    public void SkipCooldownRemovesPost()
+    {
+        var recent = InBlock(TimeSpan.FromHours(1), new PostingState(null, Fixture.Now.AddMinutes(-10), null));
+        var old = InBlock(TimeSpan.FromHours(1), new PostingState(null, Fixture.Now.AddMinutes(-31), null));
+
+        Assert.All(Outputs(recent), output => Assert.Equal(UtilityDecider.Idle, output.Payload.ActionId));
+        Assert.Contains(Outputs(old), output => output.Payload.ActionId == Post);
+    }
+}
