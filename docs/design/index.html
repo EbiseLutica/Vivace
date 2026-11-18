@@ -18,7 +18,7 @@
     <span class="chip">2026-11-06 時点</span>
     <span class="chip fixed">C# / SQLite は確定</span>
     <span class="chip fixed">案はすべて合意（57 件）</span>
-    <span class="chip">枠の外の判断は出どころつき（169 件）</span>
+    <span class="chip">枠の外の判断は出どころつき（171 件）</span>
   </div>
 </header>
 
@@ -331,6 +331,8 @@
       <tr><td>J-167</td><td><code>vivace dry-run</code> の日数の上限は数値で決めず、開始から日数を足した終わりの時刻が計算でき、さらにその1日後も計算できるかで判定する（日付の計算が範囲の端で落ちないように。開始が範囲の端でも、--days のせいとは限らない）。計算できなければ「開始と日数から終わりの時刻を計算できません。」の日本語のエラーで 1 を返し、回さない</td><td><a href="7-operations.html#cli">D7 7.5</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/17">PR #17</a>）</td></tr>
       <tr><td>J-168</td><td><code>vivace dry-run</code> の <code>--start</code> は、オフセットが必須の ISO 8601 だけを受ける（<code>+09:00</code> の形と <code>Z</code>。オフセットのない時刻、日付だけ、ISO 8601 でないものは拒否）。既定の値は、同じ形の文字列（<code>2026-11-01T23:00+09:00</code>）で、ヘルプにもそのまま出す。<code>--days</code> の省略は、日本語のエラーで止める</td><td><a href="7-operations.html#cli">D7 7.5</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/17">PR #17</a>）</td></tr>
       <tr><td>J-169</td><td>自由時間の候補で、<code>requires</code> に場所のタグがない行動は、いまの場所だけを候補にする。移動してまでする理由がなく、場所の数だけ候補と重みが増えるのを防ぐ。場所を固定するブロックの中の扱いは変えない（D5 5.2）</td><td><a href="5-decision.html#candidates">D5 5.2</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/23">PR #23</a>）</td></tr>
+      <tr><td>J-170</td><td>副行動（スマホを開く、投稿する）は、行動のバージョンを上げず、<code>PersonaState.Overlay</code> に持つ。主の行動が変わる（主の開始、移動、ブロックの割り込み、主の終わり）と消える。副行動の終わりは、同じ行動と同じ終わりの時刻で照合する。決定タイミングは積まない。理由 <code>phone</code> の決定タイミングは、ブロックの行動中でない、または副行動の途中なら捨てる。次のスマホの機会は、ブロックを始めた後で、ブロックの終わりより前のときだけ積む（ブロックを始めた印は <code>LastBlockId</code> で見る。行動が始まる前の最初の機会は、行動の開始より先に適用されるため）</td><td><a href="2-events.html#types">D2 2.3</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/23">PR #23</a>）</td></tr>
+      <tr><td>J-171</td><td>副行動の所要時間は、行動定義の範囲から引き、ブロックの残りで切る。切って 0 以下なら、投稿は候補にせず、何もしない</td><td><a href="5-decision.html#special">D5 5.4</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/23">PR #23</a>）</td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>
