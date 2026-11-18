@@ -125,4 +125,32 @@ public class InvariantsTests
         Invariants.CheckProgress(Invariants.MaxAppliedAtOneInstant);
         Assert.Throws<InvariantViolationException>(() => Invariants.CheckProgress(Invariants.MaxAppliedAtOneInstant + 1));
     }
+
+    /// <summary>副行動の途中なのに、主の行動がない状態は検出される（副行動は主の行動があって成り立つ）。</summary>
+    [Fact]
+    public void OverlayWithoutMainActionIsDetected()
+    {
+        var overlay = new Activity("cafe", KaoriRoom, Fixture.Now, Fixture.Now.AddMinutes(5), ActivityReason.Chosen, null);
+        var state = Fixture.With(Fixture.WithKaori(), Fixture.Get(Fixture.WithKaori(), Fixture.Kaori) with { Overlay = overlay });
+        var subEnd = Fixture.Event(10, overlay.EndsAt, EventTypes.ActionEnded, new ActionEndedPayload("cafe", 0, true), Fixture.Kaori);
+
+        Assert.Throws<InvariantViolationException>(() => Check(state, []));
+        Assert.Throws<InvariantViolationException>(() => Check(state, [subEnd]));
+    }
+
+    /// <summary>
+    /// 副行動の途中なのに、副行動の終わりを積んでいない状態は検出される。同じ行動と同じ時刻の終わりがあれば通る。
+    /// </summary>
+    [Fact]
+    public void OverlayWithoutSubActionEndIsDetected()
+    {
+        var overlay = new Activity("cafe", KaoriRoom, Fixture.Now, Fixture.Now.AddMinutes(5), ActivityReason.Chosen, null);
+        var running = Running();
+        var state = Fixture.With(running, Fixture.Get(running, Fixture.Kaori) with { Overlay = overlay });
+        var mainEnd = Pending(11, EventTypes.ActionEnded, new ActionEndedPayload("read_book", 0));
+        var subEnd = Fixture.Event(12, Fixture.Now.AddMinutes(5), EventTypes.ActionEnded, new ActionEndedPayload("cafe", 0, true), Fixture.Kaori);
+
+        Assert.Throws<InvariantViolationException>(() => Check(state, [mainEnd]));
+        Check(state, [mainEnd, subEnd]);
+    }
 }

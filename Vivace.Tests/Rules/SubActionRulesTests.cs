@@ -1,4 +1,5 @@
 using Vivace.Core.Domain.State;
+using Vivace.Core.Events.Guards;
 using Vivace.Core.Domain;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
@@ -163,5 +164,44 @@ public class SubActionRulesTests
         Assert.Equal(2UL, kaori.Rng["decide"]);
         Assert.Empty(result.FollowUps);
         Assert.Null(kaori.Overlay);
+    }
+
+    /// <summary>次の固定ブロックの ID（読書と同じ時刻に始まる、別のブロック）。</summary>
+    private const string Next = "other@2026-11-01";
+
+    /// <summary>読書と、そのあとに始まる固定ブロック（同じ時刻）を持つプランを確定した香織の状態。</summary>
+    private static SimState WithTwoBlocks()
+    {
+        var plan = new DayPlan(
+            1,
+            Fixture.Now,
+            Fixture.Now.AddHours(24),
+            Fixture.Now.AddHours(21),
+            PlanSource.Fallback,
+            [
+                new PlanBlock(Block, BlockKind.Fixed, Fixture.Now, Fixture.Now.AddHours(1), "read_book", KaoriRoom, PhonePolicy.Open, null, [], PartnerAbsentPolicy.Continue),
+                new PlanBlock(Next, BlockKind.Fixed, Fixture.Now, Fixture.Now.AddHours(1), "read_book", KaoriRoom, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue),
+            ],
+            null);
+        var committed = Fixture.Event(9, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
+        return Fixture.Apply(Fixture.WithKaori(), committed).State;
+    }
+
+    /// <summary>
+    /// 副行動の途中に固定ブロックが始まると、主の行動と一緒に副行動も外れる。あとから届いた副行動の終わりは、捨てられる。
+    /// </summary>
+    [Fact]
+    public void BlockStartClearsOverlayAndLaterSubEndIsSkipped()
+    {
+        var reading = Fixture.Apply(WithTwoBlocks(), Fixture.Event(10, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", KaoriRoom, TimeSpan.FromHours(1), ActivityReason.Block, 0, Block), Fixture.Kaori)).State;
+        var overlay = Fixture.Apply(reading, SubStarted(11, Fixture.Now)).State;
+        Assert.NotNull(overlay.Personas[Fixture.Kaori].Overlay);
+
+        var started = Fixture.Apply(overlay, Fixture.Event(12, Fixture.Now, EventTypes.BlockStarted, new BlockStartedPayload(Next, 1), Fixture.Kaori));
+
+        Assert.Equal(EventStatus.Applied, started.Status);
+        Assert.Null(started.State.Personas[Fixture.Kaori].Overlay);
+        var lateEnd = Fixture.Event(13, Fixture.Now.AddMinutes(5), EventTypes.ActionEnded, new ActionEndedPayload("cafe", 0, true), Fixture.Kaori);
+        Assert.Equal(EventStatus.Skipped, Fixture.Apply(started.State, lateEnd).Status);
     }
 }

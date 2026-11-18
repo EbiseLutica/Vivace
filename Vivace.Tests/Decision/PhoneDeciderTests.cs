@@ -125,4 +125,26 @@ public class PhoneDeciderTests
         var usage = new ActionUsage(at, new DateOnly(2026, 11, 2), 1, 0);
         return Fixture.With(state, persona with { Usage = persona.Usage.SetItem(Post, usage) });
     }
+
+    /// <summary>
+    /// 出力が guard で却下されると（ここでは行動のバージョンが違う）、決定中を下ろし、ブロックの行動は残し、決め直しを積む。
+    /// 却下の動きが Redecide である必要がある（Drop だと決定中のまま残る）。
+    /// </summary>
+    [Fact]
+    public void RejectedPhoneDecisionClearsDecidingAndKeepsBlockAction()
+    {
+        var state = InBlock(TimeSpan.FromHours(1));
+        var request = Fixture.Event(12, Fixture.Now, EventTypes.DecisionRequested, new DecisionRequestedPayload(DecisionReason.Phone, Block), Fixture.Kaori);
+        var deciding = Fixture.Apply(state, request).State;
+        var output = Decide(deciding, 0);
+        var stale = Fixture.With(deciding, deciding.Personas[Fixture.Kaori] with { ActivityVersion = 1 });
+
+        var result = Fixture.Apply(stale, Fixture.Event(13, Fixture.Now, EventTypes.ActivityChosen, output.Payload, Fixture.Kaori, output.Guard, 12));
+
+        Assert.Equal(EventStatus.Rejected, result.Status);
+        var kaori = result.State.Personas[Fixture.Kaori];
+        Assert.False(kaori.Deciding);
+        Assert.Equal("read_book", kaori.Activity!.ActionId);
+        Assert.Equal(new DecisionRequestedPayload(DecisionReason.Retry, null), Assert.Single(result.FollowUps).Payload);
+    }
 }
