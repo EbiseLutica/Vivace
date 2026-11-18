@@ -75,13 +75,7 @@ internal sealed class ActionEndedRule : EventRule<ActionEndedPayload>
         return ApplyResult.Applied(next, followUps);
     }
 
-    /// <summary>
-    /// 副行動を終える。Overlay が同じ行動で同じ終わりの時刻なら外す。効果は当てず、決定タイミングも積まない。
-    /// </summary>
-    /// <param name="state">適用の前の状態。</param>
-    /// <param name="persona">ペルソナ。</param>
-    /// <param name="ev">適用するイベント。</param>
-    /// <param name="payload">副行動の終わり。</param>
+    /// <summary>副行動を終える。効果は当てず、決定タイミングも積まない。</summary>
     private static ApplyResult EndSub(SimState state, PersonaState persona, SimEvent ev, ActionEndedPayload payload)
     {
         if (persona.Overlay is not { } overlay || overlay.ActionId != payload.ActionId || overlay.EndsAt != ev.Time)

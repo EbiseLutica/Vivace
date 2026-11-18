@@ -10,7 +10,7 @@ namespace Vivace.Core.Events.Payloads;
 /// <param name="Reason">理由（chosen / block / reflex / late）。</param>
 /// <param name="ActivityVersion">行動のバージョン。</param>
 /// <param name="BlockId">ブロックの行動のときのブロック ID。</param>
-/// <param name="IsSubAction">副行動（スマホを開く、投稿する）かどうか。副行動は主の行動を変えず、Overlay に入る。</param>
+/// <param name="IsSubAction">副行動かどうか。副行動は主の行動を変えず、Overlay に入る。</param>
 public sealed record ActionStartedPayload(
     string ActionId,
     PlaceId Place,

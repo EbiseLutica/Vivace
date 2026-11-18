@@ -31,7 +31,7 @@ public sealed class UtilityDecider : IDecider
     /// <summary>次の予定の場所へ向かう行動の ID。移動があるときは移動だけ（所要時間 0）、その場所にいるときは次の予定まで待つ。</summary>
     public const string GoToNext = "core.go_to_next";
 
-    /// <summary>何もしない（スマホを開く機会で「ブロックを続ける」）の行動の ID。所要時間 0。</summary>
+    /// <summary>スマホを開く機会で何もしない行動の ID。所要時間 0。</summary>
     public const string Idle = "core.idle";
 
     /// <summary>投稿の行動の効果（sns.post）。</summary>
@@ -123,14 +123,7 @@ public sealed class UtilityDecider : IDecider
         return new DeciderOutput(payload, new Guard(checks.ToImmutableArray(), RejectAction.Redecide));
     }
 
-    /// <summary>スマホを開く機会で候補になる投稿の行動。場所は動かさず、行動の制限で絞る。</summary>
-    /// <param name="defs">定義。</param>
-    /// <param name="persona">ペルソナの状態。</param>
-    /// <param name="personaDef">ペルソナの定義。</param>
-    /// <param name="worldDef">ワールドの定義。</param>
-    /// <param name="here">いまの場所。</param>
-    /// <param name="now">いまの時刻。</param>
-    /// <param name="remaining">ブロックの残り。0 以下なら投稿は候補にならない。</param>
+    /// <summary>スマホを開く機会で候補になる、いまの場所での投稿の行動。ブロックの残りがなければ空。</summary>
     private static List<Option> PhonePosts(DefinitionPack defs, PersonaState persona, PersonaDef personaDef, WorldDef worldDef, PlaceId here, DateTimeOffset now, TimeSpan remaining)
     {
         var options = new List<Option>();

@@ -53,9 +53,6 @@ internal sealed class TravelArrivedRule : EventRule<TravelArrivedPayload>
     }
 
     /// <summary>移動のあとに始まるブロックの行動で、ブロックがスマホを開けるなら、同じ時刻のスマホを開く機会を返す。</summary>
-    /// <param name="persona">着いたペルソナ。</param>
-    /// <param name="blockId">始まる行動のブロックの ID。ブロックの行動でなければ null。</param>
-    /// <param name="now">到着の時刻。</param>
     private static EventDraft? OpportunityFor(PersonaState persona, string? blockId, DateTimeOffset now) =>
         blockId is { } id && persona.Plan?.CurrentBlock(id, now) is { Phone: PhonePolicy.Open }
             ? EventDraft.PhoneOpportunity(now, persona, id)

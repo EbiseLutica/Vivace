@@ -66,14 +66,7 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
         return ApplyResult.Applied(next, followUps, signals);
     }
 
-    /// <summary>
-    /// 副行動を始める。主の行動、率、バージョン、利用の記録は変えず、Overlay に入れて、終了を積む。効果はまだ当てない。
-    /// </summary>
-    /// <param name="ctx">規則のコンテキスト。</param>
-    /// <param name="state">適用の前の状態。</param>
-    /// <param name="ev">適用するイベント。</param>
-    /// <param name="persona">ペルソナ。</param>
-    /// <param name="payload">副行動の開始。</param>
+    /// <summary>副行動を Overlay に入れて終了を積む。主の行動、率、バージョン、利用の記録は変えない。</summary>
     private static ApplyResult StartSub(RuleContext ctx, SimState state, SimEvent ev, PersonaState persona, ActionStartedPayload payload)
     {
         if (payload.ActivityVersion != persona.ActivityVersion || persona.Activity is null || persona.Overlay is not null)

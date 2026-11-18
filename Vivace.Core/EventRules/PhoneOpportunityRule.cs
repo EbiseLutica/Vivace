@@ -5,17 +5,13 @@ using Vivace.Core.Events.Payloads;
 
 namespace Vivace.Core.EventRules;
 
-/// <summary>
-/// スマホを開く機会を、決定タイミングにする。長いブロックで間隔（phone_every）が決まっていれば、次の機会も積む。
-/// </summary>
+/// <summary>スマホを開く機会を決定タイミングにし、phone_every があれば次の機会も積む。</summary>
 internal sealed class PhoneOpportunityRule : EventRule<PhoneOpportunityPayload>
 {
     /// <summary>扱うイベントタイプ。</summary>
     public override string EventType => EventTypes.PhoneOpportunity;
 
-    /// <summary>
-    /// スマホを開く機会の決定タイミングを積む。ブロックがプランにあり、スマホを開けて、移動中でなければ。
-    /// </summary>
+    /// <summary>ブロックがプランにあり、スマホを開けて、移動中でなければ、決定タイミングを積む。</summary>
     protected override ApplyResult Apply(RuleContext ctx, SimState state, SimEvent ev, PhoneOpportunityPayload payload)
     {
         if (state.AlivePersona(ev.PersonaId) is not { } persona)

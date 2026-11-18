@@ -121,7 +121,7 @@ public static class DryRunReport
         return rows.OrderBy(row => row.Start).ThenBy(row => row.Kind == RowKind.SubAction).ToList();
     }
 
-    /// <summary>人の開いている行（主と副）があれば、時刻 at で閉じて行の列に移す。</summary>
+    /// <summary>人の開いている行（主と副行動）があれば、時刻 at で閉じて行の列に移す。</summary>
     private static void CloseAt(PersonaId persona, DateTimeOffset at, List<Row> rows, Dictionary<PersonaId, Row> open, Dictionary<PersonaId, Row> openSub)
     {
         CloseSub(persona, at, rows, openSub);
@@ -170,7 +170,7 @@ public static class DryRunReport
         /// <summary>移動。travel.arrived で閉じる。</summary>
         Travel,
 
-        /// <summary>副行動（スマホを開く、投稿する）。その action.ended で閉じる。主の行動の下に1段深く出す。</summary>
+        /// <summary>副行動。その action.ended で閉じる。</summary>
         SubAction,
     }
 

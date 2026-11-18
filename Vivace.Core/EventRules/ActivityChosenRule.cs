@@ -50,14 +50,7 @@ internal sealed class ActivityChosenRule : EventRule<ActivityChosenPayload>
         return ApplyResult.Applied(next, [followUp]);
     }
 
-    /// <summary>
-    /// 副行動の決定を当てる。行動のバージョンは上げず、副行動の開始だけを積む。何もしない（所要時間 0）は、乱数の位置だけを進める。
-    /// </summary>
-    /// <param name="ev">適用するイベント。</param>
-    /// <param name="persona">決めていたペルソナ。</param>
-    /// <param name="rng">乱数の位置を進めたあとの列。</param>
-    /// <param name="payload">行動の決定。</param>
-    /// <param name="state">適用の前の状態。</param>
+    /// <summary>副行動の決定を当てる。行動のバージョンは上げない。何もしない（所要時間 0）は、乱数の位置だけを進める。</summary>
     private static ApplyResult ApplySub(SimEvent ev, PersonaState persona, ImmutableDictionary<string, ulong> rng, ActivityChosenPayload payload, SimState state)
     {
         var updated = persona with { Deciding = false, Rng = rng };
