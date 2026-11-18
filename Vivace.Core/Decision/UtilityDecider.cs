@@ -5,6 +5,7 @@ using Vivace.Core.Domain;
 using Vivace.Core.Events.Guards;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
+using Vivace.Core.Handlers;
 using Vivace.Core.Randomness;
 using Vivace.Core.Routes;
 
@@ -33,9 +34,6 @@ public sealed class UtilityDecider : IDecider
 
     /// <summary>スマホを開く機会で何もしない行動の ID。所要時間 0。</summary>
     public const string Idle = "core.idle";
-
-    /// <summary>投稿の行動の効果（sns.post）。</summary>
-    public const string PostHandler = "sns.post";
 
     /// <inheritdoc />
     public DeciderOutput Decide(DecisionContext context)
@@ -134,7 +132,7 @@ public sealed class UtilityDecider : IDecider
 
         foreach (var action in defs.Actions.Values.OrderBy(a => a.Id, StringComparer.Ordinal))
         {
-            if (action.Effects.Handler != PostHandler || action.ScheduleOnly || action.Duration is null || !ActionRules.IsUsable(personaDef, action.Id))
+            if (action.Effects.Handler != SnsPostHandler.Name || action.ScheduleOnly || action.Duration is null || !ActionRules.IsUsable(personaDef, action.Id))
             {
                 continue;
             }

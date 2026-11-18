@@ -1,5 +1,7 @@
 using System.Collections.Immutable;
+using Vivace.Core.Definitions.Model;
 using Vivace.Core.Domain.State;
+using Vivace.Core.Handlers;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
 using Vivace.Core.Signals;
@@ -61,6 +63,7 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
             signals = ImmutableArray.Create<EngineSignal>(wake.Signal);
         }
 
+        signals = signals.AddRange(EffectSignals(ev, action, started, payload));
         var next = VitalRules.Rebalance(ctx, state.WithPersona(started), now, started.Id);
         var followUps = ImmutableArray.Create(EventDraft.Next(now + payload.Duration, EventTypes.ActionEnded, started, new ActionEndedPayload(payload.ActionId, payload.ActivityVersion)));
         return ApplyResult.Applied(next, followUps, signals);
@@ -79,7 +82,7 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
             return ApplyResult.Skipped(state, "居場所が違う");
         }
 
-        if (payload.Duration <= TimeSpan.Zero || !ctx.Defs.Actions.ContainsKey(payload.ActionId))
+        if (payload.Duration <= TimeSpan.Zero || !ctx.Defs.Actions.TryGetValue(payload.ActionId, out var action))
         {
             return ApplyResult.Skipped(state, "所要時間か行動がおかしい");
         }
@@ -87,6 +90,21 @@ internal sealed class ActionStartedRule : EventRule<ActionStartedPayload>
         var now = ev.Time;
         var overlay = new Activity(payload.ActionId, payload.Place, now, now + payload.Duration, payload.Reason, null);
         var followUp = EventDraft.Next(now + payload.Duration, EventTypes.ActionEnded, persona, new ActionEndedPayload(payload.ActionId, payload.ActivityVersion, true));
-        return ApplyResult.Applied(state.WithPersona(persona with { Overlay = overlay }), [followUp]);
+        return ApplyResult.Applied(state.WithPersona(persona with { Overlay = overlay }), [followUp], EffectSignals(ev, action, persona, payload));
+    }
+
+    /// <summary>行動の効果のハンドラ（effects.handler）を起動するシグナル。効果がなければ空。行動の終わりを出力の時刻にする。</summary>
+    /// <param name="ev">行動の開始のイベント。</param>
+    /// <param name="action">行動の定義。</param>
+    /// <param name="persona">ペルソナの状態。</param>
+    /// <param name="payload">行動の開始の中身。</param>
+    private static ImmutableArray<EngineSignal> EffectSignals(SimEvent ev, ActionDef action, PersonaState persona, ActionStartedPayload payload)
+    {
+        if (action.Effects.Handler != SnsPostHandler.Name)
+        {
+            return ImmutableArray<EngineSignal>.Empty;
+        }
+
+        return [new StartEffectSignal(ev.Seq, persona.Id, ev.Time + payload.Duration, SnsPostHandler.Name, payload.ActionId, payload.Place, payload.ActivityVersion)];
     }
 }

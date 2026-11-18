@@ -8,6 +8,8 @@ using Vivace.Core.Domain;
 using Vivace.Core.Events.Guards;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
+using Vivace.Core.Handlers;
+using Vivace.Core.Llm;
 using Vivace.Core.Planning;
 using Vivace.Core.Randomness;
 using Vivace.Core.Routes;
@@ -32,6 +34,8 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly IStorage _storage;
     private readonly IRandomSource _random;
     private readonly IClock _clock;
+    /// <summary>LLM。効果のハンドラが使う。</summary>
+    private readonly ILlmClient _llm;
     private readonly Lanes _lanes = new();
     /// <summary>未適用のイベント。時刻、ステージ、連番の順に取り出す。</summary>
     private readonly PriorityQueue<SimEvent, (DateTimeOffset Time, int Stage, long Seq)> _queue = new();
@@ -62,9 +66,10 @@ public sealed class SimEngine : IAsyncDisposable
     private bool _disposed;
 
     /// <summary>初期の状態と部品から、エンジンを作る。</summary>
-    private SimEngine(RuleContext ctx, IDecider decider, IStorage storage, IRandomSource random, IClock clock)
+    private SimEngine(RuleContext ctx, IDecider decider, IStorage storage, IRandomSource random, IClock clock, ILlmClient llm)
     {
         _ctx = ctx;
+        _llm = llm;
         _applier = new EventApplier(ctx);
         _validator = new InjectionValidator(ctx);
         _decider = decider;
@@ -84,8 +89,9 @@ public sealed class SimEngine : IAsyncDisposable
     /// <param name="clock">時計。イベントの時刻まで待ってから適用する。</param>
     /// <param name="decider">自由時間の決定。省略すると UtilityDecider。</param>
     /// <param name="holidays">祝日のカレンダー。省略すると祝日のないカレンダー。</param>
-    public static SimEngine Create(DefinitionPack definitions, IStorage storage, IRandomSource random, IClock clock, IDecider? decider = null, IHolidayCalendar? holidays = null) =>
-        new(new RuleContext(definitions, RouteCache.Create(definitions), holidays ?? NoHolidays.Instance), decider ?? new UtilityDecider(), storage, random, clock);
+    /// <param name="llm">LLM。省略すると、呼ぶと失敗する実装（投稿はスキップになる）。</param>
+    public static SimEngine Create(DefinitionPack definitions, IStorage storage, IRandomSource random, IClock clock, IDecider? decider = null, IHolidayCalendar? holidays = null, ILlmClient? llm = null) =>
+        new(new RuleContext(definitions, RouteCache.Create(definitions), holidays ?? NoHolidays.Instance), decider ?? new UtilityDecider(), storage, random, clock, llm ?? new NoLlmClient());
 
     /// <summary>いまの状態（不変）。</summary>
     public SimState State => _state;
@@ -375,6 +381,7 @@ public sealed class SimEngine : IAsyncDisposable
         {
             StartDeciderSignal decide => decide.Persona,
             StartPlannerSignal plan => plan.Persona,
+            StartEffectSignal effect => effect.Persona,
             _ => (PersonaId?)null,
         }).Where(persona => persona is not null).Select(persona => persona!.Value));
 
@@ -407,11 +414,15 @@ public sealed class SimEngine : IAsyncDisposable
         {
             case StartDeciderSignal decide:
                 var decideSnapshot = _state;
-                StartHandler(decide.BatchSeq, decide.Persona, decide.Now, $"decide:{decide.Persona}", origin, () => Decide(decide, decideSnapshot));
+                StartHandler(decide.BatchSeq, decide.Persona, decide.Now, $"decide:{decide.Persona}", origin, () => Task.FromResult(Decide(decide, decideSnapshot)));
                 break;
             case StartPlannerSignal plan:
                 var planSnapshot = _state;
-                StartHandler(plan.BatchSeq, plan.Persona, plan.Now, $"plan:{plan.Persona}", origin, () => Plan(plan, planSnapshot));
+                StartHandler(plan.BatchSeq, plan.Persona, plan.Now, $"plan:{plan.Persona}", origin, () => Task.FromResult(Plan(plan, planSnapshot)));
+                break;
+            case StartEffectSignal { Handler: SnsPostHandler.Name } effect:
+                var effectSnapshot = _state;
+                StartHandler(effect.BatchSeq, effect.Persona, effect.Horizon, $"decide:{effect.Persona}", origin, () => SnsPostHandler.RunAsync(_ctx, _llm, effectSnapshot, effect));
                 break;
             case CancelHandlerSignal cancel:
                 foreach (var run in _running.Values.Where(run => run.Persona == cancel.Persona && IsCancellable(run.Lane)).ToList())
@@ -429,21 +440,19 @@ public sealed class SimEngine : IAsyncDisposable
     internal static bool IsCancellable(string lane) => lane.StartsWith("decide:", StringComparison.Ordinal);
 
     /// <summary>決める側のジョブを、レーンで起動する。ジョブはスナップショット（起動の時点の状態）だけを読む。</summary>
-    private void StartHandler(long key, PersonaId persona, DateTimeOffset horizon, string lane, Origin origin, Func<EventDraft> work)
+    private void StartHandler(long key, PersonaId persona, DateTimeOffset horizon, string lane, Origin origin, Func<Task<EventDraft>> work)
     {
         _running[key] = new Running(key, persona, horizon, lane);
-        _lanes.Post(lane, () =>
+        _lanes.Post(lane, async () =>
         {
             try
             {
-                _outputs.Writer.TryWrite(new Output(key, persona, horizon, origin, [work()], null));
+                _outputs.Writer.TryWrite(new Output(key, persona, horizon, origin, [await work()], null));
             }
             catch (Exception ex)
             {
                 _outputs.Writer.TryWrite(new Output(key, persona, horizon, origin, [], ex.ToString()));
             }
-
-            return Task.CompletedTask;
         });
     }
 
