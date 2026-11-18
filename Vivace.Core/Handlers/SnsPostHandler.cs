@@ -39,26 +39,19 @@ internal static class SnsPostHandler
     public static async Task<EventDraft> RunAsync(RuleContext ctx, ILlmClient llm, SimState snapshot, StartEffectSignal effect)
     {
         var persona = snapshot.Personas[effect.Persona];
-        var guard = new Guard([new ActivityVersionCheck(effect.ActivityVersion)], RejectAction.Drop);
-        try
+        var world = ctx.Defs.Worlds[snapshot.Worlds[persona.World].DefId];
+        var personaDef = ctx.Defs.Personas[persona.DefId];
+        var action = ctx.Defs.Actions[effect.ActionId];
+        var result = await llm.GenerateTextAsync(Request(personaDef, world, persona, action, effect), CancellationToken.None);
+        var body = result.Value.Trim();
+        if (body.Length == 0)
         {
-            var world = ctx.Defs.Worlds[snapshot.Worlds[persona.World].DefId];
-            var personaDef = ctx.Defs.Personas[persona.DefId];
-            var action = ctx.Defs.Actions[effect.ActionId];
-            var result = await llm.GenerateTextAsync(Request(personaDef, world, persona, action, effect), CancellationToken.None);
-            var body = result.Value.Trim();
-            if (body.Length > 0)
-            {
-                var speech = new OutboundSpeechPayload(Channel, OutboundSpeechPayload.OutboundPostKind.Post, body, null, Audience.Public, [effect.BatchSeq], EmptyChannelPayload, null);
-                return new EventDraft(effect.Horizon, EventTypes.OutboundSpeech, persona.World, persona.Id, speech, guard, effect.BatchSeq);
-            }
-        }
-        catch (Exception)
-        {
-            // 失敗は、下でスキップとして残す（エンジンは止めない）。
+            return Skipped(snapshot, effect);
         }
 
-        return Skipped(snapshot, effect);
+        var guard = new Guard([new ActivityVersionCheck(effect.ActivityVersion)], RejectAction.Drop);
+        var speech = new OutboundSpeechPayload(Channel, OutboundSpeechPayload.OutboundPostKind.Post, body, null, Audience.Public, [effect.BatchSeq], EmptyChannelPayload, null);
+        return new EventDraft(effect.Horizon, EventTypes.OutboundSpeech, persona.World, persona.Id, speech, guard, effect.BatchSeq);
     }
 
     /// <summary>
