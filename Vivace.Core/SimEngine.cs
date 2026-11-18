@@ -470,7 +470,7 @@ public sealed class SimEngine : IAsyncDisposable
         var random = _random.Open(seed, persona.Id.Value, "decide", persona.Rng.GetValueOrDefault("decide"));
         var context = new DecisionContext(snapshot, decide.Persona, decide.Now, decide.Reason, decide.BlockId, _ctx, random);
         var output = _decider.Decide(context);
-        return new EventDraft(decide.Now, EventTypes.ActivityChosen, persona.World, persona.Id, output.Payload, output.Guard, decide.BatchSeq);
+        return ActivityChosenDraft(decide, persona, output);
     }
 
     /// <summary>Decider が例外で失敗したときの代わりの出力を、イベントにする。自由時間は core.go_to_next、スマホを開く機会は何もしない。</summary>
@@ -482,8 +482,15 @@ public sealed class SimEngine : IAsyncDisposable
         var output = decide.Reason == DecisionReason.Phone
             ? DecisionFallback.Phone(persona)
             : DecisionFallback.FreeTime(_ctx, snapshot, persona, decide.Now);
-        return new EventDraft(decide.Now, EventTypes.ActivityChosen, persona.World, persona.Id, output.Payload, output.Guard, decide.BatchSeq);
+        return ActivityChosenDraft(decide, persona, output);
     }
+
+    /// <summary>決める側の出力を、行動の決定のイベントにする。</summary>
+    /// <param name="decide">起動のシグナル。</param>
+    /// <param name="persona">ペルソナの状態。</param>
+    /// <param name="output">決めた行動と、適用してよい条件。</param>
+    private static EventDraft ActivityChosenDraft(StartDeciderSignal decide, PersonaState persona, DeciderOutput output) =>
+        new(decide.Now, EventTypes.ActivityChosen, persona.World, persona.Id, output.Payload, output.Guard, decide.BatchSeq);
 
     /// <summary>Planner の代わりの出力を作り、イベントにする。</summary>
     private EventDraft Plan(StartPlannerSignal plan, SimState snapshot)
