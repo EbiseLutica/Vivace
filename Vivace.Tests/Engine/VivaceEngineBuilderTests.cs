@@ -1,3 +1,4 @@
+using Vivace.Core.Decision;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using Vivace.Core.Time;
@@ -103,22 +104,40 @@ public class VivaceEngineBuilderTests
         }
     }
 
-    /// <summary>UseDecider で渡した決定を使う（例外を投げる決定で、回すと止まる）。</summary>
+    /// <summary>UseDecider で渡した決定を使う。決定が例外を投げても、代わりの決定でエンジンは止まらずに返る。</summary>
     [Fact]
-    public async Task UseDeciderIsWired()
+    public async Task UseDeciderIsWiredAndFailuresFallBack()
     {
+        var decider = new CountingThrowingDecider();
         await using var engine = VivaceEngine.Create()
             .UseDefinitions(TestWorld.LoadOrThrow())
             .UseStorage(new InMemoryStorage())
             .UseClock(new VirtualClock(Scenario.Start))
-            .UseDecider(new ThrowingDecider())
+            .UseDecider(decider)
             .Build();
         await engine.InjectAsync(InjectRequest.WorldCreated(TestWorld.DefId, Scenario.WorldSeed, Origin.Test), CancellationToken.None);
         await engine.InjectAsync(InjectRequest.PersonaCreated(new PersonaDefId("kaori"), new PlaceId("kaori_room"), Origin.Test), CancellationToken.None);
 
-        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None));
+        await engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None);
 
-        Assert.Contains(ThrowingDecider.Message, error.Message, StringComparison.Ordinal);
+        Assert.True(decider.Calls > 0);
+    }
+
+    /// <summary>呼ばれた回数を数えてから、例外を投げる決定。</summary>
+    private sealed class CountingThrowingDecider : IDecider
+    {
+        /// <summary>呼ばれた回数。</summary>
+        private int _calls;
+
+        /// <summary>呼ばれた回数。</summary>
+        public int Calls => _calls;
+
+        /// <summary>数えてから例外を投げる。</summary>
+        public DeciderOutput Decide(DecisionContext context)
+        {
+            Interlocked.Increment(ref _calls);
+            return new ThrowingDecider().Decide(context);
+        }
     }
 
     /// <summary>一時フォルダに定義のファイルを書き出し、そのフォルダを返す。</summary>

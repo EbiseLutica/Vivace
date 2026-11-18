@@ -39,14 +39,13 @@ internal static class SnsPostHandler
     public static async Task<EventDraft> RunAsync(RuleContext ctx, ILlmClient llm, SimState snapshot, StartEffectSignal effect)
     {
         var persona = snapshot.Personas[effect.Persona];
-        var world = ctx.Defs.Worlds[snapshot.Worlds[persona.World].DefId];
-        var personaDef = ctx.Defs.Personas[persona.DefId];
-        var action = ctx.Defs.Actions[effect.ActionId];
         var guard = new Guard([new ActivityVersionCheck(effect.ActivityVersion)], RejectAction.Drop);
-        var request = Request(personaDef, world, persona, action, effect);
         try
         {
-            var result = await llm.GenerateTextAsync(request, CancellationToken.None);
+            var world = ctx.Defs.Worlds[snapshot.Worlds[persona.World].DefId];
+            var personaDef = ctx.Defs.Personas[persona.DefId];
+            var action = ctx.Defs.Actions[effect.ActionId];
+            var result = await llm.GenerateTextAsync(Request(personaDef, world, persona, action, effect), CancellationToken.None);
             var body = result.Value.Trim();
             if (body.Length > 0)
             {
@@ -59,8 +58,20 @@ internal static class SnsPostHandler
             // 失敗は、下でスキップとして残す（エンジンは止めない）。
         }
 
-        var skipped = new PostSkippedPayload(PostSkippedPayload.PostSkipReason.GenerationFailed, null);
-        return new EventDraft(effect.Horizon, EventTypes.PostSkipped, persona.World, persona.Id, skipped, guard, effect.BatchSeq);
+        return Skipped(snapshot, effect);
+    }
+
+    /// <summary>
+    /// 投稿をスキップする出力（生成の失敗）。ハンドラが失敗したときの代わりの出力にも使う。
+    /// </summary>
+    /// <param name="snapshot">起動の時点の状態。</param>
+    /// <param name="effect">起動のシグナル。</param>
+    public static EventDraft Skipped(SimState snapshot, StartEffectSignal effect)
+    {
+        var persona = snapshot.Personas[effect.Persona];
+        var guard = new Guard([new ActivityVersionCheck(effect.ActivityVersion)], RejectAction.Drop);
+        var payload = new PostSkippedPayload(PostSkippedPayload.PostSkipReason.GenerationFailed, null);
+        return new EventDraft(effect.Horizon, EventTypes.PostSkipped, persona.World, persona.Id, payload, guard, effect.BatchSeq);
     }
 
     /// <summary>

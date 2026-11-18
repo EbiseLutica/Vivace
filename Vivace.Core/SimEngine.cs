@@ -414,15 +414,15 @@ public sealed class SimEngine : IAsyncDisposable
         {
             case StartDeciderSignal decide:
                 var decideSnapshot = _state;
-                StartHandler(decide.BatchSeq, decide.Persona, decide.Now, $"decide:{decide.Persona}", origin, () => Task.FromResult(Decide(decide, decideSnapshot)));
+                StartHandler(decide.BatchSeq, decide.Persona, decide.Now, $"decide:{decide.Persona}", origin, () => Task.FromResult(Decide(decide, decideSnapshot)), () => FallbackDraft(decide, decideSnapshot));
                 break;
             case StartPlannerSignal plan:
                 var planSnapshot = _state;
-                StartHandler(plan.BatchSeq, plan.Persona, plan.Now, $"plan:{plan.Persona}", origin, () => Task.FromResult(Plan(plan, planSnapshot)));
+                StartHandler(plan.BatchSeq, plan.Persona, plan.Now, $"plan:{plan.Persona}", origin, () => Task.FromResult(Plan(plan, planSnapshot)), null);
                 break;
             case StartEffectSignal { Handler: SnsPostHandler.Name } effect:
                 var effectSnapshot = _state;
-                StartHandler(effect.BatchSeq, effect.Persona, effect.Horizon, $"decide:{effect.Persona}", origin, () => SnsPostHandler.RunAsync(_ctx, _llm, effectSnapshot, effect));
+                StartHandler(effect.BatchSeq, effect.Persona, effect.Horizon, $"decide:{effect.Persona}", origin, () => SnsPostHandler.RunAsync(_ctx, _llm, effectSnapshot, effect), () => SnsPostHandler.Skipped(effectSnapshot, effect));
                 break;
             case CancelHandlerSignal cancel:
                 foreach (var run in _running.Values.Where(run => run.Persona == cancel.Persona && IsCancellable(run.Lane)).ToList())
@@ -439,20 +439,26 @@ public sealed class SimEngine : IAsyncDisposable
     /// <param name="lane">レーンのキー。</param>
     internal static bool IsCancellable(string lane) => lane.StartsWith("decide:", StringComparison.Ordinal);
 
-    /// <summary>決める側のジョブを、レーンで起動する。ジョブはスナップショット（起動の時点の状態）だけを読む。</summary>
-    private void StartHandler(long key, PersonaId persona, DateTimeOffset horizon, string lane, Origin origin, Func<Task<EventDraft>> work)
+    /// <summary>
+    /// 決める側のジョブを、レーンで起動する。ジョブはスナップショット（起動の時点の状態）だけを読む。
+    /// fallback があれば、ジョブの例外は代わりの出力にする（D7 7.1）。なければ、例外はレーンを閉じ、エンジンを止める。
+    /// </summary>
+    private void StartHandler(long key, PersonaId persona, DateTimeOffset horizon, string lane, Origin origin, Func<Task<EventDraft>> work, Func<EventDraft>? fallback)
     {
         _running[key] = new Running(key, persona, horizon, lane);
         _lanes.Post(lane, async () =>
         {
+            EventDraft draft;
             try
             {
-                _outputs.Writer.TryWrite(new Output(key, persona, horizon, origin, [await work()], null));
+                draft = await work();
             }
-            catch (Exception ex)
+            catch (Exception) when (fallback is not null)
             {
-                _outputs.Writer.TryWrite(new Output(key, persona, horizon, origin, [], ex.ToString()));
+                draft = fallback();
             }
+
+            _outputs.Writer.TryWrite(new Output(key, persona, horizon, origin, [draft]));
         });
     }
 
@@ -464,6 +470,18 @@ public sealed class SimEngine : IAsyncDisposable
         var random = _random.Open(seed, persona.Id.Value, "decide", persona.Rng.GetValueOrDefault("decide"));
         var context = new DecisionContext(snapshot, decide.Persona, decide.Now, decide.Reason, decide.BlockId, _ctx, random);
         var output = _decider.Decide(context);
+        return new EventDraft(decide.Now, EventTypes.ActivityChosen, persona.World, persona.Id, output.Payload, output.Guard, decide.BatchSeq);
+    }
+
+    /// <summary>Decider が例外で失敗したときの代わりの出力を、イベントにする。自由時間は core.go_to_next、スマホを開く機会は何もしない。</summary>
+    /// <param name="decide">起動のシグナル。</param>
+    /// <param name="snapshot">起動の時点の状態。</param>
+    private EventDraft FallbackDraft(StartDeciderSignal decide, SimState snapshot)
+    {
+        var persona = snapshot.Personas[decide.Persona];
+        var output = decide.Reason == DecisionReason.Phone
+            ? DecisionFallback.Phone(persona)
+            : DecisionFallback.FreeTime(_ctx, snapshot, persona, decide.Now);
         return new EventDraft(decide.Now, EventTypes.ActivityChosen, persona.World, persona.Id, output.Payload, output.Guard, decide.BatchSeq);
     }
 
@@ -485,18 +503,13 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>ジョブの出力を受け取り、積む時を待つ列に入れる。ジョブの例外は外へ投げる。</summary>
+    /// <summary>ジョブの出力を受け取り、積む時を待つ列に入れる。取り消したものは捨てる。</summary>
     private void Receive(Output output)
     {
         _running.Remove(output.BatchSeq);
         if (_dropped.Remove(output.BatchSeq))
         {
             return;
-        }
-
-        if (output.Error is { } error)
-        {
-            throw new InvalidOperationException($"決める側のジョブが失敗しました（決定タイミング {output.BatchSeq}）: {error}");
         }
 
         _held.Add(output);
@@ -536,5 +549,5 @@ public sealed class SimEngine : IAsyncDisposable
     private sealed record InjectCommand(InjectRequest Request, TaskCompletionSource<InjectResult> Completion);
 
     /// <summary>決めるジョブの結果。</summary>
-    private sealed record Output(long BatchSeq, PersonaId Persona, DateTimeOffset Horizon, Origin Origin, ImmutableArray<EventDraft> Events, string? Error);
+    private sealed record Output(long BatchSeq, PersonaId Persona, DateTimeOffset Horizon, Origin Origin, ImmutableArray<EventDraft> Events);
 }
