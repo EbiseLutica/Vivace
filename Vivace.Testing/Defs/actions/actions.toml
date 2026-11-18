@@ -50,6 +50,7 @@ description = "スマホで独り言を投稿する。投稿の中身は、ま�
 duration = ["3m", "10m"]
 phone = "open"
 requires.items = ["smartphone"]
+limits.cooldown = "60m"
 effects.handler = "sns.post"
 
 [[action]]

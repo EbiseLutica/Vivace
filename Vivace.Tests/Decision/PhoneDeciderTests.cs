@@ -106,4 +106,23 @@ public class PhoneDeciderTests
         Assert.All(Outputs(recent), output => Assert.Equal(UtilityDecider.Idle, output.Payload.ActionId));
         Assert.Contains(Outputs(old), output => output.Payload.ActionId == Post);
     }
+
+    /// <summary>行動の制限（投稿のクールダウン 60 分）は、副行動の投稿にも効く。10 分前に投稿を始めていれば外れ、61 分前なら候補に戻る。</summary>
+    [Fact]
+    public void ActionCooldownAppliesToPhonePost()
+    {
+        var recent = WithLastStarted(InBlock(TimeSpan.FromHours(1)), Fixture.Now.AddMinutes(-10));
+        var old = WithLastStarted(InBlock(TimeSpan.FromHours(1)), Fixture.Now.AddMinutes(-61));
+
+        Assert.All(Outputs(recent), output => Assert.Equal(UtilityDecider.Idle, output.Payload.ActionId));
+        Assert.Contains(Outputs(old), output => output.Payload.ActionId == Post);
+    }
+
+    /// <summary>投稿の行動の、最後に始めた時刻を書き換えた状態。</summary>
+    private static SimState WithLastStarted(SimState state, DateTimeOffset at)
+    {
+        var persona = state.Personas[Fixture.Kaori];
+        var usage = new ActionUsage(at, new DateOnly(2026, 11, 2), 1, 0);
+        return Fixture.With(state, persona with { Usage = persona.Usage.SetItem(Post, usage) });
+    }
 }

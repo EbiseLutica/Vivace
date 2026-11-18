@@ -92,7 +92,7 @@ public class RunCommandTests
         Assert.StartsWith("testville: 祝日のカレンダー jp は未対応のため、祝日なしで回した\n", text, StringComparison.Ordinal);
         Assert.Contains("11-01 23:00 香織は香織の部屋で「SNS に投稿する」（自由）\n", text, StringComparison.Ordinal);
         Assert.Contains("11-01 23:45 香織は香織の部屋で「眠る」（予定）\n", text, StringComparison.Ordinal);
-        Assert.Contains("11-02 06:30 香織は香織の部屋で「本を読む」（自由）\n", text, StringComparison.Ordinal);
+        Assert.Contains("11-02 06:30 香織は香織の部屋から公園へ向かった\n", text, StringComparison.Ordinal);
         Assert.DoesNotContain("day.started", text, StringComparison.Ordinal);
         Assert.Matches(CountPattern, text);
     }
