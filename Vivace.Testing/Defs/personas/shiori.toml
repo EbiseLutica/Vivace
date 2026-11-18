@@ -1,10 +1,10 @@
 # テスト用の2人目のペルソナ。香織と昼休みに同行する。
 id = "shiori"
-name = "栞"
+name = "詩織"
 world = "testville"
 home = "home_living"
 lore = """
-高校2年生。香織の友人で、昼休みはよく一緒にいる。
+高校2年生。香織の双子の妹で、昼休みはよく一緒にいる。
 """
 items = ["smartphone"]
 
