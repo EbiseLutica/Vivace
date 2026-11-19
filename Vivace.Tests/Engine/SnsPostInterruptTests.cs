@@ -104,4 +104,73 @@ public class SnsPostInterruptTests
         Assert.Equal(Scenario.Start.AddMinutes(40), posting.LastPostAt);
         Assert.Null(posting.LastSkippedAt);
     }
+
+    /// <summary>
+    /// 香織の 23:50 に出す投稿の文面を、取り消しを待つ LLM。呼ばれたら、取り消しのトークンを捕まえて、取り消されるまで待つ（取り消されなければ 10 秒で打ち切る）。
+    /// </summary>
+    private sealed class CancelWaitingLlm : ILlmClient
+    {
+        /// <summary>呼ばれたことを知らせる。</summary>
+        private readonly TaskCompletionSource _entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        /// <summary>呼ばれたときのキャンセル。</summary>
+        public CancellationToken Captured { get; private set; }
+
+        /// <summary>呼ばれるまで待つ。</summary>
+        public Task Entered => _entered.Task;
+
+        /// <summary>対象の呼び出しなら、トークンを捕まえて取り消されるまで待つ。ほかの呼び出しはしない（取り消しを待つ呼び出しだけを見る）。</summary>
+        public async Task<LlmResult<string>> GenerateTextAsync(LlmRequest request, CancellationToken ct)
+        {
+            if (request.System.Contains("人物：香織", StringComparison.Ordinal)
+                && request.Messages.Any(message => message.Content.Contains("23:50", StringComparison.Ordinal)))
+            {
+                Captured = ct;
+                _entered.TrySetResult();
+                await Task.Delay(TimeSpan.FromSeconds(10), ct);
+            }
+
+            return new LlmResult<string>(Body, new LlmUsage("waiting", 0, 0));
+        }
+    }
+
+    /// <summary>
+    /// 投稿の途中で睡眠が始まると、投稿の文面の LLM 呼び出しのトークンが取り消される。出力は、取り消しの代わりの出力も残らない。
+    /// </summary>
+    [Fact]
+    public async Task SleepInterruptingAPostCancelsTheLlmCall()
+    {
+        var llm = new CancelWaitingLlm();
+        await using var engine = await Scenario.CreateAsync(decider: new PostingDecider(), llm: llm);
+        await engine.RunUntilAsync(Scenario.Start.AddMinutes(50), CancellationToken.None)
+            .WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+
+        await llm.Entered.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        Assert.True(llm.Captured.IsCancellationRequested);
+
+        var interrupted = Assert.Single(engine.Log, entry => entry.Status == EventStatus.Applied
+            && entry.Event.PersonaId == Kaori
+            && entry.Event.Time == Scenario.Start.AddMinutes(40)
+            && entry.Event.Payload is ActionStartedPayload { ActionId: "post_sns", IsSubAction: false });
+        var seq = interrupted.Event.Seq;
+        Assert.DoesNotContain(engine.Log, entry => entry.Event.CauseSeq == seq
+            && (entry.Event.EventType == EventTypes.OutboundSpeech || entry.Event.EventType == EventTypes.PostSkipped));
+    }
+
+    /// <summary>
+    /// 投稿の文面の呼び出しが待っているときにエンジンを破棄すると、その呼び出しのトークンが取り消され、破棄は有限時間で終わる。
+    /// </summary>
+    [Fact]
+    public async Task DisposingTheEngineCancelsTheLlmCallInFlight()
+    {
+        var llm = new CancelWaitingLlm();
+        var engine = await Scenario.CreateAsync(decider: new PostingDecider(), llm: llm);
+        await engine.RunUntilAsync(Scenario.Start.AddMinutes(41), CancellationToken.None)
+            .WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+        await llm.Entered.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+        await engine.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        Assert.True(llm.Captured.IsCancellationRequested);
+    }
 }

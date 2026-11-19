@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="Vivace.Cli/Vivace.Cli.csproj" />
   <Project Path="Vivace.Core/Vivace.Core.csproj" />
+  <Project Path="Vivace.Llm.Anthropic/Vivace.Llm.Anthropic.csproj" />
   <Project Path="Vivace.Testing/Vivace.Testing.csproj" />
   <Project Path="Vivace.Tests/Vivace.Tests.csproj" />
 </Solution>

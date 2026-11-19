@@ -33,7 +33,8 @@ internal static class SnsPostHandler
     /// <param name="llm">LLM。</param>
     /// <param name="snapshot">起動の時点の状態。</param>
     /// <param name="effect">起動のシグナル。</param>
-    public static async Task<EventDraft> RunAsync(RuleContext ctx, ILlmClient llm, SimState snapshot, StartEffectSignal effect)
+    /// <param name="ct">取り消し。取り消されたら、LLM の呼び出しを止め、例外は代わりの出力にする。</param>
+    public static async Task<EventDraft> RunAsync(RuleContext ctx, ILlmClient llm, SimState snapshot, StartEffectSignal effect, CancellationToken ct)
     {
         var persona = snapshot.Personas[effect.Persona];
         var world = ctx.Defs.Worlds[snapshot.Worlds[persona.World].DefId];
@@ -45,7 +46,7 @@ internal static class SnsPostHandler
 
         var channel = personaDef.Channels[0];
         var action = ctx.Defs.Actions[effect.ActionId];
-        var result = await llm.GenerateTextAsync(Request(personaDef, world, persona, action, effect), CancellationToken.None);
+        var result = await llm.GenerateTextAsync(Request(personaDef, world, persona, action, effect), ct);
         var body = result.Value.Trim();
         if (body.Length == 0)
         {

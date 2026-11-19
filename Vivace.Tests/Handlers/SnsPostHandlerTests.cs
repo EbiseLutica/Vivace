@@ -78,7 +78,7 @@ public class SnsPostHandlerTests
     {
         var llm = new ScriptedLlm().Reply("post.compose", "  今日の授業眠い \n");
 
-        var draft = await SnsPostHandler.RunAsync(Fixture.Context, llm, Fixture.WithKaori(), Effect());
+        var draft = await SnsPostHandler.RunAsync(Fixture.Context, llm, Fixture.WithKaori(), Effect(), CancellationToken.None);
 
         var speech = Assert.IsType<OutboundSpeechPayload>(draft.Payload);
         Assert.Equal("今日の授業眠い", speech.Body);
@@ -118,7 +118,7 @@ public class SnsPostHandlerTests
 
     /// <summary>既定の状態（香織が、所要時間 8 分の投稿を、行動のバージョン 0 で始めた）で、文面の呼び出しを1回する。</summary>
     private static Task<EventDraft> Run(ScriptedLlm llm, SimState? state = null) =>
-        SnsPostHandler.RunAsync(Fixture.Context, llm, state ?? Fixture.WithKaori(), Effect());
+        SnsPostHandler.RunAsync(Fixture.Context, llm, state ?? Fixture.WithKaori(), Effect(), CancellationToken.None);
 
     /// <summary>テスト用の起動のシグナル。</summary>
     private static StartEffectSignal Effect() =>

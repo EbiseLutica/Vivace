@@ -186,7 +186,7 @@
   <p><strong>参照</strong>：<a href="design/8-stack.html#poc">D8 8.4</a>、<a href="design/4-components.html#llm-port">D4 4.4</a>、<a href="design/4-components.html#channel">4.3</a>、<a href="design/5-decision.html#special">D5 5.4</a>、<a href="design/6-llm.html#post">D6 6.6</a>、<a href="design/2-events.html#types">D2 2.3</a></p>
   <ul class="tasks">
     <li><input type="checkbox" disabled>LLM の PoC：1つの実装を選び、投稿文が作れて、失敗と時間切れを扱えることだけを確かめる。結果は D8 8.4 に書く。D8 8.4 の残りの項目は、困ったときに確かめる</li>
-    <li><input type="checkbox" disabled><code>ILlmClient</code> の最小版と、その実装。<code>Vivace.Testing</code> に <code>ScriptedLlm</code>。API キーは環境変数から読み、TOML には書かない。キーがなければ、失敗時の出力で動く</li>
+    <li><input type="checkbox" disabled checked><code>ILlmClient</code> の最小版と、その実装。<code>Vivace.Testing</code> に <code>ScriptedLlm</code>。API キーは環境変数から読み、TOML には書かない。キーがなければ、失敗時の出力で動く</li>
     <li><input type="checkbox" disabled checked><code>phone.opportunity</code>：ブロックの <code>phone</code> と <code>phone_every</code> から積む。副行動の決定は「投稿する」と「何もしない」だけにする。何もしないは、所要時間 0 の <code>core.idle</code> として記録する</li>
     <li><input type="checkbox" disabled checked><code>sns.post</code> の最小版：コンテキストは、ペルソナの lore、いまの行動と場所、時刻、自分の直近の投稿数件。出力は <code>outbound.speech</code>、失敗したら <code>post.skipped</code></li>
     <li><input type="checkbox" disabled checked><code>IChannel</code> の最小版（投稿だけ）と、コンソールのチャンネル。<code>outbound.speech</code> を受けて送る。投稿は、イベントの行と見分けられる形で出す</li>
@@ -278,7 +278,8 @@
     <table>
       <tr><th>課題</th><th>見つけた所</th><th>起きること</th><th>扱う時期</th></tr>
       <tr><td>実機の Ctrl+C で、件数の行が出るかを確かめていない</td><td>PR #19</td><td>件数の行は、テストのキャンセルでしか確かめていない。System.CommandLine は、Ctrl+C のあと既定で2秒しか待たないので、ハンドラが遅いと件数の行を出す前に打ち切られる</td><td>M2（LLM の待ちが入るので、そのときに確かめる）</td></tr>
-      <tr><td><code>vivace run</code> に LLM をつないでいない</td><td>PR #26</td><td>run の投稿は、文面を作れずにスキップされる。コンソールのチャンネルの行は、LLM を渡すテストでしか出ない</td><td>M2 の次の PR（本物の LLM）</td></tr>
+      <tr><td>Anthropic の実装は、本物の API で確かめていない</td><td>PR #27</td><td>停止理由の文字列（<code>end_turn</code>、<code>refusal</code> など）、使用量、時間切れは、偽の HTTP の応答でしか確かめていない</td><td>M2 の次の PR（LLM の PoC）</td></tr>
+      <tr><td>ハンドラの取り消しのコールバックが、エンジンの処理のスレッドで動く</td><td>PR #27 のレビュー</td><td><code>CancelHandler</code> で取り消すと、取り消しを待っていたハンドラの続き（代わりの出力の書き込み）が、エンジンの処理の中で同期的に動くことがある。ハンドラはスナップショットしか読まないので壊れはしないが、重いハンドラが増えたら、取り消しを別のスレッドで行う</td><td>M4 以降（LLM を使うハンドラが増えたら）</td></tr>
       <tr><td><code>RemoteNotBefore</code> を記録するが、投稿の制限に使っていない</td><td>PR #26 のレビュー</td><td>次に投稿できる時刻を状態に持つが、投稿の行動の判定（ActionRules）は見ていない。postRateLimit と一緒に決める</td><td>M2 の次の PR（投稿の制限）</td></tr>
       <tr><td>配信の結果の投入が拒否されると、黙って消える</td><td>PR #26 のレビュー</td><td>送信は済んだのに outbound.sent / failed が残らず、未送信の操作が残る（再起動後に送信不明として扱う手当てがない）。拒否の理由を記録する</td><td>M3（送信不明の扱い）</td></tr>
       <tr><td><code>outbound.sent</code> / <code>outbound.failed</code> のイベントに、ペルソナが入らない</td><td>PR #26 のレビュー</td><td>購読をペルソナで絞れない。投入の要求にペルソナがないため、未送信の操作からペルソナを引いて入れる</td><td>M3 か M4（購読の絞り込みを使うとき）</td></tr>
@@ -288,7 +289,6 @@
       <tr><td>投稿が自由時間の主の行動として選ばれやすい</td><td>PR #23 の dry-run</td><td>投稿の行動は効果を書いていないので、欲求で選ばれにくくなる理由がない。60 分の制限で、主の行動としての投稿は1時間に1回までに抑えたが、その分の機会は残る。投稿の場所は、いまの場所だけ（D5 5.2、J-169）</td><td>M2 の次の PR（sns.post の効果と、投稿の制限を決めるとき）</td></tr>
       <tr><td>次の予定の場所へ1分だけ行って戻る</td><td>PR #23 の dry-run</td><td>香織が 11-03 の 21:51 に居間から自分の部屋へ移動し、着いた 21:52 にすぐ居間へ戻った。次の予定の場所へ向かう行動（<code>core.go_to_next</code>）が移動だけで終わり、着いて決め直したときに、元の場所の行動が選ばれる（J-143）。予定の開始までまだ2時間ある</td><td>M2 以降（行き来が目立ってきたら）</td></tr>
       <tr><td>送信が遅いと、世界の時間が遅れる</td><td>PR #26 のレビュー</td><td>送信の結果が戻るまでエンジンは次を適用しない（J-176）。実時間と倍速では、送信の遅さがそのまま遅れになる（最長 30 秒の時間切れまで）。仮想の時計のときだけ待ち、ほかは結果を普通の到着として受ける形が考えられる</td><td>M5（Misskey をつなぐとき）</td></tr>
-      <tr><td>投稿の LLM 呼び出しを <code>CancellationToken.None</code> で呼ぶ</td><td>PR #24 のレビュー</td><td>取り消しは出力を捨てるだけで、呼び出しは止まらない。同じレーンの次の決定が待つ</td><td>本物の LLM の PR で</td></tr>
       <tr><td>ハンドラの例外を代わりの出力にするとき、例外を記録していない</td><td>PR #24 のレビュー</td><td>D7 7.1 の通知（ログ）がなく、落ちた原因が運転中に見えない</td><td>Core のログを入れるとき</td></tr>
       <tr><td>不変条件の <code>Busy()</code> が、ホライズン待ちの効果の出力を数える</td><td>PR #24 のレビュー</td><td>投稿の行動の間ずっと、そのペルソナの生存の検査が飛ばされる</td><td>M2 以降</td></tr>
     </table>

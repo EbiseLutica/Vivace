@@ -40,7 +40,8 @@ public static class RunCommand
             parseResult.GetValue(seed),
             parseResult.GetValue(all),
             Console.Out,
-            ct));
+            ct,
+            llmFactory: output => LlmSetup.Create(Environment.GetEnvironmentVariable, output)));
         return command;
     }
 
@@ -65,7 +66,9 @@ public static class RunCommand
     /// <param name="until">回す先の時刻。省略するとキャンセルまで回す。</param>
     /// <param name="subscriberCapacity">流す購読の容量。省略すると既定の容量（テストで、あふれる経路を作るために指定する）。</param>
     /// <param name="channelOutput">投稿の行を書く先。省略すると出力と同じ。</param>
-    /// <param name="llm">文面を作る LLM。省略すると LLM を使わず、投稿は文面を作れずにスキップされる。</param>
+    /// <param name="llm">文面を作る LLM。省略すると llmFactory を使う。どちらもなければ、投稿は文面を作れずにスキップされる。</param>
+    /// <param name="llmFactory">定義の検証が通ったあとに LLM を作る関数。通知は出力に書く。</param>
+    /// <param name="errors">LLM の失敗を書く先。省略するとエラーの出力（Console.Error）。</param>
     internal static async Task<int> RunAsync(
         string dir,
         IClock clock,
@@ -76,7 +79,9 @@ public static class RunCommand
         DateTimeOffset? until = null,
         int? subscriberCapacity = null,
         TextWriter? channelOutput = null,
-        ILlmClient? llm = null)
+        ILlmClient? llm = null,
+        Func<TextWriter, ILlmClient?>? llmFactory = null,
+        TextWriter? errors = null)
     {
         output = TextWriter.Synchronized(output);
         channelOutput = TextWriter.Synchronized(channelOutput ?? output);
@@ -92,6 +97,7 @@ public static class RunCommand
         }
 
         WorldSetup.WriteHolidayNotices(definitions, output);
+        var client = llm ?? llmFactory?.Invoke(output);
 
         var storage = new InMemoryStorage();
         var names = new DisplayNames(definitions);
@@ -101,9 +107,9 @@ public static class RunCommand
             .UseStorage(storage)
             .UseClock(clock)
             .AddChannel(new ConsoleChannel(names, offsets, channelOutput ?? output));
-        if (llm is not null)
+        if (client is not null)
         {
-            builder.UseLlm(llm);
+            builder.UseLlm(new LoggingLlmClient(client, TextWriter.Synchronized(errors ?? Console.Error)));
         }
 
         var engine = builder.Build();
