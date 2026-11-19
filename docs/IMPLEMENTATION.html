@@ -189,7 +189,7 @@
     <li><input type="checkbox" disabled><code>ILlmClient</code> の最小版と、その実装。<code>Vivace.Testing</code> に <code>ScriptedLlm</code>。API キーは環境変数から読み、TOML には書かない。キーがなければ、失敗時の出力で動く</li>
     <li><input type="checkbox" disabled checked><code>phone.opportunity</code>：ブロックの <code>phone</code> と <code>phone_every</code> から積む。副行動の決定は「投稿する」と「何もしない」だけにする。何もしないは、所要時間 0 の <code>core.idle</code> として記録する</li>
     <li><input type="checkbox" disabled checked><code>sns.post</code> の最小版：コンテキストは、ペルソナの lore、いまの行動と場所、時刻、自分の直近の投稿数件。出力は <code>outbound.speech</code>、失敗したら <code>post.skipped</code></li>
-    <li><input type="checkbox" disabled><code>IChannel</code> の最小版（投稿だけ）と、コンソールのチャンネル。<code>outbound.speech</code> を受けて送る。投稿は、イベントの行と見分けられる形で出す</li>
+    <li><input type="checkbox" disabled checked><code>IChannel</code> の最小版（投稿だけ）と、コンソールのチャンネル。<code>outbound.speech</code> を受けて送る。投稿は、イベントの行と見分けられる形で出す</li>
   </ul>
   <p><strong>範囲外</strong>：スマホを開いて受信箱を見る副行動（M4）、副行動の状態変数の効果と利用の記録、話題の辞書と判定、場所の生成、文面の校閲、記憶、<code>LlmPolicy</code> と段の切り替え、送信の再試行、Misskey（M5）。ILlmClient は本文を返すだけで、構造化出力（<code>GenerateAsync&lt;T&gt;</code>）と <code>ITool</code> は作らない。<code>outbound.speech</code> から未送信の操作と <code>Deliver</code> を作るのは、チャンネルの PR。</p>
   <p><strong>完了条件</strong>：<code>ScriptedLlm</code> で、スマホを開く機会から投稿までがイベントの列に残るシナリオが通る。LLM が失敗しても、エンジンが止まらずに <code>post.skipped</code> が残る。本物の LLM で <code>vivace run --speed</code> を1日分回し、投稿が生活と矛盾しない。</p>
@@ -278,11 +278,16 @@
     <table>
       <tr><th>課題</th><th>見つけた所</th><th>起きること</th><th>扱う時期</th></tr>
       <tr><td>実機の Ctrl+C で、件数の行が出るかを確かめていない</td><td>PR #19</td><td>件数の行は、テストのキャンセルでしか確かめていない。System.CommandLine は、Ctrl+C のあと既定で2秒しか待たないので、ハンドラが遅いと件数の行を出す前に打ち切られる</td><td>M2（LLM の待ちが入るので、そのときに確かめる）</td></tr>
-      <tr><td><code>DryRun()</code> で時計を省くと、実時間の時計になる</td><td>PR #18 のレビュー</td><td>ドライランは早送りの時計（<code>VirtualClock</code>）のはずだが、いまはドキュメントコメントに書いただけで、検査していない。CLI の dry-run は時計を明示しているので、実害はない</td><td>M2（チャンネルを作り、<code>DryRun()</code> に中身ができるとき）</td></tr>
+      <tr><td><code>vivace run</code> に LLM をつないでいない</td><td>PR #26</td><td>run の投稿は、文面を作れずにスキップされる。コンソールのチャンネルの行は、LLM を渡すテストでしか出ない</td><td>M2 の次の PR（本物の LLM）</td></tr>
+      <tr><td><code>RemoteNotBefore</code> を記録するが、投稿の制限に使っていない</td><td>PR #26 のレビュー</td><td>次に投稿できる時刻を状態に持つが、投稿の行動の判定（ActionRules）は見ていない。postRateLimit と一緒に決める</td><td>M2 の次の PR（投稿の制限）</td></tr>
+      <tr><td>配信の結果の投入が拒否されると、黙って消える</td><td>PR #26 のレビュー</td><td>送信は済んだのに outbound.sent / failed が残らず、未送信の操作が残る（再起動後に送信不明として扱う手当てがない）。拒否の理由を記録する</td><td>M3（送信不明の扱い）</td></tr>
+      <tr><td><code>outbound.sent</code> / <code>outbound.failed</code> のイベントに、ペルソナが入らない</td><td>PR #26 のレビュー</td><td>購読をペルソナで絞れない。投入の要求にペルソナがないため、未送信の操作からペルソナを引いて入れる</td><td>M3 か M4（購読の絞り込みを使うとき）</td></tr>
+      <tr><td>定義の <code>channels</code> にあって、ビルダーに登録されていない種類があっても、警告が出ない</td><td>PR #26 のレビュー</td><td>ペルソナの投稿は、送り先がないまま送信失敗になる。起動時に、channels の種類が登録されていなければ警告を出す（止めはしない）</td><td>M5（Misskey のチャンネルを足すとき）</td></tr>
       <tr><td>同じ行動が続きやすい</td><td>PR #22 の dry-run</td><td>詩織が夕方に「テレビを見る」を3回、「喫茶店でひと休み」を2回続けた。香織の「本を読む」が、終わった同じ分にまた始まる。続けた回数による重みの下げ方（<code>RepeatFactor</code>）が弱いと見られる</td><td>M2 以降（投稿で同じことばかり言うように見えてきたら）</td></tr>
       <tr><td>生えた場所の名前が出ない</td><td>PR #21</td><td>流れる出力と行動表は、定義にない場所（生えた場所）を ID のまま出す</td><td>場所の生成を作るとき（M6 以降）</td></tr>
       <tr><td>投稿が自由時間の主の行動として選ばれやすい</td><td>PR #23 の dry-run</td><td>投稿の行動は効果を書いていないので、欲求で選ばれにくくなる理由がない。60 分の制限で、主の行動としての投稿は1時間に1回までに抑えたが、その分の機会は残る。投稿の場所は、いまの場所だけ（D5 5.2、J-169）</td><td>M2 の次の PR（sns.post の効果と、投稿の制限を決めるとき）</td></tr>
       <tr><td>次の予定の場所へ1分だけ行って戻る</td><td>PR #23 の dry-run</td><td>香織が 11-03 の 21:51 に居間から自分の部屋へ移動し、着いた 21:52 にすぐ居間へ戻った。次の予定の場所へ向かう行動（<code>core.go_to_next</code>）が移動だけで終わり、着いて決め直したときに、元の場所の行動が選ばれる（J-143）。予定の開始までまだ2時間ある</td><td>M2 以降（行き来が目立ってきたら）</td></tr>
+      <tr><td>送信が遅いと、世界の時間が遅れる</td><td>PR #26 のレビュー</td><td>送信の結果が戻るまでエンジンは次を適用しない（J-176）。実時間と倍速では、送信の遅さがそのまま遅れになる（最長 30 秒の時間切れまで）。仮想の時計のときだけ待ち、ほかは結果を普通の到着として受ける形が考えられる</td><td>M5（Misskey をつなぐとき）</td></tr>
       <tr><td>投稿の LLM 呼び出しを <code>CancellationToken.None</code> で呼ぶ</td><td>PR #24 のレビュー</td><td>取り消しは出力を捨てるだけで、呼び出しは止まらない。同じレーンの次の決定が待つ</td><td>本物の LLM の PR で</td></tr>
       <tr><td>ハンドラの例外を代わりの出力にするとき、例外を記録していない</td><td>PR #24 のレビュー</td><td>D7 7.1 の通知（ログ）がなく、落ちた原因が運転中に見えない</td><td>Core のログを入れるとき</td></tr>
       <tr><td>不変条件の <code>Busy()</code> が、ホライズン待ちの効果の出力を数える</td><td>PR #24 のレビュー</td><td>投稿の行動の間ずっと、そのペルソナの生存の検査が飛ばされる</td><td>M2 以降</td></tr>

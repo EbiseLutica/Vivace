@@ -38,15 +38,29 @@ public class PhoneDeciderTests
     }
 
     /// <summary>位置を指定して、スマホを開く機会の決定を1回する。</summary>
-    private static DeciderOutput Decide(SimState state, ulong position)
+    private static DeciderOutput Decide(SimState state, ulong position) => Decide(state, position, Fixture.Context);
+
+    /// <summary>規則のコンテキストを指定して、スマホを開く機会の決定を1回する。</summary>
+    private static DeciderOutput Decide(SimState state, ulong position, RuleContext context)
     {
         var random = new SplitMixRandomSource().Open(state.Worlds[Fixture.World].Seed, Fixture.Kaori.Value, "decide", position);
-        return new UtilityDecider().Decide(new DecisionContext(state, Fixture.Kaori, Fixture.Now, DecisionReason.Phone, Block, Fixture.Context, random));
+        return new UtilityDecider().Decide(new DecisionContext(state, Fixture.Kaori, Fixture.Now, DecisionReason.Phone, Block, context, random));
     }
 
     /// <summary>位置を変えて、決定を集める。</summary>
     private static List<DeciderOutput> Outputs(SimState state) =>
         Enumerable.Range(0, Positions).Select(position => Decide(state, (ulong)position)).ToList();
+
+    /// <summary>投稿の送り先がないペルソナは、スマホを開く機会に投稿を候補にしない。何もしないだけになる（投稿がある場合の対照は CandidatesAreOnlyPostAndIdle）。</summary>
+    [Fact]
+    public void PersonaWithoutChannelNeverPostsOnPhone()
+    {
+        var context = Fixture.ContextWithoutKaoriChannels();
+
+        var outputs = Enumerable.Range(0, Positions).Select(position => Decide(InBlock(TimeSpan.FromHours(1)), (ulong)position, context)).ToList();
+
+        Assert.All(outputs, output => Assert.Equal(UtilityDecider.Idle, output.Payload.ActionId));
+    }
 
     /// <summary>投稿をスキップした直後は、スマホを開く機会に投稿を候補にしない。何もしないだけになる。</summary>
     [Fact]

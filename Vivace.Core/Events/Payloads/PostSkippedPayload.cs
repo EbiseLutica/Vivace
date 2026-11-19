@@ -16,5 +16,8 @@ public sealed record PostSkippedPayload(PostSkippedPayload.PostSkipReason Reason
 
         /// <summary>締め切りに間に合わなかった。</summary>
         Deadline,
+
+        /// <summary>ペルソナにつながるチャンネルがない。</summary>
+        NoChannel,
     }
 }

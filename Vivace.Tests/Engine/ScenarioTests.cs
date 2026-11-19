@@ -51,6 +51,8 @@ public class ScenarioTests
             EventTypes.ActionStarted,
             EventTypes.ActionEnded,
             EventTypes.OutboundSpeech,
+            EventTypes.OutboundSent,
+            EventTypes.OutboundFailed,
             EventTypes.PostSkipped,
         };
         await using var engine = await Scenario.RunAsync(2);

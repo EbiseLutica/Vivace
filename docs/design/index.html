@@ -226,7 +226,7 @@
       <tr><td>J-30</td><td>guard の6種類と、却下されたときの動き（<code>redecide</code> / <code>recompose</code> / <code>drop</code>）</td><td><a href="1-execution.html#guard">D1 1.7</a></td><td>一括で合意</td></tr>
       <tr><td>J-31</td><td>イベントの状態に skipped と rejected を足し、理由を残す</td><td><a href="1-execution.html#states">D1 1.8</a></td><td>一括で合意</td></tr>
       <tr><td>J-32</td><td>SQLite の書き込みの接続を2本（エンジン用、記憶の整理用）にし、書くテーブルを分ける</td><td><a href="1-execution.html#tx">D1 1.9</a></td><td>一括で合意</td></tr>
-      <tr><td>J-33</td><td>運転モードは、実時間・倍速・早送り・追いつきの4つ。倍速でも配信役は動かさない</td><td><a href="1-execution.html#clock">D1 1.10</a></td><td>一括で合意</td></tr>
+      <tr><td>J-33</td><td>運転モードは、実時間・倍速・早送り・追いつきの4つ。配信役を止めるのは早送りと追いつきだけで、倍速では動かす。倍速でどのチャンネルをつなぐかはホストが決める（本物の SNS をつながないのはホストの役目）</td><td><a href="1-execution.html#clock">D1 1.10</a></td><td>ユーザーが確認（M2 のチャンネルの PR で決め直した）</td></tr>
       <tr><td>J-34</td><td>定義の読み直しを、<code>definitions.reloaded</code> のイベント（定義のハッシュつき）で記録する</td><td><a href="1-execution.html#reload">D1 1.12</a></td><td>一括で合意</td></tr>
       <tr><td>J-35</td><td>イベントに Batch と Cause を持たせる。バージョン番号は独立した項目にせず、ペイロードの中に持つ</td><td><a href="2-events.html#envelope">D2 2.1</a></td><td>一括で合意</td></tr>
       <tr><td>J-36</td><td>イベントタイプの名前（<code>activity.chosen</code> など）と、決定タイミングの理由の6種類</td><td><a href="2-events.html#types">D2 2.3</a></td><td>一括で合意</td></tr>
@@ -337,6 +337,10 @@
       <tr><td>J-172</td><td>直近の投稿の記録を <code>PostingState.Recent</code> に持つ（最大5件、本文と時刻）。発話の Apply で足し、古いものから外す。文面の作りで、同じことを繰り返さないために読む</td><td><a href="3-data.html">D3</a>、<a href="6-llm.html">D6 6.6</a></td><td>エージェント（PR #24）</td></tr>
       <tr><td>J-173</td><td>投稿の行動の制限は、行動の cooldown を最後の投稿（<code>PostingState.LastPostAt</code>）からも測る。主の行動と副行動で同じに見る。チャンネルの頻度制限（postRateLimit）は、チャンネルを作るときに足す</td><td><a href="5-decision.html">D5 5.2</a></td><td>エージェント（PR #24）</td></tr>
       <tr><td>J-174</td><td>決め方が例外で失敗したときの代わりの決定は、自由時間は <code>core.go_to_next</code>、スマホを開く機会は <code>core.idle</code>（何もしない、所要時間 0 の副行動）。スマホを開く機会の候補に <code>core.go_to_next</code> は入らないため</td><td><a href="7-operations.html">D7 7.1</a></td><td>エージェント（PR #24）</td></tr>
+      <tr><td>J-175</td><td>ドライラン（<code>DryRun()</code>）は、チャンネルを <code>NullChannel</code> に替えず、チャンネルを渡さずに配信役を止める。未送信の操作は残り、送信の完了も失敗も記録しない。<code>NullChannel</code> は <code>Vivace.Testing</code> の部品で、コアは参照できないため。時計を省いた、または仮想でない時計のドライランは <code>Build()</code> が例外にする</td><td><a href="4-components.html#api">D4 4.6</a>、<a href="1-execution.html#clock">D1 1.10</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/26">PR #26</a>）</td></tr>
+      <tr><td>J-176</td><td>配信の結果は、送信のタスクから、エンジンの処理のスレッドのコマンドの列に戻す。結果を待つ間（配信中の操作があるあいだ）は、エンジンは次のイベントの適用と、保留の出力の投入をしない（決める側の出力は受け取って保留に積む）。結果のイベントの連番の位置を、送信の速さに依らず決めるため。送信は 30 秒（実時間）で時間切れにして失敗にする。結果の投入は公開の <code>InjectAsync</code> を使わず、内部のコマンドの列に入れる（待ちの数を、エンジンの処理のスレッドだけで数えるため）</td><td><a href="1-execution.html#step">D1 1.4</a>、<a href="4-components.html#api">D4 4.6</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/26">PR #26</a>）</td></tr>
+      <tr><td>J-177</td><td>投稿（<code>sns.post</code>）の送り先は、ペルソナ定義の <code>channels</code> の先頭にする。<code>channels</code> が空のペルソナには、投稿の行動を候補にしない（主の行動、スマホを開く機会の副行動とも）。投稿の行動は、ほかの候補と同じ抽選に入らないため、送り先のないまま文面を作らない</td><td><a href="5-decision.html#candidates">D5 5.2</a>、<a href="4-components.html#channel">D4 4.3</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/26">PR #26</a>）</td></tr>
+      <tr><td>J-178</td><td>投稿をスキップする理由に「つながるチャンネルがない」（<code>NoChannel</code>）を足す。送り先のない投稿の行動が固定予定などで走ったときに、生成の失敗と取り違えないため</td><td><a href="2-events.html#types">D2 2.3</a>、<a href="6-llm.html">D6</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/26">PR #26</a>）</td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>

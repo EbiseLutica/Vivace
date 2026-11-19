@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
+using Vivace.Core.Channels;
 using Vivace.Core.Decision;
 using Vivace.Core.Definitions.Model;
 using Vivace.Core.Domain.State;
@@ -37,6 +38,12 @@ public sealed class SimEngine : IAsyncDisposable
     /// <summary>LLM。効果のハンドラが使う。</summary>
     private readonly ILlmClient _llm;
     private readonly Lanes _lanes = new();
+    /// <summary>配信役。ドライランでは null にして、送らない。</summary>
+    private readonly Dispatcher? _dispatcher;
+    /// <summary>エンジンを止めるキャンセル。破棄のときに取り消し、送信中の配信に伝える。</summary>
+    private readonly CancellationTokenSource _shutdown = new();
+    /// <summary>配信役に渡して、まだ結果が戻っていない操作の数。エンジンの処理のスレッドだけが書く。</summary>
+    private int _deliveriesInFlight;
     /// <summary>未適用のイベント。時刻、ステージ、連番の順に取り出す。</summary>
     private readonly PriorityQueue<SimEvent, (DateTimeOffset Time, int Stage, long Seq)> _queue = new();
     private readonly Dictionary<long, Running> _running = [];
@@ -66,10 +73,11 @@ public sealed class SimEngine : IAsyncDisposable
     private bool _disposed;
 
     /// <summary>初期の状態と部品から、エンジンを作る。</summary>
-    private SimEngine(RuleContext ctx, IDecider decider, IStorage storage, IRandomSource random, IClock clock, ILlmClient llm)
+    private SimEngine(RuleContext ctx, IDecider decider, IStorage storage, IRandomSource random, IClock clock, ILlmClient llm, Dispatcher? dispatcher)
     {
         _ctx = ctx;
         _llm = llm;
+        _dispatcher = dispatcher;
         _applier = new EventApplier(ctx);
         _validator = new InjectionValidator(ctx);
         _decider = decider;
@@ -90,8 +98,28 @@ public sealed class SimEngine : IAsyncDisposable
     /// <param name="decider">自由時間の決定。省略すると UtilityDecider。</param>
     /// <param name="holidays">祝日のカレンダー。省略すると祝日のないカレンダー。</param>
     /// <param name="llm">LLM。省略すると、呼ぶと失敗する実装（投稿はスキップになる）。</param>
-    public static SimEngine Create(DefinitionPack definitions, IStorage storage, IRandomSource random, IClock clock, IDecider? decider = null, IHolidayCalendar? holidays = null, ILlmClient? llm = null) =>
-        new(new RuleContext(definitions, RouteCache.Create(definitions), holidays ?? NoHolidays.Instance), decider ?? new UtilityDecider(), storage, random, clock, llm ?? new NoLlmClient());
+    /// <param name="channels">送信に使うチャンネル。省略すると、どのチャンネルもない（送信はすべて失敗する）。</param>
+    /// <param name="dispatch">送信するかどうか。false なら配信役を置かず、未送信の操作は残す（ドライラン）。</param>
+    /// <param name="sendTimeout">送信の時間切れ（実時間）。省略すると既定の 30 秒。</param>
+    public static SimEngine Create(
+        DefinitionPack definitions,
+        IStorage storage,
+        IRandomSource random,
+        IClock clock,
+        IDecider? decider = null,
+        IHolidayCalendar? holidays = null,
+        ILlmClient? llm = null,
+        IReadOnlyList<IChannel>? channels = null,
+        bool dispatch = true,
+        TimeSpan? sendTimeout = null) =>
+        new(
+            new RuleContext(definitions, RouteCache.Create(definitions), holidays ?? NoHolidays.Instance),
+            decider ?? new UtilityDecider(),
+            storage,
+            random,
+            clock,
+            llm ?? new NoLlmClient(),
+            dispatch ? new Dispatcher(channels ?? [], sendTimeout ?? Dispatcher.DefaultSendTimeout) : null);
 
     /// <summary>いまの状態（不変）。</summary>
     public SimState State => _state;
@@ -119,9 +147,9 @@ public sealed class SimEngine : IAsyncDisposable
                 return Task.FromResult(Inject(request));
             }
 
-            var command = new InjectCommand(request, new TaskCompletionSource<InjectResult>(TaskCreationOptions.RunContinuationsAsynchronously));
-            _commands.Writer.TryWrite(command);
-            return command.Completion.Task.WaitAsync(ct);
+            var completion = new TaskCompletionSource<InjectResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _commands.Writer.TryWrite(new InjectCommand(request, completion));
+            return completion.Task.WaitAsync(ct);
         }
     }
 
@@ -201,6 +229,18 @@ public sealed class SimEngine : IAsyncDisposable
             ThrowIfLaneFailed();
             DrainCommands();
             DrainOutputs();
+            if (_deliveriesInFlight > 0)
+            {
+                _commandWait ??= _commands.Reader.WaitToReadAsync(CancellationToken.None).AsTask();
+                await Task.WhenAny(_commandWait, _lanes.Failure, cancelled.Task);
+                if (_commandWait.IsCompleted)
+                {
+                    _commandWait = null;
+                }
+
+                continue;
+            }
+
             var head = _queue.TryPeek(out var next, out _) ? next : null;
             var limit = head?.Time ?? DateTimeOffset.MaxValue;
             if (_running.Values.Any(run => run.Horizon <= limit))
@@ -248,6 +288,7 @@ public sealed class SimEngine : IAsyncDisposable
     /// </summary>
     public async ValueTask DisposeAsync()
     {
+        _shutdown.Cancel();
         await _lanes.CompleteAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         await _storage.DisposeAsync();
         lock (_subscribersGate)
@@ -319,7 +360,13 @@ public sealed class SimEngine : IAsyncDisposable
     {
         while (_commands.Reader.TryRead(out var command))
         {
-            command.Completion.TrySetResult(Inject(command.Request));
+            if (command.Delivery)
+            {
+                _deliveriesInFlight--;
+            }
+
+            var result = Inject(command.Request);
+            command.Completion?.TrySetResult(result);
         }
     }
 
@@ -418,6 +465,9 @@ public sealed class SimEngine : IAsyncDisposable
                 var effectSnapshot = _state;
                 StartHandler(effect, $"decide:{effect.Persona}", origin, () => SnsPostHandler.RunAsync(_ctx, _llm, effectSnapshot, effect), () => SnsPostHandler.Skipped(effectSnapshot, effect));
                 break;
+            case DeliverSignal deliver:
+                Deliver(deliver);
+                break;
             case CancelHandlerSignal cancel:
                 foreach (var run in _running.Values.Where(run => run.Persona == cancel.Persona && IsCancellable(run.Lane)).ToList())
                 {
@@ -427,6 +477,60 @@ public sealed class SimEngine : IAsyncDisposable
 
                 break;
         }
+    }
+
+    /// <summary>
+    /// 未送信の操作を配信役に渡す。送信は別のタスクで行い、結果は配信の結果のコマンドとして戻す。配信役がなければ何もしない。
+    /// </summary>
+    /// <param name="signal">配信のシグナル。</param>
+    private void Deliver(DeliverSignal signal)
+    {
+        if (_dispatcher is null)
+        {
+            return;
+        }
+
+        var operation = signal.Operation;
+        var request = new OutboundRequest(operation.Seq, signal.Persona, _clock.UtcNow, operation.OperationKind, operation.IsSpeech, operation.Payload);
+        _deliveriesInFlight++;
+        _ = Task.Run(() => DeliverAsync(_dispatcher, operation, request, _shutdown.Token));
+    }
+
+    /// <summary>
+    /// 配信役に送らせ、結果を配信の結果のコマンドとして戻す。どの経路でも結果を1つ戻す（例外は失敗の結果にする）。
+    /// </summary>
+    /// <param name="dispatcher">配信役。</param>
+    /// <param name="operation">送る未送信の操作。</param>
+    /// <param name="request">チャンネルに渡す操作。</param>
+    /// <param name="ct">エンジンを止めるキャンセル。</param>
+    private async Task DeliverAsync(Dispatcher dispatcher, OutboundOp operation, OutboundRequest request, CancellationToken ct)
+    {
+        InjectRequest injection;
+        try
+        {
+            var result = await dispatcher.SendAsync(operation.Channel, request, ct);
+            injection = DeliveryRequest(operation, result);
+        }
+        catch (Exception ex)
+        {
+            injection = DeliveryRequest(operation, new SendResult.Failed(ex.Message, SurelyNotSent: false, RetryAfter: null));
+        }
+
+        _commands.Writer.TryWrite(new InjectCommand(injection, null, Delivery: true));
+    }
+
+    /// <summary>送信の結果を、送信の完了か失敗のイベントの投入にする。</summary>
+    /// <param name="operation">送った未送信の操作。</param>
+    /// <param name="result">送信の結果。</param>
+    private static InjectRequest DeliveryRequest(OutboundOp operation, SendResult result)
+    {
+        var origin = Origin.FromChannel(operation.Channel);
+        return result switch
+        {
+            SendResult.Sent sent => new InjectRequest(EventTypes.OutboundSent, new OutboundSentPayload(operation.Seq, sent.ExternalId), null, origin),
+            SendResult.Failed failed => new InjectRequest(EventTypes.OutboundFailed, new OutboundFailedPayload(operation.Seq, failed.Reason, failed.RetryAfter), null, origin),
+            _ => throw new ArgumentOutOfRangeException(nameof(result), result, null),
+        };
     }
 
     /// <summary>取り消しの対象になるレーンか。決める側のレーンだけを止め、Planner は止めない。</summary>
@@ -541,8 +645,8 @@ public sealed class SimEngine : IAsyncDisposable
     /// <summary>実行中の決めるジョブ。</summary>
     private sealed record Running(long Key, PersonaId Persona, DateTimeOffset Horizon, string Lane);
 
-    /// <summary>実行中に届いた投入のコマンド。</summary>
-    private sealed record InjectCommand(InjectRequest Request, TaskCompletionSource<InjectResult> Completion);
+    /// <summary>実行中に届いた投入のコマンド。配信の結果のときは Completion を持たず、Delivery を真にする。</summary>
+    private sealed record InjectCommand(InjectRequest Request, TaskCompletionSource<InjectResult>? Completion, bool Delivery = false);
 
     /// <summary>決めるジョブの結果。</summary>
     private sealed record Output(long BatchSeq, PersonaId Persona, DateTimeOffset Horizon, Origin Origin, ImmutableArray<EventDraft> Events);

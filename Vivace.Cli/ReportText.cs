@@ -58,6 +58,7 @@ public static class ReportText
         PostSkippedPayload.PostSkipReason.AllRejected => "話題がなかった",
         PostSkippedPayload.PostSkipReason.GenerationFailed => "生成の失敗",
         PostSkippedPayload.PostSkipReason.Deadline => "締め切り",
+        PostSkippedPayload.PostSkipReason.NoChannel => "つながるチャンネルがない",
         _ => throw new ArgumentOutOfRangeException(nameof(reason), reason, null),
     };
 

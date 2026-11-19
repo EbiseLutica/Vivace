@@ -116,6 +116,8 @@ public sealed class EventApplier
             new ActionStartedRule(),
             new ActionEndedRule(),
             new OutboundSpeechRule(),
+            new OutboundSentRule(),
+            new OutboundFailedRule(),
             new PostSkippedRule(),
         }.ToImmutableDictionary(rule => rule.EventType, rule => rule, StringComparer.Ordinal);
 }

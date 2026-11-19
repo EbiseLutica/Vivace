@@ -242,7 +242,7 @@ public class PlanRulesTests
     [Fact]
     public void UnsupportedEventTypeThrows()
     {
-        var ev = Fixture.Event(10, Fixture.Now, EventTypes.OutboundSent, new OutboundSentPayload(3, null), Fixture.Kaori);
+        var ev = Fixture.Event(10, Fixture.Now, EventTypes.OutboundUnknown, new OutboundUnknownPayload(3, "送信不明"), Fixture.Kaori);
 
         Assert.Throws<NotSupportedException>(() => Fixture.Apply(Fixture.WithKaori(), ev));
     }

@@ -2,6 +2,7 @@ using System.CommandLine;
 using Vivace.Core;
 using Vivace.Core.Definitions;
 using Vivace.Core.Definitions.Model;
+using Vivace.Core.Llm;
 using Vivace.Core.Domain;
 using Vivace.Core.Storage;
 using Vivace.Core.Time;
@@ -63,6 +64,8 @@ public static class RunCommand
     /// <param name="ct">止めるためのキャンセル（Ctrl+C）。</param>
     /// <param name="until">回す先の時刻。省略するとキャンセルまで回す。</param>
     /// <param name="subscriberCapacity">流す購読の容量。省略すると既定の容量（テストで、あふれる経路を作るために指定する）。</param>
+    /// <param name="channelOutput">投稿の行を書く先。省略すると出力と同じ。</param>
+    /// <param name="llm">文面を作る LLM。省略すると LLM を使わず、投稿は文面を作れずにスキップされる。</param>
     internal static async Task<int> RunAsync(
         string dir,
         IClock clock,
@@ -71,8 +74,12 @@ public static class RunCommand
         TextWriter output,
         CancellationToken ct,
         DateTimeOffset? until = null,
-        int? subscriberCapacity = null)
+        int? subscriberCapacity = null,
+        TextWriter? channelOutput = null,
+        ILlmClient? llm = null)
     {
+        output = TextWriter.Synchronized(output);
+        channelOutput = TextWriter.Synchronized(channelOutput ?? output);
         if (!Directory.Exists(dir))
         {
             return ValidateCommand.Run(dir, output);
@@ -87,20 +94,29 @@ public static class RunCommand
         WorldSetup.WriteHolidayNotices(definitions, output);
 
         var storage = new InMemoryStorage();
-        var engine = VivaceEngine.Create()
+        var names = new DisplayNames(definitions);
+        var offsets = Offsets(definitions);
+        var builder = VivaceEngine.Create()
             .UseDefinitions(definitions)
             .UseStorage(storage)
             .UseClock(clock)
-            .Build();
+            .AddChannel(new ConsoleChannel(names, offsets, channelOutput ?? output));
+        if (llm is not null)
+        {
+            builder.UseLlm(llm);
+        }
+
+        var engine = builder.Build();
         using var run = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var feed = subscriberCapacity is { } capacity
             ? engine.Subscribe(capacity, CancellationToken.None)
             : engine.Subscribe(CancellationToken.None);
-        var printing = PrintAsync(feed, new DisplayNames(definitions), Offsets(definitions), all, output, run);
+        var printing = PrintAsync(feed, names, offsets, all, output, run);
 
         var code = 0;
         try
         {
+            await engine.StartAsync(run.Token);
             if (await WorldSetup.InjectAsync(engine, definitions, seed, null, output, run.Token))
             {
                 await engine.RunUntilAsync(until ?? DateTimeOffset.MaxValue, run.Token);

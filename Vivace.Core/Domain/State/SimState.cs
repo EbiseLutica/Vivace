@@ -29,6 +29,11 @@ public sealed record SimState(
     public SimState WithPersona(PersonaState persona) =>
         this with { Personas = Personas.SetItem(persona.Id, persona) };
 
+    /// <summary>未送信の操作の連番を持つペルソナの状態を返す。なければ null。</summary>
+    /// <param name="seq">操作の連番。</param>
+    public PersonaState? PersonaWithOutbound(long seq) =>
+        Personas.Values.FirstOrDefault(persona => persona.Outbound.Any(op => op.Seq == seq));
+
     /// <summary>
     /// ペルソナのいまの居場所に、ほかの人がいるか。移動中の人は、どの場所にもいないものとして扱う。
     /// </summary>

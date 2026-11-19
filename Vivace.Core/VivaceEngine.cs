@@ -1,3 +1,4 @@
+using Vivace.Core.Channels;
 using Vivace.Core.Domain.State;
 using Vivace.Core.Storage;
 
@@ -9,11 +10,16 @@ public sealed class VivaceEngine : IAsyncDisposable
     /// <summary>中で動くシミュレーションのエンジン。</summary>
     private readonly SimEngine _engine;
 
-    /// <summary>組んだシミュレーションのエンジンを包む。</summary>
+    /// <summary>つないだチャンネル。ドライランでは空。</summary>
+    private readonly IReadOnlyList<IChannel> _channels;
+
+    /// <summary>組んだシミュレーションのエンジンと、つないだチャンネルを包む。</summary>
     /// <param name="engine">シミュレーションのエンジン。</param>
-    internal VivaceEngine(SimEngine engine)
+    /// <param name="channels">つないだチャンネル。</param>
+    internal VivaceEngine(SimEngine engine, IReadOnlyList<IChannel> channels)
     {
         _engine = engine;
+        _channels = channels;
     }
 
     /// <summary>エンジンを組むビルダーを作る。</summary>
@@ -35,6 +41,16 @@ public sealed class VivaceEngine : IAsyncDisposable
     /// <param name="capacity">読まれずに溜めておける件数。</param>
     /// <param name="ct">購読をやめるキャンセル。</param>
     internal IAsyncEnumerable<LoggedEvent> Subscribe(int capacity, CancellationToken ct) => _engine.Subscribe(capacity, ct);
+
+    /// <summary>つないだチャンネルを起動する。エンジンを回す前に呼ぶ。</summary>
+    /// <param name="ct">キャンセル。</param>
+    public async Task StartAsync(CancellationToken ct)
+    {
+        foreach (var channel in _channels)
+        {
+            await channel.StartAsync(this, ct);
+        }
+    }
 
     /// <summary>時刻 until まで回す。</summary>
     /// <param name="until">進める先の時刻。</param>

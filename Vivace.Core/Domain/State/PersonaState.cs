@@ -47,6 +47,10 @@ public sealed record PersonaState(
     string? LastBlockId = null,
     string? PlannedFor = null)
 {
+    /// <summary>送信の終わった未送信の操作を外す。</summary>
+    /// <param name="seq">操作の連番。</param>
+    public PersonaState WithoutOutbound(long seq) => this with { Outbound = Outbound.RemoveAll(op => op.Seq == seq) };
+
     /// <summary>
     /// 行動を始めたときの利用の記録を更新する。同じ行動が続いた回数（Consecutive）を数え、ほかの行動の連続は切る。
     /// </summary>
