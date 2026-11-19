@@ -40,7 +40,8 @@ public static class RunCommand
             parseResult.GetValue(seed),
             parseResult.GetValue(all),
             Console.Out,
-            ct));
+            ct,
+            llm: LlmSetup.Create(Environment.GetEnvironmentVariable, Console.Out)));
         return command;
     }
 
