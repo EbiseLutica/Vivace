@@ -377,13 +377,7 @@ public sealed class SimEngine : IAsyncDisposable
 
     /// <summary>適用の後に動いている決めるジョブのペルソナ。これから起動するシグナルの分も含める。</summary>
     private ImmutableHashSet<PersonaId> BusyAfter(ImmutableArray<EngineSignal> signals) =>
-        Busy().Union(signals.Select(signal => signal switch
-        {
-            StartDeciderSignal decide => decide.Persona,
-            StartPlannerSignal plan => plan.Persona,
-            StartEffectSignal effect => effect.Persona,
-            _ => (PersonaId?)null,
-        }).Where(persona => persona is not null).Select(persona => persona!.Value));
+        Busy().Union(signals.OfType<StartHandlerSignal>().Select(start => start.Persona));
 
     /// <summary>後続のイベントに連番と発生元を付けて、キューに入れる。</summary>
     private long Enqueue(EventDraft ev, Origin origin, long? cause)
@@ -414,15 +408,15 @@ public sealed class SimEngine : IAsyncDisposable
         {
             case StartDeciderSignal decide:
                 var decideSnapshot = _state;
-                StartHandler(decide.BatchSeq, decide.Persona, decide.Now, $"decide:{decide.Persona}", origin, () => Task.FromResult(Decide(decide, decideSnapshot)), () => FallbackDraft(decide, decideSnapshot));
+                StartHandler(decide, $"decide:{decide.Persona}", origin, () => Task.FromResult(Decide(decide, decideSnapshot)), () => FallbackDraft(decide, decideSnapshot));
                 break;
             case StartPlannerSignal plan:
                 var planSnapshot = _state;
-                StartHandler(plan.BatchSeq, plan.Persona, plan.Now, $"plan:{plan.Persona}", origin, () => Task.FromResult(Plan(plan, planSnapshot)), null);
+                StartHandler(plan, $"plan:{plan.Persona}", origin, () => Task.FromResult(Plan(plan, planSnapshot)), null);
                 break;
             case StartEffectSignal effect:
                 var effectSnapshot = _state;
-                StartHandler(effect.BatchSeq, effect.Persona, effect.Horizon, $"decide:{effect.Persona}", origin, () => SnsPostHandler.RunAsync(_ctx, _llm, effectSnapshot, effect), () => SnsPostHandler.Skipped(effectSnapshot, effect));
+                StartHandler(effect, $"decide:{effect.Persona}", origin, () => SnsPostHandler.RunAsync(_ctx, _llm, effectSnapshot, effect), () => SnsPostHandler.Skipped(effectSnapshot, effect));
                 break;
             case CancelHandlerSignal cancel:
                 foreach (var run in _running.Values.Where(run => run.Persona == cancel.Persona && IsCancellable(run.Lane)).ToList())
@@ -443,9 +437,9 @@ public sealed class SimEngine : IAsyncDisposable
     /// 決める側のジョブを、レーンで起動する。ジョブはスナップショット（起動の時点の状態）だけを読む。
     /// fallback があれば、ジョブの例外は代わりの出力にする。なければ、例外はレーンを閉じ、エンジンを止める。
     /// </summary>
-    private void StartHandler(long key, PersonaId persona, DateTimeOffset horizon, string lane, Origin origin, Func<Task<EventDraft>> work, Func<EventDraft>? fallback)
+    private void StartHandler(StartHandlerSignal start, string lane, Origin origin, Func<Task<EventDraft>> work, Func<EventDraft>? fallback)
     {
-        _running[key] = new Running(key, persona, horizon, lane);
+        _running[start.BatchSeq] = new Running(start.BatchSeq, start.Persona, start.Horizon, lane);
         _lanes.Post(lane, async () =>
         {
             EventDraft draft;
@@ -458,7 +452,7 @@ public sealed class SimEngine : IAsyncDisposable
                 draft = fallback();
             }
 
-            _outputs.Writer.TryWrite(new Output(key, persona, horizon, origin, [draft]));
+            _outputs.Writer.TryWrite(new Output(start.BatchSeq, start.Persona, start.Horizon, origin, [draft]));
         });
     }
 
