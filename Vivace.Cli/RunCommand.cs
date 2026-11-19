@@ -63,6 +63,7 @@ public static class RunCommand
     /// <param name="ct">止めるためのキャンセル（Ctrl+C）。</param>
     /// <param name="until">回す先の時刻。省略するとキャンセルまで回す。</param>
     /// <param name="subscriberCapacity">流す購読の容量。省略すると既定の容量（テストで、あふれる経路を作るために指定する）。</param>
+    /// <param name="channelOutput">投稿の行を書く先。省略すると出力と同じ。</param>
     internal static async Task<int> RunAsync(
         string dir,
         IClock clock,
@@ -71,7 +72,8 @@ public static class RunCommand
         TextWriter output,
         CancellationToken ct,
         DateTimeOffset? until = null,
-        int? subscriberCapacity = null)
+        int? subscriberCapacity = null,
+        TextWriter? channelOutput = null)
     {
         if (!Directory.Exists(dir))
         {
@@ -87,20 +89,25 @@ public static class RunCommand
         WorldSetup.WriteHolidayNotices(definitions, output);
 
         var storage = new InMemoryStorage();
+        var names = new DisplayNames(definitions);
+        var offsets = Offsets(definitions);
         var engine = VivaceEngine.Create()
             .UseDefinitions(definitions)
             .UseStorage(storage)
             .UseClock(clock)
+            .UseLlm(StandInLlm())
+            .AddChannel(new ConsoleChannel(names, offsets, channelOutput ?? output))
             .Build();
         using var run = CancellationTokenSource.CreateLinkedTokenSource(ct);
         var feed = subscriberCapacity is { } capacity
             ? engine.Subscribe(capacity, CancellationToken.None)
             : engine.Subscribe(CancellationToken.None);
-        var printing = PrintAsync(feed, new DisplayNames(definitions), Offsets(definitions), all, output, run);
+        var printing = PrintAsync(feed, names, offsets, all, output, run);
 
         var code = 0;
         try
         {
+            await engine.StartAsync(run.Token);
             if (await WorldSetup.InjectAsync(engine, definitions, seed, null, output, run.Token))
             {
                 await engine.RunUntilAsync(until ?? DateTimeOffset.MaxValue, run.Token);
@@ -127,6 +134,14 @@ public static class RunCommand
         output.Write(ReportText.CountLine(storage.Events));
         return code == 0 && !overflowed ? 0 : 1;
     }
+
+    /// <summary>
+    /// 文面を作る LLM の仮の実装。本物の LLM を組むまで、投稿の文面は台本の一言になる。
+    /// </summary>
+    private static ScriptedLlm StandInLlm() => new ScriptedLlm().Reply("post.compose", StandInBody);
+
+    /// <summary>仮の文面。</summary>
+    private const string StandInBody = "今日の授業眠い";
 
     /// <summary>
     /// 購読を読み、既定の書式で1行ずつ書く。購読があふれたら、理由を書いて run を止め、true を返す。

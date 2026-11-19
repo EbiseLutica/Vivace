@@ -150,7 +150,8 @@ public class RunCommandTests
             output,
             CancellationToken.None,
             Scenario.Start.AddDays(1),
-            subscriberCapacity: 1);
+            subscriberCapacity: 1,
+            channelOutput: TextWriter.Null);
 
         var text = inner.ToString();
         Assert.Equal(1, code);
