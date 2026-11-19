@@ -1,8 +1,8 @@
 # テスト用のペルソナ。固定予定の書き方の例を兼ねる。
-id = "kaori"
-name = "香織"
+id = "taro"
+name = "太郎"
 world = "testville"
-home = "kaori_room"
+home = "taro_room"
 lore = """
 高校2年生。本が好きで、図書委員。
 """
@@ -49,7 +49,7 @@ id = "sleep_weekday"
 from = "23:45"
 to = "06:30"
 action = "core.sleep"
-place = "kaori_room"
+place = "taro_room"
 
 [[schedule.block]]
 id = "school"
@@ -76,7 +76,7 @@ to = "13:00"
 action = "eat_lunch"
 place = "school_2a"
 phone = "open"
-with = ["shiori"]
+with = ["hanako"]
 on_partner_absent = "continue"
 
 [[schedule.exception]]

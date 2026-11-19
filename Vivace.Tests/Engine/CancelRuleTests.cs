@@ -9,8 +9,8 @@ public class CancelRuleTests
     [Fact]
     public void OnlyDecisionLanesAreCancellable()
     {
-        Assert.True(SimEngine.IsCancellable("decide:kaori"));
-        Assert.False(SimEngine.IsCancellable("plan:kaori"));
+        Assert.True(SimEngine.IsCancellable("decide:taro"));
+        Assert.False(SimEngine.IsCancellable("plan:taro"));
         Assert.False(SimEngine.IsCancellable("world:testville"));
     }
 }

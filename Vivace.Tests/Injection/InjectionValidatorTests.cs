@@ -11,8 +11,8 @@ namespace Vivace.Tests.Injection;
 /// <summary>投入 API の検査。共通の検査（時刻、型）と、ワールドとペルソナの生成の検査を確かめる。</summary>
 public class InjectionValidatorTests
 {
-    private static readonly PersonaDefId KaoriDef = new("kaori");
-    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private static readonly PersonaDefId TaroDef = new("taro");
+    private static readonly PlaceId TaroRoom = new("taro_room");
 
     /// <summary>処理する時点より前の時刻は、拒否する。</summary>
     [Fact]
@@ -56,7 +56,7 @@ public class InjectionValidatorTests
     {
         var request = new InjectRequest(EventTypes.VitalAdjusted, new DayStartedPayload(new DateOnly(2026, 11, 1)), null, Origin.Test);
 
-        Assert.Equal("未対応の型", Reject(Fixture.WithKaori(), [], request));
+        Assert.Equal("未対応の型", Reject(Fixture.WithTaro(), [], request));
     }
 
     /// <summary>ルールのテーブルにあっても、投入の検査を持たない型（日の始まり）は、未対応で拒否する。</summary>
@@ -72,7 +72,7 @@ public class InjectionValidatorTests
     [Fact]
     public void MismatchedPayloadIsRejected()
     {
-        var request = new InjectRequest(EventTypes.WorldCreated, new PersonaCreatedPayload(KaoriDef, KaoriRoom), null, Origin.Test);
+        var request = new InjectRequest(EventTypes.WorldCreated, new PersonaCreatedPayload(TaroDef, TaroRoom), null, Origin.Test);
 
         Assert.Equal("中身の型が違う", Reject(Fixture.Empty(), [], request));
     }
@@ -90,7 +90,7 @@ public class InjectionValidatorTests
     [Fact]
     public void PersonaWithoutDefinitionIsRejected()
     {
-        var request = InjectRequest.PersonaCreated(new PersonaDefId("nobody"), KaoriRoom, Origin.Test);
+        var request = InjectRequest.PersonaCreated(new PersonaDefId("nobody"), TaroRoom, Origin.Test);
 
         Assert.Equal("定義がない", Reject(Fixture.WithWorld(), [], request));
     }
@@ -99,17 +99,17 @@ public class InjectionValidatorTests
     [Fact]
     public void PersonaInAliveWorldIsAccepted()
     {
-        var draft = Accept(Fixture.WithWorld(), [], InjectRequest.PersonaCreated(KaoriDef, KaoriRoom, Origin.Test));
+        var draft = Accept(Fixture.WithWorld(), [], InjectRequest.PersonaCreated(TaroDef, TaroRoom, Origin.Test));
 
         Assert.Equal(EventTypes.PersonaCreated, draft.EventType);
-        Assert.Equal(new PersonaCreatedPayload(KaoriDef, KaoriRoom), draft.Payload);
+        Assert.Equal(new PersonaCreatedPayload(TaroDef, TaroRoom), draft.Payload);
     }
 
     /// <summary>居住するワールドがなく、キューにも生成がなければ、拒否する。</summary>
     [Fact]
     public void PersonaWithoutWorldIsRejected()
     {
-        Assert.Equal("ワールドがない", Reject(Fixture.Empty(), [], InjectRequest.PersonaCreated(KaoriDef, KaoriRoom, Origin.Test)));
+        Assert.Equal("ワールドがない", Reject(Fixture.Empty(), [], InjectRequest.PersonaCreated(TaroDef, TaroRoom, Origin.Test)));
     }
 
     /// <summary>居住するワールドの生成が、要求と同じ時刻でキューにあれば、生成済みとみなして受け付ける。</summary>
@@ -118,7 +118,7 @@ public class InjectionValidatorTests
     {
         var queued = QueuedWorld(Fixture.Now, TestWorld.DefId);
 
-        var draft = Accept(Fixture.Empty(), [queued], InjectRequest.PersonaCreated(KaoriDef, KaoriRoom, Origin.Test, Fixture.Now));
+        var draft = Accept(Fixture.Empty(), [queued], InjectRequest.PersonaCreated(TaroDef, TaroRoom, Origin.Test, Fixture.Now));
 
         Assert.Equal(Fixture.Now, draft.Time);
     }
@@ -129,7 +129,7 @@ public class InjectionValidatorTests
     {
         var queued = QueuedWorld(Fixture.Now.AddMinutes(1), TestWorld.DefId);
 
-        var reason = Reject(Fixture.Empty(), [queued], InjectRequest.PersonaCreated(KaoriDef, KaoriRoom, Origin.Test, Fixture.Now));
+        var reason = Reject(Fixture.Empty(), [queued], InjectRequest.PersonaCreated(TaroDef, TaroRoom, Origin.Test, Fixture.Now));
 
         Assert.Equal("ワールドがない", reason);
     }
@@ -140,7 +140,7 @@ public class InjectionValidatorTests
     {
         var queued = QueuedWorld(Fixture.Now, new WorldDefId("elsewhere"));
 
-        var reason = Reject(Fixture.Empty(), [queued], InjectRequest.PersonaCreated(KaoriDef, KaoriRoom, Origin.Test, Fixture.Now));
+        var reason = Reject(Fixture.Empty(), [queued], InjectRequest.PersonaCreated(TaroDef, TaroRoom, Origin.Test, Fixture.Now));
 
         Assert.Equal("ワールドがない", reason);
     }

@@ -13,7 +13,7 @@ namespace Vivace.Tests.Rules;
 /// <summary>プランの確定、ブロックの開始、Planner の起動の Apply を、手で作った小さなプランで確かめる。</summary>
 public class PlanRulesTests
 {
-    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private static readonly PlaceId TaroRoom = new("taro_room");
     private static readonly PlaceId HomeLiving = new("home_living");
 
     /// <summary>自由時間 1 時間、読書の固定ブロック 1 時間、自由時間 1 時間の小さなプラン。次の作り直しは 21 時間後。</summary>
@@ -25,7 +25,7 @@ public class PlanRulesTests
         PlanSource.Fallback,
         [
             new PlanBlock(null, BlockKind.Free, Fixture.Now, Fixture.Now.AddHours(1), null, null, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue),
-            new PlanBlock("reading@2026-11-01", BlockKind.Fixed, Fixture.Now.AddHours(1), Fixture.Now.AddHours(2), "read_book", KaoriRoom, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue),
+            new PlanBlock("reading@2026-11-01", BlockKind.Fixed, Fixture.Now.AddHours(1), Fixture.Now.AddHours(2), "read_book", TaroRoom, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue),
             new PlanBlock(null, BlockKind.Free, Fixture.Now.AddHours(2), Fixture.Now.AddHours(3), null, null, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue),
         ],
         null);
@@ -33,24 +33,24 @@ public class PlanRulesTests
     /// <summary>小さなプランを確定した状態を作る。</summary>
     private static SimState WithPlan()
     {
-        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
-        return Fixture.Apply(Fixture.WithKaori(), committed).State;
+        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
+        return Fixture.Apply(Fixture.WithTaro(), committed).State;
     }
 
     /// <summary>ブロックの開始のイベントを作る。</summary>
     private static SimEvent BlockStarted(long seq, DateTimeOffset time, string? block, long version = 1) =>
-        Fixture.Event(seq, time, EventTypes.BlockStarted, new BlockStartedPayload(block, version), Fixture.Kaori);
+        Fixture.Event(seq, time, EventTypes.BlockStarted, new BlockStartedPayload(block, version), Fixture.Taro);
 
     /// <summary>プランの確定は、バージョンを上げ、これから始まるブロックと、次の作り直しの時刻を積む。</summary>
     [Fact]
     public void PlanCommittedSchedulesBlockStartsAndNextRebuild()
     {
-        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
+        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
 
-        var result = Fixture.Apply(Fixture.WithKaori(), committed);
+        var result = Fixture.Apply(Fixture.WithTaro(), committed);
 
         Assert.Equal(EventStatus.Applied, result.Status);
-        Assert.Equal(1, result.State.Personas[Fixture.Kaori].PlanVersion);
+        Assert.Equal(1, result.State.Personas[Fixture.Taro].PlanVersion);
         Assert.Equal(3, result.FollowUps.Count(e => e.EventType == EventTypes.BlockStarted));
         Assert.Equal(
             new BlockStartedPayload(null, 1),
@@ -63,12 +63,12 @@ public class PlanRulesTests
     [Fact]
     public void StalePlanIsRejected()
     {
-        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Kaori, new Guard([new PlanVersionCheck(3)], RejectAction.Drop));
+        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Taro, new Guard([new PlanVersionCheck(3)], RejectAction.Drop));
 
-        var result = Fixture.Apply(Fixture.WithKaori(), committed);
+        var result = Fixture.Apply(Fixture.WithTaro(), committed);
 
         Assert.Equal(EventStatus.Rejected, result.Status);
-        Assert.Equal(0, result.State.Personas[Fixture.Kaori].PlanVersion);
+        Assert.Equal(0, result.State.Personas[Fixture.Taro].PlanVersion);
         Assert.Empty(result.FollowUps);
     }
 
@@ -95,11 +95,11 @@ public class PlanRulesTests
     [Fact]
     public void PlanCommittedDoesNotReEmitContinuingBlocks()
     {
-        var first = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop)));
-        var result = Fixture.Apply(first.State, Fixture.Event(11, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Kaori, new Guard([new PlanVersionCheck(1)], RejectAction.Drop)));
+        var first = Fixture.Apply(Fixture.WithTaro(), Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop)));
+        var result = Fixture.Apply(first.State, Fixture.Event(11, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Taro, new Guard([new PlanVersionCheck(1)], RejectAction.Drop)));
 
         Assert.Equal(EventStatus.Applied, result.Status);
-        Assert.Equal(2, result.State.Personas[Fixture.Kaori].PlanVersion);
+        Assert.Equal(2, result.State.Personas[Fixture.Taro].PlanVersion);
         Assert.Empty(result.FollowUps.Where(e => e.EventType == EventTypes.BlockStarted));
     }
 
@@ -112,8 +112,8 @@ public class PlanRulesTests
 
         var result = Fixture.Apply(plan, start);
 
-        Assert.Equal(new ActionStartedPayload("read_book", KaoriRoom, TimeSpan.FromHours(1), ActivityReason.Block, 0, "reading@2026-11-01"), Assert.Single(result.FollowUps).Payload);
-        Assert.Equal("reading@2026-11-01", result.State.Personas[Fixture.Kaori].LastBlockId);
+        Assert.Equal(new ActionStartedPayload("read_book", TaroRoom, TimeSpan.FromHours(1), ActivityReason.Block, 0, "reading@2026-11-01"), Assert.Single(result.FollowUps).Payload);
+        Assert.Equal("reading@2026-11-01", result.State.Personas[Fixture.Taro].LastBlockId);
         Assert.Equal(EventStatus.Skipped, Fixture.Apply(result.State, start).Status);
     }
 
@@ -129,8 +129,8 @@ public class PlanRulesTests
             PlanSource.Fallback,
             [new PlanBlock("tv@2026-11-01", BlockKind.Fixed, Fixture.Now, Fixture.Now.AddHours(1), "watch_tv", HomeLiving, PhonePolicy.Open, null, [], PartnerAbsentPolicy.Continue)],
             null);
-        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
-        var state = Fixture.Apply(Fixture.WithKaori(), committed).State;
+        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
+        var state = Fixture.Apply(Fixture.WithTaro(), committed).State;
 
         var result = Fixture.Apply(state, BlockStarted(11, Fixture.Now, "tv@2026-11-01"));
 
@@ -143,15 +143,15 @@ public class PlanRulesTests
     [Fact]
     public void BlockStartCutsRunningActivity()
     {
-        var withActivity = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(12, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", KaoriRoom, TimeSpan.FromHours(2), ActivityReason.Chosen, 0, null), Fixture.Kaori)).State;
-        var planned = Fixture.Apply(withActivity, Fixture.Event(13, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop))).State;
+        var withActivity = Fixture.Apply(Fixture.WithTaro(), Fixture.Event(12, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", TaroRoom, TimeSpan.FromHours(2), ActivityReason.Chosen, 0, null), Fixture.Taro)).State;
+        var planned = Fixture.Apply(withActivity, Fixture.Event(13, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(SmallPlan()), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop))).State;
 
         var result = Fixture.Apply(planned, BlockStarted(14, Fixture.Now.AddHours(1), "reading@2026-11-01"));
 
         Assert.Equal(EventStatus.Applied, result.Status);
-        Assert.Equal(new CancelHandlerSignal(Fixture.Kaori), Assert.Single(result.Signals));
-        Assert.Equal(1, result.State.Personas[Fixture.Kaori].ActivityVersion);
-        Assert.Null(result.State.Personas[Fixture.Kaori].Activity);
+        Assert.Equal(new CancelHandlerSignal(Fixture.Taro), Assert.Single(result.Signals));
+        Assert.Equal(1, result.State.Personas[Fixture.Taro].ActivityVersion);
+        Assert.Null(result.State.Personas[Fixture.Taro].Activity);
         Assert.Equal(1, Assert.IsType<ActionStartedPayload>(Assert.Single(result.FollowUps).Payload).ActivityVersion);
     }
 
@@ -160,13 +160,13 @@ public class PlanRulesTests
     public void PlanDueStartsPlannerOnceAndDropsStalePlan()
     {
         var plan = WithPlan();
-        var due = Fixture.Event(11, Fixture.Now.AddHours(21), EventTypes.PlanDue, new PlanDuePayload(1), Fixture.Kaori);
+        var due = Fixture.Event(11, Fixture.Now.AddHours(21), EventTypes.PlanDue, new PlanDuePayload(1), Fixture.Taro);
 
         var first = Fixture.Apply(plan, due);
-        Assert.Equal(new StartPlannerSignal(11, Fixture.Kaori, Fixture.Now.AddHours(21)), Assert.Single(first.Signals));
+        Assert.Equal(new StartPlannerSignal(11, Fixture.Taro, Fixture.Now.AddHours(21)), Assert.Single(first.Signals));
 
         Assert.Equal(EventStatus.Skipped, Fixture.Apply(first.State, due).Status);
-        Assert.Equal(EventStatus.Skipped, Fixture.Apply(plan, Fixture.Event(12, Fixture.Now.AddHours(21), EventTypes.PlanDue, new PlanDuePayload(0), Fixture.Kaori)).Status);
+        Assert.Equal(EventStatus.Skipped, Fixture.Apply(plan, Fixture.Event(12, Fixture.Now.AddHours(21), EventTypes.PlanDue, new PlanDuePayload(0), Fixture.Taro)).Status);
     }
 
     /// <summary>移動中に記憶の整理のブロック（睡眠）が始まると、Planner を一度だけ起こす。期間のキーはブロック ID で、同じブロックでは起こさない。</summary>
@@ -182,16 +182,16 @@ public class PlanRulesTests
             PlanSource.Fallback,
             [new PlanBlock(blockId, BlockKind.Fixed, Fixture.Now, Fixture.Now.AddHours(8), "core.sleep", null, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue)],
             null);
-        var planned = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop))).State;
-        var travel = Fixture.Event(11, Fixture.Now, EventTypes.TravelStarted, new TravelStartedPayload(KaoriRoom, HomeLiving, ImmutableArray<RouteStep>.Empty, Fixture.Now.AddHours(1), 0, null), Fixture.Kaori);
+        var planned = Fixture.Apply(Fixture.WithTaro(), Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop))).State;
+        var travel = Fixture.Event(11, Fixture.Now, EventTypes.TravelStarted, new TravelStartedPayload(TaroRoom, HomeLiving, ImmutableArray<RouteStep>.Empty, Fixture.Now.AddHours(1), 0, null), Fixture.Taro);
         var traveling = Fixture.Apply(planned, travel).State;
         var start = BlockStarted(12, Fixture.Now.AddMinutes(30), blockId);
 
         var first = Fixture.Apply(traveling, start);
 
         Assert.Equal(EventStatus.Applied, first.Status);
-        Assert.Equal(new StartPlannerSignal(12, Fixture.Kaori, Fixture.Now.AddMinutes(30)), Assert.Single(first.Signals));
-        Assert.Equal(blockId, first.State.Personas[Fixture.Kaori].PlannedFor);
+        Assert.Equal(new StartPlannerSignal(12, Fixture.Taro, Fixture.Now.AddMinutes(30)), Assert.Single(first.Signals));
+        Assert.Equal(blockId, first.State.Personas[Fixture.Taro].PlannedFor);
 
         var second = Fixture.Apply(first.State, start);
 
@@ -212,38 +212,38 @@ public class PlanRulesTests
             PlanSource.Fallback,
             [new PlanBlock(blockId, BlockKind.Fixed, Fixture.Now, Fixture.Now.AddMinutes(1), "core.sleep", HomeLiving, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue)],
             null);
-        var withActivity = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(11, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", KaoriRoom, TimeSpan.FromHours(2), ActivityReason.Chosen, 0, null), Fixture.Kaori)).State;
-        var planned = Fixture.Apply(withActivity, Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop))).State;
+        var withActivity = Fixture.Apply(Fixture.WithTaro(), Fixture.Event(11, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", TaroRoom, TimeSpan.FromHours(2), ActivityReason.Chosen, 0, null), Fixture.Taro)).State;
+        var planned = Fixture.Apply(withActivity, Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop))).State;
 
         var result = Fixture.Apply(planned, BlockStarted(12, Fixture.Now, blockId));
 
         Assert.Equal(EventStatus.Applied, result.Status);
         Assert.Equal(
-            new EngineSignal[] { new CancelHandlerSignal(Fixture.Kaori), new StartPlannerSignal(12, Fixture.Kaori, Fixture.Now) },
+            new EngineSignal[] { new CancelHandlerSignal(Fixture.Taro), new StartPlannerSignal(12, Fixture.Taro, Fixture.Now) },
             result.Signals.ToArray());
-        Assert.Equal(blockId, result.State.Personas[Fixture.Kaori].PlannedFor);
-        Assert.Equal(blockId, result.State.Personas[Fixture.Kaori].LastBlockId);
+        Assert.Equal(blockId, result.State.Personas[Fixture.Taro].PlannedFor);
+        Assert.Equal(blockId, result.State.Personas[Fixture.Taro].LastBlockId);
     }
 
     /// <summary>プランがないペルソナは、行動の終わりで決定タイミングを積まない（自由時間でも、ブロックの途中でもないため）。</summary>
     [Fact]
     public void ActionEndWithoutPlanRequestsNoDecision()
     {
-        var running = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(10, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", KaoriRoom, TimeSpan.FromHours(2), ActivityReason.Chosen, 0, null), Fixture.Kaori)).State;
+        var running = Fixture.Apply(Fixture.WithTaro(), Fixture.Event(10, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", TaroRoom, TimeSpan.FromHours(2), ActivityReason.Chosen, 0, null), Fixture.Taro)).State;
 
-        var result = Fixture.Apply(running, Fixture.Event(11, Fixture.Now.AddHours(2), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 0), Fixture.Kaori));
+        var result = Fixture.Apply(running, Fixture.Event(11, Fixture.Now.AddHours(2), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 0), Fixture.Taro));
 
         Assert.Equal(EventStatus.Applied, result.Status);
         Assert.Empty(result.FollowUps);
-        Assert.Null(result.State.Personas[Fixture.Kaori].Activity);
+        Assert.Null(result.State.Personas[Fixture.Taro].Activity);
     }
 
     /// <summary>規則にない型は、握りつぶさず、例外で止める。</summary>
     [Fact]
     public void UnsupportedEventTypeThrows()
     {
-        var ev = Fixture.Event(10, Fixture.Now, EventTypes.OutboundUnknown, new OutboundUnknownPayload(3, "送信不明"), Fixture.Kaori);
+        var ev = Fixture.Event(10, Fixture.Now, EventTypes.OutboundUnknown, new OutboundUnknownPayload(3, "送信不明"), Fixture.Taro);
 
-        Assert.Throws<NotSupportedException>(() => Fixture.Apply(Fixture.WithKaori(), ev));
+        Assert.Throws<NotSupportedException>(() => Fixture.Apply(Fixture.WithTaro(), ev));
     }
 }

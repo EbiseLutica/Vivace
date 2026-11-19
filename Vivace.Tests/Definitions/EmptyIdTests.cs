@@ -25,7 +25,7 @@ public class EmptyIdTests
     [Fact]
     public void TwoPersonasWithEmptyIdAreNotReportedAsDuplicate()
     {
-        var files = WithCopies("personas/shiori.toml", "id = \"shiori\"", "id = \"\"", "personas/blank1.toml", "personas/blank2.toml");
+        var files = WithCopies("personas/hanako.toml", "id = \"hanako\"", "id = \"\"", "personas/blank1.toml", "personas/blank2.toml");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -60,7 +60,7 @@ public class EmptyIdTests
     [InlineData("# id", DefinitionIssueCode.MissingRequired, 1, "必須の項目がありません: id")]
     public void PersonaWithoutReadableIdIsNotRegistered(string idLine, DefinitionIssueCode code, int line, string message)
     {
-        var files = WithCopies("personas/shiori.toml", "id = \"shiori\"", idLine, "personas/blank.toml");
+        var files = WithCopies("personas/hanako.toml", "id = \"hanako\"", idLine, "personas/blank.toml");
 
         var result = DefinitionLoader.LoadFiles(files);
 

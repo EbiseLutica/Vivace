@@ -10,21 +10,21 @@ namespace Vivace.Tests.Engine;
 /// <summary>エンジンの投入 API。実行中でないときはその場で、実行中はループの中で処理する。</summary>
 public class InjectAsyncTests
 {
-    private static readonly (PersonaDefId, PlaceId)[] KaoriOnly = [(new PersonaDefId("kaori"), new PlaceId("kaori_room"))];
-    private static readonly PersonaDefId ShioriDef = new("shiori");
+    private static readonly (PersonaDefId, PlaceId)[] TaroOnly = [(new PersonaDefId("taro"), new PlaceId("taro_room"))];
+    private static readonly PersonaDefId HanakoDef = new("hanako");
     private static readonly PlaceId HomeLiving = new("home_living");
 
     /// <summary>
-    /// 実行中でないときの投入は、その場で連番を返す。ワールドと香織で 1 と 2 を使ったので、詩織は 3。
+    /// 実行中でないときの投入は、その場で連番を返す。ワールドと太郎で 1 と 2 を使ったので、花子は 3。
     /// 拒否した要求は連番を使わない。
     /// </summary>
     [Fact]
     public async Task InjectOutsideRunAssignsNextSeqAndRejectionUsesNone()
     {
-        await using var engine = await Scenario.CreateAsync(personas: KaoriOnly);
+        await using var engine = await Scenario.CreateAsync(personas: TaroOnly);
 
         var rejected = await engine.InjectAsync(InjectRequest.PersonaCreated(new PersonaDefId("nobody"), HomeLiving, Origin.Test), CancellationToken.None);
-        var accepted = await engine.InjectAsync(InjectRequest.PersonaCreated(ShioriDef, HomeLiving, Origin.Admin), CancellationToken.None);
+        var accepted = await engine.InjectAsync(InjectRequest.PersonaCreated(HanakoDef, HomeLiving, Origin.Admin), CancellationToken.None);
 
         Assert.Equal(InjectResult.Reject("定義がない"), rejected);
         Assert.False(rejected.Accepted);
@@ -36,16 +36,16 @@ public class InjectAsyncTests
     [Fact]
     public async Task InjectOutsideRunRejectsPastTime()
     {
-        await using var engine = await Scenario.CreateAsync(personas: KaoriOnly);
+        await using var engine = await Scenario.CreateAsync(personas: TaroOnly);
 
-        var result = await engine.InjectAsync(InjectRequest.PersonaCreated(ShioriDef, HomeLiving, Origin.Test, Scenario.Start.AddSeconds(-1)), CancellationToken.None);
+        var result = await engine.InjectAsync(InjectRequest.PersonaCreated(HanakoDef, HomeLiving, Origin.Test, Scenario.Start.AddSeconds(-1)), CancellationToken.None);
 
         Assert.Equal(InjectResult.Reject("過去の時刻"), result);
     }
 
     /// <summary>
     /// 実行中（決める側のジョブの出力を待っている間）の投入は、ループが起きて処理し、ジョブが終わる前に結果を返す。
-    /// 時刻を省略した詩織の生成は、エンジンが処理した時点の時刻で適用され、発生元も残る。仮想時計は、出力を待っている間は進まないので、
+    /// 時刻を省略した花子の生成は、エンジンが処理した時点の時刻で適用され、発生元も残る。仮想時計は、出力を待っている間は進まないので、
     /// 投入の直前に読んだ時計の時刻がそのまま適用の時刻になる。
     /// </summary>
     [Fact]
@@ -53,7 +53,7 @@ public class InjectAsyncTests
     {
         var decider = new BlockingDecider();
         var clock = new VirtualClock(Scenario.Start);
-        await using var engine = await Scenario.CreateAsync(decider: decider, personas: KaoriOnly, clock: clock);
+        await using var engine = await Scenario.CreateAsync(decider: decider, personas: TaroOnly, clock: clock);
         Task run;
         InjectResult result;
         DateTimeOffset before;
@@ -63,7 +63,7 @@ public class InjectAsyncTests
             await decider.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
             before = clock.UtcNow;
 
-            result = await engine.InjectAsync(InjectRequest.PersonaCreated(ShioriDef, HomeLiving, Origin.Admin), CancellationToken.None)
+            result = await engine.InjectAsync(InjectRequest.PersonaCreated(HanakoDef, HomeLiving, Origin.Admin), CancellationToken.None)
                 .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
             Assert.False(run.IsCompleted);
@@ -82,7 +82,7 @@ public class InjectAsyncTests
         Assert.Equal(Origin.Admin, logged.Event.Origin);
         Assert.Equal(before, logged.Event.Time);
         Assert.Same(engine.State, engine.View);
-        Assert.True(engine.View.Personas.ContainsKey(new PersonaId("shiori")));
+        Assert.True(engine.View.Personas.ContainsKey(new PersonaId("hanako")));
     }
 
     /// <summary>
@@ -94,7 +94,7 @@ public class InjectAsyncTests
     {
         var until = Scenario.Start.AddHours(1).AddSeconds(7);
         var clock = new GatedClock(Scenario.Start, until);
-        await using var engine = await Scenario.CreateAsync(personas: KaoriOnly, clock: clock);
+        await using var engine = await Scenario.CreateAsync(personas: TaroOnly, clock: clock);
         Task run;
         Task<InjectResult> inject;
         try
@@ -102,7 +102,7 @@ public class InjectAsyncTests
             run = engine.RunUntilAsync(until, CancellationToken.None);
             await clock.Entered.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
-            inject = engine.InjectAsync(InjectRequest.PersonaCreated(ShioriDef, HomeLiving, Origin.Test, until), CancellationToken.None);
+            inject = engine.InjectAsync(InjectRequest.PersonaCreated(HanakoDef, HomeLiving, Origin.Test, until), CancellationToken.None);
             await Task.Delay(50, TestContext.Current.CancellationToken);
 
             Assert.False(inject.IsCompleted);
@@ -124,7 +124,7 @@ public class InjectAsyncTests
     public async Task RunUntilWhileRunningThrows()
     {
         var decider = new BlockingDecider();
-        await using var engine = await Scenario.CreateAsync(decider: decider, personas: KaoriOnly);
+        await using var engine = await Scenario.CreateAsync(decider: decider, personas: TaroOnly);
         Task run;
         try
         {

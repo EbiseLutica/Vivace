@@ -13,7 +13,7 @@ public class PostingLimitTests
 {
     private static readonly ActionDef Post = Fixture.Context.Defs.Actions["post_sns"];
     private static readonly ActionDef Read = Fixture.Context.Defs.Actions["read_book"];
-    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private static readonly PlaceId TaroRoom = new("taro_room");
 
     /// <summary>サーバーが返した次に投稿できる時刻より前は、投稿を候補にしない。その時刻ちょうどで候補に戻る。</summary>
     [Fact]
@@ -60,10 +60,10 @@ public class PostingLimitTests
     [Fact]
     public void SkipAlsoMakesPostNotChoosable()
     {
-        var skipped = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(10, Fixture.Now, EventTypes.PostSkipped, new PostSkippedPayload(PostSkippedPayload.PostSkipReason.AllRejected, null), Fixture.Kaori)).State;
-        var persona = skipped.Personas[Fixture.Kaori];
+        var skipped = Fixture.Apply(Fixture.WithTaro(), Fixture.Event(10, Fixture.Now, EventTypes.PostSkipped, new PostSkippedPayload(PostSkippedPayload.PostSkipReason.AllRejected, null), Fixture.Taro)).State;
+        var persona = skipped.Personas[Fixture.Taro];
 
-        Assert.False(ActionRules.CanChoose(Fixture.Context, skipped, persona, "post_sns", KaoriRoom, Fixture.Now.AddMinutes(10)));
-        Assert.True(ActionRules.CanChoose(Fixture.Context, skipped, persona, "post_sns", KaoriRoom, Fixture.Now.AddMinutes(30)));
+        Assert.False(ActionRules.CanChoose(Fixture.Context, skipped, persona, "post_sns", TaroRoom, Fixture.Now.AddMinutes(10)));
+        Assert.True(ActionRules.CanChoose(Fixture.Context, skipped, persona, "post_sns", TaroRoom, Fixture.Now.AddMinutes(30)));
     }
 }

@@ -15,11 +15,11 @@ namespace Vivace.Tests.Decision;
 /// </summary>
 public class PlacelessActionTests
 {
-    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private static readonly PlaceId TaroRoom = new("taro_room");
     private const string Post = "post_sns";
     private const int Positions = 40;
 
-    /// <summary>香織が香織の部屋にいて、3 時間の自由時間の中にいる状態。</summary>
+    /// <summary>太郎が太郎の部屋にいて、3 時間の自由時間の中にいる状態。</summary>
     private static SimState FreeThreeHours()
     {
         var plan = new DayPlan(
@@ -30,18 +30,18 @@ public class PlacelessActionTests
             PlanSource.Fallback,
             [new PlanBlock(null, BlockKind.Free, Fixture.Now, Fixture.Now.AddHours(3), null, null, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue)],
             null);
-        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
-        return Fixture.Apply(Fixture.WithKaori(), committed).State;
+        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
+        return Fixture.Apply(Fixture.WithTaro(), committed).State;
     }
 
     /// <summary>位置を指定して、自由時間の決定を1回する。</summary>
     private static DeciderOutput Decide(SimState state, ulong position)
     {
-        var random = new SplitMixRandomSource().Open(state.Worlds[Fixture.World].Seed, Fixture.Kaori.Value, "decide", position);
-        return new UtilityDecider().Decide(new DecisionContext(state, Fixture.Kaori, Fixture.Now, DecisionReason.Free, null, Fixture.Context, random));
+        var random = new SplitMixRandomSource().Open(state.Worlds[Fixture.World].Seed, Fixture.Taro.Value, "decide", position);
+        return new UtilityDecider().Decide(new DecisionContext(state, Fixture.Taro, Fixture.Now, DecisionReason.Free, null, Fixture.Context, random));
     }
 
-    /// <summary>投稿（場所のタグなし）は、どの位置の決定でも香織の部屋で、ほかの場所には出ない。投稿は選ばれる候補として残る。</summary>
+    /// <summary>投稿（場所のタグなし）は、どの位置の決定でも太郎の部屋で、ほかの場所には出ない。投稿は選ばれる候補として残る。</summary>
     [Fact]
     public void PlacelessActionIsOnlyCandidateAtCurrentPlace()
     {
@@ -53,6 +53,6 @@ public class PlacelessActionTests
             .ToList();
 
         Assert.NotEmpty(posts);
-        Assert.All(posts, output => Assert.Equal(KaoriRoom, output.Payload.Place));
+        Assert.All(posts, output => Assert.Equal(TaroRoom, output.Payload.Place));
     }
 }

@@ -16,8 +16,8 @@ from = "テスト語"
 verdict = "pass"
 
 [[place]]
-id = "kaori_room"
-name = "香織の部屋"
+id = "taro_room"
+name = "太郎の部屋"
 tags = ["desk"]
 group = "家"
 links = { home_living = 1 }

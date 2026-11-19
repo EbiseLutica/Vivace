@@ -1,7 +1,7 @@
 namespace Vivace.Core.Domain;
 
 /// <summary>
-/// 場所の ID。定義の場所の ID、または生えた場所の ID（例: "kaori_room"）。
+/// 場所の ID。定義の場所の ID、または生えた場所の ID（例: "taro_room"）。
 /// </summary>
 public readonly record struct PlaceId(string Value) : IEntityId
 {

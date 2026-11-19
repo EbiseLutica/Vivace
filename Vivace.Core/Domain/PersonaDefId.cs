@@ -1,7 +1,7 @@
 namespace Vivace.Core.Domain;
 
 /// <summary>
-/// ペルソナの定義の ID（例: "kaori"）。定義を引くキーで、インスタンスの ID（<see cref="PersonaId"/>）とは型を分ける。
+/// ペルソナの定義の ID（例: "taro"）。定義を引くキーで、インスタンスの ID（<see cref="PersonaId"/>）とは型を分ける。
 /// </summary>
 public readonly record struct PersonaDefId(string Value) : IEntityId
 {

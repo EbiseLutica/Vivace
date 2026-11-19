@@ -116,7 +116,7 @@ public class OutboundDeliveryTests
             .DryRun()
             .Build();
         await engine.InjectAsync(InjectRequest.WorldCreated(TestWorld.DefId, Scenario.WorldSeed, Origin.Test), CancellationToken.None);
-        await engine.InjectAsync(InjectRequest.PersonaCreated(new PersonaDefId("kaori"), new PlaceId("kaori_room"), Origin.Test), CancellationToken.None);
+        await engine.InjectAsync(InjectRequest.PersonaCreated(new PersonaDefId("taro"), new PlaceId("taro_room"), Origin.Test), CancellationToken.None);
 
         await engine.RunUntilAsync(Scenario.Start.AddDays(2), CancellationToken.None);
 

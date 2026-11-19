@@ -10,12 +10,12 @@ public class DefinitionErrorTests
     [Fact]
     public void SyntaxErrorIsReportedWithLine()
     {
-        var files = DefinitionFixtures.Replaced("personas/kaori.toml", "id = \"kaori\"", "id = = \"kaori\"");
+        var files = DefinitionFixtures.Replaced("personas/taro.toml", "id = \"taro\"", "id = = \"taro\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
         Assert.True(result.HasErrors);
-        Assert.All(result.Issues.Where(issue => issue.Code == DefinitionIssueCode.SyntaxError), issue => Assert.Equal("personas/kaori.toml", issue.Location.Path));
+        Assert.All(result.Issues.Where(issue => issue.Code == DefinitionIssueCode.SyntaxError), issue => Assert.Equal("personas/taro.toml", issue.Location.Path));
         Assert.Contains(result.Issues, issue => issue.Code == DefinitionIssueCode.SyntaxError && issue.Location.Line == 2);
         Assert.Null(result.Definitions);
     }
@@ -39,12 +39,12 @@ public class DefinitionErrorTests
     public void DuplicateIdIsReportedAtSecondDefinition()
     {
         var files = DefinitionFixtures.Original();
-        var copy = files.Single(file => file.Path == "personas/kaori.toml") with { Path = "personas/kaori_copy.toml" };
+        var copy = files.Single(file => file.Path == "personas/taro.toml") with { Path = "personas/taro_copy.toml" };
         files.Add(copy);
 
         var result = DefinitionLoader.LoadFiles(files);
 
-        DefinitionFixtures.Find(result, DefinitionIssueCode.DuplicateId, new SourceLocation("personas/kaori_copy.toml", 1, 1));
+        DefinitionFixtures.Find(result, DefinitionIssueCode.DuplicateId, new SourceLocation("personas/taro_copy.toml", 1, 1));
         Assert.Null(result.Definitions);
     }
 
@@ -65,11 +65,11 @@ public class DefinitionErrorTests
     /// </summary>
     [Theory]
     [InlineData("worlds/testville.toml", "park = 10", "nowhere = 10")]
-    [InlineData("personas/kaori.toml", "world = \"testville\"", "world = \"nowhere\"")]
-    [InlineData("personas/kaori.toml", "action = \"core.sleep\"", "action = \"core.snooze\"")]
-    [InlineData("personas/kaori.toml", "place = \"kaori_room\"", "place = \"nowhere\"")]
-    [InlineData("personas/kaori.toml", "home = \"kaori_room\"", "home = \"nowhere\"")]
-    [InlineData("personas/kaori.toml", "with = [\"shiori\"]", "with = [\"nobody\"]")]
+    [InlineData("personas/taro.toml", "world = \"testville\"", "world = \"nowhere\"")]
+    [InlineData("personas/taro.toml", "action = \"core.sleep\"", "action = \"core.snooze\"")]
+    [InlineData("personas/taro.toml", "place = \"taro_room\"", "place = \"nowhere\"")]
+    [InlineData("personas/taro.toml", "home = \"taro_room\"", "home = \"nowhere\"")]
+    [InlineData("personas/taro.toml", "with = [\"hanako\"]", "with = [\"nobody\"]")]
     public void MissingReferenceIsReportedAtKey(string path, string needle, string replacement)
     {
         var files = DefinitionFixtures.Replaced(path, needle, replacement);
@@ -85,8 +85,8 @@ public class DefinitionErrorTests
     [Fact]
     public void EdgeMismatchIsReportedAtLaterEdge()
     {
-        var files = DefinitionFixtures.Replaced("worlds/testville.toml", "links = { street = 3 }", "links = { street = 3, kaori_room = 2 }");
-        var location = DefinitionFixtures.At(files, "worlds/testville.toml", "kaori_room = 2");
+        var files = DefinitionFixtures.Replaced("worlds/testville.toml", "links = { street = 3 }", "links = { street = 3, taro_room = 2 }");
+        var location = DefinitionFixtures.At(files, "worlds/testville.toml", "taro_room = 2");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -98,10 +98,10 @@ public class DefinitionErrorTests
     public void OverlappingFixedBlocksAreReported()
     {
         var files = DefinitionFixtures.Replaced(
-            "personas/kaori.toml",
+            "personas/taro.toml",
             "[[schedule.exception]]\n",
             "[[schedule.block]]\nid = \"clash\"\nfrom = \"09:00\"\nto = \"10:00\"\naction = \"walk_park\"\nplace = \"park\"\n\n[[schedule.exception]]\n");
-        var header = DefinitionFixtures.At(files, "personas/kaori.toml", "[[schedule.block]]\nid = \"clash\"");
+        var header = DefinitionFixtures.At(files, "personas/taro.toml", "[[schedule.block]]\nid = \"clash\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -113,7 +113,7 @@ public class DefinitionErrorTests
     [Fact]
     public void ReflexActionWithRangeDurationIsReported()
     {
-        var files = DefinitionFixtures.Replaced("personas/kaori.toml", "action = \"core.go_home_rest\"", "action = \"walk_park\"");
+        var files = DefinitionFixtures.Replaced("personas/taro.toml", "action = \"core.go_home_rest\"", "action = \"walk_park\"");
         var location = DefinitionFixtures.At(files, "actions/actions.toml", "duration = [\"20m\", \"60m\"]");
 
         var result = DefinitionLoader.LoadFiles(files);
@@ -126,10 +126,10 @@ public class DefinitionErrorTests
     public void ForbiddingGoToNextIsReported()
     {
         var files = DefinitionFixtures.Replaced(
-            "personas/kaori.toml",
+            "personas/taro.toml",
             "prefs = { read_book = \"like\"",
             "prefs = { \"core.go_to_next\" = \"forbid\", read_book = \"like\"");
-        var location = DefinitionFixtures.At(files, "personas/kaori.toml", "\"core.go_to_next\" = \"forbid\"");
+        var location = DefinitionFixtures.At(files, "personas/taro.toml", "\"core.go_to_next\" = \"forbid\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 

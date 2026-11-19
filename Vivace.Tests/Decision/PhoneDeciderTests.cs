@@ -15,12 +15,12 @@ namespace Vivace.Tests.Decision;
 /// </summary>
 public class PhoneDeciderTests
 {
-    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private static readonly PlaceId TaroRoom = new("taro_room");
     private const string Block = "reading@2026-11-01";
     private const string Post = "post_sns";
     private const int Positions = 40;
 
-    /// <summary>読書の固定ブロック（残りが length）の中で、読書を始めた香織の状態。</summary>
+    /// <summary>読書の固定ブロック（残りが length）の中で、読書を始めた太郎の状態。</summary>
     private static SimState InBlock(TimeSpan length)
     {
         var plan = new DayPlan(
@@ -29,11 +29,11 @@ public class PhoneDeciderTests
             Fixture.Now.AddHours(24),
             Fixture.Now.AddHours(21),
             PlanSource.Fallback,
-            [new PlanBlock(Block, BlockKind.Fixed, Fixture.Now, Fixture.Now + length, "read_book", KaoriRoom, PhonePolicy.Open, null, [], PartnerAbsentPolicy.Continue)],
+            [new PlanBlock(Block, BlockKind.Fixed, Fixture.Now, Fixture.Now + length, "read_book", TaroRoom, PhonePolicy.Open, null, [], PartnerAbsentPolicy.Continue)],
             null);
-        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
-        var state = Fixture.Apply(Fixture.WithKaori(), committed).State;
-        var started = Fixture.Event(11, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", KaoriRoom, length, ActivityReason.Block, 0, Block), Fixture.Kaori);
+        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
+        var state = Fixture.Apply(Fixture.WithTaro(), committed).State;
+        var started = Fixture.Event(11, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", TaroRoom, length, ActivityReason.Block, 0, Block), Fixture.Taro);
         return Fixture.Apply(state, started).State;
     }
 
@@ -43,8 +43,8 @@ public class PhoneDeciderTests
     /// <summary>規則のコンテキストを指定して、スマホを開く機会の決定を1回する。</summary>
     private static DeciderOutput Decide(SimState state, ulong position, RuleContext context)
     {
-        var random = new SplitMixRandomSource().Open(state.Worlds[Fixture.World].Seed, Fixture.Kaori.Value, "decide", position);
-        return new UtilityDecider().Decide(new DecisionContext(state, Fixture.Kaori, Fixture.Now, DecisionReason.Phone, Block, context, random));
+        var random = new SplitMixRandomSource().Open(state.Worlds[Fixture.World].Seed, Fixture.Taro.Value, "decide", position);
+        return new UtilityDecider().Decide(new DecisionContext(state, Fixture.Taro, Fixture.Now, DecisionReason.Phone, Block, context, random));
     }
 
     /// <summary>位置を変えて、決定を集める。</summary>
@@ -55,7 +55,7 @@ public class PhoneDeciderTests
     [Fact]
     public void PersonaWithoutChannelNeverPostsOnPhone()
     {
-        var context = Fixture.ContextWithoutKaoriChannels();
+        var context = Fixture.ContextWithoutTaroChannels();
 
         var outputs = Enumerable.Range(0, Positions).Select(position => Decide(InBlock(TimeSpan.FromHours(1)), (ulong)position, context)).ToList();
 
@@ -66,7 +66,7 @@ public class PhoneDeciderTests
     [Fact]
     public void SkipJustBeforeLeavesOnlyIdle()
     {
-        var skipped = Fixture.Apply(InBlock(TimeSpan.FromHours(1)), Fixture.Event(20, Fixture.Now, EventTypes.PostSkipped, new PostSkippedPayload(PostSkippedPayload.PostSkipReason.AllRejected, null), Fixture.Kaori)).State;
+        var skipped = Fixture.Apply(InBlock(TimeSpan.FromHours(1)), Fixture.Event(20, Fixture.Now, EventTypes.PostSkipped, new PostSkippedPayload(PostSkippedPayload.PostSkipReason.AllRejected, null), Fixture.Taro)).State;
 
         var outputs = Outputs(skipped);
 
@@ -84,7 +84,7 @@ public class PhoneDeciderTests
         Assert.All(outputs, output =>
         {
             Assert.True(output.Payload.IsSubAction);
-            Assert.Equal(KaoriRoom, output.Payload.Place);
+            Assert.Equal(TaroRoom, output.Payload.Place);
             Assert.Equal(0, output.Payload.TravelMinutes);
             Assert.True(output.Payload.Route.IsEmpty);
         });
@@ -117,7 +117,7 @@ public class PhoneDeciderTests
     /// <summary>投稿の行動の、最後に始めた時刻を書き換えた状態。</summary>
     private static SimState WithLastStarted(SimState state, DateTimeOffset at)
     {
-        var persona = state.Personas[Fixture.Kaori];
+        var persona = state.Personas[Fixture.Taro];
         var usage = new ActionUsage(at, new DateOnly(2026, 11, 2), 1, 0);
         return Fixture.With(state, persona with { Usage = persona.Usage.SetItem(Post, usage) });
     }
@@ -130,17 +130,17 @@ public class PhoneDeciderTests
     public void RejectedPhoneDecisionClearsDecidingAndKeepsBlockAction()
     {
         var state = InBlock(TimeSpan.FromHours(1));
-        var request = Fixture.Event(12, Fixture.Now, EventTypes.DecisionRequested, new DecisionRequestedPayload(DecisionReason.Phone, Block), Fixture.Kaori);
+        var request = Fixture.Event(12, Fixture.Now, EventTypes.DecisionRequested, new DecisionRequestedPayload(DecisionReason.Phone, Block), Fixture.Taro);
         var deciding = Fixture.Apply(state, request).State;
         var output = Decide(deciding, 0);
-        var stale = Fixture.With(deciding, deciding.Personas[Fixture.Kaori] with { ActivityVersion = 1 });
+        var stale = Fixture.With(deciding, deciding.Personas[Fixture.Taro] with { ActivityVersion = 1 });
 
-        var result = Fixture.Apply(stale, Fixture.Event(13, Fixture.Now, EventTypes.ActivityChosen, output.Payload, Fixture.Kaori, output.Guard, 12));
+        var result = Fixture.Apply(stale, Fixture.Event(13, Fixture.Now, EventTypes.ActivityChosen, output.Payload, Fixture.Taro, output.Guard, 12));
 
         Assert.Equal(EventStatus.Rejected, result.Status);
-        var kaori = result.State.Personas[Fixture.Kaori];
-        Assert.False(kaori.Deciding);
-        Assert.Equal("read_book", kaori.Activity!.ActionId);
+        var taro = result.State.Personas[Fixture.Taro];
+        Assert.False(taro.Deciding);
+        Assert.Equal("read_book", taro.Activity!.ActionId);
         Assert.Equal(new DecisionRequestedPayload(DecisionReason.Retry, null), Assert.Single(result.FollowUps).Payload);
     }
 }

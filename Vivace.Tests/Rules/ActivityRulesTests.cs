@@ -13,32 +13,32 @@ namespace Vivace.Tests.Rules;
 /// <summary>行動の開始と終了、移動、決定タイミング、行動の決定の Apply を、手で計算した小さな例で確かめる。</summary>
 public class ActivityRulesTests
 {
-    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private static readonly PlaceId TaroRoom = new("taro_room");
     private static readonly PlaceId HomeLiving = new("home_living");
 
     /// <summary>行動の開始のイベントを作る。</summary>
     private static SimEvent ActionStarted(long seq, string action, PlaceId place, TimeSpan duration, long version) =>
-        Fixture.Event(seq, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload(action, place, duration, ActivityReason.Chosen, version, null), Fixture.Kaori);
+        Fixture.Event(seq, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload(action, place, duration, ActivityReason.Chosen, version, null), Fixture.Taro);
 
     /// <summary>決定タイミングのイベントを作る。</summary>
     private static SimEvent Request(long seq) =>
-        Fixture.Event(seq, Fixture.Now, EventTypes.DecisionRequested, new DecisionRequestedPayload(DecisionReason.Free, null), Fixture.Kaori);
+        Fixture.Event(seq, Fixture.Now, EventTypes.DecisionRequested, new DecisionRequestedPayload(DecisionReason.Free, null), Fixture.Taro);
 
     /// <summary>決定タイミングの決定の中身（行動、場所、所要時間、乱数の範囲）を作る。移動は 0 分。</summary>
     private static ActivityChosenPayload Choice(string action, PlaceId place, int minutes, ulong from, ulong to) =>
-        new(action, place, ImmutableArray<RouteStep>.Empty, 0, TimeSpan.FromMinutes(minutes), false, new RngDraws(Fixture.Kaori.Value, "decide", from, to));
+        new(action, place, ImmutableArray<RouteStep>.Empty, 0, TimeSpan.FromMinutes(minutes), false, new RngDraws(Fixture.Taro.Value, "decide", from, to));
 
     /// <summary>行動の開始で、率が行動の率に替わり、終了の時刻が積まれる。読書は気力 −2、退屈度は既定の +3 のまま。</summary>
     [Fact]
     public void ActionStartedSwitchesRatesAndSchedulesEnd()
     {
-        var result = Fixture.Apply(Fixture.WithKaori(), ActionStarted(10, "read_book", KaoriRoom, TimeSpan.FromMinutes(30), 0));
+        var result = Fixture.Apply(Fixture.WithTaro(), ActionStarted(10, "read_book", TaroRoom, TimeSpan.FromMinutes(30), 0));
 
         Assert.Equal(EventStatus.Applied, result.Status);
-        var kaori = result.State.Personas[Fixture.Kaori];
-        Assert.Equal("read_book", kaori.Activity!.ActionId);
-        Assert.Equal(-2.0, kaori.Vitals.Energy.Rate);
-        Assert.Equal(3.0, kaori.Vitals.Boredom.Rate);
+        var taro = result.State.Personas[Fixture.Taro];
+        Assert.Equal("read_book", taro.Activity!.ActionId);
+        Assert.Equal(-2.0, taro.Vitals.Energy.Rate);
+        Assert.Equal(3.0, taro.Vitals.Boredom.Rate);
         var ended = Assert.Single(result.FollowUps);
         Assert.Equal(new ActionEndedPayload("read_book", 0), ended.Payload);
         Assert.Equal(Fixture.Now.AddMinutes(30), ended.Time);
@@ -48,17 +48,17 @@ public class ActivityRulesTests
     [Fact]
     public void ActionEndedAppliesOnEndEffectsAndRestoresRates()
     {
-        var started = Fixture.Apply(Fixture.WithKaori(), ActionStarted(10, "read_book", KaoriRoom, TimeSpan.FromMinutes(30), 0)).State;
-        var ended = Fixture.Event(11, Fixture.Now.AddMinutes(30), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 0), Fixture.Kaori);
+        var started = Fixture.Apply(Fixture.WithTaro(), ActionStarted(10, "read_book", TaroRoom, TimeSpan.FromMinutes(30), 0)).State;
+        var ended = Fixture.Event(11, Fixture.Now.AddMinutes(30), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 0), Fixture.Taro);
 
         var result = Fixture.Apply(started, ended);
 
         Assert.Equal(EventStatus.Applied, result.Status);
-        var kaori = result.State.Personas[Fixture.Kaori];
-        Assert.Null(kaori.Activity);
-        Assert.Equal(11.5, kaori.Vitals.Boredom.BaseValue, 6);
-        Assert.Equal(79, kaori.Vitals.Energy.BaseValue, 6);
-        Assert.Equal(-4.0, kaori.Vitals.Energy.Rate);
+        var taro = result.State.Personas[Fixture.Taro];
+        Assert.Null(taro.Activity);
+        Assert.Equal(11.5, taro.Vitals.Boredom.BaseValue, 6);
+        Assert.Equal(79, taro.Vitals.Energy.BaseValue, 6);
+        Assert.Equal(-4.0, taro.Vitals.Energy.Rate);
         Assert.Empty(result.FollowUps);
     }
 
@@ -66,51 +66,51 @@ public class ActivityRulesTests
     [Fact]
     public void StaleActionEndedIsSkippedAndEndDoesNotBumpVersion()
     {
-        var started = Fixture.Apply(Fixture.WithKaori(), ActionStarted(10, "read_book", KaoriRoom, TimeSpan.FromMinutes(30), 0)).State;
-        var stale = Fixture.Event(11, Fixture.Now.AddMinutes(30), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 7), Fixture.Kaori);
+        var started = Fixture.Apply(Fixture.WithTaro(), ActionStarted(10, "read_book", TaroRoom, TimeSpan.FromMinutes(30), 0)).State;
+        var stale = Fixture.Event(11, Fixture.Now.AddMinutes(30), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 7), Fixture.Taro);
 
         Assert.Equal(EventStatus.Skipped, Fixture.Apply(started, stale).Status);
 
-        var valid = Fixture.Event(12, Fixture.Now.AddMinutes(30), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 0), Fixture.Kaori);
-        Assert.Equal(0, Fixture.Apply(started, valid).State.Personas[Fixture.Kaori].ActivityVersion);
+        var valid = Fixture.Event(12, Fixture.Now.AddMinutes(30), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 0), Fixture.Taro);
+        Assert.Equal(0, Fixture.Apply(started, valid).State.Personas[Fixture.Taro].ActivityVersion);
     }
 
     /// <summary>睡眠の終わりで、気力は 100 に戻り、眠った時間が目標（7時間）に足りなければ健康度が下がる。5時間なら 2 時間足りないので −8。</summary>
     [Fact]
     public void SleepEndRestoresEnergyAndChargesSleepDebt()
     {
-        var start = Fixture.Event(10, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("core.sleep", KaoriRoom, TimeSpan.FromHours(5), ActivityReason.Chosen, 0, null), Fixture.Kaori);
-        var asleep = Fixture.Apply(Fixture.WithKaori(), start).State;
-        var end = Fixture.Event(11, Fixture.Now.AddHours(5), EventTypes.ActionEnded, new ActionEndedPayload("core.sleep", 0), Fixture.Kaori);
+        var start = Fixture.Event(10, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("core.sleep", TaroRoom, TimeSpan.FromHours(5), ActivityReason.Chosen, 0, null), Fixture.Taro);
+        var asleep = Fixture.Apply(Fixture.WithTaro(), start).State;
+        var end = Fixture.Event(11, Fixture.Now.AddHours(5), EventTypes.ActionEnded, new ActionEndedPayload("core.sleep", 0), Fixture.Taro);
 
-        var kaori = Fixture.Apply(asleep, end).State.Personas[Fixture.Kaori];
+        var taro = Fixture.Apply(asleep, end).State.Personas[Fixture.Taro];
 
-        Assert.Equal(100, kaori.Vitals.Energy.BaseValue, 6);
-        Assert.Equal(92, kaori.Vitals.Health.BaseValue, 6);
+        Assert.Equal(100, taro.Vitals.Energy.BaseValue, 6);
+        Assert.Equal(92, taro.Vitals.Health.BaseValue, 6);
     }
 
     /// <summary>睡眠が起こす記憶の整理（ここでは Planner の起動）は、同じ期間で一度だけ。期間が変わったときに起きる。</summary>
     [Fact]
     public void ConsolidatingSleepStartsPlannerOncePerPeriod()
     {
-        var later = Fixture.Event(10, Fixture.Now.AddHours(1), EventTypes.ActionStarted, new ActionStartedPayload("core.sleep", KaoriRoom, TimeSpan.FromHours(5), ActivityReason.Chosen, 0, null), Fixture.Kaori);
+        var later = Fixture.Event(10, Fixture.Now.AddHours(1), EventTypes.ActionStarted, new ActionStartedPayload("core.sleep", TaroRoom, TimeSpan.FromHours(5), ActivityReason.Chosen, 0, null), Fixture.Taro);
 
-        var result = Fixture.Apply(Fixture.WithKaori(), later);
+        var result = Fixture.Apply(Fixture.WithTaro(), later);
 
-        Assert.Equal(new StartPlannerSignal(10, Fixture.Kaori, Fixture.Now.AddHours(1)), Assert.Single(result.Signals));
-        var sameTime = Fixture.Event(11, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("core.sleep", KaoriRoom, TimeSpan.FromHours(5), ActivityReason.Chosen, 0, null), Fixture.Kaori);
-        Assert.Empty(Fixture.Apply(Fixture.WithKaori(), sameTime).Signals);
+        Assert.Equal(new StartPlannerSignal(10, Fixture.Taro, Fixture.Now.AddHours(1)), Assert.Single(result.Signals));
+        var sameTime = Fixture.Event(11, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("core.sleep", TaroRoom, TimeSpan.FromHours(5), ActivityReason.Chosen, 0, null), Fixture.Taro);
+        Assert.Empty(Fixture.Apply(Fixture.WithTaro(), sameTime).Signals);
     }
 
     /// <summary>決定タイミングの要求は、決定中のフラグを立て、Decider の起動を依頼する。決定中にもう一度要求すると捨てる。</summary>
     [Fact]
     public void DecisionRequestIsRecordedOnceAndStartsDecider()
     {
-        var first = Fixture.Apply(Fixture.WithKaori(), Request(10));
-        Assert.True(first.State.Personas[Fixture.Kaori].Deciding);
-        Assert.Equal(new StartDeciderSignal(10, Fixture.Kaori, Fixture.Now, DecisionReason.Free, null), Assert.Single(first.Signals));
+        var first = Fixture.Apply(Fixture.WithTaro(), Request(10));
+        Assert.True(first.State.Personas[Fixture.Taro].Deciding);
+        Assert.Equal(new StartDeciderSignal(10, Fixture.Taro, Fixture.Now, DecisionReason.Free, null), Assert.Single(first.Signals));
 
-        var second = Fixture.Apply(first.State, Fixture.Event(11, Fixture.Now, EventTypes.DecisionRequested, new DecisionRequestedPayload(DecisionReason.Ended, null), Fixture.Kaori));
+        var second = Fixture.Apply(first.State, Fixture.Event(11, Fixture.Now, EventTypes.DecisionRequested, new DecisionRequestedPayload(DecisionReason.Ended, null), Fixture.Taro));
         Assert.Equal(EventStatus.Skipped, second.Status);
         Assert.Empty(second.Signals);
     }
@@ -119,14 +119,14 @@ public class ActivityRulesTests
     [Fact]
     public void StaleDecisionIsRejectedAndRequestedAgain()
     {
-        var deciding = Fixture.Apply(Fixture.WithKaori(), Request(10)).State;
+        var deciding = Fixture.Apply(Fixture.WithTaro(), Request(10)).State;
         var guard = new Guard([new ActivityVersionCheck(5)], RejectAction.Redecide);
 
-        var result = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, Choice("read_book", KaoriRoom, 30, 0, 3), Fixture.Kaori, guard, 10));
+        var result = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, Choice("read_book", TaroRoom, 30, 0, 3), Fixture.Taro, guard, 10));
 
         Assert.Equal(EventStatus.Rejected, result.Status);
         Assert.Equal("行動のバージョンが違う", result.Reason);
-        Assert.False(result.State.Personas[Fixture.Kaori].Deciding);
+        Assert.False(result.State.Personas[Fixture.Taro].Deciding);
         Assert.Equal(new DecisionRequestedPayload(DecisionReason.Retry, null), Assert.Single(result.FollowUps).Payload);
     }
 
@@ -134,10 +134,10 @@ public class ActivityRulesTests
     [Fact]
     public void RngCursorMismatchIsRejected()
     {
-        var deciding = Fixture.Apply(Fixture.WithKaori(), Request(10)).State;
-        var guard = new Guard([new RngCursorCheck(Fixture.Kaori.Value, "decide", 4)], RejectAction.Redecide);
+        var deciding = Fixture.Apply(Fixture.WithTaro(), Request(10)).State;
+        var guard = new Guard([new RngCursorCheck(Fixture.Taro.Value, "decide", 4)], RejectAction.Redecide);
 
-        var result = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, Choice("read_book", KaoriRoom, 30, 0, 3), Fixture.Kaori, guard, 10));
+        var result = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, Choice("read_book", TaroRoom, 30, 0, 3), Fixture.Taro, guard, 10));
 
         Assert.Equal(EventStatus.Rejected, result.Status);
         Assert.Equal("乱数の位置が違う", result.Reason);
@@ -147,31 +147,31 @@ public class ActivityRulesTests
     [Fact]
     public void ChosenActivityInPlaceStartsActionAndAdvancesRng()
     {
-        var deciding = Fixture.Apply(Fixture.WithKaori(), Request(10)).State;
+        var deciding = Fixture.Apply(Fixture.WithTaro(), Request(10)).State;
         var guard = new Guard(
-            [new ActivityVersionCheck(0), new FeasibleCheck("read_book", KaoriRoom), new RngCursorCheck(Fixture.Kaori.Value, "decide", 0)],
+            [new ActivityVersionCheck(0), new FeasibleCheck("read_book", TaroRoom), new RngCursorCheck(Fixture.Taro.Value, "decide", 0)],
             RejectAction.Redecide);
 
-        var result = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, Choice("read_book", KaoriRoom, 30, 0, 3), Fixture.Kaori, guard, 10));
+        var result = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, Choice("read_book", TaroRoom, 30, 0, 3), Fixture.Taro, guard, 10));
 
         Assert.Equal(EventStatus.Applied, result.Status);
-        var kaori = result.State.Personas[Fixture.Kaori];
-        Assert.False(kaori.Deciding);
-        Assert.Equal(1, kaori.ActivityVersion);
-        Assert.Equal(3UL, kaori.Rng["decide"]);
-        Assert.Equal(new ActionStartedPayload("read_book", KaoriRoom, TimeSpan.FromMinutes(30), ActivityReason.Chosen, 1, null), Assert.Single(result.FollowUps).Payload);
+        var taro = result.State.Personas[Fixture.Taro];
+        Assert.False(taro.Deciding);
+        Assert.Equal(1, taro.ActivityVersion);
+        Assert.Equal(3UL, taro.Rng["decide"]);
+        Assert.Equal(new ActionStartedPayload("read_book", TaroRoom, TimeSpan.FromMinutes(30), ActivityReason.Chosen, 1, null), Assert.Single(result.FollowUps).Payload);
     }
 
     /// <summary>場所が違えば、移動を先に積み、到着のあとに行動を始める。移動中の人は、どの場所にもいない。</summary>
     [Fact]
     public void ChosenActivityElsewhereStartsTravelThenAction()
     {
-        var route = ImmutableArray.Create(new RouteStep(KaoriRoom, HomeLiving, 1));
-        var deciding = Fixture.Apply(Fixture.WithKaori(), Request(10)).State;
-        var guard = new Guard([new ActivityVersionCheck(0), new FeasibleCheck("watch_tv", HomeLiving), new RngCursorCheck(Fixture.Kaori.Value, "decide", 0)], RejectAction.Redecide);
-        var chosen = new ActivityChosenPayload("watch_tv", HomeLiving, route, 1, TimeSpan.FromMinutes(35), false, new RngDraws(Fixture.Kaori.Value, "decide", 0, 0));
+        var route = ImmutableArray.Create(new RouteStep(TaroRoom, HomeLiving, 1));
+        var deciding = Fixture.Apply(Fixture.WithTaro(), Request(10)).State;
+        var guard = new Guard([new ActivityVersionCheck(0), new FeasibleCheck("watch_tv", HomeLiving), new RngCursorCheck(Fixture.Taro.Value, "decide", 0)], RejectAction.Redecide);
+        var chosen = new ActivityChosenPayload("watch_tv", HomeLiving, route, 1, TimeSpan.FromMinutes(35), false, new RngDraws(Fixture.Taro.Value, "decide", 0, 0));
 
-        var moved = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, chosen, Fixture.Kaori, guard, 10));
+        var moved = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, chosen, Fixture.Taro, guard, 10));
 
         var travel = Assert.Single(moved.FollowUps);
         Assert.Equal(EventTypes.TravelStarted, travel.EventType);
@@ -179,12 +179,12 @@ public class ActivityRulesTests
         Assert.Equal(Fixture.Now.AddMinutes(1), travelPayload.ArrivesAt);
         Assert.Equal(new PendingAction("watch_tv", HomeLiving, TimeSpan.FromMinutes(35), ActivityReason.Chosen, null), travelPayload.Next);
 
-        var onWay = Fixture.Apply(moved.State, Fixture.Event(12, Fixture.Now, EventTypes.TravelStarted, travelPayload, Fixture.Kaori));
+        var onWay = Fixture.Apply(moved.State, Fixture.Event(12, Fixture.Now, EventTypes.TravelStarted, travelPayload, Fixture.Taro));
         Assert.Equal(EventStatus.Applied, onWay.Status);
-        Assert.IsType<Traveling>(onWay.State.Personas[Fixture.Kaori].Location);
+        Assert.IsType<Traveling>(onWay.State.Personas[Fixture.Taro].Location);
 
-        var arrived = Fixture.Apply(onWay.State, Fixture.Event(13, Fixture.Now.AddMinutes(1), EventTypes.TravelArrived, new TravelArrivedPayload(HomeLiving, 1), Fixture.Kaori));
-        Assert.Equal(new AtPlace(HomeLiving), arrived.State.Personas[Fixture.Kaori].Location);
+        var arrived = Fixture.Apply(onWay.State, Fixture.Event(13, Fixture.Now.AddMinutes(1), EventTypes.TravelArrived, new TravelArrivedPayload(HomeLiving, 1), Fixture.Taro));
+        Assert.Equal(new AtPlace(HomeLiving), arrived.State.Personas[Fixture.Taro].Location);
         Assert.Equal(new ActionStartedPayload("watch_tv", HomeLiving, TimeSpan.FromMinutes(35), ActivityReason.Chosen, 1, null), Assert.Single(arrived.FollowUps).Payload);
     }
 
@@ -192,9 +192,9 @@ public class ActivityRulesTests
     [Fact]
     public void StaleTravelIsSkipped()
     {
-        var stale = Fixture.Event(10, Fixture.Now, EventTypes.TravelStarted, new TravelStartedPayload(KaoriRoom, HomeLiving, ImmutableArray<RouteStep>.Empty, Fixture.Now.AddMinutes(1), 9), Fixture.Kaori);
+        var stale = Fixture.Event(10, Fixture.Now, EventTypes.TravelStarted, new TravelStartedPayload(TaroRoom, HomeLiving, ImmutableArray<RouteStep>.Empty, Fixture.Now.AddMinutes(1), 9), Fixture.Taro);
 
-        Assert.Equal(EventStatus.Skipped, Fixture.Apply(Fixture.WithKaori(), stale).Status);
+        Assert.Equal(EventStatus.Skipped, Fixture.Apply(Fixture.WithTaro(), stale).Status);
     }
 
     /// <summary>夜の決定は、行動の実行の判定（時刻の範囲の制限）で却下する。散歩は 6 時から 21 時まで。基準の時刻は 23 時。</summary>
@@ -202,10 +202,10 @@ public class ActivityRulesTests
     public void ActivityOutsideHoursIsRejectedByFeasibility()
     {
         var park = new PlaceId("park");
-        var deciding = Fixture.Apply(Fixture.WithKaori(), Request(10)).State;
+        var deciding = Fixture.Apply(Fixture.WithTaro(), Request(10)).State;
         var guard = new Guard([new FeasibleCheck("walk_park", park)], RejectAction.Redecide);
 
-        var result = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, Choice("walk_park", park, 30, 0, 0), Fixture.Kaori, guard, 10));
+        var result = Fixture.Apply(deciding, Fixture.Event(11, Fixture.Now, EventTypes.ActivityChosen, Choice("walk_park", park, 30, 0, 0), Fixture.Taro, guard, 10));
 
         Assert.Equal(EventStatus.Rejected, result.Status);
         Assert.Equal("行動が実行できない", result.Reason);

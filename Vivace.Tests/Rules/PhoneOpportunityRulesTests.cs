@@ -14,36 +14,36 @@ namespace Vivace.Tests.Rules;
 /// </summary>
 public class PhoneOpportunityRulesTests
 {
-    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private static readonly PlaceId TaroRoom = new("taro_room");
     private const string Block = "reading@2026-11-01";
 
-    /// <summary>1時間の読書の固定ブロック（14:00 から 15:00、香織の部屋）。スマホの設定と間隔を指定する。</summary>
+    /// <summary>1時間の読書の固定ブロック（14:00 から 15:00、太郎の部屋）。スマホの設定と間隔を指定する。</summary>
     private static DayPlan Plan(PhonePolicy phone, TimeSpan? every, PlaceId? place = null) => new(
         1,
         Fixture.Now,
         Fixture.Now.AddHours(24),
         Fixture.Now.AddHours(21),
         PlanSource.Fallback,
-        [new PlanBlock(Block, BlockKind.Fixed, Fixture.Now, Fixture.Now.AddHours(1), "read_book", place ?? KaoriRoom, phone, every, [], PartnerAbsentPolicy.Continue)],
+        [new PlanBlock(Block, BlockKind.Fixed, Fixture.Now, Fixture.Now.AddHours(1), "read_book", place ?? TaroRoom, phone, every, [], PartnerAbsentPolicy.Continue)],
         null);
 
-    /// <summary>プランを確定した香織の状態。</summary>
+    /// <summary>プランを確定した太郎の状態。</summary>
     private static SimState WithPlan(PhonePolicy phone, TimeSpan? every)
     {
-        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(Plan(phone, every)), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
-        return Fixture.Apply(Fixture.WithKaori(), committed).State;
+        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(Plan(phone, every)), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
+        return Fixture.Apply(Fixture.WithTaro(), committed).State;
     }
 
-    /// <summary>プランを確定し、ブロックを始めた香織の状態（ブロックを始めた印がつく）。</summary>
+    /// <summary>プランを確定し、ブロックを始めた太郎の状態（ブロックを始めた印がつく）。</summary>
     private static SimState WithBlockStarted(PhonePolicy phone, TimeSpan? every)
     {
-        var started = Fixture.Event(11, Fixture.Now, EventTypes.BlockStarted, new BlockStartedPayload(Block, 1), Fixture.Kaori);
+        var started = Fixture.Event(11, Fixture.Now, EventTypes.BlockStarted, new BlockStartedPayload(Block, 1), Fixture.Taro);
         return Fixture.Apply(WithPlan(phone, every), started).State;
     }
 
     /// <summary>スマホを開く機会のイベント（ブロックの ID つき）。</summary>
     private static SimEvent Opportunity(long seq, DateTimeOffset at) =>
-        Fixture.Event(seq, at, EventTypes.PhoneOpportunity, new PhoneOpportunityPayload(Block), Fixture.Kaori);
+        Fixture.Event(seq, at, EventTypes.PhoneOpportunity, new PhoneOpportunityPayload(Block), Fixture.Taro);
 
     /// <summary>スマホを開けるブロックの機会は、同じ時刻に「スマホを開く機会」の決定タイミングを積む。間隔がなければ、次の機会は積まない。</summary>
     [Fact]
@@ -108,8 +108,8 @@ public class PhoneOpportunityRulesTests
             11,
             Fixture.Now,
             EventTypes.TravelStarted,
-            new TravelStartedPayload(KaoriRoom, new PlaceId("home_living"), ImmutableArray<RouteStep>.Empty, Fixture.Now.AddMinutes(10), 0, null),
-            Fixture.Kaori);
+            new TravelStartedPayload(TaroRoom, new PlaceId("home_living"), ImmutableArray<RouteStep>.Empty, Fixture.Now.AddMinutes(10), 0, null),
+            Fixture.Taro);
         var moving = Fixture.Apply(WithPlan(PhonePolicy.Open, TimeSpan.FromMinutes(20)), travel).State;
 
         var result = Fixture.Apply(moving, Opportunity(12, Fixture.Now));
@@ -122,13 +122,13 @@ public class PhoneOpportunityRulesTests
     [Fact]
     public void BlockStartWithOpenPhoneAlsoSchedulesOpportunity()
     {
-        var start = Fixture.Event(11, Fixture.Now, EventTypes.BlockStarted, new BlockStartedPayload(Block, 1), Fixture.Kaori);
+        var start = Fixture.Event(11, Fixture.Now, EventTypes.BlockStarted, new BlockStartedPayload(Block, 1), Fixture.Taro);
 
         var result = Fixture.Apply(WithPlan(PhonePolicy.Open, null), start);
 
         Assert.Equal(2, result.FollowUps.Length);
         var started = Assert.Single(result.FollowUps, e => e.EventType == EventTypes.ActionStarted);
-        Assert.Equal(new ActionStartedPayload("read_book", KaoriRoom, TimeSpan.FromHours(1), ActivityReason.Block, 0, Block), started.Payload);
+        Assert.Equal(new ActionStartedPayload("read_book", TaroRoom, TimeSpan.FromHours(1), ActivityReason.Block, 0, Block), started.Payload);
         var opportunity = Assert.Single(result.FollowUps, e => e.EventType == EventTypes.PhoneOpportunity);
         Assert.Equal(new PhoneOpportunityPayload(Block), opportunity.Payload);
         Assert.Equal(Fixture.Now, opportunity.Time);
@@ -138,7 +138,7 @@ public class PhoneOpportunityRulesTests
     [Fact]
     public void BlockStartWithClosedPhoneOnlyStartsAction()
     {
-        var start = Fixture.Event(11, Fixture.Now, EventTypes.BlockStarted, new BlockStartedPayload(Block, 1), Fixture.Kaori);
+        var start = Fixture.Event(11, Fixture.Now, EventTypes.BlockStarted, new BlockStartedPayload(Block, 1), Fixture.Taro);
 
         var result = Fixture.Apply(WithPlan(PhonePolicy.Closed, null), start);
 
@@ -151,11 +151,11 @@ public class PhoneOpportunityRulesTests
     public void ArrivalIntoOpenBlockAlsoSchedulesOpportunity()
     {
         var home = new PlaceId("home_living");
-        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(Plan(PhonePolicy.Open, null, home)), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
+        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(Plan(PhonePolicy.Open, null, home)), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
         var pending = new PendingAction("read_book", home, TimeSpan.FromMinutes(50), ActivityReason.Block, Block);
-        var travel = Fixture.Event(11, Fixture.Now, EventTypes.TravelStarted, new TravelStartedPayload(KaoriRoom, home, ImmutableArray<RouteStep>.Empty, Fixture.Now.AddMinutes(10), 0, pending), Fixture.Kaori);
-        var moving = Fixture.Apply(Fixture.Apply(Fixture.WithKaori(), committed).State, travel).State;
-        var arrived = Fixture.Event(12, Fixture.Now.AddMinutes(10), EventTypes.TravelArrived, new TravelArrivedPayload(home, 0), Fixture.Kaori);
+        var travel = Fixture.Event(11, Fixture.Now, EventTypes.TravelStarted, new TravelStartedPayload(TaroRoom, home, ImmutableArray<RouteStep>.Empty, Fixture.Now.AddMinutes(10), 0, pending), Fixture.Taro);
+        var moving = Fixture.Apply(Fixture.Apply(Fixture.WithTaro(), committed).State, travel).State;
+        var arrived = Fixture.Event(12, Fixture.Now.AddMinutes(10), EventTypes.TravelArrived, new TravelArrivedPayload(home, 0), Fixture.Taro);
 
         var result = Fixture.Apply(moving, arrived);
 

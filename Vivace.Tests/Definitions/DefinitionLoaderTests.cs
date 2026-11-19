@@ -21,32 +21,32 @@ public class DefinitionLoaderTests
         Assert.Equal("クリスマスイブ", world.Events[new Vivace.Core.Time.MonthDay(12, 24)]);
         Assert.Equal(TermVerdict.Pass, world.Terms.Single().Verdict);
 
-        var kaori = definitions.Personas[new PersonaDefId("kaori")];
-        Assert.Equal("kaori_room", kaori.Home);
-        Assert.Equal(TestWorld.DefId, kaori.World);
-        Assert.Equal(60, kaori.Vitals.SocialCeiling);
-        Assert.Equal(TimeSpan.FromHours(7), kaori.Vitals.SleepTarget);
-        Assert.Equal(PreferenceKind.Factor, kaori.Prefs["cafe"].Kind);
-        Assert.Equal(PreferenceKind.Dislike, kaori.Prefs["tag:outdoor"].Kind);
-        Assert.Equal(FollowBackPolicy.Always, kaori.FollowBack);
+        var taro = definitions.Personas[new PersonaDefId("taro")];
+        Assert.Equal("taro_room", taro.Home);
+        Assert.Equal(TestWorld.DefId, taro.World);
+        Assert.Equal(60, taro.Vitals.SocialCeiling);
+        Assert.Equal(TimeSpan.FromHours(7), taro.Vitals.SleepTarget);
+        Assert.Equal(PreferenceKind.Factor, taro.Prefs["cafe"].Kind);
+        Assert.Equal(PreferenceKind.Dislike, taro.Prefs["tag:outdoor"].Kind);
+        Assert.Equal(FollowBackPolicy.Always, taro.FollowBack);
     }
 
     /// <summary>省略した状態変数と反射と乱れの重みは、既定値になる。</summary>
     [Fact]
     public void OmittedValuesTakeDefaults()
     {
-        var shiori = TestWorld.LoadOrThrow().Personas[new PersonaDefId("shiori")];
+        var hanako = TestWorld.LoadOrThrow().Personas[new PersonaDefId("hanako")];
 
-        Assert.Equal(80, shiori.Vitals.EnergyInitial);
-        Assert.Equal(-50, shiori.Vitals.SocialFloor);
-        Assert.Equal(100, shiori.Vitals.SocialCeiling);
-        Assert.Equal(TimeSpan.FromHours(7), shiori.Vitals.SleepTarget);
-        Assert.Equal(0, shiori.Reflexes[Vivace.Core.Domain.State.VitalName.Energy].Threshold);
-        Assert.Equal("core.faint", shiori.Reflexes[Vivace.Core.Domain.State.VitalName.Energy].ActionId);
-        Assert.Equal(20, shiori.Reflexes[Vivace.Core.Domain.State.VitalName.Health].Threshold);
-        Assert.Equal("core.go_home_rest", shiori.Reflexes[Vivace.Core.Domain.State.VitalName.Health].ActionId);
-        Assert.Equal(0.3, shiori.Disruption.Absent);
-        Assert.Equal(1.0, shiori.MemoryHalfLife);
+        Assert.Equal(80, hanako.Vitals.EnergyInitial);
+        Assert.Equal(-50, hanako.Vitals.SocialFloor);
+        Assert.Equal(100, hanako.Vitals.SocialCeiling);
+        Assert.Equal(TimeSpan.FromHours(7), hanako.Vitals.SleepTarget);
+        Assert.Equal(0, hanako.Reflexes[Vivace.Core.Domain.State.VitalName.Energy].Threshold);
+        Assert.Equal("core.faint", hanako.Reflexes[Vivace.Core.Domain.State.VitalName.Energy].ActionId);
+        Assert.Equal(20, hanako.Reflexes[Vivace.Core.Domain.State.VitalName.Health].Threshold);
+        Assert.Equal("core.go_home_rest", hanako.Reflexes[Vivace.Core.Domain.State.VitalName.Health].ActionId);
+        Assert.Equal(0.3, hanako.Disruption.Absent);
+        Assert.Equal(1.0, hanako.MemoryHalfLife);
     }
 
     /// <summary>組み込みの行動（core.*）が埋め込みから読め、効果と固定の長さが正しい。</summary>

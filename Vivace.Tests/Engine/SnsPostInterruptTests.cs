@@ -18,8 +18,8 @@ public class SnsPostInterruptTests
     /// <summary>投稿の文面。</summary>
     private const string Body = "今日の授業眠い";
 
-    /// <summary>香織。</summary>
-    private static readonly PersonaId Kaori = new("kaori");
+    /// <summary>太郎。</summary>
+    private static readonly PersonaId Taro = new("taro");
 
     /// <summary>
     /// 自由時間は、必ず10分の投稿を選ぶ（投稿が途切れずに続くように）。スマホを開く機会は、通常どおり決める。
@@ -44,7 +44,7 @@ public class SnsPostInterruptTests
     }
 
     /// <summary>
-    /// 香織の 23:50 に出す投稿の文面だけ、門が開くまで応答しない LLM。ほかの呼び出しは中の LLM に任せる。
+    /// 太郎の 23:50 に出す投稿の文面だけ、門が開くまで応答しない LLM。ほかの呼び出しは中の LLM に任せる。
     /// 取り消されなかった呼び出しは、ホライズンでエンジンを待たせ続ける。
     /// </summary>
     private sealed class GatedLlm(ILlmClient inner) : ILlmClient
@@ -58,7 +58,7 @@ public class SnsPostInterruptTests
         /// <summary>止める呼び出しなら門が開くまで待ち、中の LLM に任せる。</summary>
         public async Task<LlmResult<string>> GenerateTextAsync(LlmRequest request, CancellationToken ct)
         {
-            if (request.System.Contains("人物：香織", StringComparison.Ordinal)
+            if (request.System.Contains("人物：太郎", StringComparison.Ordinal)
                 && request.Messages.Any(message => message.Content.Contains("23:50", StringComparison.Ordinal)))
             {
                 await _gate.Task;
@@ -69,7 +69,7 @@ public class SnsPostInterruptTests
     }
 
     /// <summary>
-    /// 香織の投稿（23:40 から 10 分）の途中で、睡眠（23:45）が始まる。投稿の出力（発話もスキップも）は適用されず、
+    /// 太郎の投稿（23:40 から 10 分）の途中で、睡眠（23:45）が始まる。投稿の出力（発話もスキップも）は適用されず、
     /// 最後の投稿は前の投稿（23:40）のまま、最後のスキップも変わらない。
     /// </summary>
     [Fact]
@@ -88,11 +88,11 @@ public class SnsPostInterruptTests
         }
 
         var interrupted = Assert.Single(engine.Log, entry => entry.Status == EventStatus.Applied
-            && entry.Event.PersonaId == Kaori
+            && entry.Event.PersonaId == Taro
             && entry.Event.Time == Scenario.Start.AddMinutes(40)
             && entry.Event.Payload is ActionStartedPayload { ActionId: "post_sns", IsSubAction: false });
         Assert.Contains(engine.Log, entry => entry.Status == EventStatus.Applied
-            && entry.Event.PersonaId == Kaori
+            && entry.Event.PersonaId == Taro
             && entry.Event.Time == Scenario.Start.AddMinutes(45)
             && entry.Event.Payload is ActionStartedPayload { ActionId: "core.sleep" });
 
@@ -100,13 +100,13 @@ public class SnsPostInterruptTests
         Assert.DoesNotContain(engine.Log, entry => entry.Event.CauseSeq == seq
             && (entry.Event.EventType == EventTypes.OutboundSpeech || entry.Event.EventType == EventTypes.PostSkipped));
 
-        var posting = engine.State.Personas[Kaori].Posting;
+        var posting = engine.State.Personas[Taro].Posting;
         Assert.Equal(Scenario.Start.AddMinutes(40), posting.LastPostAt);
         Assert.Null(posting.LastSkippedAt);
     }
 
     /// <summary>
-    /// 香織の 23:50 に出す投稿の文面を、取り消しを待つ LLM。呼ばれたら、取り消しのトークンを捕まえて、取り消されるまで待つ（取り消されなければ 10 秒で打ち切る）。
+    /// 太郎の 23:50 に出す投稿の文面を、取り消しを待つ LLM。呼ばれたら、取り消しのトークンを捕まえて、取り消されるまで待つ（取り消されなければ 10 秒で打ち切る）。
     /// </summary>
     private sealed class CancelWaitingLlm : ILlmClient
     {
@@ -122,7 +122,7 @@ public class SnsPostInterruptTests
         /// <summary>対象の呼び出しなら、トークンを捕まえて取り消されるまで待つ。ほかの呼び出しはしない（取り消しを待つ呼び出しだけを見る）。</summary>
         public async Task<LlmResult<string>> GenerateTextAsync(LlmRequest request, CancellationToken ct)
         {
-            if (request.System.Contains("人物：香織", StringComparison.Ordinal)
+            if (request.System.Contains("人物：太郎", StringComparison.Ordinal)
                 && request.Messages.Any(message => message.Content.Contains("23:50", StringComparison.Ordinal)))
             {
                 Captured = ct;
@@ -149,7 +149,7 @@ public class SnsPostInterruptTests
         Assert.True(llm.Captured.IsCancellationRequested);
 
         var interrupted = Assert.Single(engine.Log, entry => entry.Status == EventStatus.Applied
-            && entry.Event.PersonaId == Kaori
+            && entry.Event.PersonaId == Taro
             && entry.Event.Time == Scenario.Start.AddMinutes(40)
             && entry.Event.Payload is ActionStartedPayload { ActionId: "post_sns", IsSubAction: false });
         var seq = interrupted.Event.Seq;

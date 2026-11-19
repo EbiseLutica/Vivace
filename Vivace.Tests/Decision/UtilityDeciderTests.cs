@@ -18,7 +18,7 @@ namespace Vivace.Tests.Decision;
 /// </summary>
 public class UtilityDeciderTests
 {
-    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private static readonly PlaceId TaroRoom = new("taro_room");
     private static readonly PlaceId Park = new("park");
 
     private static readonly ActionEffects NoEffects = new(
@@ -50,25 +50,25 @@ public class UtilityDeciderTests
         var positions = Enumerable.Range(0, 200).Select(position => (ulong)position).ToList();
 
         var withChannel = positions.Select(position => FreeTimeChoice(state, position, Fixture.Context)).ToList();
-        var withoutChannel = positions.Select(position => FreeTimeChoice(state, position, Fixture.ContextWithoutKaoriChannels())).ToList();
+        var withoutChannel = positions.Select(position => FreeTimeChoice(state, position, Fixture.ContextWithoutTaroChannels())).ToList();
 
         Assert.Contains("post_sns", withChannel);
         Assert.DoesNotContain("post_sns", withoutChannel);
     }
 
-    /// <summary>香織が、固定の予定のない1日分のプランを持つ状態（自由時間が続く。プランの終わりまで行動を選べる）。</summary>
+    /// <summary>太郎が、固定の予定のない1日分のプランを持つ状態（自由時間が続く。プランの終わりまで行動を選べる）。</summary>
     private static SimState FreeDay()
     {
         var plan = new DayPlan(1, Fixture.Now, Fixture.Now.AddHours(24), Fixture.Now.AddHours(21), PlanSource.Fallback, [], null);
-        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
-        return Fixture.Apply(Fixture.WithKaori(), committed).State;
+        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
+        return Fixture.Apply(Fixture.WithTaro(), committed).State;
     }
 
     /// <summary>位置を指定して、自由時間の決定の行動の ID を1つ返す。</summary>
     private static string FreeTimeChoice(SimState state, ulong position, RuleContext context)
     {
-        var random = new SplitMixRandomSource().Open(state.Worlds[Fixture.World].Seed, Fixture.Kaori.Value, "decide", position);
-        return new UtilityDecider().Decide(new DecisionContext(state, Fixture.Kaori, Fixture.Now, DecisionReason.Ended, null, context, random)).Payload.ActionId;
+        var random = new SplitMixRandomSource().Open(state.Worlds[Fixture.World].Seed, Fixture.Taro.Value, "decide", position);
+        return new UtilityDecider().Decide(new DecisionContext(state, Fixture.Taro, Fixture.Now, DecisionReason.Ended, null, context, random)).Payload.ActionId;
     }
 
     /// <summary>設計書の計算例：14:00、気力 30、退屈度 70。家で昼寝（60 分、気力 +20/時）、公園を散歩（移動 15 分 + 45 分、気力 −6/時、終了時に退屈度 −25）、家でゲーム（60 分、終了時に退屈度 −30、好き）。</summary>
@@ -76,11 +76,11 @@ public class UtilityDeciderTests
     public void NeedMatchesDesignWorkedExample()
     {
         var definitions = TestWorld.LoadOrThrow();
-        var kaoriDef = definitions.Personas[new PersonaDefId("kaori")];
+        var taroDef = definitions.Personas[new PersonaDefId("taro")];
         var basis = definitions.Actions["read_book"];
-        var state = Fixture.WithKaori();
-        var kaori = state.Personas[Fixture.Kaori] with { Vitals = VitalsWith(30, 70) };
-        state = Fixture.With(state, kaori);
+        var state = Fixture.WithTaro();
+        var taro = state.Personas[Fixture.Taro] with { Vitals = VitalsWith(30, 70) };
+        state = Fixture.With(state, taro);
 
         var nap = basis with
         {
@@ -98,9 +98,9 @@ public class UtilityDeciderTests
             Effects = NoEffects with { OnEnd = Map((VitalName.Boredom, -30)) },
         };
 
-        var napNeed = UtilityDecider.Need(state, kaori, kaoriDef, Fixture.Now, nap, KaoriRoom, 0, TimeSpan.FromMinutes(60), 0);
-        var walkNeed = UtilityDecider.Need(state, kaori, kaoriDef, Fixture.Now, walk, Park, 15, TimeSpan.FromMinutes(45), 0);
-        var gameNeed = UtilityDecider.Need(state, kaori, kaoriDef, Fixture.Now, game, KaoriRoom, 0, TimeSpan.FromMinutes(60), 0);
+        var napNeed = UtilityDecider.Need(state, taro, taroDef, Fixture.Now, nap, TaroRoom, 0, TimeSpan.FromMinutes(60), 0);
+        var walkNeed = UtilityDecider.Need(state, taro, taroDef, Fixture.Now, walk, Park, 15, TimeSpan.FromMinutes(45), 0);
+        var gameNeed = UtilityDecider.Need(state, taro, taroDef, Fixture.Now, game, TaroRoom, 0, TimeSpan.FromMinutes(60), 0);
 
         Assert.Equal(1.28, napNeed, 2);
         Assert.Equal(1.27, walkNeed, 2);
@@ -140,8 +140,8 @@ public class UtilityDeciderTests
     public void ScheduleOnlyAndExhaustedActionsAreNeverChosen()
     {
         var state = FreeDay(Fixture.Now.AddHours(3));
-        var kaori = state.Personas[Fixture.Kaori];
-        var exhausted = kaori with
+        var taro = state.Personas[Fixture.Taro];
+        var exhausted = taro with
         {
             Usage = ImmutableDictionary<string, ActionUsage>.Empty.Add("cafe", new ActionUsage(null, new DateOnly(2026, 11, 1), 2, 0)),
         };
@@ -177,7 +177,7 @@ public class UtilityDeciderTests
     public void GoToNextWhileMovingIsMoveOnly()
     {
         var state = FreeDayWithFixedBlockAt(Fixture.Now.AddHours(3));
-        state = Fixture.With(state, state.Personas[Fixture.Kaori] with { Location = new AtPlace(new PlaceId("school_2a")) });
+        state = Fixture.With(state, state.Personas[Fixture.Taro] with { Location = new AtPlace(new PlaceId("school_2a")) });
 
         var chosen = Enumerable.Range(0, 40)
             .Select(position => Decide(state, (ulong)position))
@@ -187,7 +187,7 @@ public class UtilityDeciderTests
         Assert.NotEmpty(chosen);
         foreach (var output in chosen)
         {
-            Assert.Equal(KaoriRoom, output.Payload.Place);
+            Assert.Equal(TaroRoom, output.Payload.Place);
             Assert.Equal(19, output.Payload.TravelMinutes);
             Assert.Equal(TimeSpan.Zero, output.Payload.Duration);
         }
@@ -205,12 +205,12 @@ public class UtilityDeciderTests
         Assert.Equal(3, output.Guard.Checks.Length);
         Assert.Equal(new ActivityVersionCheck(0), output.Guard.Checks[0]);
         Assert.Equal(new FeasibleCheck(output.Payload.ActionId, output.Payload.Place), output.Guard.Checks[1]);
-        Assert.Equal(new RngCursorCheck(Fixture.Kaori.Value, "decide", 5), output.Guard.Checks[2]);
+        Assert.Equal(new RngCursorCheck(Fixture.Taro.Value, "decide", 5), output.Guard.Checks[2]);
         Assert.Equal(5UL, output.Payload.Draws!.From);
         Assert.True(output.Payload.Draws.To > 5);
     }
 
-    /// <summary>自由時間の決定に使う状態。香織が家にいて、いまから until まで自由時間。</summary>
+    /// <summary>自由時間の決定に使う状態。太郎が家にいて、いまから until まで自由時間。</summary>
     private static SimState FreeDay(DateTimeOffset until)
     {
         var plan = new DayPlan(
@@ -235,7 +235,7 @@ public class UtilityDeciderTests
             PlanSource.Fallback,
             [
                 new PlanBlock(null, BlockKind.Free, Fixture.Now, start, null, null, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue),
-                new PlanBlock("reading@2026-11-01", BlockKind.Fixed, start, start.AddHours(1), "read_book", KaoriRoom, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue),
+                new PlanBlock("reading@2026-11-01", BlockKind.Fixed, start, start.AddHours(1), "read_book", TaroRoom, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue),
             ],
             null);
         return Commit(plan);
@@ -244,16 +244,16 @@ public class UtilityDeciderTests
     /// <summary>プランを確定した状態を作る。</summary>
     private static SimState Commit(DayPlan plan)
     {
-        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
-        return Fixture.Apply(Fixture.WithKaori(), committed).State;
+        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
+        return Fixture.Apply(Fixture.WithTaro(), committed).State;
     }
 
     /// <summary>乱数の位置を指定して決定する。</summary>
     private static DeciderOutput Decide(SimState state, ulong position)
     {
-        var persona = state.Personas[Fixture.Kaori];
-        var random = new SplitMixRandomSource().Open(state.Worlds[Fixture.World].Seed, Fixture.Kaori.Value, "decide", position);
-        var context = new DecisionContext(state, Fixture.Kaori, Fixture.Now, DecisionReason.Free, null, Fixture.Context, random);
+        var persona = state.Personas[Fixture.Taro];
+        var random = new SplitMixRandomSource().Open(state.Worlds[Fixture.World].Seed, Fixture.Taro.Value, "decide", position);
+        var context = new DecisionContext(state, Fixture.Taro, Fixture.Now, DecisionReason.Free, null, Fixture.Context, random);
         return new UtilityDecider().Decide(context);
     }
 }

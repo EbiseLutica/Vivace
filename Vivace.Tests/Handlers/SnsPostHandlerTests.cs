@@ -15,7 +15,7 @@ namespace Vivace.Tests.Handlers;
 /// <summary>投稿の文面の呼び出し。入力に人物と世界の lore、時刻、行動と場所、直近の投稿が入ること、空の本文はスキップになること、出力に行動のバージョンの検査が付くこと。</summary>
 public class SnsPostHandlerTests
 {
-    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private static readonly PlaceId TaroRoom = new("taro_room");
 
     /// <summary>入力に、人物の lore の一節が入る。入っていなければ台本に当たらず、スキップになる。</summary>
     [Fact]
@@ -48,7 +48,7 @@ public class SnsPostHandlerTests
     [Fact]
     public async Task RequestCarriesRecentPosts()
     {
-        var state = Speech(Fixture.WithKaori(), "前の独り言");
+        var state = Speech(Fixture.WithTaro(), "前の独り言");
 
         var draft = await Run(new ScriptedLlm().Reply("post.compose", "今日の授業眠い", contains: "- 前の独り言"), state);
 
@@ -68,11 +68,11 @@ public class SnsPostHandlerTests
     [Fact]
     public async Task OverlayPostCarriesMainActivityName()
     {
-        var state = Start(Start(Fixture.WithKaori(), 3, Fixture.Now, "watch_tv"), 4, Fixture.Now, "post_sns", sub: true);
+        var state = Start(Start(Fixture.WithTaro(), 3, Fixture.Now, "watch_tv"), 4, Fixture.Now, "post_sns", sub: true);
 
         var user = await UserMessageOf(state);
 
-        Assert.Contains("いまの行動：テレビを見る\nいる場所：香織の部屋", user, StringComparison.Ordinal);
+        Assert.Contains("いまの行動：テレビを見る\nいる場所：太郎の部屋", user, StringComparison.Ordinal);
         Assert.DoesNotContain("直前の行動", user, StringComparison.Ordinal);
     }
 
@@ -80,11 +80,11 @@ public class SnsPostHandlerTests
     [Fact]
     public async Task OverlayPostDuringClosedActivityCarriesInterlude()
     {
-        var state = Start(Start(Fixture.WithKaori(), 3, Fixture.Now, "attend_class"), 4, Fixture.Now, "post_sns", sub: true);
+        var state = Start(Start(Fixture.WithTaro(), 3, Fixture.Now, "attend_class"), 4, Fixture.Now, "post_sns", sub: true);
 
         var user = await UserMessageOf(state);
 
-        Assert.Contains("いまの行動：授業を受けるの合間\nいる場所：香織の部屋", user, StringComparison.Ordinal);
+        Assert.Contains("いまの行動：授業を受けるの合間\nいる場所：太郎の部屋", user, StringComparison.Ordinal);
     }
 
     /// <summary>主の行動の投稿は、「いまの行動」の行を出さず、直前の行動（最後の開始が最も新しいもの）を出す。投稿の行動の名前は入らない。</summary>
@@ -92,16 +92,16 @@ public class SnsPostHandlerTests
     public async Task MainPostCarriesPreviousActivityInsteadOfItself()
     {
         var at = Fixture.Now;
-        var state = Start(Fixture.WithKaori(), 3, at, "read_book");
+        var state = Start(Fixture.WithTaro(), 3, at, "read_book");
         state = End(state, 4, at.AddMinutes(30), "read_book");
         state = Start(state, 5, at.AddMinutes(30), "watch_tv");
         state = End(state, 6, at.AddMinutes(60), "watch_tv");
         state = Start(state, 7, at.AddMinutes(60), "post_sns");
-        Assert.Equal("post_sns", state.Personas[Fixture.Kaori].Activity?.ActionId);
+        Assert.Equal("post_sns", state.Personas[Fixture.Taro].Activity?.ActionId);
 
         var user = await UserMessageOf(state);
 
-        Assert.Contains("直前の行動：テレビを見る\nいる場所：香織の部屋", user, StringComparison.Ordinal);
+        Assert.Contains("直前の行動：テレビを見る\nいる場所：太郎の部屋", user, StringComparison.Ordinal);
         Assert.DoesNotContain("いまの行動", user, StringComparison.Ordinal);
         Assert.DoesNotContain("SNS に投稿する", user, StringComparison.Ordinal);
     }
@@ -112,7 +112,7 @@ public class SnsPostHandlerTests
     {
         var llm = new RecordingLlm();
 
-        await SnsPostHandler.RunAsync(Fixture.Context, llm, Fixture.WithKaori(), Effect(), CancellationToken.None);
+        await SnsPostHandler.RunAsync(Fixture.Context, llm, Fixture.WithTaro(), Effect(), CancellationToken.None);
 
         var request = Assert.Single(llm.Requests);
         Assert.Contains("ここに書いていない人の、いまの様子や居場所は書きません。", request.System, StringComparison.Ordinal);
@@ -124,7 +124,7 @@ public class SnsPostHandlerTests
     {
         var llm = new ScriptedLlm().Reply("post.compose", "  今日の授業眠い \n");
 
-        var draft = await SnsPostHandler.RunAsync(Fixture.Context, llm, Fixture.WithKaori(), Effect(), CancellationToken.None);
+        var draft = await SnsPostHandler.RunAsync(Fixture.Context, llm, Fixture.WithTaro(), Effect(), CancellationToken.None);
 
         var speech = Assert.IsType<OutboundSpeechPayload>(draft.Payload);
         Assert.Equal("今日の授業眠い", speech.Body);
@@ -150,21 +150,21 @@ public class SnsPostHandlerTests
     [Fact]
     public void SpeechFromAnOlderActivityIsRejected()
     {
-        var state = Fixture.WithKaori();
+        var state = Fixture.WithTaro();
         var stale = Fixture.Event(10, Fixture.Now, EventTypes.OutboundSpeech,
             new OutboundSpeechPayload("console", OutboundSpeechPayload.OutboundPostKind.Post, "古い独り言", null, Audience.Public, [], default, null),
-            Fixture.Kaori, new Guard([new ActivityVersionCheck(7)], RejectAction.Drop));
+            Fixture.Taro, new Guard([new ActivityVersionCheck(7)], RejectAction.Drop));
 
         var result = Fixture.Apply(state, stale);
 
         Assert.Equal(EventStatus.Rejected, result.Status);
         Assert.Equal("行動のバージョンが違う", result.Reason);
-        Assert.Null(result.State.Personas[Fixture.Kaori].Posting.LastPostAt);
+        Assert.Null(result.State.Personas[Fixture.Taro].Posting.LastPostAt);
     }
 
-    /// <summary>既定の状態（香織が、所要時間 8 分の投稿を、行動のバージョン 0 で始めた）で、文面の呼び出しを1回する。</summary>
+    /// <summary>既定の状態（太郎が、所要時間 8 分の投稿を、行動のバージョン 0 で始めた）で、文面の呼び出しを1回する。</summary>
     private static Task<EventDraft> Run(ScriptedLlm llm, SimState? state = null) =>
-        SnsPostHandler.RunAsync(Fixture.Context, llm, state ?? Fixture.WithKaori(), Effect(), CancellationToken.None);
+        SnsPostHandler.RunAsync(Fixture.Context, llm, state ?? Fixture.WithTaro(), Effect(), CancellationToken.None);
 
     /// <summary>要求を記録して、固定の本文を返す LLM。</summary>
     private sealed class RecordingLlm : ILlmClient
@@ -184,7 +184,7 @@ public class SnsPostHandlerTests
 
     /// <summary>テスト用の起動のシグナル。</summary>
     private static StartEffectSignal Effect() =>
-        new(10, Fixture.Kaori, Fixture.Now.AddMinutes(8), "post_sns", KaoriRoom, 0);
+        new(10, Fixture.Taro, Fixture.Now.AddMinutes(8), "post_sns", TaroRoom, 0);
 
     /// <summary>文面の呼び出しを1回して、メッセージの本文を返す。</summary>
     private static async Task<string> UserMessageOf(SimState state)
@@ -194,18 +194,18 @@ public class SnsPostHandlerTests
         return Assert.Single(Assert.Single(llm.Requests).Messages).Content;
     }
 
-    /// <summary>香織の部屋で行動を1件始める。sub なら副行動として Overlay に入る（行動のバージョン 0、所要時間 30 分）。</summary>
+    /// <summary>太郎の部屋で行動を1件始める。sub なら副行動として Overlay に入る（行動のバージョン 0、所要時間 30 分）。</summary>
     private static SimState Start(SimState state, long seq, DateTimeOffset at, string actionId, bool sub = false) =>
         Fixture.Apply(state, Fixture.Event(seq, at, EventTypes.ActionStarted,
-            new ActionStartedPayload(actionId, KaoriRoom, TimeSpan.FromMinutes(30), ActivityReason.Chosen, 0, null, sub), Fixture.Kaori)).State;
+            new ActionStartedPayload(actionId, TaroRoom, TimeSpan.FromMinutes(30), ActivityReason.Chosen, 0, null, sub), Fixture.Taro)).State;
 
     /// <summary>行動を1件終える。</summary>
     private static SimState End(SimState state, long seq, DateTimeOffset at, string actionId) =>
-        Fixture.Apply(state, Fixture.Event(seq, at, EventTypes.ActionEnded, new ActionEndedPayload(actionId, 0), Fixture.Kaori)).State;
+        Fixture.Apply(state, Fixture.Event(seq, at, EventTypes.ActionEnded, new ActionEndedPayload(actionId, 0), Fixture.Taro)).State;
 
-    /// <summary>香織の発話を1件適用した状態。</summary>
+    /// <summary>太郎の発話を1件適用した状態。</summary>
     private static SimState Speech(SimState state, string body) =>
         Fixture.Apply(state, Fixture.Event(9, Fixture.Now, EventTypes.OutboundSpeech,
             new OutboundSpeechPayload("console", OutboundSpeechPayload.OutboundPostKind.Post, body, null, Audience.Public, [], default, null),
-            Fixture.Kaori)).State;
+            Fixture.Taro)).State;
 }

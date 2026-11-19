@@ -30,7 +30,7 @@ public static class ReportText
     /// <param name="date">日付。</param>
     public static string Weekday(DateOnly date) => Weekdays[(int)date.DayOfWeek];
 
-    /// <summary>行動の行の本文。"本を読む＠香織の部屋（予定）" の形。</summary>
+    /// <summary>行動の行の本文。"本を読む＠太郎の部屋（予定）" の形。</summary>
     /// <param name="started">行動の開始。</param>
     /// <param name="names">表示名を引く表。</param>
     /// <param name="world">行動のワールド。分からなければ null。</param>
@@ -62,7 +62,7 @@ public static class ReportText
         _ => throw new ArgumentOutOfRangeException(nameof(reason), reason, null),
     };
 
-    /// <summary>移動の行の本文。"移動 香織の部屋 → 2年A組の教室" の形。</summary>
+    /// <summary>移動の行の本文。"移動 太郎の部屋 → 2年A組の教室" の形。</summary>
     /// <param name="travel">移動の開始。</param>
     /// <param name="names">表示名を引く表。</param>
     /// <param name="world">移動のワールド。分からなければ null。</param>

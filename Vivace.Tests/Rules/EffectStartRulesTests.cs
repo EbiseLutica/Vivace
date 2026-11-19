@@ -11,13 +11,13 @@ namespace Vivace.Tests.Rules;
 /// <summary>行動の効果のハンドラの起動。効果（handler）のある行動の開始だけが、終わりの時刻を出力の時刻にして起動する。</summary>
 public class EffectStartRulesTests
 {
-    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private static readonly PlaceId TaroRoom = new("taro_room");
 
     /// <summary>効果のない行動の開始は、シグナルを出さない。</summary>
     [Fact]
     public void ActionWithoutHandlerStartsNoEffect()
     {
-        var result = Fixture.Apply(Fixture.WithKaori(), Started(10, "read_book", TimeSpan.FromMinutes(30), 0));
+        var result = Fixture.Apply(Fixture.WithTaro(), Started(10, "read_book", TimeSpan.FromMinutes(30), 0));
 
         Assert.Equal(EventStatus.Applied, result.Status);
         Assert.Empty(result.Signals);
@@ -27,11 +27,11 @@ public class EffectStartRulesTests
     [Fact]
     public void PostActionStartsEffectAtItsEnd()
     {
-        var result = Fixture.Apply(Fixture.WithKaori(), Started(10, "post_sns", TimeSpan.FromMinutes(8), 0));
+        var result = Fixture.Apply(Fixture.WithTaro(), Started(10, "post_sns", TimeSpan.FromMinutes(8), 0));
 
         var signal = Assert.IsType<StartEffectSignal>(Assert.Single(result.Signals));
         Assert.Equal(10, signal.BatchSeq);
-        Assert.Equal(Fixture.Kaori, signal.Persona);
+        Assert.Equal(Fixture.Taro, signal.Persona);
         Assert.Equal(Fixture.Now.AddMinutes(8), signal.Horizon);
         Assert.Equal(0, signal.ActivityVersion);
     }
@@ -40,17 +40,17 @@ public class EffectStartRulesTests
     [Fact]
     public void SubActionPostStartsEffectWithoutTouchingTheMainAction()
     {
-        var main = Fixture.Apply(Fixture.WithKaori(), Started(10, "read_book", TimeSpan.FromMinutes(30), 0)).State;
+        var main = Fixture.Apply(Fixture.WithTaro(), Started(10, "read_book", TimeSpan.FromMinutes(30), 0)).State;
 
         var result = Fixture.Apply(main, Started(11, "post_sns", TimeSpan.FromMinutes(8), 0, isSubAction: true));
 
         var signal = Assert.IsType<StartEffectSignal>(Assert.Single(result.Signals));
         Assert.Equal(11, signal.BatchSeq);
         Assert.Equal(Fixture.Now.AddMinutes(8), signal.Horizon);
-        Assert.Equal(0, result.State.Personas[Fixture.Kaori].ActivityVersion);
+        Assert.Equal(0, result.State.Personas[Fixture.Taro].ActivityVersion);
     }
 
     /// <summary>行動の開始のイベント。主の行動は行動のバージョンで、副行動は版を上げない。</summary>
     private static SimEvent Started(long seq, string actionId, TimeSpan duration, long version, bool isSubAction = false) =>
-        Fixture.Event(seq, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload(actionId, KaoriRoom, duration, ActivityReason.Chosen, version, null, isSubAction), Fixture.Kaori);
+        Fixture.Event(seq, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload(actionId, TaroRoom, duration, ActivityReason.Chosen, version, null, isSubAction), Fixture.Taro);
 }
