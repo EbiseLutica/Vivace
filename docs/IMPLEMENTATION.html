@@ -26,7 +26,7 @@
   <div class="meta">
     <span class="chip">2026-11-15 時点</span>
     <span class="chip">節目 M1〜M6</span>
-    <span class="chip fixed">次の到達点：M2 独り言の投稿</span>
+    <span class="chip fixed">次の到達点：M3 再起動しても続く</span>
   </div>
 </header>
 
@@ -188,7 +188,7 @@
     <li><input type="checkbox" disabled checked>LLM の PoC：1つの実装を選び、投稿文が作れて、失敗と時間切れを扱えることだけを確かめる。結果は D8 8.4 に書く。D8 8.4 の残りの項目は、困ったときに確かめる</li>
     <li><input type="checkbox" disabled checked><code>ILlmClient</code> の最小版と、その実装。<code>Vivace.Testing</code> に <code>ScriptedLlm</code>。API キーは環境変数から読み、TOML には書かない。キーがなければ、失敗時の出力で動く</li>
     <li><input type="checkbox" disabled checked><code>phone.opportunity</code>：ブロックの <code>phone</code> と <code>phone_every</code> から積む。副行動の決定は「投稿する」と「何もしない」だけにする。何もしないは、所要時間 0 の <code>core.idle</code> として記録する</li>
-    <li><input type="checkbox" disabled checked><code>sns.post</code> の最小版：コンテキストは、ペルソナの lore、いまの行動と場所、時刻、自分の直近の投稿数件。出力は <code>outbound.speech</code>、失敗したら <code>post.skipped</code></li>
+    <li><input type="checkbox" disabled checked><code>sns.post</code> の最小版：コンテキストは、ペルソナの lore、いまの行動（主の行動としての投稿では直前の行動。J-182）と場所、時刻、自分の直近の投稿数件。出力は <code>outbound.speech</code>、失敗したら <code>post.skipped</code></li>
     <li><input type="checkbox" disabled checked><code>IChannel</code> の最小版（投稿だけ）と、コンソールのチャンネル。<code>outbound.speech</code> を受けて送る。投稿は、イベントの行と見分けられる形で出す</li>
   </ul>
   <p><strong>範囲外</strong>：スマホを開いて受信箱を見る副行動（M4）、副行動の状態変数の効果と利用の記録、話題の辞書と判定、場所の生成、文面の校閲、記憶、<code>LlmPolicy</code> と段の切り替え、送信の再試行、Misskey（M5）。ILlmClient は本文を返すだけで、構造化出力（<code>GenerateAsync&lt;T&gt;</code>）と <code>ITool</code> は作らない。<code>outbound.speech</code> から未送信の操作と <code>Deliver</code> を作るのは、チャンネルの PR。</p>
@@ -295,7 +295,7 @@
 
 <section id="next">
   <h2>最初の一手</h2>
-  <p>M2 の見つかった課題の片付けから進める。</p>
+  <p>M3 の SQLite のストレージから進める。</p>
 </section>
 
 </main>
