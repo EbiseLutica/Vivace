@@ -28,6 +28,33 @@ public class VivaceEngineBuilderChannelTests
         Assert.Throws<InvalidOperationException>(() => builder.Build());
     }
 
+    /// <summary>ドライランでは、エンジンの StartAsync がチャンネルを1つも起動しない（対照として、通常の運転では1回起動する）。</summary>
+    [Fact]
+    public async Task DryRunDoesNotStartChannels()
+    {
+        var dry = new FakeChannel("console", (_, _) => Task.FromResult<SendResult>(new SendResult.Sent("x")));
+        var normal = new FakeChannel("console", (_, _) => Task.FromResult<SendResult>(new SendResult.Sent("x")));
+        await using var dryEngine = VivaceEngine.Create()
+            .UseDefinitions(TestWorld.LoadOrThrow())
+            .UseStorage(new InMemoryStorage())
+            .UseClock(new VirtualClock(Scenario.Start))
+            .AddChannel(dry)
+            .DryRun()
+            .Build();
+        await using var normalEngine = VivaceEngine.Create()
+            .UseDefinitions(TestWorld.LoadOrThrow())
+            .UseStorage(new InMemoryStorage())
+            .UseClock(new VirtualClock(Scenario.Start))
+            .AddChannel(normal)
+            .Build();
+
+        await dryEngine.StartAsync(CancellationToken.None);
+        await normalEngine.StartAsync(CancellationToken.None);
+
+        Assert.Equal(0, dry.Starts);
+        Assert.Equal(1, normal.Starts);
+    }
+
     /// <summary>同じ種類のチャンネルを2つつなぐと、Build が例外を投げる。</summary>
     [Fact]
     public void DuplicateChannelKindThrows()
