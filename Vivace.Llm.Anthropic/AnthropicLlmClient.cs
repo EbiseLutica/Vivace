@@ -31,19 +31,24 @@ public sealed class AnthropicLlmClient : ILlmClient
     /// </summary>
     /// <param name="apiKey">API キー。</param>
     /// <param name="options">設定。</param>
-    public static AnthropicLlmClient? FromApiKey(string? apiKey, AnthropicLlmOptions options)
+    public static AnthropicLlmClient? FromApiKey(string? apiKey, AnthropicLlmOptions options) => Build(apiKey, options, null);
+
+    /// <summary>
+    /// API キーと、任意の HTTP クライアントから作る。テストで通信を差し替えるために使う。キーが空なら null。
+    /// </summary>
+    /// <param name="apiKey">API キー。</param>
+    /// <param name="options">設定。</param>
+    /// <param name="httpClient">SDK に使わせる HTTP クライアント（省略すると SDK の既定）。</param>
+    internal static AnthropicLlmClient? Build(string? apiKey, AnthropicLlmOptions options, HttpClient? httpClient)
     {
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             return null;
         }
 
-        var client = new AnthropicClient
-        {
-            ApiKey = apiKey,
-            MaxRetries = 0,
-            Timeout = options.Timeout,
-        };
+        var client = httpClient is null
+            ? new AnthropicClient { ApiKey = apiKey, MaxRetries = 0, Timeout = options.Timeout }
+            : new AnthropicClient { ApiKey = apiKey, MaxRetries = 0, Timeout = options.Timeout, HttpClient = httpClient };
         return new AnthropicLlmClient(client, options);
     }
 
