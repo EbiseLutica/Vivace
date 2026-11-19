@@ -353,6 +353,7 @@
       <tr><td>J-188</td><td>events の時刻は、<code>enqueued_utc</code> をイベントの時刻（積んだ実時刻はまだ持たない）、<code>applied_utc</code> を適用の記録にだけコミットした実時刻（<code>TimeProvider</code>）で書く。適用でない記録は NULL</td><td><a href="3-data.html#sqlite">D3 3.8</a></td><td>エージェント（M3 の PR。PR 番号は未定）</td></tr>
       <tr><td>J-189</td><td>状態の書き込みは、前にコミットした状態と参照を比べて、変わった行だけ書く（イミュータブルなので参照で判る）。<code>created_seq</code> は作成のイベント（<code>world.created</code>、<code>persona.created</code>）の連番から引き、<code>updated_seq</code> のペルソナは、そのコミットの最後の連番にする。カーソルは保存せず、適用番号が最大のイベントから組み立てる</td><td><a href="3-data.html#sqlite">D3 3.8</a>、<a href="1-execution.html#tx">D1 1.9</a></td><td>エージェント（M3 の PR。PR 番号は未定）</td></tr>
       <tr><td>J-190</td><td>受信、未送信の操作、出来事の表は、いまの状態の写しとする。一覧の参照が変わったら所属の行を消して入れ直す。送信済みや処理済みの行は残さず、記録はイベントの列に任せる。未送信の操作の <code>status</code> は、写しの行なので <code>pending</code> だけを書く</td><td><a href="3-data.html#sqlite">D3 3.8</a></td><td>エージェント（M3 の PR。PR 番号は未定）</td></tr>
+      <tr><td>J-191</td><td><code>ReadEventsAsync</code> は seq の昇順で返す。エンジンの <code>Log</code> は処理の順なので、同じ列にはならない（seq は積んだときに付くため）。適用の列は <code>apply_no</code> の順で一致する。処理の順は保存しない。起動の手順で要ると分かったら、列を足して決める</td><td><a href="3-data.html#sqlite">D3 3.8</a></td><td>エージェント（M3 の PR。PR 番号は未定）</td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>

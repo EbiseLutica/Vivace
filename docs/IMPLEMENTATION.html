@@ -200,7 +200,7 @@
   <p>イベントを SQLite に記録し、起動したら記録から状態を戻して続きから動かす。M2 までの「起動するたびに生成し直す」をやめる。</p>
   <p><strong>参照</strong>：<a href="design/1-execution.html#tx">D1 1.9</a>、<a href="design/1-execution.html#startup">1.11</a>、<a href="design/3-data.html#sqlite">D3 3.8</a>、<a href="design/3-data.html#json">3.9</a>、<a href="design/7-operations.html#testing">D7 7.4</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" disabled><code>Vivace.Storage.Sqlite</code>：スキーマ、接続の設定、<code>StorageBatch</code> のコミット、イベントの読み出し</li>
+    <li><input type="checkbox" disabled checked><code>Vivace.Storage.Sqlite</code>：スキーマ、接続の設定、<code>StorageBatch</code> のコミット、イベントの読み出し</li>
     <li><input type="checkbox" disabled checked>ペイロードの JSON（ソース生成、バージョン、知らないイベントタイプでの停止）</li>
     <li><input type="checkbox" disabled>起動の手順：記録から状態を戻し、処理中の決定タイミングとハンドラを起動し直す（<a href="design/1-execution.html#apply">D1 P-58</a>。定義の検証で、記憶の整理を起こす行動に <code>handler</code> を持たせないことも含む）</li>
     <li><input type="checkbox" disabled>追いつき：止めていた間を早送りで進める。上限は 14 日</li>
