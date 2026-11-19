@@ -49,7 +49,7 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly Dictionary<long, Running> _running = [];
     private readonly List<Output> _held = [];
     private readonly HashSet<long> _dropped = [];
-    /// <summary>起動したジョブの取り消し元。エンジンの処理のスレッドだけが読み書きし、出力を受け取ったときに破棄する。</summary>
+    /// <summary>起動したジョブの取り消し元。エンジンの処理のスレッドだけが読み書きし、出力を受け取ったときに破棄する。破棄のときに残りも破棄する。</summary>
     private readonly Dictionary<long, CancellationTokenSource> _handlerCancels = [];
     private readonly Channel<Output> _outputs = Channel.CreateUnbounded<Output>();
     /// <summary>実行中に届いた投入のコマンド。ループの各回の先頭で取り出す。</summary>
@@ -292,6 +292,12 @@ public sealed class SimEngine : IAsyncDisposable
     {
         _shutdown.Cancel();
         await _lanes.CompleteAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        foreach (var handlerCancel in _handlerCancels.Values)
+        {
+            handlerCancel.Dispose();
+        }
+
+        _handlerCancels.Clear();
         await _storage.DisposeAsync();
         lock (_subscribersGate)
         {
