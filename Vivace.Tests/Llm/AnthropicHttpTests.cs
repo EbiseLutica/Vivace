@@ -66,9 +66,9 @@ public class AnthropicHttpTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => client.GenerateTextAsync(Request(), cancel.Token));
     }
 
-    /// <summary>送るボディは、モデル、上限、system、user と assistant の順。thinking、temperature、top_p は含まない。</summary>
+    /// <summary>送るボディは、モデル、上限、system、user と assistant の順。temperature と top_p は含まない。</summary>
     [Fact]
-    public async Task RequestBodyHasNoThinkingOrSamplingFields()
+    public async Task RequestBodyHasNoSamplingFields()
     {
         string? body = null;
         var handler = new FakeHandler(async (request, ct) =>
@@ -88,7 +88,6 @@ public class AnthropicHttpTests
         Assert.Equal("指示", root.GetProperty("system").GetString());
         var roles = root.GetProperty("messages").EnumerateArray().Select(message => message.GetProperty("role").GetString()).ToList();
         Assert.Equal(["user", "assistant", "user"], roles);
-        Assert.False(root.TryGetProperty("thinking", out _));
         Assert.False(root.TryGetProperty("temperature", out _));
         Assert.False(root.TryGetProperty("top_p", out _));
     }

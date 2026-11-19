@@ -56,15 +56,6 @@ public class AnthropicRequestMapperTests
         Assert.Equal("やあ", assistant.Content.TryPickString(out var assistantText) ? assistantText : null);
     }
 
-    /// <summary>thinking は送らない（opus-5-5 は disabled が 400）。温度も、このパラメータには含めない。</summary>
-    [Fact]
-    public void ThinkingIsNotSent()
-    {
-        var parameters = AnthropicRequestMapper.ToParams(Request(LlmTier.Main), new AnthropicLlmOptions());
-
-        Assert.Null(parameters.Thinking);
-    }
-
     /// <summary>末尾が assistant の呼び出し（prefill）は、送る前に拒否する。</summary>
     [Fact]
     public void TrailingAssistantMessageIsRejected()

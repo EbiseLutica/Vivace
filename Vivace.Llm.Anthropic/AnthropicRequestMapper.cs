@@ -8,7 +8,7 @@ internal static class AnthropicRequestMapper
 {
     /// <summary>
     /// 段からモデルを選び、system、メッセージ、最大トークン数を入れたパラメータを作る。
-    /// thinking、temperature、top_p は送らない（送るとモデルによって 400 になる）。
+    /// temperature と top_p は送らない（送るとモデルによって 400 になる）。thinking はモデルの既定に任せる。
     /// </summary>
     /// <param name="request">呼び出しの内容。</param>
     /// <param name="options">モデルと応答の上限。末尾が assistant のメッセージ（prefill）は、対象のモデルでは 400 になるため、ここで拒否する。</param>
