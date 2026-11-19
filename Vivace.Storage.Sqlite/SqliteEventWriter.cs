@@ -32,7 +32,7 @@ internal static class SqliteEventWriter
             SqliteValues.Bind(command, "$type", ev.EventType);
             SqliteValues.Bind(command, "$world", ev.WorldId?.Value);
             SqliteValues.Bind(command, "$persona", ev.PersonaId?.Value);
-            SqliteValues.Bind(command, "$status", StatusName(logged.Status));
+            SqliteValues.Bind(command, "$status", SqliteNames.ToColumn(logged.Status));
             SqliteValues.Bind(command, "$reason", logged.Reason);
             SqliteValues.Bind(command, "$applyNo", logged.ApplyNo);
             SqliteValues.Bind(command, "$batch", ev.BatchSeq);
@@ -46,14 +46,4 @@ internal static class SqliteEventWriter
             SqliteValues.Bind(command, "$applied", logged.Status == EventStatus.Applied ? (object)SqliteValues.ToMs(appliedAt) : null);
         }, ct);
     }
-
-    /// <summary>結果の名前（events の status 列）。</summary>
-    /// <param name="status">結果。</param>
-    public static string StatusName(EventStatus status) => status switch
-    {
-        EventStatus.Applied => "applied",
-        EventStatus.Skipped => "skipped",
-        EventStatus.Rejected => "rejected",
-        _ => throw new ArgumentOutOfRangeException(nameof(status), status, "知らない結果です。"),
-    };
 }

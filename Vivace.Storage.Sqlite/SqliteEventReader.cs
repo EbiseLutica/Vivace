@@ -43,18 +43,9 @@ internal static class SqliteEventReader
             SqliteValues.ReadJson(reader.GetString(12), VivaceJsonContext.Default.Origin),
             reader.IsDBNull(13) ? null : SqliteValues.ReadElement(reader.GetString(13)),
             reader.IsDBNull(14) ? null : SqliteValues.FromMs(reader.GetInt64(14)));
-        var status = ParseStatus(reader.GetString(5));
+        var status = SqliteNames.FromColumn<EventStatus>(reader.GetString(5));
         var applyNo = reader.IsDBNull(7) ? (long?)null : reader.GetInt64(7);
         var reason = reader.IsDBNull(6) ? null : reader.GetString(6);
         return new LoggedEvent(ev, status, applyNo, reason);
     }
-
-    /// <summary>結果の名前を読む（events の status 列）。</summary>
-    private static EventStatus ParseStatus(string text) => text switch
-    {
-        "applied" => EventStatus.Applied,
-        "skipped" => EventStatus.Skipped,
-        "rejected" => EventStatus.Rejected,
-        _ => throw new InvalidDataException($"知らない結果の名前です: {text}"),
-    };
 }

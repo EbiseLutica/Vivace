@@ -64,7 +64,7 @@ internal static class SqliteStateWriter
     /// <summary>受信の、所属の行の削除。</summary>
     private const string InboxDeleteSql = "DELETE FROM inbox WHERE persona_id = $persona";
 
-    /// <summary>受信の挿入。未処理の受信として入れる（処理の結果は、後の段で書く）。</summary>
+    /// <summary>受信の挿入。状態の写しなので、未処理の unread だけを書く（J-190）。</summary>
     private const string InboxInsertSql = """
         INSERT INTO inbox (id, persona_id, channel, kind, sender, audience, body, original_arrived_utc, status, handled_seq, outcome, item)
         VALUES ($id, $persona, $channel, $kind, $sender, $audience, $body, $arrived, 'unread', NULL, NULL, $item)
@@ -121,7 +121,7 @@ internal static class SqliteStateWriter
                 SqliteValues.Bind(command, "$id", world.Id.Value);
                 SqliteValues.Bind(command, "$def", world.DefId.Value);
                 SqliteValues.Bind(command, "$seed", unchecked((long)world.Seed));
-                SqliteValues.Bind(command, "$status", world.Status.ToString());
+                SqliteValues.Bind(command, "$status", SqliteNames.ToColumn(world.Status));
                 SqliteValues.Bind(command, "$graph", world.GraphVersion);
             }, ct);
         }
@@ -162,7 +162,7 @@ internal static class SqliteStateWriter
             SqliteValues.Bind(command, "$tags", SqliteValues.Json(place.Tags, VivaceJsonContext.Default.ImmutableArrayString));
             SqliteValues.Bind(command, "$links", SqliteValues.Json(place.Links, VivaceJsonContext.Default.ImmutableArrayPlaceLink));
             SqliteValues.Bind(command, "$grp", place.Group);
-            SqliteValues.Bind(command, "$status", place.Status.ToString());
+            SqliteValues.Bind(command, "$status", SqliteNames.ToColumn(place.Status));
             SqliteValues.Bind(command, "$created", place.CreatedSeq);
             SqliteValues.Bind(command, "$updated", place.UpdatedSeq);
         }, ct);
@@ -173,7 +173,7 @@ internal static class SqliteStateWriter
         {
             SqliteValues.Bind(command, "$world", world.Id.Value);
             SqliteValues.Bind(command, "$term", term.Term);
-            SqliteValues.Bind(command, "$verdict", term.Verdict.ToString());
+            SqliteValues.Bind(command, "$verdict", SqliteNames.ToColumn(term.Verdict));
             SqliteValues.Bind(command, "$mapped", term.Mapped);
             SqliteValues.Bind(command, "$category", term.Category);
             SqliteValues.Bind(command, "$created", term.CreatedSeq);
@@ -226,7 +226,7 @@ internal static class SqliteStateWriter
             SqliteValues.Bind(command, "$id", persona.Id.Value);
             SqliteValues.Bind(command, "$def", persona.DefId.Value);
             SqliteValues.Bind(command, "$world", persona.World.Value);
-            SqliteValues.Bind(command, "$status", persona.Status.ToString());
+            SqliteValues.Bind(command, "$status", SqliteNames.ToColumn(persona.Status));
             SqliteValues.Bind(command, "$location", SqliteValues.Json(persona.Location, VivaceJsonContext.Default.Location));
             SqliteValues.Bind(command, "$activity", SqliteValues.JsonOrNull(persona.Activity, VivaceJsonContext.Default.Activity));
             SqliteValues.Bind(command, "$overlay", SqliteValues.JsonOrNull(persona.Overlay, VivaceJsonContext.Default.Activity));
@@ -252,9 +252,9 @@ internal static class SqliteStateWriter
             SqliteValues.Bind(command, "$id", item.Seq);
             SqliteValues.Bind(command, "$persona", persona.Id.Value);
             SqliteValues.Bind(command, "$channel", item.Channel);
-            SqliteValues.Bind(command, "$kind", item.Kind.ToString());
+            SqliteValues.Bind(command, "$kind", SqliteNames.ToColumn(item.Kind));
             SqliteValues.Bind(command, "$sender", SqliteValues.Json(item.Sender, VivaceJsonContext.Default.Sender));
-            SqliteValues.Bind(command, "$audience", item.Audience.ToString());
+            SqliteValues.Bind(command, "$audience", SqliteNames.ToColumn(item.Audience));
             SqliteValues.Bind(command, "$body", item.Text ?? string.Empty);
             SqliteValues.Bind(command, "$arrived", SqliteValues.ToMsOrNull(item.OriginalArrivedAt));
             SqliteValues.Bind(command, "$item", SqliteValues.Json(item, VivaceJsonContext.Default.InboxItem));

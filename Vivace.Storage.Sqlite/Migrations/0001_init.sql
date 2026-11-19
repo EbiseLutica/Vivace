@@ -25,7 +25,7 @@ CREATE INDEX ix_events_type    ON events(persona_id, event_type, time_utc);
 -- 状態のテーブル（エンジンが書く）
 CREATE TABLE worlds (
   id TEXT PRIMARY KEY, def_id TEXT NOT NULL, seed INTEGER NOT NULL,
-  status TEXT NOT NULL, graph_version INTEGER NOT NULL, created_seq INTEGER NOT NULL
+  status TEXT NOT NULL, graph_version INTEGER NOT NULL, created_seq INTEGER NOT NULL -- alive / destroyed
 );
 CREATE TABLE world_places (                -- 生えた場所
   world_id TEXT NOT NULL, place_id TEXT NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE world_places (                -- 生えた場所
 );
 CREATE TABLE world_terms (                 -- 変換の辞書の実行中の記録
   world_id TEXT NOT NULL, term TEXT NOT NULL,
-  verdict TEXT NOT NULL, mapped TEXT, category TEXT, created_seq INTEGER NOT NULL,
+  verdict TEXT NOT NULL, mapped TEXT, category TEXT, created_seq INTEGER NOT NULL, -- pass / convert / reject
   PRIMARY KEY (world_id, term)
 );
 CREATE TABLE incidents (                   -- 発生中の出来事
@@ -46,7 +46,7 @@ CREATE TABLE incidents (                   -- 発生中の出来事
   started_utc INTEGER NOT NULL, ends_utc INTEGER
 );
 CREATE TABLE personas (
-  id TEXT PRIMARY KEY, def_id TEXT NOT NULL, world_id TEXT NOT NULL, status TEXT NOT NULL,
+  id TEXT PRIMARY KEY, def_id TEXT NOT NULL, world_id TEXT NOT NULL, status TEXT NOT NULL, -- alive / gap / destroyed
   location TEXT NOT NULL,                  -- JSON
   activity TEXT, overlay TEXT, activity_version INTEGER NOT NULL,
   vitals TEXT NOT NULL, conditions TEXT NOT NULL,
@@ -59,10 +59,10 @@ CREATE TABLE personas (
 );
 CREATE TABLE inbox (
   id INTEGER PRIMARY KEY,                  -- notification.arrived の seq
-  persona_id TEXT NOT NULL, channel TEXT NOT NULL, kind TEXT NOT NULL,
-  sender TEXT, audience TEXT NOT NULL, body TEXT NOT NULL,
+  persona_id TEXT NOT NULL, channel TEXT NOT NULL, kind TEXT NOT NULL, -- message / reaction / follow / other
+  sender TEXT, audience TEXT NOT NULL, body TEXT NOT NULL, -- public / dm / no_memory
   original_arrived_utc INTEGER,
-  status TEXT NOT NULL,                    -- unread / handled
+  status TEXT NOT NULL,                    -- unread / handled（状態の写しなので unread だけを書く）
   handled_seq INTEGER, outcome TEXT,
   item TEXT NOT NULL                       -- 受信の全体の JSON
 );
@@ -70,6 +70,6 @@ CREATE TABLE outbound (
   id INTEGER PRIMARY KEY,                  -- outbound.speech / operation の seq
   persona_id TEXT NOT NULL, channel TEXT NOT NULL, op_kind TEXT NOT NULL,
   is_speech INTEGER NOT NULL, payload TEXT NOT NULL,
-  status TEXT NOT NULL,                    -- pending / sent / failed / unknown
+  status TEXT NOT NULL,                    -- pending / sent / failed / unknown（状態の写しなので pending だけを書く）
   external_id TEXT, result_seq INTEGER, sent_utc INTEGER, error TEXT
 );
