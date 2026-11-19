@@ -7,7 +7,7 @@ namespace Vivace.Cli;
 /// </summary>
 internal sealed class LoggingLlmClient(ILlmClient inner, TextWriter errors) : ILlmClient
 {
-    /// <summary>中の LLM を呼ぶ。失敗したら、目的と例外の型名とメッセージを1行書く。</summary>
+    /// <summary>中の LLM を呼ぶ。失敗したら、目的と例外の型名と、改行を空白に変えたメッセージを1行書く。</summary>
     /// <param name="request">呼び出しの内容。</param>
     /// <param name="ct">キャンセル。</param>
     public async Task<LlmResult<string>> GenerateTextAsync(LlmRequest request, CancellationToken ct)
@@ -22,7 +22,7 @@ internal sealed class LoggingLlmClient(ILlmClient inner, TextWriter errors) : IL
         }
         catch (Exception ex)
         {
-            errors.WriteLine($"LLM の呼び出しに失敗した（目的 {request.Purpose}）: {ex.GetType().Name}: {ex.Message}");
+            errors.WriteLine($"LLM の呼び出しに失敗した（目的 {request.Purpose}）: {ex.GetType().Name}: {ex.Message.ReplaceLineEndings(" ")}");
             throw;
         }
     }

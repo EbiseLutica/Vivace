@@ -96,7 +96,7 @@
   <ul>
     <li><strong>Vivace.Core</strong>：ドメイン型、定義の読み込みと検証、Apply、エンジン、Decider、Planner の手順、効果のハンドラ（受信箱、投稿）、コンテキストの組み立て、記憶の整理、ポート。依存は TOML のライブラリとログの抽象だけ</li>
     <li><strong>Vivace.Storage.Sqlite</strong>：SQLite の実装を分けて、コアから SQL を追い出す。モバイルで別のストレージを使うときも、コアは変えない（VISION 1章）</li>
-    <li><strong>Vivace.Llm.*</strong>：LLM の実装。どの SDK を使うかは、PoC で決める（D8）</li>
+    <li><strong>Vivace.Llm.*</strong>：LLM の実装。いまは Anthropic の公式 SDK を直接使う <code>Vivace.Llm.Anthropic</code>（D8 8.4）</li>
     <li><strong>Vivace.Testing</strong>：テストとドライランの部品。台本どおりに返す LLM、何も送らないチャンネル、仮想時計、シナリオを書くための補助</li>
   </ul>
   <p>テストは別の <code>Vivace.Tests</code> に置き、7つには数えない（D8 8.2）。</p>

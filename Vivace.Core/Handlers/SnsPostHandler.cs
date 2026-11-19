@@ -89,6 +89,7 @@ internal static class SnsPostHandler
             {examples}
             世界：{world.Name}
             {world.Lore}
+            ここに書いていない人の、いまの様子や居場所は書きません。
             書くのは本文だけです。説明、見出し、引用符、複数の案は書きません。
             """;
         var recent = string.Join('\n', persona.Posting.Recent.Select(post => $"- {post.Body}"));

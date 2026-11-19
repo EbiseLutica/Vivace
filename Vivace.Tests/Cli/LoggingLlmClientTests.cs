@@ -19,6 +19,30 @@ public class LoggingLlmClientTests
         Assert.Equal("LLM の呼び出しに失敗した（目的 post.compose）: InvalidOperationException: 壊れた\n", errors.ToString());
     }
 
+    /// <summary>メッセージに改行があっても、書かれるのは1行。改行は空白に変わる。</summary>
+    [Fact]
+    public async Task MultiLineMessageIsWrittenAsOneLine()
+    {
+        var errors = new StringWriter { NewLine = "\n" };
+        var client = new LoggingLlmClient(new FailingLlm(new InvalidOperationException("Status Code: Unauthorized\n{\"type\":\"error\"}")), errors);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => client.GenerateTextAsync(Request(), CancellationToken.None));
+
+        Assert.Equal("LLM の呼び出しに失敗した（目的 post.compose）: InvalidOperationException: Status Code: Unauthorized {\"type\":\"error\"}\n", errors.ToString());
+    }
+
+    /// <summary>取り消しでない TaskCanceledException（タイムアウトなど）は、失敗として1行書いてから投げ直す。</summary>
+    [Fact]
+    public async Task TaskCanceledWithoutCancellationIsWrittenAsFailure()
+    {
+        var errors = new StringWriter { NewLine = "\n" };
+        var client = new LoggingLlmClient(new FailingLlm(new TaskCanceledException("timeout")), errors);
+
+        await Assert.ThrowsAsync<TaskCanceledException>(() => client.GenerateTextAsync(Request(), CancellationToken.None));
+
+        Assert.Equal("LLM の呼び出しに失敗した（目的 post.compose）: TaskCanceledException: timeout\n", errors.ToString());
+    }
+
     /// <summary>取り消しで止まったときは、何も書かずに例外を投げ直す。</summary>
     [Fact]
     public async Task CancellationWritesNothing()
