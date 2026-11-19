@@ -114,6 +114,7 @@ public class GoToNextWeightTests
         var index = files.FindIndex(file => file.Path == "actions/actions.toml");
         var text = files[index].Text
             .Replace("weight = 1.0", string.Empty, StringComparison.Ordinal)
+            .Replace("weight = 0.3", string.Empty, StringComparison.Ordinal)
             .Replace("[[action]]", "[[action]]\nweight = 0.0", StringComparison.Ordinal);
         files[index] = files[index] with { Text = text };
         return DefinitionLoader.LoadFiles(files).Definitions ?? throw new InvalidOperationException("定義が読めません。");

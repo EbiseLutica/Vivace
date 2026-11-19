@@ -48,6 +48,7 @@ id = "post_sns"
 display = "SNS に投稿する"
 description = "スマホで独り言を投稿する。投稿の中身は、まだ作られていない（この行動は走るだけ）。"
 duration = ["3m", "10m"]
+weight = 0.3
 phone = "open"
 requires.items = ["smartphone"]
 limits.cooldown = "60m"
