@@ -24,6 +24,8 @@ public class RuleTableTests
         "action.started",
         "action.ended",
         "outbound.speech",
+        "outbound.sent",
+        "outbound.failed",
         "post.skipped",
     ];
 
