@@ -8,12 +8,23 @@ using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Rules;
 
-/// <summary>投稿の行動の制限。スキップのあとの30分と、最後の投稿からの cooldown を、主でも副でも同じに見る。</summary>
+/// <summary>投稿の行動の制限。スキップのあとの30分、サーバーの次の時刻、最後の投稿からの cooldown を、主でも副でも同じに見る。</summary>
 public class PostingLimitTests
 {
     private static readonly ActionDef Post = Fixture.Context.Defs.Actions["post_sns"];
     private static readonly ActionDef Read = Fixture.Context.Defs.Actions["read_book"];
     private static readonly PlaceId KaoriRoom = new("kaori_room");
+
+    /// <summary>サーバーが返した次に投稿できる時刻より前は、投稿を候補にしない。その時刻ちょうどで候補に戻る。</summary>
+    [Fact]
+    public void RemoteNotBeforeBlocksPostUntilThatTime()
+    {
+        var remoteNotBefore = Fixture.Now.AddMinutes(10);
+        var posting = new PostingState(null, null, remoteNotBefore, []);
+
+        Assert.False(ActionRules.WithinPostingLimits(Post, posting, remoteNotBefore.AddMinutes(-1)));
+        Assert.True(ActionRules.WithinPostingLimits(Post, posting, remoteNotBefore));
+    }
 
     /// <summary>スキップの直後は、投稿を候補にしない。30分ちょうどで候補に戻る（30分未満は含まない）。</summary>
     [Fact]
