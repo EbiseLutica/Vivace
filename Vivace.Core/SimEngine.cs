@@ -40,6 +40,8 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly Lanes _lanes = new();
     /// <summary>配信役。ドライランでは null にして、送らない。</summary>
     private readonly Dispatcher? _dispatcher;
+    /// <summary>エンジンを止めるキャンセル。破棄のときに取り消し、送信中の配信に伝える。</summary>
+    private readonly CancellationTokenSource _shutdown = new();
     /// <summary>配信役に渡して、まだ結果が戻っていない操作の数。エンジンの処理のスレッドだけが書く。</summary>
     private int _deliveriesInFlight;
     /// <summary>未適用のイベント。時刻、ステージ、連番の順に取り出す。</summary>
@@ -98,6 +100,7 @@ public sealed class SimEngine : IAsyncDisposable
     /// <param name="llm">LLM。省略すると、呼ぶと失敗する実装（投稿はスキップになる）。</param>
     /// <param name="channels">送信に使うチャンネル。省略すると、どのチャンネルもない（送信はすべて失敗する）。</param>
     /// <param name="dispatch">送信するかどうか。false なら配信役を置かず、未送信の操作は残す（ドライラン）。</param>
+    /// <param name="sendTimeout">送信の時間切れ（実時間）。省略すると既定の 30 秒。</param>
     public static SimEngine Create(
         DefinitionPack definitions,
         IStorage storage,
@@ -107,7 +110,8 @@ public sealed class SimEngine : IAsyncDisposable
         IHolidayCalendar? holidays = null,
         ILlmClient? llm = null,
         IReadOnlyList<IChannel>? channels = null,
-        bool dispatch = true) =>
+        bool dispatch = true,
+        TimeSpan? sendTimeout = null) =>
         new(
             new RuleContext(definitions, RouteCache.Create(definitions), holidays ?? NoHolidays.Instance),
             decider ?? new UtilityDecider(),
@@ -115,7 +119,7 @@ public sealed class SimEngine : IAsyncDisposable
             random,
             clock,
             llm ?? new NoLlmClient(),
-            dispatch ? new Dispatcher(channels ?? []) : null);
+            dispatch ? new Dispatcher(channels ?? [], sendTimeout ?? Dispatcher.DefaultSendTimeout) : null);
 
     /// <summary>いまの状態（不変）。</summary>
     public SimState State => _state;
@@ -284,6 +288,7 @@ public sealed class SimEngine : IAsyncDisposable
     /// </summary>
     public async ValueTask DisposeAsync()
     {
+        _shutdown.Cancel();
         await _lanes.CompleteAsync().ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         await _storage.DisposeAsync();
         lock (_subscribersGate)
@@ -488,7 +493,7 @@ public sealed class SimEngine : IAsyncDisposable
         var operation = signal.Operation;
         var request = new OutboundRequest(operation.Seq, signal.Persona, _clock.UtcNow, operation.OperationKind, operation.IsSpeech, operation.Payload);
         _deliveriesInFlight++;
-        _ = Task.Run(() => DeliverAsync(_dispatcher, operation, request));
+        _ = Task.Run(() => DeliverAsync(_dispatcher, operation, request, _shutdown.Token));
     }
 
     /// <summary>
@@ -497,12 +502,13 @@ public sealed class SimEngine : IAsyncDisposable
     /// <param name="dispatcher">配信役。</param>
     /// <param name="operation">送る未送信の操作。</param>
     /// <param name="request">チャンネルに渡す操作。</param>
-    private async Task DeliverAsync(Dispatcher dispatcher, OutboundOp operation, OutboundRequest request)
+    /// <param name="ct">エンジンを止めるキャンセル。</param>
+    private async Task DeliverAsync(Dispatcher dispatcher, OutboundOp operation, OutboundRequest request, CancellationToken ct)
     {
         InjectRequest injection;
         try
         {
-            var result = await dispatcher.SendAsync(operation.Channel, request, CancellationToken.None);
+            var result = await dispatcher.SendAsync(operation.Channel, request, ct);
             injection = DeliveryRequest(operation, result);
         }
         catch (Exception ex)

@@ -85,6 +85,21 @@ public class OutboundDeliveryTests
         Assert.All(failed, payload => Assert.Contains(mode == "null" ? "結果を返さなかった" : "壊れた", payload.Reason, StringComparison.Ordinal));
     }
 
+    /// <summary>返らないチャンネルは、時間切れの失敗になり、エンジンは進む。</summary>
+    [Fact]
+    public async Task HangingChannelTimesOutAsFailedAndRunContinues()
+    {
+        var channel = new FakeChannel(Scenario.ChannelKind, (_, _) => new TaskCompletionSource<SendResult>().Task);
+        await using var engine = await Scenario.RunAsync(2, llm: Posts(), channels: [channel], sendTimeout: TimeSpan.FromMilliseconds(20));
+
+        var speeches = Applied(engine).Count(entry => entry.Event.EventType == EventTypes.OutboundSpeech);
+        var failed = Applied(engine).Where(entry => entry.Event.EventType == EventTypes.OutboundFailed).Select(entry => (OutboundFailedPayload)entry.Event.Payload).ToList();
+
+        Assert.NotEqual(0, speeches);
+        Assert.Equal(speeches, failed.Count);
+        Assert.All(failed, payload => Assert.Contains("時間切れ", payload.Reason, StringComparison.Ordinal));
+    }
+
     /// <summary>ドライランでは送らず、発話の未送信の操作が残る（送信の完了も失敗もない）。</summary>
     [Fact]
     public async Task DryRunKeepsSpeechesUnsent()
