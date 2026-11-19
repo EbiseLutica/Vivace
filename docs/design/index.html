@@ -226,7 +226,7 @@
       <tr><td>J-30</td><td>guard の6種類と、却下されたときの動き（<code>redecide</code> / <code>recompose</code> / <code>drop</code>）</td><td><a href="1-execution.html#guard">D1 1.7</a></td><td>一括で合意</td></tr>
       <tr><td>J-31</td><td>イベントの状態に skipped と rejected を足し、理由を残す</td><td><a href="1-execution.html#states">D1 1.8</a></td><td>一括で合意</td></tr>
       <tr><td>J-32</td><td>SQLite の書き込みの接続を2本（エンジン用、記憶の整理用）にし、書くテーブルを分ける</td><td><a href="1-execution.html#tx">D1 1.9</a></td><td>一括で合意</td></tr>
-      <tr><td>J-33</td><td>運転モードは、実時間・倍速・早送り・追いつきの4つ。倍速でも配信役は動かさない</td><td><a href="1-execution.html#clock">D1 1.10</a></td><td>一括で合意</td></tr>
+      <tr><td>J-33</td><td>運転モードは、実時間・倍速・早送り・追いつきの4つ。配信役を止めるのは早送りと追いつきだけで、倍速では動かす。倍速でどのチャンネルをつなぐかはホストが決める（本物の SNS をつながないのはホストの役目）</td><td><a href="1-execution.html#clock">D1 1.10</a></td><td>ユーザーが確認（M2 のチャンネルの PR で決め直した）</td></tr>
       <tr><td>J-34</td><td>定義の読み直しを、<code>definitions.reloaded</code> のイベント（定義のハッシュつき）で記録する</td><td><a href="1-execution.html#reload">D1 1.12</a></td><td>一括で合意</td></tr>
       <tr><td>J-35</td><td>イベントに Batch と Cause を持たせる。バージョン番号は独立した項目にせず、ペイロードの中に持つ</td><td><a href="2-events.html#envelope">D2 2.1</a></td><td>一括で合意</td></tr>
       <tr><td>J-36</td><td>イベントタイプの名前（<code>activity.chosen</code> など）と、決定タイミングの理由の6種類</td><td><a href="2-events.html#types">D2 2.3</a></td><td>一括で合意</td></tr>

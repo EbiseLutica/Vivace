@@ -458,7 +458,7 @@ record ApplyResult(
     <table>
       <tr><th>モード</th><th>時計</th><th>締め切り</th><th>配信役</th><th>LLM</th></tr>
       <tr><td>実時間</td><td><code>SystemClock</code></td><td>効かせる</td><td>動く</td><td>実物</td></tr>
-      <tr><td>倍速</td><td><code>ScaledClock</code>（開始点からの経過を n 倍）</td><td>効かせる（仮想の時刻で）</td><td>動かさない</td><td>実物かダミー</td></tr>
+      <tr><td>倍速</td><td><code>ScaledClock</code>（開始点からの経過を n 倍）</td><td>効かせる（仮想の時刻で）</td><td>動く（どのチャンネルをつなぐかはホストが決める）</td><td>実物かダミー</td></tr>
       <tr><td>早送り（ドライラン）</td><td><code>VirtualClock</code></td><td>効かせない</td><td>動かさない</td><td>実物かダミー</td></tr>
       <tr><td>追いつき</td><td><code>VirtualClock</code> から <code>SystemClock</code> へ切り替え</td><td>効かせない</td><td>動かさない（圏外）</td><td>追いつきの中で使い終わるプランは、Planner が LLM を呼ばない（D5 5.5）。SNS の行動は候補にならない</td></tr>
     </table>
