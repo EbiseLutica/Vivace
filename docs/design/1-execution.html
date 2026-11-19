@@ -194,6 +194,17 @@ record ApplyResult(
       <tr><td><code>ChannelOnline</code></td><td>圏外が明けたことをチャンネルに伝える</td><td>追いつきの終わりに、毎回出す</td></tr>
     </table>
   </div>
+  <div class="draft">
+    <span class="label">案 P-58　StartHandler を出したイベントは、出力を取り込むまで processing にする</span>
+    <p>上の表の復元は、処理中の決定タイミングしか手がかりにしていない。Planner（記憶の整理を起こす行動の開始、ブロックの開始、<code>plan.due</code>、<code>persona.created</code> から起動）と効果のハンドラ（<code>action.started</code> から起動）は、トリガーのイベントがすぐ applied になるので、出力が届く前に落ちると、起動し直す手がかりが残らない。</p>
+    <ul>
+      <li>P-07 の processing を、決定タイミングだけでなく、<code>StartHandler</code> を出すすべてのイベントに広げる。適用番号は processing に入るときに振り、ハンドラの出力をキューに入れたら applied にする。<code>CancelHandler</code> で出力を捨てたときも applied にする</li>
+      <li>再起動では、processing のイベントからシグナルを作り直して起動する。まとまりの連番はそのイベントの連番、ほかの中身はペイロードといまの状態から作る。スナップショットは再起動のときの状態になるので、ホライズンの先が長いハンドラ（効果、Planner）は、落ちなかったときと入力が変わりうる。LLM の出力はもともと揺れるので、それは許す</li>
+      <li>取り消したハンドラを再起動で起動し直しても、出力は行動のバージョンの検査（1.7）で弾かれる（P-03 と同じ）</li>
+      <li>1つのイベントが出す <code>StartHandler</code> は1つまでにする。実行中のハンドラと出力は、まとまりの連番で区別するため。いまぶつかりうるのは、記憶の整理を起こす行動が効果のハンドラも持つときだけなので、定義の検証で、<code>effects.sleep.consolidate</code> と <code>effects.handler</code> を同じ行動に持たせない</li>
+    </ul>
+    <p>合意したら、上の表の <code>StartHandler</code> の行を「ハンドラ（Decider、Planner、効果）をレーンで起動する」「processing のイベントから起動し直す」に直し、1.8 の状態の図と 1.11 の起動の手順も合わせる。</p>
+  </div>
   <div class="callout">
     <span class="label">決定 P-03　割り込まれた行動のハンドラは取り消す</span>
     「投稿する」の文面を作っている途中に、反射で行動が打ち切られたら、そのハンドラはもう要らない。Apply が行動のバージョン番号を上げるときに <code>CancelHandler</code> を出し、エンジンはそのハンドラを <code>CancellationToken</code> で止めて、ホライズンの待ちからも外す。止めきれずに出力が返ってきても、バージョン番号の検査（1.7）で弾かれるので、取り消しは最適化にすぎない。
