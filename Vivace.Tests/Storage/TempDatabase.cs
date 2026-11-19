@@ -6,6 +6,7 @@ namespace Vivace.Tests.Storage;
 /// <summary>テスト用の一時フォルダ（その中の SQLite のファイル）。破棄するとフォルダごと消す。</summary>
 public sealed class TempDatabase : IDisposable
 {
+    /// <summary>作ったフォルダのパス。破棄のときに消す。</summary>
     private readonly string _folder;
 
     /// <summary>新しい一時フォルダを作り、その中のファイルのパスを決める。</summary>

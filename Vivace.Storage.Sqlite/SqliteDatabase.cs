@@ -11,6 +11,8 @@ public sealed class SqliteDatabase : IAsyncDisposable
     /// <summary>待ち時間（ミリ秒）。ロックの競合の待ち。</summary>
     private const int BusyTimeoutMs = 5000;
 
+    /// <summary>開いた接続を持つ。作るのは OpenAsync だけ。</summary>
+    /// <param name="connection">設定とマイグレーションを済ませた接続。</param>
     private SqliteDatabase(SqliteConnection connection)
     {
         Connection = connection;

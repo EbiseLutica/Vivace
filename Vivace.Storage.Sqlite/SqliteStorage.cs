@@ -9,8 +9,13 @@ namespace Vivace.Storage.Sqlite;
 /// </summary>
 public sealed class SqliteStorage : IStorage
 {
+    /// <summary>接続を持つデータベース。</summary>
     private readonly SqliteDatabase _database;
+
+    /// <summary>適用の時刻に使う実時刻。</summary>
     private readonly TimeProvider _time;
+
+    /// <summary>前にコミットした（または読んだ）状態。変わった行を判る基準に使う。読んでいなければ null。</summary>
     private SimState? _committed;
 
     /// <summary>開いたデータベースを使う保存先を作る。</summary>

@@ -10,12 +10,16 @@ namespace Vivace.Tests.Serialization;
 /// <summary>イベントタイプごとの、手で作った小さなペイロードの例。</summary>
 public static class PayloadSamples
 {
+    /// <summary>例の基準の時刻（UTC）。</summary>
     private static readonly DateTimeOffset T0 = new(2026, 11, 1, 14, 0, 0, TimeSpan.Zero);
 
+    /// <summary>例で使う場所（家）。</summary>
     private static readonly PlaceId Home = new("home");
 
+    /// <summary>例で使う場所（駅）。</summary>
     private static readonly PlaceId Station = new("station");
 
+    /// <summary>例で使う乱数の範囲。</summary>
     private static readonly RngDraws Draws = new("taro", "decide", 1, 2);
 
     /// <summary>イベントタイプの名前から、例のペイロードを引く（全イベントタイプ分）。</summary>
@@ -25,6 +29,7 @@ public static class PayloadSamples
     /// <param name="text">JSON の文字列。</param>
     public static JsonElement Json(string text) => JsonDocument.Parse(text).RootElement.Clone();
 
+    /// <summary>全イベントタイプの例を組み立てる。</summary>
     private static Dictionary<string, EventPayload> Build()
     {
         var plan = new DayPlan(

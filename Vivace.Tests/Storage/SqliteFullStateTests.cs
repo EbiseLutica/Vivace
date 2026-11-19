@@ -17,16 +17,22 @@ namespace Vivace.Tests.Storage;
 /// </summary>
 public class SqliteFullStateTests
 {
+    /// <summary>例の基準の時刻（UTC）。</summary>
     private static readonly DateTimeOffset T0 = new(2026, 11, 1, 14, 0, 0, TimeSpan.Zero);
 
+    /// <summary>例で使う場所（家）。</summary>
     private static readonly PlaceId Home = new("home");
 
+    /// <summary>例で使う場所（喫茶店）。</summary>
     private static readonly PlaceId Cafe = new("cafe");
 
+    /// <summary>例で使うワールド。</summary>
     private static readonly WorldId World = new("testville-1");
 
+    /// <summary>例で使うペルソナ（移動中、副行動や決定の処理中を持つ）。</summary>
     private static readonly PersonaId Taro = new("taro");
 
+    /// <summary>例で使うペルソナ（居場所だけを持つ）。</summary>
     private static readonly PersonaId Hanako = new("hanako");
 
     /// <summary>手で作った状態と記録を書いて開き直すと、記録と状態が書く前と一致する。</summary>
