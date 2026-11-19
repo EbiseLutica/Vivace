@@ -1,3 +1,4 @@
+using Vivace.Core.Channels;
 using Vivace.Core.Decision;
 using Vivace.Core.Definitions;
 using Vivace.Core.Definitions.Model;
@@ -35,6 +36,9 @@ public sealed class VivaceEngineBuilder
     /// <summary>LLM。省略すると、呼ぶと失敗する実装（投稿はスキップになる）。</summary>
     private ILlmClient? _llm;
 
+    /// <summary>つなぐチャンネル。追加した順。</summary>
+    private readonly List<IChannel> _channels = [];
+
     /// <summary>空のビルダーを作る。VivaceEngine.Create から使う。</summary>
     internal VivaceEngineBuilder()
     {
@@ -42,6 +46,14 @@ public sealed class VivaceEngineBuilder
 
     /// <summary>ドライラン（外に何も出さない）として組むかどうか。</summary>
     internal bool IsDryRun { get; private set; }
+
+    /// <summary>チャンネルをつなぐ。種類が同じチャンネルは、Build のときに拒否する。</summary>
+    /// <param name="channel">チャンネル。</param>
+    public VivaceEngineBuilder AddChannel(IChannel channel)
+    {
+        _channels.Add(channel);
+        return this;
+    }
 
     /// <summary>定義のフォルダを使う。読み込みは Build で行う。</summary>
     /// <param name="directory">定義のフォルダ。</param>
@@ -109,7 +121,10 @@ public sealed class VivaceEngineBuilder
         return this;
     }
 
-    /// <summary>ドライラン（外に何も出さない）として組む。早送りにするには、UseClock で VirtualClock を渡す（省くと実時間になる）。</summary>
+    /// <summary>
+    /// ドライラン（外に何も出さない）として組む。チャンネルは使わず、配信役を止めるので、未送信の操作は残る。
+    /// 時計は VirtualClock を UseClock で渡す。省くか別の時計なら、Build が例外を投げる。
+    /// </summary>
     public VivaceEngineBuilder DryRun()
     {
         IsDryRun = true;
@@ -117,13 +132,26 @@ public sealed class VivaceEngineBuilder
     }
 
     /// <summary>エンジンを組む。</summary>
-    /// <exception cref="InvalidOperationException">定義がない、定義にエラーがある、保存先がない。</exception>
+    /// <exception cref="InvalidOperationException">定義がない、定義にエラーがある、保存先がない、ドライランで時計が仮想でない、チャンネルの種類が重複している。</exception>
     public VivaceEngine Build()
     {
         var definitions = LoadDefinitions();
         var storage = _storage ?? throw new InvalidOperationException("ストレージが渡されていません。 UseStorage で指定してください。");
         var clock = ResolveClock();
-        return new VivaceEngine(SimEngine.Create(definitions, storage, _random ?? new SplitMixRandomSource(), clock, _decider, _holidays, _llm));
+        if (IsDryRun && clock is not VirtualClock)
+        {
+            throw new InvalidOperationException("ドライランは仮想時計（VirtualClock）で組んでください。 UseClock で指定してください。");
+        }
+
+        var duplicate = _channels.GroupBy(channel => channel.Kind, StringComparer.Ordinal).FirstOrDefault(group => group.Count() > 1);
+        if (duplicate is not null)
+        {
+            throw new InvalidOperationException($"同じ種類のチャンネルが2つあります: {duplicate.Key}");
+        }
+
+        var channels = IsDryRun ? [] : _channels.ToList();
+        var engine = SimEngine.Create(definitions, storage, _random ?? new SplitMixRandomSource(), clock, _decider, _holidays, _llm, channels, dispatch: !IsDryRun);
+        return new VivaceEngine(engine, channels);
     }
 
     /// <summary>使う時計を返す。渡されていなければ、実時間の SystemClock。</summary>

@@ -1,3 +1,4 @@
+using Vivace.Core.Channels;
 using Vivace.Core.Decision;
 using Vivace.Core.Definitions.Model;
 using Vivace.Core.Domain;
@@ -22,6 +23,9 @@ public static class Scenario
     /// <summary>既定のワールドのシード。</summary>
     public const ulong WorldSeed = 20261101;
 
+    /// <summary>既定のチャンネルの種類（テスト用の町のペルソナの channels と同じ）。</summary>
+    public const string ChannelKind = "console";
+
     /// <summary>既定で生成するペルソナ。香織（家は kaori_room）と詩織（家は home_living）。</summary>
     private static readonly (PersonaDefId DefId, PlaceId Home)[] DefaultPersonas =
     [
@@ -39,6 +43,7 @@ public static class Scenario
     /// <param name="clock">時計。開始の時刻を指していること。省略すると開始の時刻の仮想時計。</param>
     /// <param name="storage">保存先。省略するとメモリの保存先。</param>
     /// <param name="llm">LLM。省略すると、呼ぶと失敗する実装（投稿はスキップになる）。</param>
+    /// <param name="channels">送信に使うチャンネル。省略すると、何も送らない console のチャンネル。</param>
     public static async Task<SimEngine> CreateAsync(
         ulong seed = WorldSeed,
         IDecider? decider = null,
@@ -46,11 +51,12 @@ public static class Scenario
         IReadOnlyList<(PersonaDefId DefId, PlaceId Home)>? personas = null,
         IClock? clock = null,
         IStorage? storage = null,
-        ILlmClient? llm = null)
+        ILlmClient? llm = null,
+        IReadOnlyList<IChannel>? channels = null)
     {
         var loaded = definitions ?? TestWorld.LoadOrThrow();
         clock ??= new VirtualClock(Start);
-        var engine = SimEngine.Create(loaded, storage ?? new InMemoryStorage(), new SplitMixRandomSource(), clock, decider, TestHolidays.Instance, llm);
+        var engine = SimEngine.Create(loaded, storage ?? new InMemoryStorage(), new SplitMixRandomSource(), clock, decider, TestHolidays.Instance, llm, channels ?? [new NullChannel(ChannelKind)]);
         await InjectOrThrowAsync(engine, InjectRequest.WorldCreated(TestWorld.DefId, seed, Origin.Test, Start));
         foreach (var (defId, home) in personas ?? DefaultPersonas)
         {
@@ -66,9 +72,10 @@ public static class Scenario
     /// <param name="days">回す日数。</param>
     /// <param name="seed">ワールドのシード。</param>
     /// <param name="llm">LLM。省略すると、呼ぶと失敗する実装。</param>
-    public static async Task<SimEngine> RunAsync(int days, ulong seed = WorldSeed, ILlmClient? llm = null)
+    /// <param name="channels">送信に使うチャンネル。省略すると、何も送らない console のチャンネル。</param>
+    public static async Task<SimEngine> RunAsync(int days, ulong seed = WorldSeed, ILlmClient? llm = null, IReadOnlyList<IChannel>? channels = null)
     {
-        var engine = await CreateAsync(seed, llm: llm);
+        var engine = await CreateAsync(seed, llm: llm, channels: channels);
         await engine.RunUntilAsync(Start.AddDays(days), CancellationToken.None);
         return engine;
     }
