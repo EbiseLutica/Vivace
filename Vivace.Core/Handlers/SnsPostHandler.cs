@@ -45,8 +45,7 @@ internal static class SnsPostHandler
         }
 
         var channel = personaDef.Channels[0];
-        var action = ctx.Defs.Actions[effect.ActionId];
-        var result = await llm.GenerateTextAsync(Request(personaDef, world, persona, action, effect), ct);
+        var result = await llm.GenerateTextAsync(Request(ctx, personaDef, world, persona, effect), ct);
         var body = result.Value.Trim();
         if (body.Length == 0)
         {
@@ -73,9 +72,9 @@ internal static class SnsPostHandler
     }
 
     /// <summary>
-    /// 文面の呼び出し。システムの指示にはペルソナと世界の lore、メッセージには時刻、行動、場所、直近の投稿を置く。
+    /// 文面の呼び出し。システムの指示にはペルソナと世界の lore、メッセージには時刻、行動の行、場所、直近の投稿を置く。
     /// </summary>
-    private static LlmRequest Request(PersonaDef personaDef, WorldDef world, PersonaState persona, ActionDef action, StartEffectSignal effect)
+    private static LlmRequest Request(RuleContext ctx, PersonaDef personaDef, WorldDef world, PersonaState persona, StartEffectSignal effect)
     {
         var (date, time) = LocalTimeHelper.ToLocal(effect.Horizon, world.UtcOffset);
         var localTime = string.Create(CultureInfo.InvariantCulture, $"{date:yyyy-MM-dd} {time:HH:mm}");
@@ -93,13 +92,53 @@ internal static class SnsPostHandler
             書くのは本文だけです。説明、見出し、引用符、複数の案は書きません。
             """;
         var recent = string.Join('\n', persona.Posting.Recent.Select(post => $"- {post.Body}"));
+        var header = string.Join('\n', new[] { $"いまの時刻：{localTime}", ActivityLine(ctx, persona, effect), $"いる場所：{placeName}" }.OfType<string>());
         var user = $"""
-            いまの時刻：{localTime}
-            いまの行動：{action.Display}
-            いる場所：{placeName}
+            {header}
             自分の直近の投稿（同じことは書かない）：
             {(recent.Length > 0 ? recent : "- まだない")}
             """;
         return new LlmRequest(LlmTier.Main, Purpose, system, [new LlmMessage(LlmRole.User, user)]);
+    }
+
+    /// <summary>
+    /// 文面に渡す行動の行。副行動（Overlay）の投稿なら、主の行動の表示名を「いまの行動」にする。主の行動がスマホを開けない
+    /// 行動なら、その合間として「（表示名）の合間」にする。主の行動の投稿なら、投稿の前にしていた行動を「直前の行動」にする。
+    /// 表示名が引けなければ、行を出さない。
+    /// </summary>
+    /// <param name="ctx">規則のコンテキスト（定義）。</param>
+    /// <param name="persona">起動の時点のペルソナの状態。</param>
+    /// <param name="effect">起動のシグナル。</param>
+    private static string? ActivityLine(RuleContext ctx, PersonaState persona, StartEffectSignal effect)
+    {
+        if (persona.Overlay is { } overlay && overlay.ActionId == effect.ActionId)
+        {
+            if (persona.Activity is not { } main || !ctx.Defs.Actions.TryGetValue(main.ActionId, out var mainAction))
+            {
+                return null;
+            }
+
+            return mainAction.Phone == PhonePolicy.Closed ? $"いまの行動：{mainAction.Display}の合間" : $"いまの行動：{mainAction.Display}";
+        }
+
+        return PreviousActivity(ctx, persona, effect.ActionId) is { } previous ? $"直前の行動：{previous}" : null;
+    }
+
+    /// <summary>
+    /// 直前に使っていた行動の表示名。投稿の行動自身と、定義のない行動は除き、最後の開始が最も新しいものを選ぶ。
+    /// 開始が同じ時刻なら、行動 ID の序数順で先のもの。
+    /// </summary>
+    /// <param name="ctx">規則のコンテキスト（定義）。</param>
+    /// <param name="persona">起動の時点のペルソナの状態。</param>
+    /// <param name="postActionId">投稿の行動の ID。</param>
+    private static string? PreviousActivity(RuleContext ctx, PersonaState persona, string postActionId)
+    {
+        var previous = persona.Usage
+            .Where(pair => pair.Key != postActionId && pair.Value.LastStartedAt is not null && ctx.Defs.Actions.ContainsKey(pair.Key))
+            .OrderByDescending(pair => pair.Value.LastStartedAt)
+            .ThenBy(pair => pair.Key, StringComparer.Ordinal)
+            .Select(pair => pair.Key)
+            .FirstOrDefault();
+        return previous is null ? null : ctx.Defs.Actions[previous].Display;
     }
 }

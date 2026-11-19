@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Vivace.Core.Decision;
 using Vivace.Core.Definitions.Model;
 using Vivace.Core.Definitions;
@@ -112,8 +113,7 @@ public class GoToNextWeightTests
     {
         var files = TestWorld.Files().ToList();
         var index = files.FindIndex(file => file.Path == "actions/actions.toml");
-        var text = files[index].Text
-            .Replace("weight = 1.0", string.Empty, StringComparison.Ordinal)
+        var text = Regex.Replace(files[index].Text, @"^weight = .*\r?\n", string.Empty, RegexOptions.Multiline)
             .Replace("[[action]]", "[[action]]\nweight = 0.0", StringComparison.Ordinal);
         files[index] = files[index] with { Text = text };
         return DefinitionLoader.LoadFiles(files).Definitions ?? throw new InvalidOperationException("定義が読めません。");

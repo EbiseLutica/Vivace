@@ -191,7 +191,8 @@ public static class ActionRules
 
     /// <summary>
     /// 投稿の行動（効果が sns.post）の、投稿の状態による制限を満たすか。最後のスキップから SkipCooldown 以内、
-    /// または最後の投稿から行動の cooldown 以内なら満たさない。主の行動と副行動（スマホを開く機会）で同じに見る。投稿以外は常に満たす。
+    /// サーバーが返した次に投稿できる時刻（RemoteNotBefore）より前、または最後の投稿から行動の cooldown 以内なら満たさない。
+    /// 主の行動と副行動（スマホを開く機会）で同じに見る。投稿以外は常に満たす。
     /// </summary>
     /// <param name="action">行動の定義。</param>
     /// <param name="posting">投稿の状態。</param>
@@ -204,6 +205,11 @@ public static class ActionRules
         }
 
         if (posting.LastSkippedAt is { } skipped && now - skipped < SkipCooldown)
+        {
+            return false;
+        }
+
+        if (posting.RemoteNotBefore is { } remoteNotBefore && now < remoteNotBefore)
         {
             return false;
         }

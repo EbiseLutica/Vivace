@@ -26,7 +26,7 @@
   <div class="meta">
     <span class="chip">2026-11-15 時点</span>
     <span class="chip">節目 M1〜M6</span>
-    <span class="chip fixed">次の到達点：M2 独り言の投稿</span>
+    <span class="chip fixed">次の到達点：M3 再起動しても続く</span>
   </div>
 </header>
 
@@ -188,7 +188,7 @@
     <li><input type="checkbox" disabled checked>LLM の PoC：1つの実装を選び、投稿文が作れて、失敗と時間切れを扱えることだけを確かめる。結果は D8 8.4 に書く。D8 8.4 の残りの項目は、困ったときに確かめる</li>
     <li><input type="checkbox" disabled checked><code>ILlmClient</code> の最小版と、その実装。<code>Vivace.Testing</code> に <code>ScriptedLlm</code>。API キーは環境変数から読み、TOML には書かない。キーがなければ、失敗時の出力で動く</li>
     <li><input type="checkbox" disabled checked><code>phone.opportunity</code>：ブロックの <code>phone</code> と <code>phone_every</code> から積む。副行動の決定は「投稿する」と「何もしない」だけにする。何もしないは、所要時間 0 の <code>core.idle</code> として記録する</li>
-    <li><input type="checkbox" disabled checked><code>sns.post</code> の最小版：コンテキストは、ペルソナの lore、いまの行動と場所、時刻、自分の直近の投稿数件。出力は <code>outbound.speech</code>、失敗したら <code>post.skipped</code></li>
+    <li><input type="checkbox" disabled checked><code>sns.post</code> の最小版：コンテキストは、ペルソナの lore、いまの行動（主の行動としての投稿では直前の行動。J-182）と場所、時刻、自分の直近の投稿数件。出力は <code>outbound.speech</code>、失敗したら <code>post.skipped</code></li>
     <li><input type="checkbox" disabled checked><code>IChannel</code> の最小版（投稿だけ）と、コンソールのチャンネル。<code>outbound.speech</code> を受けて送る。投稿は、イベントの行と見分けられる形で出す</li>
   </ul>
   <p><strong>範囲外</strong>：スマホを開いて受信箱を見る副行動（M4）、副行動の状態変数の効果と利用の記録、話題の辞書と判定、場所の生成、文面の校閲、記憶、<code>LlmPolicy</code> と段の切り替え、送信の再試行、Misskey（M5）。ILlmClient は本文を返すだけで、構造化出力（<code>GenerateAsync&lt;T&gt;</code>）と <code>ITool</code> は作らない。<code>outbound.speech</code> から未送信の操作と <code>Deliver</code> を作るのは、チャンネルの PR。</p>
@@ -278,15 +278,13 @@
     <table>
       <tr><th>課題</th><th>見つけた所</th><th>起きること</th><th>扱う時期</th></tr>
       <tr><td>投稿に、同居人のいまの様子を作ることがある</td><td>PR #28 の運転</td><td>詩織が居間で「香織が『風邪ひくよ』ってタオルを投げてきた」と書いたが、香織は自分の部屋で本を読んでいた。プロンプトで「書いていない人の様子は書かない」と指示すると、食い違いは 15 件中 3 件から 13 件中 1 件に減ったが、消えてはいない。同じ場所にいる人をコンテキストに渡すか、校閲（D6 6.10）で弾く</td><td>校閲か、同じ場所の人を扱うとき（M4 以降）</td></tr>
-      <tr><td>主の行動として投稿すると、文面に渡る「いまの行動」が投稿そのものになる</td><td>PR #28 の運転</td><td>自由時間に「SNS に投稿する」を選ぶと、プロンプトのいまの行動は「SNS に投稿する」になり、直前に何をしていたかが渡らない。文面は lore から話題を作る（香織が自分の部屋で、図書室のカウンターの話を書いた）。直前の行動か、その日の予定を渡す</td><td>M2 の次の PR（sns.post の効果を決めるとき）</td></tr>
       <tr><td>ハンドラの取り消しのコールバックが、エンジンの処理のスレッドで動く</td><td>PR #27 のレビュー</td><td><code>CancelHandler</code> で取り消すと、取り消しを待っていたハンドラの続き（代わりの出力の書き込み）が、エンジンの処理の中で同期的に動くことがある。ハンドラはスナップショットしか読まないので壊れはしないが、重いハンドラが増えたら、取り消しを別のスレッドで行う</td><td>M4 以降（LLM を使うハンドラが増えたら）</td></tr>
-      <tr><td><code>RemoteNotBefore</code> を記録するが、投稿の制限に使っていない</td><td>PR #26 のレビュー</td><td>次に投稿できる時刻を状態に持つが、投稿の行動の判定（ActionRules）は見ていない。postRateLimit と一緒に決める</td><td>M2 の次の PR（投稿の制限）</td></tr>
+      <tr><td>チャンネルの <code>postRateLimit</code> がない</td><td>PR #26 のレビュー</td><td>チャンネルが宣言する投稿の間隔の下限を、投稿の判定に使っていない。コンソールには制限がないので困らない</td><td>M5（Misskey のチャンネルを足すとき）</td></tr>
       <tr><td>配信の結果の投入が拒否されると、黙って消える</td><td>PR #26 のレビュー</td><td>送信は済んだのに outbound.sent / failed が残らず、未送信の操作が残る（再起動後に送信不明として扱う手当てがない）。拒否の理由を記録する</td><td>M3（送信不明の扱い）</td></tr>
       <tr><td><code>outbound.sent</code> / <code>outbound.failed</code> のイベントに、ペルソナが入らない</td><td>PR #26 のレビュー</td><td>購読をペルソナで絞れない。投入の要求にペルソナがないため、未送信の操作からペルソナを引いて入れる</td><td>M3 か M4（購読の絞り込みを使うとき）</td></tr>
       <tr><td>定義の <code>channels</code> にあって、ビルダーに登録されていない種類があっても、警告が出ない</td><td>PR #26 のレビュー</td><td>ペルソナの投稿は、送り先がないまま送信失敗になる。起動時に、channels の種類が登録されていなければ警告を出す（止めはしない）</td><td>M5（Misskey のチャンネルを足すとき）</td></tr>
       <tr><td>同じ行動が続きやすい</td><td>PR #22 の dry-run</td><td>詩織が夕方に「テレビを見る」を3回、「喫茶店でひと休み」を2回続けた。香織の「本を読む」が、終わった同じ分にまた始まる。続けた回数による重みの下げ方（<code>RepeatFactor</code>）が弱いと見られる</td><td>M2 以降（投稿で同じことばかり言うように見えてきたら）</td></tr>
       <tr><td>生えた場所の名前が出ない</td><td>PR #21</td><td>流れる出力と行動表は、定義にない場所（生えた場所）を ID のまま出す</td><td>場所の生成を作るとき（M6 以降）</td></tr>
-      <tr><td>投稿が自由時間の主の行動として選ばれやすい</td><td>PR #23 の dry-run</td><td>投稿の行動は効果を書いていないので、欲求で選ばれにくくなる理由がない。60 分の制限で、主の行動としての投稿は1時間に1回までに抑えたが、その分の機会は残る。投稿の場所は、いまの場所だけ（D5 5.2、J-169）</td><td>M2 の次の PR（sns.post の効果と、投稿の制限を決めるとき）</td></tr>
       <tr><td>次の予定の場所へ1分だけ行って戻る</td><td>PR #23 の dry-run</td><td>香織が 11-03 の 21:51 に居間から自分の部屋へ移動し、着いた 21:52 にすぐ居間へ戻った。次の予定の場所へ向かう行動（<code>core.go_to_next</code>）が移動だけで終わり、着いて決め直したときに、元の場所の行動が選ばれる（J-143）。予定の開始までまだ2時間ある</td><td>M2 以降（行き来が目立ってきたら）</td></tr>
       <tr><td>送信が遅いと、世界の時間が遅れる</td><td>PR #26 のレビュー</td><td>送信の結果が戻るまでエンジンは次を適用しない（J-176）。実時間と倍速では、送信の遅さがそのまま遅れになる（最長 30 秒の時間切れまで）。仮想の時計のときだけ待ち、ほかは結果を普通の到着として受ける形が考えられる</td><td>M5（Misskey をつなぐとき）</td></tr>
       <tr><td>ハンドラの例外を代わりの出力にするとき、例外を記録していない</td><td>PR #24 のレビュー</td><td>D7 7.1 の通知（ログ）がなく、落ちた原因が運転中に見えない</td><td>Core のログを入れるとき</td></tr>
@@ -297,7 +295,7 @@
 
 <section id="next">
   <h2>最初の一手</h2>
-  <p>M2 の見つかった課題の片付けから進める。</p>
+  <p>M3 の SQLite のストレージから進める。</p>
 </section>
 
 </main>
