@@ -6,7 +6,7 @@ namespace Vivace.Llm.Anthropic;
 public sealed record AnthropicLlmOptions
 {
     /// <summary>Main の段のモデル。</summary>
-    public string MainModel { get; init; } = "claude-opus-5-5";
+    public string MainModel { get; init; } = "claude-sonnet-5-5";
 
     /// <summary>Light の段のモデル。</summary>
     public string LightModel { get; init; } = "claude-haiku-5-5";

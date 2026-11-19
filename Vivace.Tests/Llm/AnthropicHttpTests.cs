@@ -11,7 +11,7 @@ public class AnthropicHttpTests
 {
     /// <summary>text ブロック2つ、end_turn、使用量、モデル名を持つ応答。</summary>
     private const string Ok = """
-        {"id":"msg_1","type":"message","role":"assistant","model":"claude-opus-5-5","content":[{"type":"text","text":"今日の"},{"type":"text","text":"授業眠い"}],"stop_reason":"end_turn","stop_sequence":null,"usage":{"input_tokens":120,"output_tokens":7}}
+        {"id":"msg_1","type":"message","role":"assistant","model":"claude-sonnet-5-5","content":[{"type":"text","text":"今日の"},{"type":"text","text":"授業眠い"}],"stop_reason":"end_turn","stop_sequence":null,"usage":{"input_tokens":120,"output_tokens":7}}
         """;
 
     /// <summary>成功の応答は本文を連結し、使用量とモデル名を返す。</summary>
@@ -24,7 +24,7 @@ public class AnthropicHttpTests
         var result = await client.GenerateTextAsync(Request(), CancellationToken.None);
 
         Assert.Equal("今日の授業眠い", result.Value);
-        Assert.Equal("claude-opus-5-5", result.Usage.Model);
+        Assert.Equal("claude-sonnet-5-5", result.Usage.Model);
         Assert.Equal(120, result.Usage.InputTokens);
         Assert.Equal(7, result.Usage.OutputTokens);
     }

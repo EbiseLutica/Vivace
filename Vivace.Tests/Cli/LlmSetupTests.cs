@@ -48,7 +48,7 @@ public class LlmSetupTests
     {
         var options = LlmSetup.Options(_ => null);
 
-        Assert.Equal("claude-opus-5-5", options.MainModel);
+        Assert.Equal("claude-sonnet-5-5", options.MainModel);
         Assert.Equal("claude-haiku-5-5", options.LightModel);
     }
 

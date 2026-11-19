@@ -20,14 +20,14 @@ public class AnthropicRequestMapperTests
         Assert.Equal("light-y", light.Model.Raw());
     }
 
-    /// <summary>既定のモデルと上限は、オプションの既定値（claude-opus-5-5、claude-haiku-5-5、4096）。</summary>
+    /// <summary>既定のモデルと上限は、オプションの既定値（claude-sonnet-5-5、claude-haiku-5-5、4096）。</summary>
     [Fact]
     public void DefaultsAreOpus55HaikuAnd4096Tokens()
     {
         var main = AnthropicRequestMapper.ToParams(Request(LlmTier.Main), new AnthropicLlmOptions());
         var light = AnthropicRequestMapper.ToParams(Request(LlmTier.Light), new AnthropicLlmOptions());
 
-        Assert.Equal("claude-opus-5-5", main.Model.Raw());
+        Assert.Equal("claude-sonnet-5-5", main.Model.Raw());
         Assert.Equal("claude-haiku-5-5", light.Model.Raw());
         Assert.Equal(4096, main.MaxTokens);
     }
