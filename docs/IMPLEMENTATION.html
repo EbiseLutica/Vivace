@@ -278,7 +278,11 @@
     <table>
       <tr><th>課題</th><th>見つけた所</th><th>起きること</th><th>扱う時期</th></tr>
       <tr><td>実機の Ctrl+C で、件数の行が出るかを確かめていない</td><td>PR #19</td><td>件数の行は、テストのキャンセルでしか確かめていない。System.CommandLine は、Ctrl+C のあと既定で2秒しか待たないので、ハンドラが遅いと件数の行を出す前に打ち切られる</td><td>M2（LLM の待ちが入るので、そのときに確かめる）</td></tr>
-      <tr><td><code>vivace run</code> の投稿の文面は、仮の台本（どの投稿も同じ一言）</td><td>M2 の CLI（<code>RunCommand</code> の仮の LLM）</td><td>run の投稿は、どれも「今日の授業眠い」になる。台本の LLM を外して本物の LLM をつなぐ PR で置き換える</td><td>M2 の次の PR（本物の LLM）</td></tr>
+      <tr><td><code>vivace run</code> の投稿の文面は、仮の一言（「今日の授業眠い（仮の文面）」）</td><td>M2 の CLI（<code>RunCommand</code> の仮の LLM。<code>llm</code> 引数で外せる）</td><td>run の投稿は、既定では仮の一言になる。本物の LLM をつなぐ PR で、既定を置き換える</td><td>M2 の次の PR（本物の LLM）</td></tr>
+      <tr><td><code>RemoteNotBefore</code> を記録するが、投稿の制限に使っていない</td><td>outbound.failed の適用（M2 の作業）</td><td>次に投稿できる時刻を状態に持つが、投稿の行動の判定（ActionRules）は見ていない。postRateLimit と一緒に決める</td><td>M2 の次の PR（投稿の制限）</td></tr>
+      <tr><td>配信の結果の投入が拒否されると、黙って消える</td><td>SimEngine の配信の結果の処理（M2 の作業）</td><td>送信は済んだのに outbound.sent / failed が残らず、未送信の操作が残る（再起動後に送信不明として扱う手当てがない）。拒否の理由を記録する</td><td>M3（送信不明の扱い）</td></tr>
+      <tr><td><code>outbound.sent</code> / <code>outbound.failed</code> のイベントに、ペルソナが入らない</td><td>配信の結果の投入（M2 の作業）</td><td>購読をペルソナで絞れない。投入の要求にペルソナがないため、未送信の操作からペルソナを引いて入れる</td><td>M3 か M4（購読の絞り込みを使うとき）</td></tr>
+      <tr><td>定義の <code>channels</code> にあって、ビルダーに登録されていない種類があっても、警告が出ない</td><td>定義の検証と組み立て（M2 の作業）</td><td>ペルソナの投稿は、送り先がないまま送信失敗になる。起動時に、channels の種類が登録されていなければ警告を出す（止めはしない）</td><td>M5（Misskey のチャンネルを足すとき）</td></tr>
       <tr><td>同じ行動が続きやすい</td><td>PR #22 の dry-run</td><td>詩織が夕方に「テレビを見る」を3回、「喫茶店でひと休み」を2回続けた。香織の「本を読む」が、終わった同じ分にまた始まる。続けた回数による重みの下げ方（<code>RepeatFactor</code>）が弱いと見られる</td><td>M2 以降（投稿で同じことばかり言うように見えてきたら）</td></tr>
       <tr><td>生えた場所の名前が出ない</td><td>PR #21</td><td>流れる出力と行動表は、定義にない場所（生えた場所）を ID のまま出す</td><td>場所の生成を作るとき（M6 以降）</td></tr>
       <tr><td>投稿が自由時間の主の行動として選ばれやすい</td><td>PR #23 の dry-run</td><td>投稿の行動は効果を書いていないので、欲求で選ばれにくくなる理由がない。60 分の制限で、主の行動としての投稿は1時間に1回までに抑えたが、その分の機会は残る。投稿の場所は、いまの場所だけ（D5 5.2、J-169）</td><td>M2 の次の PR（sns.post の効果と、投稿の制限を決めるとき）</td></tr>
