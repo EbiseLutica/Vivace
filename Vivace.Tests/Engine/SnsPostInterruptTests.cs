@@ -156,4 +156,21 @@ public class SnsPostInterruptTests
         Assert.DoesNotContain(engine.Log, entry => entry.Event.CauseSeq == seq
             && (entry.Event.EventType == EventTypes.OutboundSpeech || entry.Event.EventType == EventTypes.PostSkipped));
     }
+
+    /// <summary>
+    /// 投稿の文面の呼び出しが待っているときにエンジンを破棄すると、その呼び出しのトークンが取り消され、破棄は有限時間で終わる。
+    /// </summary>
+    [Fact]
+    public async Task DisposingTheEngineCancelsTheLlmCallInFlight()
+    {
+        var llm = new CancelWaitingLlm();
+        var engine = await Scenario.CreateAsync(decider: new PostingDecider(), llm: llm);
+        await engine.RunUntilAsync(Scenario.Start.AddMinutes(41), CancellationToken.None)
+            .WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+        await llm.Entered.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+        await engine.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        Assert.True(llm.Captured.IsCancellationRequested);
+    }
 }
