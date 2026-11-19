@@ -5,6 +5,7 @@ using Vivace.Core.Events;
 using Vivace.Core.Events.Guards;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Handlers;
+using Vivace.Core.Llm;
 using Vivace.Core.Signals;
 using Vivace.Testing;
 using Vivace.Tests.Support;
@@ -72,13 +73,16 @@ public class SnsPostHandlerTests
         Assert.Equal(EventTypes.OutboundSpeech, draft.EventType);
     }
 
-    /// <summary>システムの指示に、ここに書いていない人の様子や居場所は書かないという一行が入る。</summary>
+    /// <summary>システムの指示（System）に、ここに書いていない人の様子や居場所は書かないという一行が入る。メッセージ側には入らない。</summary>
     [Fact]
     public async Task SystemForbidsInventingOthersState()
     {
-        var draft = await Run(new ScriptedLlm().Reply("post.compose", "今日の授業眠い", contains: "ここに書いていない人の、いまの様子や居場所は書きません。"));
+        var llm = new RecordingLlm();
 
-        Assert.Equal(EventTypes.OutboundSpeech, draft.EventType);
+        await SnsPostHandler.RunAsync(Fixture.Context, llm, Fixture.WithKaori(), Effect(), CancellationToken.None);
+
+        var request = Assert.Single(llm.Requests);
+        Assert.Contains("ここに書いていない人の、いまの様子や居場所は書きません。", request.System, StringComparison.Ordinal);
     }
 
     /// <summary>本文は前後の空白を取り除いて、発話にする。出力の時刻は行動の終わり、guard は行動のバージョン。</summary>
@@ -128,6 +132,22 @@ public class SnsPostHandlerTests
     /// <summary>既定の状態（香織が、所要時間 8 分の投稿を、行動のバージョン 0 で始めた）で、文面の呼び出しを1回する。</summary>
     private static Task<EventDraft> Run(ScriptedLlm llm, SimState? state = null) =>
         SnsPostHandler.RunAsync(Fixture.Context, llm, state ?? Fixture.WithKaori(), Effect(), CancellationToken.None);
+
+    /// <summary>要求を記録して、固定の本文を返す LLM。</summary>
+    private sealed class RecordingLlm : ILlmClient
+    {
+        /// <summary>受け取った要求の列。</summary>
+        public List<LlmRequest> Requests { get; } = [];
+
+        /// <summary>要求を記録し、固定の本文を返す。</summary>
+        /// <param name="request">呼び出しの内容。</param>
+        /// <param name="ct">キャンセル（使わない）。</param>
+        public Task<LlmResult<string>> GenerateTextAsync(LlmRequest request, CancellationToken ct)
+        {
+            Requests.Add(request);
+            return Task.FromResult(new LlmResult<string>("今日の授業眠い", new LlmUsage("recording", 0, 0)));
+        }
+    }
 
     /// <summary>テスト用の起動のシグナル。</summary>
     private static StartEffectSignal Effect() =>
