@@ -374,7 +374,7 @@ sealed record PersonaState(
     DayPlan? Plan, long PlanVersion,
     ImmutableDictionary&lt;string, ActionUsage&gt; Usage,    // 行動ごとの前回の開始、今日の回数、連続回数
     ImmutableDictionary&lt;string, ulong&gt; Rng,            // 用途ごとの乱数の位置（D5）
-    PostingState Posting,                               // 最後の投稿、スキップ、サーバーの制限
+    PostingState Posting,                               // 最後の投稿、スキップ、サーバーの制限、直近の投稿（最大5件。J-172）
     ImmutableList&lt;InboxItem&gt; Inbox,                    // 未処理の通知だけ
     ImmutableList&lt;OutboundOp&gt; Outbound,                // 未送信の操作だけ
     DateTimeOffset? LastWake,                           // 日誌の範囲の起点（VISION 13章）。睡眠の終わりで設定する（J-145）

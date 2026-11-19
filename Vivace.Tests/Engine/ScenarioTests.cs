@@ -1,5 +1,6 @@
 using Vivace.Core.Events;
 using Vivace.Core;
+using Vivace.Core.Llm;
 using Vivace.Tests.Support;
 using Vivace.Testing;
 
@@ -15,7 +16,7 @@ public class ScenarioTests
     [Fact]
     public async Task SevenDaysMatchSnapshot()
     {
-        await using var engine = await Scenario.RunAsync(7);
+        await using var engine = await Scenario.RunAsync(7, llm: ScriptedPosts());
 
         await Snapshot.Text(EventText.Lines(engine.Log));
     }
@@ -49,6 +50,8 @@ public class ScenarioTests
             EventTypes.TravelArrived,
             EventTypes.ActionStarted,
             EventTypes.ActionEnded,
+            EventTypes.OutboundSpeech,
+            EventTypes.PostSkipped,
         };
         await using var engine = await Scenario.RunAsync(2);
 
@@ -56,4 +59,7 @@ public class ScenarioTests
 
         Assert.All(types, type => Assert.Contains(type, allowed));
     }
+
+    /// <summary>投稿の文面は、どの呼び出しでも同じ一言を返す台本（同じ結果で比べられるように）。</summary>
+    private static ScriptedLlm ScriptedPosts() => new ScriptedLlm().Reply("post.compose", "今日の授業眠い");
 }

@@ -23,9 +23,11 @@ public class RuleTableTests
         "travel.arrived",
         "action.started",
         "action.ended",
+        "outbound.speech",
+        "post.skipped",
     ];
 
-    /// <summary>テーブルのキーは段階2 の13タイプちょうどで、余りも不足もない。</summary>
+    /// <summary>テーブルのキーは段階2 のタイプちょうどで、余りも不足もない。</summary>
     [Fact]
     public void TableHasExactlyTheStage2EventTypes()
     {

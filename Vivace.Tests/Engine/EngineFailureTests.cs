@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using Vivace.Core.Decision;
 using Vivace.Core.Events.Guards;
+using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
 using Vivace.Core;
 using Vivace.Testing;
@@ -13,14 +14,20 @@ namespace Vivace.Tests.Engine;
 /// </summary>
 public class EngineFailureTests
 {
-    /// <summary>決める側のジョブが例外を投げたら、エンジンは例外で止まる（握りつぶして続けない）。</summary>
+    /// <summary>Decider が例外を投げたら、代わりの決定（core.go_to_next）になり、エンジンは止まらずに返る。</summary>
     [Fact]
-    public async Task FailingDecisionStopsEngine()
+    public async Task FailingDecisionFallsBackToGoToNextAndTheRunReturns()
     {
         await using var engine = await Scenario.CreateAsync(Scenario.WorldSeed, new ThrowingDecider());
 
-        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None));
-        Assert.Contains("決める側のジョブが失敗", error.Message, StringComparison.Ordinal);
+        await engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
+
+        var chosen = engine.Log
+            .Where(entry => entry.Status == EventStatus.Applied && entry.Event.Payload is ActivityChosenPayload)
+            .Select(entry => ((ActivityChosenPayload)entry.Event.Payload).ActionId)
+            .ToList();
+        Assert.Contains("core.go_to_next", chosen, StringComparer.Ordinal);
+        Assert.All(chosen, id => Assert.Contains(id, new[] { "core.go_to_next", "core.idle" }));
     }
 
     /// <summary>レーンのジョブが包みを抜けて例外を投げたら、出力を待っているエンジンも、待ちをやめて例外で止まる。破棄は投げずに終わる。</summary>

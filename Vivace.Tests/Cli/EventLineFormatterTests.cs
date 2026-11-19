@@ -95,6 +95,17 @@ public class EventLineFormatterTests
         Assert.Equal("11-02 07:00 香織の予定を立て直す時刻になった", Format(Logged(At(22, 0), EventTypes.PlanDue, new PlanDuePayload(1), Kaori), all: true));
     }
 
+    /// <summary>投稿は「（投稿）」の文、やめた投稿は理由つきの文になり、既定でも出す。</summary>
+    [Fact]
+    public void PostingLinesAreShownByDefault()
+    {
+        var speech = new OutboundSpeechPayload("console", OutboundSpeechPayload.OutboundPostKind.Post, "今日の授業眠い", null, Audience.Public, [], default, null);
+        var skipped = new PostSkippedPayload(PostSkippedPayload.PostSkipReason.GenerationFailed, null);
+
+        Assert.Equal("11-02 07:28 香織（投稿）今日の授業眠い", Format(Logged(At(22, 28), EventTypes.OutboundSpeech, speech, Kaori)));
+        Assert.Equal("11-02 07:30 香織（投稿をやめた：生成の失敗）", Format(Logged(At(22, 30), EventTypes.PostSkipped, skipped, Kaori)));
+    }
+
     /// <summary>--all でも、行動と移動は既定と同じ文になる。</summary>
     [Fact]
     public void AllModeKeepsActionSentence()

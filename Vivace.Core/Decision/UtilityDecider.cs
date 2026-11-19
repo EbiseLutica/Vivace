@@ -5,6 +5,7 @@ using Vivace.Core.Domain;
 using Vivace.Core.Events.Guards;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Events;
+using Vivace.Core.Handlers;
 using Vivace.Core.Randomness;
 using Vivace.Core.Routes;
 
@@ -34,9 +35,6 @@ public sealed class UtilityDecider : IDecider
     /// <summary>スマホを開く機会で何もしない行動の ID。所要時間 0。</summary>
     public const string Idle = "core.idle";
 
-    /// <summary>投稿の行動の効果（sns.post）。</summary>
-    public const string PostHandler = "sns.post";
-
     /// <inheritdoc />
     public DeciderOutput Decide(DecisionContext context)
     {
@@ -44,17 +42,13 @@ public sealed class UtilityDecider : IDecider
         var state = context.State;
         var now = context.Now;
         var persona = state.Personas[context.Persona];
-        if (persona.Location is not AtPlace at)
-        {
-            throw new InvalidOperationException("決定タイミングは、ペルソナが場所にいるときにしか起きません。");
-        }
-
+        var here = DecisionPlace(persona);
         var personaDef = defs.Personas[persona.DefId];
         var worldDefId = state.Worlds[persona.World].DefId;
         var worldDef = defs.Worlds[worldDefId];
         if (context.Reason == DecisionReason.Phone)
         {
-            return DecidePhone(context, persona, personaDef, worldDef, at.Place);
+            return DecidePhone(context, persona, personaDef, worldDef, here);
         }
 
         var routes = context.Rules.Routes.For(worldDefId);
@@ -64,7 +58,7 @@ public sealed class UtilityDecider : IDecider
         var from = context.Random.Position;
         var random = context.Random;
 
-        var options = Candidates(defs, persona, personaDef, worldDef, at.Place, now, routes, next, deadline);
+        var options = Candidates(defs, persona, personaDef, worldDef, here, now, routes, next, deadline);
         var drawn = options.Select(option => (Option: option, Duration: option.FixedDuration ?? DurationOf(option, random))).ToList();
         var feasible = drawn.Where(entry => IsFeasible(entry.Option, entry.Duration, now, deadline, next, routes)).ToList();
         var weights = WeightsOf(feasible, state, persona, personaDef, now);
@@ -79,7 +73,7 @@ public sealed class UtilityDecider : IDecider
         var place = chosen.Option.Place;
         var route = chosen.Option.Minutes == 0
             ? ImmutableArray<RouteStep>.Empty
-            : routes.Steps(at.Place, place) ?? ImmutableArray<RouteStep>.Empty;
+            : routes.Steps(here, place) ?? ImmutableArray<RouteStep>.Empty;
         var draws = new RngDraws(persona.Id.Value, "decide", from, random.Position);
         var payload = new ActivityChosenPayload(chosen.Option.ActionId, place, route, chosen.Option.Minutes, Positive(chosen.Duration), false, draws);
         var guard = new Guard(
@@ -91,6 +85,12 @@ public sealed class UtilityDecider : IDecider
             RejectAction.Redecide);
         return new DeciderOutput(payload, guard);
     }
+
+    /// <summary>決定タイミングのペルソナの場所。場所にいないときは例外。</summary>
+    internal static PlaceId DecisionPlace(PersonaState persona) =>
+        persona.Location is AtPlace at
+            ? at.Place
+            : throw new InvalidOperationException("決定タイミングは、ペルソナが場所にいるときにしか起きません。");
 
     /// <summary>スマホを開く機会の決定。候補は、いまの場所での投稿（ブロックの残りで切る）と、何もしない（重み 1.0、所要時間 0）だけ。</summary>
     private static DeciderOutput DecidePhone(DecisionContext context, PersonaState persona, PersonaDef personaDef, WorldDef worldDef, PlaceId here)
@@ -134,14 +134,15 @@ public sealed class UtilityDecider : IDecider
 
         foreach (var action in defs.Actions.Values.OrderBy(a => a.Id, StringComparer.Ordinal))
         {
-            if (action.Effects.Handler != PostHandler || action.ScheduleOnly || action.Duration is null || !ActionRules.IsUsable(personaDef, action.Id))
+            if (action.Effects.Handler != SnsPostHandler.Name || action.ScheduleOnly || action.Duration is null || !ActionRules.IsUsable(personaDef, action.Id))
             {
                 continue;
             }
 
             if (ActionRules.PreferenceFactor(personaDef, action) is not { } preference
                 || !ActionRules.PlaceAllows(action, personaDef, placeDef)
-                || !ActionRules.WithinLimits(action, persona.Usage.GetValueOrDefault(action.Id), now, worldDef.UtcOffset))
+                || !ActionRules.WithinLimits(action, persona.Usage.GetValueOrDefault(action.Id), now, worldDef.UtcOffset)
+                || !ActionRules.WithinPostingLimits(action, persona.Posting, now))
             {
                 continue;
             }
@@ -166,18 +167,10 @@ public sealed class UtilityDecider : IDecider
     private static List<Option> Candidates(DefinitionPack defs, PersonaState persona, PersonaDef personaDef, WorldDef worldDef, PlaceId here, DateTimeOffset now, RouteTable routes, PlanBlock? next, DateTimeOffset deadline)
     {
         var options = new List<Option>();
-        var goPlace = next?.Place ?? here;
-        var goMinutes = routes.Minutes(here, goPlace);
-        if (goMinutes is null)
-        {
-            goPlace = here;
-            goMinutes = 0;
-        }
-
+        var go = GoToNextTarget.Of(routes, here, next, now, deadline);
         var goAction = defs.Actions[GoToNext];
         var goPreference = ActionRules.PreferenceFactor(personaDef, goAction) ?? 1.0;
-        var goDuration = goMinutes.Value == 0 ? deadline - now : TimeSpan.Zero;
-        options.Add(new Option(GoToNext, goPlace, goMinutes.Value, goPreference, goAction, goDuration));
+        options.Add(new Option(GoToNext, go.Place, go.Minutes, goPreference, goAction, go.Wait));
         foreach (var action in defs.Actions.Values.OrderBy(a => a.Id, StringComparer.Ordinal))
         {
             if (action.ScheduleOnly || action.Id == GoToNext || action.Duration is null || !ActionRules.IsUsable(personaDef, action.Id))
@@ -203,7 +196,8 @@ public sealed class UtilityDecider : IDecider
                     continue;
                 }
 
-                if (!ActionRules.WithinLimits(action, persona.Usage.GetValueOrDefault(action.Id), now.AddMinutes(minutes), worldDef.UtcOffset))
+                if (!ActionRules.WithinLimits(action, persona.Usage.GetValueOrDefault(action.Id), now.AddMinutes(minutes), worldDef.UtcOffset)
+                    || !ActionRules.WithinPostingLimits(action, persona.Posting, now.AddMinutes(minutes)))
                 {
                     continue;
                 }

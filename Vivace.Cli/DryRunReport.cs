@@ -48,7 +48,7 @@ public static class DryRunReport
                 builder.Append(names.Persona(persona)).Append('\n');
                 foreach (var row in personaRows)
                 {
-                    var indent = row.Kind == RowKind.SubAction ? "    " : "  ";
+                    var indent = row.Kind is RowKind.SubAction or RowKind.SubPoint ? "    " : "  ";
                     builder.Append(indent).Append(FormatRow(row, utcOffsets)).Append('\n');
                 }
             }
@@ -72,6 +72,11 @@ public static class DryRunReport
         var rows = new List<Row>();
         var open = new Dictionary<PersonaId, Row>();
         var openSub = new Dictionary<PersonaId, Row>();
+        var subEnds = new Dictionary<PersonaId, DateTimeOffset>();
+
+        // 副行動が時刻 at に終わった直後の時点の行は、副行動の字下げにする（投稿の発話とスキップ）。
+        RowKind PointKind(PersonaId persona, DateTimeOffset at) =>
+            subEnds.TryGetValue(persona, out var end) && end == at ? RowKind.SubPoint : RowKind.Point;
         foreach (var logged in applied)
         {
             var ev = logged.Event;
@@ -91,6 +96,7 @@ public static class DryRunReport
                     break;
                 case ActionEndedPayload { IsSubAction: true } when openSub.Remove(persona, out var sub):
                     rows.Add(sub with { End = ev.Time });
+                    subEnds[persona] = ev.Time;
                     break;
                 case ActionEndedPayload { IsSubAction: false } when open.TryGetValue(persona, out var action) && action.Kind == RowKind.Action:
                     CloseSub(persona, ev.Time, rows, openSub);
@@ -100,6 +106,12 @@ public static class DryRunReport
                 case TravelStartedPayload travel:
                     CloseAt(persona, ev.Time, rows, open, openSub);
                     open[persona] = new Row(persona, ev.WorldId, ev.Time, null, RowKind.Travel, ReportText.TravelRow(travel, names, ev.WorldId));
+                    break;
+                case OutboundSpeechPayload { Kind: OutboundSpeechPayload.OutboundPostKind.Post } post:
+                    rows.Add(new Row(persona, ev.WorldId, ev.Time, ev.Time, PointKind(persona, ev.Time), ReportText.PostRow(post)));
+                    break;
+                case PostSkippedPayload skipped:
+                    rows.Add(new Row(persona, ev.WorldId, ev.Time, ev.Time, PointKind(persona, ev.Time), ReportText.PostSkipRow(skipped)));
                     break;
                 case TravelArrivedPayload when open.TryGetValue(persona, out var trip) && trip.Kind == RowKind.Travel:
                     rows.Add(trip with { End = ev.Time });
@@ -118,7 +130,7 @@ public static class DryRunReport
             rows.Add(openSub[persona]);
         }
 
-        return rows.OrderBy(row => row.Start).ThenBy(row => row.Kind == RowKind.SubAction).ToList();
+        return rows.OrderBy(row => row.Start).ThenBy(row => row.Kind is RowKind.SubAction or RowKind.SubPoint).ToList();
     }
 
     /// <summary>人の開いている行（主と副行動）があれば、時刻 at で閉じて行の列に移す。</summary>
@@ -145,6 +157,11 @@ public static class DryRunReport
     {
         var offset = OffsetOf(row, utcOffsets);
         var start = TimeOf(row.Start, offset);
+        if (row.Kind is RowKind.Point or RowKind.SubPoint)
+        {
+            return $"{start} {row.Body}";
+        }
+
         var end = row.End is { } finished ? TimeOf(finished, offset) : Unfinished;
         return $"{start}-{end} {row.Body}";
     }
@@ -172,6 +189,12 @@ public static class DryRunReport
 
         /// <summary>副行動。その action.ended で閉じる。</summary>
         SubAction,
+
+        /// <summary>時点の行（投稿、投稿のスキップ）。開始の時刻だけを書く。</summary>
+        Point,
+
+        /// <summary>副行動の終わりの直後の時点の行（副行動の投稿の発話、スキップ）。副行動の字下げで書く。</summary>
+        SubPoint,
     }
 
     /// <summary>表の1行。End が null なら、記録の終わりまで続いている（未終了）。</summary>

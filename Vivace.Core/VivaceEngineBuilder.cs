@@ -1,6 +1,7 @@
 using Vivace.Core.Decision;
 using Vivace.Core.Definitions;
 using Vivace.Core.Definitions.Model;
+using Vivace.Core.Llm;
 using Vivace.Core.Randomness;
 using Vivace.Core.Storage;
 using Vivace.Core.Time;
@@ -30,6 +31,9 @@ public sealed class VivaceEngineBuilder
 
     /// <summary>乱数の列を開く実装。省略すると SplitMix。</summary>
     private IRandomSource? _random;
+
+    /// <summary>LLM。省略すると、呼ぶと失敗する実装（投稿はスキップになる）。</summary>
+    private ILlmClient? _llm;
 
     /// <summary>空のビルダーを作る。VivaceEngine.Create から使う。</summary>
     internal VivaceEngineBuilder()
@@ -97,6 +101,14 @@ public sealed class VivaceEngineBuilder
         return this;
     }
 
+    /// <summary>LLM を使う。</summary>
+    /// <param name="llm">LLM の実装。</param>
+    public VivaceEngineBuilder UseLlm(ILlmClient llm)
+    {
+        _llm = llm;
+        return this;
+    }
+
     /// <summary>ドライラン（外に何も出さない）として組む。早送りにするには、UseClock で VirtualClock を渡す（省くと実時間になる）。</summary>
     public VivaceEngineBuilder DryRun()
     {
@@ -111,7 +123,7 @@ public sealed class VivaceEngineBuilder
         var definitions = LoadDefinitions();
         var storage = _storage ?? throw new InvalidOperationException("ストレージが渡されていません。 UseStorage で指定してください。");
         var clock = ResolveClock();
-        return new VivaceEngine(SimEngine.Create(definitions, storage, _random ?? new SplitMixRandomSource(), clock, _decider, _holidays));
+        return new VivaceEngine(SimEngine.Create(definitions, storage, _random ?? new SplitMixRandomSource(), clock, _decider, _holidays, _llm));
     }
 
     /// <summary>使う時計を返す。渡されていなければ、実時間の SystemClock。</summary>
