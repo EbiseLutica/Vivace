@@ -52,11 +52,6 @@ public sealed class AnthropicLlmClient : ILlmClient
         return new AnthropicLlmClient(client, options);
     }
 
-    /// <summary>環境変数 ANTHROPIC_API_KEY から作る。未設定なら null を返す。</summary>
-    /// <param name="options">設定。</param>
-    public static AnthropicLlmClient? FromEnvironment(AnthropicLlmOptions options) =>
-        FromApiKey(Environment.GetEnvironmentVariable(ApiKeyVariable), options);
-
     /// <summary>1回の呼び出しをして、本文と使用量を返す。拒否、最大トークン数の切れ、空の本文は例外にする。</summary>
     /// <param name="request">呼び出しの内容。</param>
     /// <param name="ct">キャンセル。SDK の呼び出しに渡す。</param>
