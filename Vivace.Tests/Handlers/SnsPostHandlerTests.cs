@@ -64,13 +64,35 @@ public class SnsPostHandlerTests
         Assert.Equal(EventTypes.OutboundSpeech, draft.EventType);
     }
 
-    /// <summary>入力に、いまの行動と場所（表示名）が入る。</summary>
+    /// <summary>副行動の投稿は、「いまの行動」に主の行動の表示名（本を読む）が入る。投稿の行動の名前は入らない。</summary>
     [Fact]
-    public async Task RequestCarriesActionAndPlaceNames()
+    public async Task OverlayPostCarriesMainActivityName()
     {
-        var draft = await Run(new ScriptedLlm().Reply("post.compose", "今日の授業眠い", contains: "いまの行動：SNS に投稿する\nいる場所：香織の部屋"));
+        var state = Start(Start(Fixture.WithKaori(), 3, Fixture.Now, "read_book"), 4, Fixture.Now, "post_sns", sub: true);
 
-        Assert.Equal(EventTypes.OutboundSpeech, draft.EventType);
+        var user = await UserMessageOf(state);
+
+        Assert.Contains("いまの行動：本を読む\nいる場所：香織の部屋", user, StringComparison.Ordinal);
+        Assert.DoesNotContain("直前の行動", user, StringComparison.Ordinal);
+    }
+
+    /// <summary>主の行動の投稿は、「いまの行動」の行を出さず、直前の行動（最後の開始が最も新しいもの）を出す。投稿の行動の名前は入らない。</summary>
+    [Fact]
+    public async Task MainPostCarriesPreviousActivityInsteadOfItself()
+    {
+        var at = Fixture.Now;
+        var state = Start(Fixture.WithKaori(), 3, at, "read_book");
+        state = End(state, 4, at.AddMinutes(30), "read_book");
+        state = Start(state, 5, at.AddMinutes(30), "watch_tv");
+        state = End(state, 6, at.AddMinutes(60), "watch_tv");
+        state = Start(state, 7, at.AddMinutes(60), "post_sns");
+        Assert.Equal("post_sns", state.Personas[Fixture.Kaori].Activity?.ActionId);
+
+        var user = await UserMessageOf(state);
+
+        Assert.Contains("直前の行動：テレビを見る\nいる場所：香織の部屋", user, StringComparison.Ordinal);
+        Assert.DoesNotContain("いまの行動", user, StringComparison.Ordinal);
+        Assert.DoesNotContain("SNS に投稿する", user, StringComparison.Ordinal);
     }
 
     /// <summary>システムの指示（System）に、ここに書いていない人の様子や居場所は書かないという一行が入る。メッセージ側には入らない。</summary>
@@ -152,6 +174,23 @@ public class SnsPostHandlerTests
     /// <summary>テスト用の起動のシグナル。</summary>
     private static StartEffectSignal Effect() =>
         new(10, Fixture.Kaori, Fixture.Now.AddMinutes(8), "post_sns", KaoriRoom, 0);
+
+    /// <summary>文面の呼び出しを1回して、メッセージの本文を返す。</summary>
+    private static async Task<string> UserMessageOf(SimState state)
+    {
+        var llm = new RecordingLlm();
+        await SnsPostHandler.RunAsync(Fixture.Context, llm, state, Effect(), CancellationToken.None);
+        return Assert.Single(Assert.Single(llm.Requests).Messages).Content;
+    }
+
+    /// <summary>香織の部屋で行動を1件始める。sub なら副行動として Overlay に入る（行動のバージョン 0、所要時間 30 分）。</summary>
+    private static SimState Start(SimState state, long seq, DateTimeOffset at, string actionId, bool sub = false) =>
+        Fixture.Apply(state, Fixture.Event(seq, at, EventTypes.ActionStarted,
+            new ActionStartedPayload(actionId, KaoriRoom, TimeSpan.FromMinutes(30), ActivityReason.Chosen, 0, null, sub), Fixture.Kaori)).State;
+
+    /// <summary>行動を1件終える。</summary>
+    private static SimState End(SimState state, long seq, DateTimeOffset at, string actionId) =>
+        Fixture.Apply(state, Fixture.Event(seq, at, EventTypes.ActionEnded, new ActionEndedPayload(actionId, 0), Fixture.Kaori)).State;
 
     /// <summary>香織の発話を1件適用した状態。</summary>
     private static SimState Speech(SimState state, string body) =>
