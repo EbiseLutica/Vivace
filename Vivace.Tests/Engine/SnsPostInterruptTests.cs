@@ -106,7 +106,7 @@ public class SnsPostInterruptTests
     }
 
     /// <summary>
-    /// 香織の 23:50 に出す投稿の文面を、取り消しを待つ LLM。呼ばれたら、取り消しのトークンを捕まえて、取り消されるまで待つ。
+    /// 香織の 23:50 に出す投稿の文面を、取り消しを待つ LLM。呼ばれたら、取り消しのトークンを捕まえて、取り消されるまで待つ（取り消されなければ 10 秒で打ち切る）。
     /// </summary>
     private sealed class CancelWaitingLlm : ILlmClient
     {
@@ -127,7 +127,7 @@ public class SnsPostInterruptTests
             {
                 Captured = ct;
                 _entered.TrySetResult();
-                await Task.Delay(Timeout.Infinite, ct);
+                await Task.Delay(TimeSpan.FromSeconds(10), ct);
             }
 
             return new LlmResult<string>(Body, new LlmUsage("waiting", 0, 0));
