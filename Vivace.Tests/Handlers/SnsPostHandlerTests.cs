@@ -72,6 +72,15 @@ public class SnsPostHandlerTests
         Assert.Equal(EventTypes.OutboundSpeech, draft.EventType);
     }
 
+    /// <summary>システムの指示に、ここに書いていない人の様子や居場所は書かないという一行が入る。</summary>
+    [Fact]
+    public async Task SystemForbidsInventingOthersState()
+    {
+        var draft = await Run(new ScriptedLlm().Reply("post.compose", "今日の授業眠い", contains: "ここに書いていない人の、いまの様子や居場所は書きません。"));
+
+        Assert.Equal(EventTypes.OutboundSpeech, draft.EventType);
+    }
+
     /// <summary>本文は前後の空白を取り除いて、発話にする。出力の時刻は行動の終わり、guard は行動のバージョン。</summary>
     [Fact]
     public async Task BodyIsTrimmedAndGuardedByActivityVersion()
