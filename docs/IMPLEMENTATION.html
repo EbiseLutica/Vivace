@@ -278,7 +278,7 @@
     <table>
       <tr><th>課題</th><th>見つけた所</th><th>起きること</th><th>扱う時期</th></tr>
       <tr><td>実機の Ctrl+C で、件数の行が出るかを確かめていない</td><td>PR #19</td><td>件数の行は、テストのキャンセルでしか確かめていない。System.CommandLine は、Ctrl+C のあと既定で2秒しか待たないので、ハンドラが遅いと件数の行を出す前に打ち切られる</td><td>M2（LLM の待ちが入るので、そのときに確かめる）</td></tr>
-      <tr><td><code>vivace run</code> の投稿の文面は、仮の一言（「今日の授業眠い（仮の文面）」）</td><td>PR #26</td><td>run の投稿は、既定では仮の一言になる。本物の LLM をつなぐ PR で、既定を置き換える</td><td>M2 の次の PR（本物の LLM）</td></tr>
+      <tr><td><code>vivace run</code> に LLM をつないでいない</td><td>PR #26</td><td>run の投稿は、文面を作れずにスキップされる。コンソールのチャンネルの行は、LLM を渡すテストでしか出ない</td><td>M2 の次の PR（本物の LLM）</td></tr>
       <tr><td><code>RemoteNotBefore</code> を記録するが、投稿の制限に使っていない</td><td>PR #26 のレビュー</td><td>次に投稿できる時刻を状態に持つが、投稿の行動の判定（ActionRules）は見ていない。postRateLimit と一緒に決める</td><td>M2 の次の PR（投稿の制限）</td></tr>
       <tr><td>配信の結果の投入が拒否されると、黙って消える</td><td>PR #26 のレビュー</td><td>送信は済んだのに outbound.sent / failed が残らず、未送信の操作が残る（再起動後に送信不明として扱う手当てがない）。拒否の理由を記録する</td><td>M3（送信不明の扱い）</td></tr>
       <tr><td><code>outbound.sent</code> / <code>outbound.failed</code> のイベントに、ペルソナが入らない</td><td>PR #26 のレビュー</td><td>購読をペルソナで絞れない。投入の要求にペルソナがないため、未送信の操作からペルソナを引いて入れる</td><td>M3 か M4（購読の絞り込みを使うとき）</td></tr>

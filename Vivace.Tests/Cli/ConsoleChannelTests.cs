@@ -48,16 +48,4 @@ public class ConsoleChannelTests
         Assert.Equal(0, code);
         Assert.Contains("[送信 console] 香織: テストの文面\n", output.ToString(), StringComparison.Ordinal);
     }
-
-    /// <summary>LLM を渡さないと、仮の文面を使い、仮だとわかる形で書く。</summary>
-    [Fact]
-    public async Task RunWithoutLlmUsesMarkedStandInText()
-    {
-        using var folder = new DefinitionFolder(TestWorld.Files().ToList());
-        var output = new StringWriter { NewLine = "\n" };
-
-        await RunCommand.RunAsync(folder.Path, new VirtualClock(Scenario.Start), Scenario.WorldSeed, false, output, CancellationToken.None, Scenario.Start.AddDays(2));
-
-        Assert.Contains("[送信 console] 香織: 今日の授業眠い（仮の文面）\n", output.ToString(), StringComparison.Ordinal);
-    }
 }
