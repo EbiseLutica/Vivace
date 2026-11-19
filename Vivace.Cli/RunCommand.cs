@@ -68,6 +68,7 @@ public static class RunCommand
     /// <param name="channelOutput">投稿の行を書く先。省略すると出力と同じ。</param>
     /// <param name="llm">文面を作る LLM。省略すると llmFactory を使う。どちらもなければ、投稿は文面を作れずにスキップされる。</param>
     /// <param name="llmFactory">定義の検証が通ったあとに LLM を作る関数。通知は出力に書く。</param>
+    /// <param name="errors">LLM の失敗を書く先。省略するとエラーの出力（Console.Error）。</param>
     internal static async Task<int> RunAsync(
         string dir,
         IClock clock,
@@ -79,7 +80,8 @@ public static class RunCommand
         int? subscriberCapacity = null,
         TextWriter? channelOutput = null,
         ILlmClient? llm = null,
-        Func<TextWriter, ILlmClient?>? llmFactory = null)
+        Func<TextWriter, ILlmClient?>? llmFactory = null,
+        TextWriter? errors = null)
     {
         output = TextWriter.Synchronized(output);
         channelOutput = TextWriter.Synchronized(channelOutput ?? output);
@@ -107,7 +109,7 @@ public static class RunCommand
             .AddChannel(new ConsoleChannel(names, offsets, channelOutput ?? output));
         if (client is not null)
         {
-            builder.UseLlm(client);
+            builder.UseLlm(new LoggingLlmClient(client, TextWriter.Synchronized(errors ?? Console.Error)));
         }
 
         var engine = builder.Build();
