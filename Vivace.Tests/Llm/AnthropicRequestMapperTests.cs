@@ -40,7 +40,7 @@ public class AnthropicRequestMapperTests
 
         Assert.True(parameters.System!.TryPickString(out var system));
         Assert.Equal("指示", system);
-        Assert.Equal(2, parameters.Messages.Count);
+        Assert.Equal(3, parameters.Messages.Count);
         Assert.All(parameters.Messages, message => Assert.False(message.TryPickSystem(out _)));
     }
 
@@ -65,11 +65,20 @@ public class AnthropicRequestMapperTests
         Assert.Null(parameters.Thinking);
     }
 
+    /// <summary>末尾が assistant の呼び出し（prefill）は、送る前に拒否する。</summary>
+    [Fact]
+    public void TrailingAssistantMessageIsRejected()
+    {
+        var request = new LlmRequest(LlmTier.Main, "test", "指示", [new LlmMessage(LlmRole.User, "挨拶"), new LlmMessage(LlmRole.Assistant, "やあ")]);
+
+        Assert.Throws<ArgumentException>(() => AnthropicRequestMapper.ToParams(request, new AnthropicLlmOptions()));
+    }
+
     /// <summary>テスト用の呼び出し。system は「指示」、メッセージは利用者の挨拶と、モデルの応答。</summary>
     /// <param name="tier">モデルの段。</param>
     private static LlmRequest Request(LlmTier tier) => new(
         tier,
         "test",
         "指示",
-        [new LlmMessage(LlmRole.User, "こんにちは"), new LlmMessage(LlmRole.Assistant, "やあ")]);
+        [new LlmMessage(LlmRole.User, "こんにちは"), new LlmMessage(LlmRole.Assistant, "やあ"), new LlmMessage(LlmRole.User, "続き")]);
 }

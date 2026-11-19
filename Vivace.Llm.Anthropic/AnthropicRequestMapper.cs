@@ -11,9 +11,15 @@ internal static class AnthropicRequestMapper
     /// thinking、temperature、top_p は送らない（送るとモデルによって 400 になる）。
     /// </summary>
     /// <param name="request">呼び出しの内容。</param>
-    /// <param name="options">モデルと応答の上限。</param>
+    /// <param name="options">モデルと応答の上限。末尾が assistant のメッセージ（prefill）は、対象のモデルでは 400 になるため、ここで拒否する。</param>
+    /// <exception cref="ArgumentException">末尾のメッセージが assistant のとき。</exception>
     public static MessageCreateParams ToParams(LlmRequest request, AnthropicLlmOptions options)
     {
+        if (request.Messages.Count > 0 && request.Messages[^1].Role == LlmRole.Assistant)
+        {
+            throw new ArgumentException("末尾のメッセージが assistant の呼び出し（prefill）は送れません。", nameof(request));
+        }
+
         var messages = request.Messages.Select<LlmMessage, MessageParam>(message => message.Role switch
         {
             LlmRole.User => new UserMessageParam { Content = message.Content },
