@@ -348,6 +348,8 @@
       <tr><td>J-183</td><td>ペイロードの JSON の項目名は PascalCase のまま（命名の変換はしない）。版の <code>"v"</code> は JSON の先頭に書く。列挙は数値で書く（<code>JsonStringEnumConverter</code> は AOT の警告になる）。列挙の値を足すときは末尾に足す</td><td><a href="3-data.html#json">D3 3.9</a></td><td>エージェント（M3 の PR。PR 番号は未定）</td></tr>
       <tr><td>J-184</td><td>時刻は JSON でも UTC（ISO 8601、精度を落とさない）で書く。読むとオフセットは 0 になる。エンジンは時刻を UTC に直してから地方時にするので、結果は変わらない</td><td><a href="3-data.html#json">D3 3.9</a>、<a href="3-data.html#sqlite">3.8</a></td><td>エージェント（M3 の PR。PR 番号は未定）</td></tr>
       <tr><td>J-185</td><td>多態の印は <code>"$type"</code> で、<code>Location</code> と <code>GuardCheck</code> に付ける。ペイロードには付けない（型はイベントタイプから引く）。ID は文字列の JSON にする</td><td><a href="3-data.html#json">D3 3.9</a></td><td>エージェント（M3 の PR。PR 番号は未定）</td></tr>
+      <tr><td>J-186</td><td>状態の行（<code>personas</code>）に、<code>deciding</code>、<code>last_block_id</code>、<code>planned_for</code> を足す。<code>PersonaState</code> の項目で、表に載っていないと状態を戻せないため</td><td><a href="3-data.html#sqlite">D3 3.8</a></td><td>エージェント（M3 の PR。PR 番号は未定）</td></tr>
+      <tr><td>J-187</td><td>受信の表（<code>inbox</code>）に、受信の全体を JSON の <code>item</code> として持つ。<code>InboxItem</code> の項目（チャンネルの種類、会話の鍵、スレッド、添付など）は表の列にしきれないため。表の行は、いまの状態の受信の写しとし、処理されて状態から消えた行は消す（記録はイベントの列にある）</td><td><a href="3-data.html#sqlite">D3 3.8</a></td><td>エージェント（M3 の PR。PR 番号は未定）</td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>

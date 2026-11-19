@@ -10,6 +10,7 @@
     <ProjectReference Include="..\Vivace.Cli\Vivace.Cli.csproj" />
     <ProjectReference Include="..\Vivace.Testing\Vivace.Testing.csproj" />
     <ProjectReference Include="..\Vivace.Llm.Anthropic\Vivace.Llm.Anthropic.csproj" />
+    <ProjectReference Include="..\Vivace.Storage.Sqlite\Vivace.Storage.Sqlite.csproj" />
   </ItemGroup>
 
   <ItemGroup>

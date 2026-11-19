@@ -537,7 +537,10 @@ CREATE TABLE personas (
   vitals TEXT NOT NULL, conditions TEXT NOT NULL,
   plan TEXT, plan_version INTEGER NOT NULL,
   usage TEXT NOT NULL, rng TEXT NOT NULL, posting TEXT NOT NULL,
-  last_wake_utc INTEGER, created_seq INTEGER NOT NULL, updated_seq INTEGER NOT NULL
+  last_wake_utc INTEGER, created_seq INTEGER NOT NULL, updated_seq INTEGER NOT NULL,
+  deciding INTEGER NOT NULL DEFAULT 0,     -- 決定タイミングの処理中
+  last_block_id TEXT,                      -- 最後に始めたブロック
+  planned_for TEXT                         -- Planner を起こした期間のキー
 );
 CREATE TABLE inbox (
   id INTEGER PRIMARY KEY,                  -- notification.arrived の seq
@@ -545,7 +548,8 @@ CREATE TABLE inbox (
   sender TEXT, audience TEXT NOT NULL, body TEXT NOT NULL,
   original_arrived_utc INTEGER,
   status TEXT NOT NULL,                    -- unread / handled
-  handled_seq INTEGER, outcome TEXT
+  handled_seq INTEGER, outcome TEXT,
+  item TEXT NOT NULL                       -- 受信の全体の JSON
 );
 CREATE TABLE outbound (
   id INTEGER PRIMARY KEY,                  -- outbound.speech / operation の seq
