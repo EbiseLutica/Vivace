@@ -64,16 +64,27 @@ public class SnsPostHandlerTests
         Assert.Equal(EventTypes.OutboundSpeech, draft.EventType);
     }
 
-    /// <summary>副行動の投稿は、「いまの行動」に主の行動の表示名（本を読む）が入る。投稿の行動の名前は入らない。</summary>
+    /// <summary>副行動の投稿は、スマホを開ける主の行動（テレビを見る）の表示名を「いまの行動」に入れる。投稿の行動の名前は入らない。</summary>
     [Fact]
     public async Task OverlayPostCarriesMainActivityName()
     {
-        var state = Start(Start(Fixture.WithKaori(), 3, Fixture.Now, "read_book"), 4, Fixture.Now, "post_sns", sub: true);
+        var state = Start(Start(Fixture.WithKaori(), 3, Fixture.Now, "watch_tv"), 4, Fixture.Now, "post_sns", sub: true);
 
         var user = await UserMessageOf(state);
 
-        Assert.Contains("いまの行動：本を読む\nいる場所：香織の部屋", user, StringComparison.Ordinal);
+        Assert.Contains("いまの行動：テレビを見る\nいる場所：香織の部屋", user, StringComparison.Ordinal);
         Assert.DoesNotContain("直前の行動", user, StringComparison.Ordinal);
+    }
+
+    /// <summary>主の行動がスマホを開けない（授業を受ける）ときの副行動の投稿は、「いまの行動」に「授業を受けるの合間」が入る。</summary>
+    [Fact]
+    public async Task OverlayPostDuringClosedActivityCarriesInterlude()
+    {
+        var state = Start(Start(Fixture.WithKaori(), 3, Fixture.Now, "attend_class"), 4, Fixture.Now, "post_sns", sub: true);
+
+        var user = await UserMessageOf(state);
+
+        Assert.Contains("いまの行動：授業を受けるの合間\nいる場所：香織の部屋", user, StringComparison.Ordinal);
     }
 
     /// <summary>主の行動の投稿は、「いまの行動」の行を出さず、直前の行動（最後の開始が最も新しいもの）を出す。投稿の行動の名前は入らない。</summary>

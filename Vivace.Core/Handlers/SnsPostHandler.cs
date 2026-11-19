@@ -102,8 +102,9 @@ internal static class SnsPostHandler
     }
 
     /// <summary>
-    /// 文面に渡す行動の行。副行動（Overlay）の投稿なら、主の行動の表示名を「いまの行動」にする。主の行動の投稿なら、
-    /// 投稿の前にしていた行動を「直前の行動」にする。どちらも表示名が引けなければ、行を出さない。
+    /// 文面に渡す行動の行。副行動（Overlay）の投稿なら、主の行動の表示名を「いまの行動」にする。主の行動がスマホを開けない
+    /// 行動なら、その合間として「（表示名）の合間」にする。主の行動の投稿なら、投稿の前にしていた行動を「直前の行動」にする。
+    /// 表示名が引けなければ、行を出さない。
     /// </summary>
     /// <param name="ctx">規則のコンテキスト（定義）。</param>
     /// <param name="persona">起動の時点のペルソナの状態。</param>
@@ -112,9 +113,12 @@ internal static class SnsPostHandler
     {
         if (persona.Overlay is { } overlay && overlay.ActionId == effect.ActionId)
         {
-            return persona.Activity is { } main && ctx.Defs.Actions.TryGetValue(main.ActionId, out var mainAction)
-                ? $"いまの行動：{mainAction.Display}"
-                : null;
+            if (persona.Activity is not { } main || !ctx.Defs.Actions.TryGetValue(main.ActionId, out var mainAction))
+            {
+                return null;
+            }
+
+            return mainAction.Phone == PhonePolicy.Closed ? $"いまの行動：{mainAction.Display}の合間" : $"いまの行動：{mainAction.Display}";
         }
 
         return PreviousActivity(ctx, persona, effect.ActionId) is { } previous ? $"直前の行動：{previous}" : null;
