@@ -75,6 +75,8 @@ public static class RunCommand
         int? subscriberCapacity = null,
         TextWriter? channelOutput = null)
     {
+        output = TextWriter.Synchronized(output);
+        channelOutput = TextWriter.Synchronized(channelOutput ?? output);
         if (!Directory.Exists(dir))
         {
             return ValidateCommand.Run(dir, output);
