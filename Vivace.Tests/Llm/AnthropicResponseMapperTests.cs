@@ -47,4 +47,24 @@ public class AnthropicResponseMapperTests
         Assert.Throws<InvalidOperationException>(() => AnthropicResponseMapper.ToResult("end_turn", [], "m", 1, 0));
         Assert.Throws<InvalidOperationException>(() => AnthropicResponseMapper.ToResult("end_turn", [""], "m", 1, 0));
     }
+
+    /// <summary>成功の停止理由（stop_sequence）は本文を返す。</summary>
+    [Fact]
+    public void StopSequenceReturnsText()
+    {
+        var result = AnthropicResponseMapper.ToResult("stop_sequence", ["本文"], "m", 1, 1);
+
+        Assert.Equal("本文", result.Value);
+    }
+
+    /// <summary>許可リストにない停止理由は、本文があっても例外にする。</summary>
+    /// <param name="stopReason">停止理由。</param>
+    [Theory]
+    [InlineData("model_context_window_exceeded")]
+    [InlineData("tool_use")]
+    [InlineData("pause_turn")]
+    public void UnknownStopReasonThrows(string stopReason)
+    {
+        Assert.Throws<InvalidOperationException>(() => AnthropicResponseMapper.ToResult(stopReason, ["本文"], "m", 1, 1));
+    }
 }

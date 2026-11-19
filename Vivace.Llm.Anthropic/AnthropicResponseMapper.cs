@@ -11,8 +11,11 @@ internal static class AnthropicResponseMapper
     /// <summary>最大トークン数で切れた停止理由。</summary>
     public const string MaxTokensStopReason = "max_tokens";
 
+    /// <summary>成功として扱う停止理由（null は停止理由がない応答）。</summary>
+    private static readonly HashSet<string?> SuccessStopReasons = new(StringComparer.Ordinal) { "end_turn", "stop_sequence", null };
+
     /// <summary>
-    /// 停止理由を確かめ、text のブロックを連結して本文にする。拒否と最大トークン数の切れ、空の本文は例外にする。
+    /// 停止理由を確かめ、text のブロックを連結して本文にする。成功の停止理由以外、空の本文は例外にする。
     /// 拒否のときは本文を読まない。
     /// </summary>
     /// <param name="stopReason">停止理由（なければ null）。</param>
@@ -30,6 +33,11 @@ internal static class AnthropicResponseMapper
         if (stopReason == MaxTokensStopReason)
         {
             throw new InvalidOperationException("LLM の応答が最大トークン数で切れました（stop_reason: max_tokens）。");
+        }
+
+        if (!SuccessStopReasons.Contains(stopReason))
+        {
+            throw new InvalidOperationException($"LLM の応答が想定外の停止理由で終わりました（stop_reason: {stopReason}）。");
         }
 
         var body = string.Concat(texts);
