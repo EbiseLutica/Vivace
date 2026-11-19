@@ -60,8 +60,7 @@ public sealed class AnthropicLlmClient : ILlmClient
         var parameters = AnthropicRequestMapper.ToParams(request, _options);
         var message = await _client.Messages.Create(parameters, ct);
         var texts = message.Content
-            .Select(block => block.TryPickText(out var text) ? text.Text : string.Empty)
-            .Where(text => text.Length > 0);
+            .Select(block => block.TryPickText(out var text) ? text.Text : string.Empty);
         return AnthropicResponseMapper.ToResult(message.StopReason?.Raw(), texts, message.Model.Raw(), message.Usage.InputTokens, message.Usage.OutputTokens);
     }
 }
