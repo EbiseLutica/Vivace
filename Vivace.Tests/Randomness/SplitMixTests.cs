@@ -21,7 +21,7 @@ public class SplitMixTests
 
     /// <summary>シードの導出は、SHA-256("{ワールドのシード}:{持ち主}:{用途}") の先頭 8 バイトをリトルエンディアンで読んだ値（既知の値で固定）。</summary>
     [Theory]
-    [InlineData(42UL, "kaori@tokyo", "decide", 17115192317731340520UL)]
+    [InlineData(42UL, "taro@tokyo", "decide", 15112297623253681688UL)]
     [InlineData(1234567UL, "world", "incident", 35876087154524244UL)]
     public void DerivesSeedFromSha256OfWorldOwnerAndPurpose(ulong worldSeed, string owner, string purpose, ulong expected)
     {
@@ -34,9 +34,9 @@ public class SplitMixTests
     {
         var source = new SplitMixRandomSource();
 
-        var decide = source.Open(42, "kaori@tokyo", "decide", 0).NextUInt64();
-        var sameAgain = source.Open(42, "kaori@tokyo", "decide", 0).NextUInt64();
-        var incident = source.Open(42, "kaori@tokyo", "incident", 0).NextUInt64();
+        var decide = source.Open(42, "taro@tokyo", "decide", 0).NextUInt64();
+        var sameAgain = source.Open(42, "taro@tokyo", "decide", 0).NextUInt64();
+        var incident = source.Open(42, "taro@tokyo", "incident", 0).NextUInt64();
 
         Assert.Equal(decide, sameAgain);
         Assert.NotEqual(decide, incident);
@@ -47,10 +47,10 @@ public class SplitMixTests
     public void OpeningAtPositionResumesTheSameSequence()
     {
         var source = new SplitMixRandomSource();
-        var fromStart = source.Open(42, "kaori@tokyo", "decide", 0);
+        var fromStart = source.Open(42, "taro@tokyo", "decide", 0);
         var all = Enumerable.Range(0, 10).Select(_ => fromStart.NextUInt64()).ToArray();
 
-        var resumed = source.Open(42, "kaori@tokyo", "decide", 6);
+        var resumed = source.Open(42, "taro@tokyo", "decide", 6);
 
         Assert.Equal(all[6], resumed.NextUInt64());
         Assert.Equal(all[7], resumed.NextUInt64());

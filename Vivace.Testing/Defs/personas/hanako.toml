@@ -1,11 +1,11 @@
-# テスト用の2人目のペルソナ。香織と昼休みに同行する。
-id = "shiori"
-name = "詩織"
+# テスト用の2人目のペルソナ。太郎と昼休みに同行する。
+id = "hanako"
+name = "花子"
 world = "testville"
 home = "home_living"
 channels = ["console"]
 lore = """
-高校2年生。香織の双子の妹で、昼休みはよく一緒にいる。
+高校2年生。太郎の双子の妹で、昼休みはよく一緒にいる。
 """
 items = ["smartphone"]
 
@@ -48,7 +48,7 @@ action = "eat_lunch"
 place = "school_2a"
 phone = "open"
 phone_every = "20m"
-with = ["kaori"]
+with = ["taro"]
 
 [[schedule.exception]]
 date = "2026-12-24"

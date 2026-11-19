@@ -16,7 +16,7 @@ namespace Vivace.Tests.Rules;
 /// <summary>睡眠の率、次の行動の候補、繰り返しの減衰、状態変数のバージョンの再発防止。</summary>
 public class RegressionRulesTests
 {
-    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private static readonly PlaceId TaroRoom = new("taro_room");
 
     /// <summary>睡眠の開始が Planner を起こすとき、睡眠の率（気力 0）が残る。期間のキーは、睡眠のブロック ID で持つ。</summary>
     [Fact]
@@ -26,16 +26,16 @@ public class RegressionRulesTests
             10,
             Fixture.Now.AddHours(1),
             EventTypes.ActionStarted,
-            new ActionStartedPayload("core.sleep", KaoriRoom, TimeSpan.FromHours(5), ActivityReason.Block, 0, "sleep_weekday@2026-11-01"),
-            Fixture.Kaori);
+            new ActionStartedPayload("core.sleep", TaroRoom, TimeSpan.FromHours(5), ActivityReason.Block, 0, "sleep_weekday@2026-11-01"),
+            Fixture.Taro);
 
-        var result = Fixture.Apply(Fixture.WithKaori(), start);
+        var result = Fixture.Apply(Fixture.WithTaro(), start);
 
-        var kaori = result.State.Personas[Fixture.Kaori];
-        Assert.Equal(0.0, kaori.Vitals.Energy.Rate);
-        Assert.Equal(0, kaori.ActivityVersion);
-        Assert.Equal("sleep_weekday@2026-11-01", kaori.PlannedFor);
-        Assert.Equal(new StartPlannerSignal(10, Fixture.Kaori, Fixture.Now.AddHours(1)), Assert.Single(result.Signals));
+        var taro = result.State.Personas[Fixture.Taro];
+        Assert.Equal(0.0, taro.Vitals.Energy.Rate);
+        Assert.Equal(0, taro.ActivityVersion);
+        Assert.Equal("sleep_weekday@2026-11-01", taro.PlannedFor);
+        Assert.Equal(new StartPlannerSignal(10, Fixture.Taro, Fixture.Now.AddHours(1)), Assert.Single(result.Signals));
     }
 
     /// <summary>
@@ -45,24 +45,24 @@ public class RegressionRulesTests
     [Fact]
     public void RepeatDecayShrinksBoredomReliefOfRepeatedAction()
     {
-        var state = Fixture.WithKaori();
-        var kaori = state.Personas[Fixture.Kaori] with
+        var state = Fixture.WithTaro();
+        var taro = state.Personas[Fixture.Taro] with
         {
             Vitals = new Vitals(new VitalTrack(Fixture.Now, 80, 0), new VitalTrack(Fixture.Now, 100, 0), new VitalTrack(Fixture.Now, 90, 0), new VitalTrack(Fixture.Now, 0, 0), 1),
         };
-        state = Fixture.With(state, kaori);
+        state = Fixture.With(state, taro);
         var half = Fixture.Now.AddMinutes(30);
         var end = Fixture.Now.AddMinutes(60);
 
-        var first = Fixture.Apply(state, Fixture.Event(10, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("walk_park", KaoriRoom, TimeSpan.FromMinutes(30), ActivityReason.Chosen, 0, null), Fixture.Kaori)).State;
-        var firstEnd = Fixture.Apply(first, Fixture.Event(11, half, EventTypes.ActionEnded, new ActionEndedPayload("walk_park", 0), Fixture.Kaori)).State;
-        Assert.Equal(66.5, firstEnd.Personas[Fixture.Kaori].Vitals.Boredom.BaseValue, 6);
+        var first = Fixture.Apply(state, Fixture.Event(10, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("walk_park", TaroRoom, TimeSpan.FromMinutes(30), ActivityReason.Chosen, 0, null), Fixture.Taro)).State;
+        var firstEnd = Fixture.Apply(first, Fixture.Event(11, half, EventTypes.ActionEnded, new ActionEndedPayload("walk_park", 0), Fixture.Taro)).State;
+        Assert.Equal(66.5, firstEnd.Personas[Fixture.Taro].Vitals.Boredom.BaseValue, 6);
 
-        var second = Fixture.Apply(firstEnd, Fixture.Event(12, half, EventTypes.ActionStarted, new ActionStartedPayload("walk_park", KaoriRoom, TimeSpan.FromMinutes(30), ActivityReason.Chosen, 0, null), Fixture.Kaori)).State;
-        var secondEnd = Fixture.Apply(second, Fixture.Event(13, end, EventTypes.ActionEnded, new ActionEndedPayload("walk_park", 0), Fixture.Kaori));
+        var second = Fixture.Apply(firstEnd, Fixture.Event(12, half, EventTypes.ActionStarted, new ActionStartedPayload("walk_park", TaroRoom, TimeSpan.FromMinutes(30), ActivityReason.Chosen, 0, null), Fixture.Taro)).State;
+        var secondEnd = Fixture.Apply(second, Fixture.Event(13, end, EventTypes.ActionEnded, new ActionEndedPayload("walk_park", 0), Fixture.Taro));
 
         Assert.Equal(EventStatus.Applied, secondEnd.Status);
-        Assert.Equal(53.0, secondEnd.State.Personas[Fixture.Kaori].Vitals.Boredom.BaseValue, 6);
+        Assert.Equal(53.0, secondEnd.State.Personas[Fixture.Taro].Vitals.Boredom.BaseValue, 6);
     }
 
     /// <summary>
@@ -71,16 +71,16 @@ public class RegressionRulesTests
     [Fact]
     public void GoToNextIsFeasibleWhenUseListOmitsCore()
     {
-        var files = DefinitionFixtures.Replaced("personas/kaori.toml", "\"core.*\", ", string.Empty);
+        var files = DefinitionFixtures.Replaced("personas/taro.toml", "\"core.*\", ", string.Empty);
         var definitions = DefinitionLoader.LoadFiles(files).Definitions!;
         var context = new RuleContext(definitions, RouteCache.Create(definitions));
         var state = Fixture.WithWorld();
-        state = new EventApplier(context).Apply(state, Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("kaori"), KaoriRoom), null)).State;
+        state = new EventApplier(context).Apply(state, Fixture.Event(2, Fixture.Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("taro"), TaroRoom), null)).State;
 
-        var kaori = state.Personas[Fixture.Kaori];
+        var taro = state.Personas[Fixture.Taro];
 
-        Assert.True(ActionRules.CanChoose(context, state, kaori, ActionRules.GoToNextId, KaoriRoom, Fixture.Now));
-        Assert.False(ActionRules.CanChoose(context, state, kaori, "attend_class", KaoriRoom, Fixture.Now));
+        Assert.True(ActionRules.CanChoose(context, state, taro, ActionRules.GoToNextId, TaroRoom, Fixture.Now));
+        Assert.False(ActionRules.CanChoose(context, state, taro, "attend_class", TaroRoom, Fixture.Now));
     }
 
     /// <summary>
@@ -96,15 +96,15 @@ public class RegressionRulesTests
             Fixture.Now.AddHours(4),
             sleepAt,
             PlanSource.Fallback,
-            [new PlanBlock("sleep@2026-11-01", BlockKind.Fixed, sleepAt, sleepAt.AddHours(6), "core.sleep", KaoriRoom, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue)],
+            [new PlanBlock("sleep@2026-11-01", BlockKind.Fixed, sleepAt, sleepAt.AddHours(6), "core.sleep", TaroRoom, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue)],
             null);
-        var state = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop))).State;
+        var state = Fixture.Apply(Fixture.WithTaro(), Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop))).State;
 
-        var due = Fixture.Apply(state, Fixture.Event(11, sleepAt, EventTypes.PlanDue, new PlanDuePayload(1), Fixture.Kaori));
+        var due = Fixture.Apply(state, Fixture.Event(11, sleepAt, EventTypes.PlanDue, new PlanDuePayload(1), Fixture.Taro));
         Assert.Equal(EventStatus.Skipped, due.Status);
 
-        var sleep = Fixture.Apply(state, Fixture.Event(12, sleepAt, EventTypes.ActionStarted, new ActionStartedPayload("core.sleep", KaoriRoom, TimeSpan.FromHours(6), ActivityReason.Block, 0, "sleep@2026-11-01"), Fixture.Kaori));
-        Assert.Equal(new StartPlannerSignal(12, Fixture.Kaori, sleepAt), Assert.Single(sleep.Signals));
+        var sleep = Fixture.Apply(state, Fixture.Event(12, sleepAt, EventTypes.ActionStarted, new ActionStartedPayload("core.sleep", TaroRoom, TimeSpan.FromHours(6), ActivityReason.Block, 0, "sleep@2026-11-01"), Fixture.Taro));
+        Assert.Equal(new StartPlannerSignal(12, Fixture.Taro, sleepAt), Assert.Single(sleep.Signals));
     }
 
     /// <summary>状態変数を急に変えても、バージョンが上がる。古い予測を捨てるため。</summary>
@@ -112,10 +112,10 @@ public class RegressionRulesTests
     public void AbruptVitalChangeBumpsVersion()
     {
         var definitions = TestWorld.LoadOrThrow();
-        var kaori = Fixture.WithKaori().Personas[Fixture.Kaori];
+        var taro = Fixture.WithTaro().Personas[Fixture.Taro];
 
-        var changed = VitalRules.Change(kaori, VitalName.Boredom, Fixture.Now, definitions, -5, null);
+        var changed = VitalRules.Change(taro, VitalName.Boredom, Fixture.Now, definitions, -5, null);
 
-        Assert.Equal(kaori.Vitals.Version + 1, changed.Vitals.Version);
+        Assert.Equal(taro.Vitals.Version + 1, changed.Vitals.Version);
     }
 }

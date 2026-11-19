@@ -133,8 +133,8 @@ from = "代々木公園"
 verdict = "pass"                 # pass | convert | reject
 
 [[place]]
-id = "kaori_room"
-name = "香織の部屋"
+id = "taro_room"
+name = "太郎の部屋"
 tags = ["bed", "desk"]
 group = "家"
 links = { home_living = 1 }      # つながる場所の ID と移動時間（分）
@@ -158,12 +158,12 @@ links = { street_home = 1 }</code></pre>
 <p><strong>カレンダー</strong>（J-140）：祝日のカレンダーは、エンジンの作成時に渡す（<code>IHolidayCalendar</code>、P-18）。段階2 のテストのカレンダーは、2026-11-03 だけを祝日にする。日本のカレンダーは段階8。</p>
 <section id="persona-def">
   <h2><span class="num">3.4</span>ペルソナ定義</h2>
-<pre><code>id = "kaori"
-name = "香織"
+<pre><code>id = "taro"
+name = "太郎"
 world = "tokyo"
-home = "kaori_room"              # 早退して帰る場所（P-19）
+home = "taro_room"               #早退して帰る場所（P-19）
 lore = """
-高校2年生。本が好きで、図書委員。一人称は「わたし」。...
+高校2年生。本が好きで、図書委員。一人称は「ぼく」。...
 """
 examples = ["今日の図書室、ずっと静かだったな", "..."]   # 発言例（任意）
 channels = ["misskey"]
@@ -225,7 +225,7 @@ days = ["mon", "tue", "wed", "thu", "fri"]
 from = "23:45"
 to = "06:30"                     # to &lt; from は日をまたぐ
 action = "core.sleep"
-place = "kaori_room"
+place = "taro_room"
 
 [[schedule.block]]
 id = "school"
@@ -251,7 +251,7 @@ from = "12:20"
 to = "13:00"
 action = "eat_lunch"
 phone = "open"
-with = ["shiori"]                # 同行（相手の定義にも書く）
+with = ["hanako"]                # 同行（相手の定義にも書く）
 on_partner_absent = "continue"   # continue | cancel（D5）
 
 [[schedule.exception]]
@@ -396,7 +396,7 @@ sealed record PersonaState(
   </div>
   <div class="callout">
     <span class="label">決定 P-22　インスタンス ID は定義 ID</span>
-    <code>kaori</code>、<code>tokyo</code>。1つの定義から生成するインスタンスは1つだけ（VISION 2章）なので、ワールド ID を含めなくても決まる。破棄したあとに同じ定義から生成し直したら、<code>kaori#2</code> のように番号を付け、前のインスタンスと見分ける。ログと記憶のテーブルで、人が読んで誰かわかる形にする。（当初は「定義 ID@ワールド ID」としていたが、ペルソナはワールドを跨いでも1人なので改めた）
+    <code>taro</code>、<code>tokyo</code>。1つの定義から生成するインスタンスは1つだけ（VISION 2章）なので、ワールド ID を含めなくても決まる。破棄したあとに同じ定義から生成し直したら、<code>taro#2</code> のように番号を付け、前のインスタンスと見分ける。ログと記憶のテーブルで、人が読んで誰かわかる形にする。（当初は「定義 ID@ワールド ID」としていたが、ペルソナはワールドを跨いでも1人なので改めた）
   </div>
 </section>
 

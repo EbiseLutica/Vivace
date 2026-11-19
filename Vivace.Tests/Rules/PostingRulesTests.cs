@@ -15,10 +15,10 @@ public class PostingRulesTests
     public void SpeechUpdatesLastPostAndRecent()
     {
         var at = Fixture.Now.AddMinutes(5);
-        var result = Fixture.Apply(Fixture.WithKaori(), Speech(10, at, "今日の授業眠い"));
+        var result = Fixture.Apply(Fixture.WithTaro(), Speech(10, at, "今日の授業眠い"));
 
         Assert.Equal(EventStatus.Applied, result.Status);
-        var posting = result.State.Personas[Fixture.Kaori].Posting;
+        var posting = result.State.Personas[Fixture.Taro].Posting;
         Assert.Equal(at, posting.LastPostAt);
         Assert.Null(posting.LastSkippedAt);
         var recent = Assert.Single(posting.Recent);
@@ -29,13 +29,13 @@ public class PostingRulesTests
     [Fact]
     public void RecentPostsKeepOnlyTheLatestFive()
     {
-        var state = Fixture.WithKaori();
+        var state = Fixture.WithTaro();
         for (var i = 0; i < PostingState.RecentLimit + 1; i++)
         {
             state = Fixture.Apply(state, Speech(10 + i, Fixture.Now.AddMinutes(i), $"独り言{i}")).State;
         }
 
-        var recent = state.Personas[Fixture.Kaori].Posting.Recent;
+        var recent = state.Personas[Fixture.Taro].Posting.Recent;
         Assert.Equal(PostingState.RecentLimit, recent.Count);
         Assert.Equal("独り言1", recent[0].Body);
         Assert.Equal($"独り言{PostingState.RecentLimit}", recent[^1].Body);
@@ -46,9 +46,9 @@ public class PostingRulesTests
     public void SkipUpdatesOnlyLastSkippedAt()
     {
         var at = Fixture.Now.AddMinutes(7);
-        var skipped = Fixture.Event(10, at, EventTypes.PostSkipped, new PostSkippedPayload(PostSkippedPayload.PostSkipReason.GenerationFailed, null), Fixture.Kaori);
+        var skipped = Fixture.Event(10, at, EventTypes.PostSkipped, new PostSkippedPayload(PostSkippedPayload.PostSkipReason.GenerationFailed, null), Fixture.Taro);
 
-        var posting = Fixture.Apply(Fixture.WithKaori(), skipped).State.Personas[Fixture.Kaori].Posting;
+        var posting = Fixture.Apply(Fixture.WithTaro(), skipped).State.Personas[Fixture.Taro].Posting;
 
         Assert.Equal(at, posting.LastSkippedAt);
         Assert.Null(posting.LastPostAt);
@@ -59,8 +59,8 @@ public class PostingRulesTests
     [Fact]
     public void PostingForMissingPersonaIsSkipped()
     {
-        var speech = Fixture.Apply(Fixture.WithKaori(), Speech(10, Fixture.Now, "独り言", persona: Fixture.Shiori));
-        var skipped = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(11, Fixture.Now, EventTypes.PostSkipped, new PostSkippedPayload(PostSkippedPayload.PostSkipReason.AllRejected, null), Fixture.Shiori));
+        var speech = Fixture.Apply(Fixture.WithTaro(), Speech(10, Fixture.Now, "独り言", persona: Fixture.Hanako));
+        var skipped = Fixture.Apply(Fixture.WithTaro(), Fixture.Event(11, Fixture.Now, EventTypes.PostSkipped, new PostSkippedPayload(PostSkippedPayload.PostSkipReason.AllRejected, null), Fixture.Hanako));
 
         Assert.Equal(EventStatus.Skipped, speech.Status);
         Assert.Equal("ペルソナがない", speech.Reason);
@@ -78,5 +78,5 @@ public class PostingRulesTests
             Audience.Public,
             [seq],
             default,
-            null), persona ?? Fixture.Kaori);
+            null), persona ?? Fixture.Taro);
 }

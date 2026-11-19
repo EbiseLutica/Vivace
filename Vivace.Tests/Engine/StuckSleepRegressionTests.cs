@@ -16,7 +16,7 @@ public class StuckSleepRegressionTests
     [Fact]
     public async Task UnstartableSleepDoesNotStopTimeOrLoop()
     {
-        var files = DefinitionFixtures.Replaced("personas/kaori.toml", "action = \"core.sleep\"", "action = \"nap_club\"");
+        var files = DefinitionFixtures.Replaced("personas/taro.toml", "action = \"core.sleep\"", "action = \"nap_club\"");
         files.Add(new DefinitionFile("actions/nap.toml", "[[action]]\nid = \"nap_club\"\ndisplay = \"仮眠\"\ndescription = \"クラブ室でだけ眠る。\"\nduration = \"2h\"\nphone = \"closed\"\nschedule_only = true\nrequires.place_tags = [\"club\"]\neffects.restore.energy = 50\neffects.sleep = { consolidate = true, debt = false }\n"));
         var definitions = DefinitionLoader.LoadFiles(files).Definitions ?? throw new InvalidOperationException("定義が読めません。");
         var until = Scenario.Start.AddDays(2);
@@ -27,7 +27,7 @@ public class StuckSleepRegressionTests
         var applied = engine.Log.Where(entry => entry.Status == EventStatus.Applied).ToList();
         Assert.True(applied.Count < 20_000, $"適用が多すぎる（時刻が進んでいない可能性）: {applied.Count}");
         Assert.True(applied.Max(entry => entry.Event.Time) <= until);
-        foreach (var persona in new[] { "kaori", "shiori" })
+        foreach (var persona in new[] { "taro", "hanako" })
         {
             var plans = applied.Count(entry => entry.Event.EventType == EventTypes.PlanCommitted && entry.Event.PersonaId?.Value == persona);
             Assert.True(plans >= 3, $"{persona} の計画が作り直されていない: {plans}");

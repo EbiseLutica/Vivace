@@ -21,11 +21,11 @@ public static class Fixture
     /// <summary>テストのワールドの ID。</summary>
     public static readonly WorldId World = new(TestWorld.DefId.Value);
 
-    /// <summary>香織のインスタンス ID。</summary>
-    public static readonly PersonaId Kaori = new("kaori");
+    /// <summary>太郎のインスタンス ID。</summary>
+    public static readonly PersonaId Taro = new("taro");
 
-    /// <summary>詩織のインスタンス ID。</summary>
-    public static readonly PersonaId Shiori = new("shiori");
+    /// <summary>花子のインスタンス ID。</summary>
+    public static readonly PersonaId Hanako = new("hanako");
 
     private static readonly Lazy<RuleContext> Shared = new(() =>
     {
@@ -36,11 +36,11 @@ public static class Fixture
     /// <summary>テストの規則のコンテキスト（定義と最短経路のテーブル）。</summary>
     public static RuleContext Context => Shared.Value;
 
-    /// <summary>香織の channels を空にした規則のコンテキスト（投稿の送り先がないペルソナ）。</summary>
-    public static RuleContext ContextWithoutKaoriChannels()
+    /// <summary>太郎の channels を空にした規則のコンテキスト（投稿の送り先がないペルソナ）。</summary>
+    public static RuleContext ContextWithoutTaroChannels()
     {
         var defs = TestWorld.LoadOrThrow();
-        var id = new PersonaDefId("kaori");
+        var id = new PersonaDefId("taro");
         var changed = defs with { Personas = defs.Personas.SetItem(id, defs.Personas[id] with { Channels = [] }) };
         return new RuleContext(changed, RouteCache.Create(changed));
     }
@@ -55,13 +55,13 @@ public static class Fixture
     public static SimState WithWorld() =>
         Apply(Empty(), Event(1, Now, EventTypes.WorldCreated, new WorldCreatedPayload(TestWorld.DefId, 42), null)).State;
 
-    /// <summary>ワールドと香織（家は kaori_room）を作った状態。</summary>
-    public static SimState WithKaori() =>
-        Apply(WithWorld(), Event(2, Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("kaori"), new PlaceId("kaori_room")), null)).State;
+    /// <summary>ワールドと太郎（家は taro_room）を作った状態。</summary>
+    public static SimState WithTaro() =>
+        Apply(WithWorld(), Event(2, Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("taro"), new PlaceId("taro_room")), null)).State;
 
-    /// <summary>ワールドと香織と詩織（家は home_living）を作った状態。</summary>
+    /// <summary>ワールドと太郎と花子（家は home_living）を作った状態。</summary>
     public static SimState WithBoth() =>
-        Apply(WithKaori(), Event(3, Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("shiori"), new PlaceId("home_living")), null)).State;
+        Apply(WithTaro(), Event(3, Now, EventTypes.PersonaCreated, new PersonaCreatedPayload(new PersonaDefId("hanako"), new PlaceId("home_living")), null)).State;
 
     /// <summary>規則を1つ適用する。</summary>
     public static ApplyResult Apply(SimState state, SimEvent ev) => new EventApplier(Context).Apply(state, ev);

@@ -26,11 +26,11 @@ public static class Scenario
     /// <summary>既定のチャンネルの種類（テスト用の町のペルソナの channels と同じ）。</summary>
     public const string ChannelKind = "console";
 
-    /// <summary>既定で生成するペルソナ。香織（家は kaori_room）と詩織（家は home_living）。</summary>
+    /// <summary>既定で生成するペルソナ。太郎（家は taro_room）と花子（家は home_living）。</summary>
     private static readonly (PersonaDefId DefId, PlaceId Home)[] DefaultPersonas =
     [
-        (new PersonaDefId("kaori"), new PlaceId("kaori_room")),
-        (new PersonaDefId("shiori"), new PlaceId("home_living")),
+        (new PersonaDefId("taro"), new PlaceId("taro_room")),
+        (new PersonaDefId("hanako"), new PlaceId("home_living")),
     ];
 
     /// <summary>
@@ -39,7 +39,7 @@ public static class Scenario
     /// <param name="seed">ワールドのシード。</param>
     /// <param name="decider">決める側。省略すると効用による決定。</param>
     /// <param name="definitions">定義。省略するとテスト用の町。</param>
-    /// <param name="personas">生成するペルソナ（定義 ID と家）。省略すると香織と詩織。</param>
+    /// <param name="personas">生成するペルソナ（定義 ID と家）。省略すると太郎と花子。</param>
     /// <param name="clock">時計。開始の時刻を指していること。省略すると開始の時刻の仮想時計。</param>
     /// <param name="storage">保存先。省略するとメモリの保存先。</param>
     /// <param name="llm">LLM。省略すると、呼ぶと失敗する実装（投稿はスキップになる）。</param>

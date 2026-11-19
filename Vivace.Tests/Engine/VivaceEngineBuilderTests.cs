@@ -70,7 +70,7 @@ public class VivaceEngineBuilderTests
     }
 
     /// <summary>
-    /// テスト用の定義のフォルダから組んだエンジンで、ワールドと香織を投入して 1 時間回すと、両方が生きていて、
+    /// テスト用の定義のフォルダから組んだエンジンで、ワールドと太郎を投入して 1 時間回すと、両方が生きていて、
     /// 適用の位置は回した範囲（開始から 1 時間）に収まる。DryRun のフラグも残る。
     /// </summary>
     [Fact]
@@ -88,14 +88,14 @@ public class VivaceEngineBuilderTests
             await using var engine = builder.Build();
 
             var world = await engine.InjectAsync(InjectRequest.WorldCreated(TestWorld.DefId, Scenario.WorldSeed, Origin.Test), CancellationToken.None);
-            var kaori = await engine.InjectAsync(InjectRequest.PersonaCreated(new PersonaDefId("kaori"), new PlaceId("kaori_room"), Origin.Test), CancellationToken.None);
+            var taro = await engine.InjectAsync(InjectRequest.PersonaCreated(new PersonaDefId("taro"), new PlaceId("taro_room"), Origin.Test), CancellationToken.None);
             await engine.RunUntilAsync(Scenario.Start.AddHours(1), CancellationToken.None);
 
             Assert.True(builder.IsDryRun);
             Assert.Equal(InjectResult.Accept(1), world);
-            Assert.Equal(InjectResult.Accept(2), kaori);
+            Assert.Equal(InjectResult.Accept(2), taro);
             Assert.True(engine.View.Worlds.ContainsKey(new WorldId("testville")));
-            Assert.True(engine.View.Personas.ContainsKey(new PersonaId("kaori")));
+            Assert.True(engine.View.Personas.ContainsKey(new PersonaId("taro")));
             Assert.InRange(engine.View.Cursor.Time, Scenario.Start, Scenario.Start.AddHours(1));
         }
         finally
@@ -116,7 +116,7 @@ public class VivaceEngineBuilderTests
             .UseDecider(decider)
             .Build();
         await engine.InjectAsync(InjectRequest.WorldCreated(TestWorld.DefId, Scenario.WorldSeed, Origin.Test), CancellationToken.None);
-        await engine.InjectAsync(InjectRequest.PersonaCreated(new PersonaDefId("kaori"), new PlaceId("kaori_room"), Origin.Test), CancellationToken.None);
+        await engine.InjectAsync(InjectRequest.PersonaCreated(new PersonaDefId("taro"), new PlaceId("taro_room"), Origin.Test), CancellationToken.None);
 
         await engine.RunUntilAsync(Scenario.Start.AddDays(1), CancellationToken.None);
 

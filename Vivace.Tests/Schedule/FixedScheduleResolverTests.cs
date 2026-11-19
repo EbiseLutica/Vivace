@@ -19,7 +19,7 @@ public class FixedScheduleResolverTests
     private static readonly DefinitionPack Defs = TestWorld.LoadOrThrow();
 
     /// <summary>ペルソナの定義を、ID で引く。</summary>
-    private static PersonaDef Kaori() => Defs.Personas[new PersonaDefId("kaori")];
+    private static PersonaDef Taro() => Defs.Personas[new PersonaDefId("taro")];
 
     /// <summary>テスト用の祝日のカレンダー。指定した日だけが祝日。</summary>
     private sealed class FixedHolidays(params DateOnly[] holidays) : IHolidayCalendar
@@ -31,7 +31,7 @@ public class FixedScheduleResolverTests
     [Fact]
     public void WeekdayInDefaultPeriodExpandsNestedBlocksInOrder()
     {
-        var day = FixedScheduleResolver.Resolve(Defs, Kaori(), Monday, NoHolidays.Instance);
+        var day = FixedScheduleResolver.Resolve(Defs, Taro(), Monday, NoHolidays.Instance);
 
         Assert.Empty(day.Issues);
         var expected = new (string Id, string DefId, int Start, int End)[]
@@ -59,7 +59,7 @@ public class FixedScheduleResolverTests
     [Fact]
     public void NestedBlocksInheritActionPlaceAndOwnPhone()
     {
-        var day = FixedScheduleResolver.Resolve(Defs, Kaori(), Monday, NoHolidays.Instance);
+        var day = FixedScheduleResolver.Resolve(Defs, Taro(), Monday, NoHolidays.Instance);
 
         var shortBreak = day.Blocks.Single(block => block.Id == "short_break.2@2026-11-02");
         Assert.Equal("attend_class", shortBreak.Action);
@@ -71,14 +71,14 @@ public class FixedScheduleResolverTests
 
         var lunch = day.Blocks.Single(block => block.DefId == "lunch_break");
         Assert.Equal("eat_lunch", lunch.Action);
-        Assert.Equal(["shiori"], lunch.With);
+        Assert.Equal(["hanako"], lunch.With);
     }
 
     /// <summary>夏の期間には授業がない。睡眠は、日をまたいで開始日のブロックになる。</summary>
     [Fact]
     public void PeriodDecidesWhichBlocksApply()
     {
-        var day = FixedScheduleResolver.Resolve(Defs, Kaori(), SummerMonday, NoHolidays.Instance);
+        var day = FixedScheduleResolver.Resolve(Defs, Taro(), SummerMonday, NoHolidays.Instance);
 
         Assert.DoesNotContain(day.Blocks, block => block.DefId == "school");
         var sleep = day.Blocks.Single(block => block.DefId == "sleep_weekday");
@@ -91,7 +91,7 @@ public class FixedScheduleResolverTests
     [Fact]
     public void YearSpanningPeriodMatchesItsDays()
     {
-        var periods = Kaori().Schedule.Periods;
+        var periods = Taro().Schedule.Periods;
 
         Assert.Equal("winter", FixedScheduleResolver.PeriodOf(periods, WinterFriday));
         Assert.Equal("winter", FixedScheduleResolver.PeriodOf(periods, new DateOnly(2027, 1, 3)));
@@ -113,7 +113,7 @@ public class FixedScheduleResolverTests
     [Fact]
     public void ExceptionDaySkipsAndAddsBlocks()
     {
-        var day = FixedScheduleResolver.Resolve(Defs, Kaori(), Thursday, NoHolidays.Instance);
+        var day = FixedScheduleResolver.Resolve(Defs, Taro(), Thursday, NoHolidays.Instance);
 
         Assert.DoesNotContain(day.Blocks, block => block.DefId == "school");
         Assert.DoesNotContain(day.Blocks, block => block.DefId is "short_break" or "lunch_break");
@@ -130,7 +130,7 @@ public class FixedScheduleResolverTests
     {
         var holidays = new FixedHolidays(Monday);
 
-        var day = FixedScheduleResolver.Resolve(Defs, Kaori(), Monday, holidays);
+        var day = FixedScheduleResolver.Resolve(Defs, Taro(), Monday, holidays);
 
         Assert.DoesNotContain(day.Blocks, block => block.DefId is "school" or "short_break" or "lunch_break");
         Assert.Contains(day.Blocks, block => block.DefId == "sleep_weekday");
@@ -140,14 +140,14 @@ public class FixedScheduleResolverTests
     [Fact]
     public void NestedBlockOutsideParentIsReported()
     {
-        var kaori = Kaori();
-        var schedule = kaori.Schedule with
+        var taro = Taro();
+        var schedule = taro.Schedule with
         {
-            Blocks = kaori.Schedule.Blocks.Select(block => block.Id == "short_break"
+            Blocks = taro.Schedule.Blocks.Select(block => block.Id == "short_break"
                 ? block with { Ranges = [new TimeRange(new TimeOnly(7, 0), new TimeOnly(7, 10))] }
                 : block).ToImmutableArray(),
         };
-        var persona = kaori with { Schedule = schedule };
+        var persona = taro with { Schedule = schedule };
 
         var day = FixedScheduleResolver.Resolve(Defs, persona, Monday, NoHolidays.Instance);
 

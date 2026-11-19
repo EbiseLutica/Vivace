@@ -174,7 +174,7 @@ CLAUDE.md：
   - ワールドがない
   - キューの `world.created` で通る
   - キューの `world.created` が要求より後の時刻なら拒否
-- 実行中の `InjectAsync`：kaori だけで始め、`Subscribe` で最初の `day.started` を見たら、shiori を `At = null` で投入する。受け付けられて、その連番の `persona.created` が投入した時刻以降に適用されることを確かめる
+- 実行中の `InjectAsync`：taro だけで始め、`Subscribe` で最初の `day.started` を見たら、hanako を `At = null` で投入する。受け付けられて、その連番の `persona.created` が投入した時刻以降に適用されることを確かめる
 - `Subscribe` で流れた順と、`Log` の Applied の順（連番と ApplyNo）が一致すること
 - 遅い購読者が切断され、エンジンは最後まで回ること
 - ビルダーが、時計なし、保存先なし、定義のエラーで例外を投げること
@@ -229,8 +229,8 @@ CLAUDE.md：
 
 - 保存先の記録から、日ごと（ワールドの現地の日付）、人ごと（ID の序数順）に行動表を作る
 - 行の形：
-  - `07:00-07:30 [予定] eat_breakfast @kaori_room`
-  - `08:10-08:25 移動 kaori_room → school`
+  - `07:00-07:30 [予定] eat_breakfast @taro_room`
+  - `08:10-08:25 移動 taro_room → school`
 - 終わりは、同じ人の `action.ended` か `travel.arrived` から取る
 - 曜日は配列で引く。カルチャに依る書式は使わない
 - 末尾に、適用、捨てた、却下の件数を出す

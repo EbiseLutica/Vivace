@@ -14,18 +14,18 @@ namespace Vivace.Tests.Definitions;
 /// <summary>壊した定義で、読み込みが位置つきの問題を返すことを確かめる。</summary>
 public class ReviewRegressionTests
 {
-    private const string Kaori = "personas/kaori.toml";
+    private const string Taro = "personas/taro.toml";
     private const string Actions = "actions/actions.toml";
     private const string Incidents = "incidents/incidents.toml";
     private const string World = "worlds/testville.toml";
-    private const string Shiori = "personas/shiori.toml";
+    private const string Hanako = "personas/hanako.toml";
 
     /// <summary>周期：期間の日付が不正でも例外は出ず、位置つきのエラーになる。</summary>
     [Fact]
     public void ImpossiblePeriodDateIsReportedWithoutThrowing()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "from = \"07-21\"", "from = \"13-40\"");
-        var location = DefinitionFixtures.At(files, Kaori, "from = \"13-40\"");
+        var files = DefinitionFixtures.Replaced(Taro, "from = \"07-21\"", "from = \"13-40\"");
+        var location = DefinitionFixtures.At(files, Taro, "from = \"13-40\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -37,8 +37,8 @@ public class ReviewRegressionTests
     [Fact]
     public void PeriodMissingEndIsReportedAtHeader()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "to = \"08-31\"\n", string.Empty);
-        var header = DefinitionFixtures.At(files, Kaori, "[[schedule.period]]\nid = \"summer\"");
+        var files = DefinitionFixtures.Replaced(Taro, "to = \"08-31\"\n", string.Empty);
+        var header = DefinitionFixtures.At(files, Taro, "[[schedule.period]]\nid = \"summer\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -113,8 +113,8 @@ public class ReviewRegressionTests
     [Fact]
     public void WithinSelfReferenceIsReported()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "id = \"sleep_weekday\"", "id = \"sleep_weekday\"\nwithin = \"sleep_weekday\"");
-        var location = DefinitionFixtures.At(files, Kaori, "within = \"sleep_weekday\"");
+        var files = DefinitionFixtures.Replaced(Taro, "id = \"sleep_weekday\"", "id = \"sleep_weekday\"\nwithin = \"sleep_weekday\"");
+        var location = DefinitionFixtures.At(files, Taro, "within = \"sleep_weekday\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -125,8 +125,8 @@ public class ReviewRegressionTests
     [Fact]
     public void WithinCycleIsReported()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "id = \"school\"", "id = \"school\"\nwithin = \"short_break\"");
-        var location = DefinitionFixtures.At(files, Kaori, "within = \"short_break\"");
+        var files = DefinitionFixtures.Replaced(Taro, "id = \"school\"", "id = \"school\"\nwithin = \"short_break\"");
+        var location = DefinitionFixtures.At(files, Taro, "within = \"short_break\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -138,10 +138,10 @@ public class ReviewRegressionTests
     public void OverlappingTimesOfOneBlockAreReported()
     {
         var files = DefinitionFixtures.Replaced(
-            Kaori,
+            Taro,
             "times = [[\"10:20\", \"10:30\"], [\"14:30\", \"14:40\"]]",
             "times = [[\"10:20\", \"10:30\"], [\"10:25\", \"10:40\"], [\"14:30\", \"14:40\"]]");
-        var header = DefinitionFixtures.At(files, Kaori, "[[schedule.block]]\nid = \"short_break\"");
+        var header = DefinitionFixtures.At(files, Taro, "[[schedule.block]]\nid = \"short_break\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -153,8 +153,8 @@ public class ReviewRegressionTests
     [Fact]
     public void OverlappingChildrenOfSameParentAreReported()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "from = \"12:20\"\nto = \"13:00\"", "from = \"10:25\"\nto = \"10:35\"");
-        var header = DefinitionFixtures.At(files, Kaori, "[[schedule.block]]\nid = \"lunch_break\"");
+        var files = DefinitionFixtures.Replaced(Taro, "from = \"12:20\"\nto = \"13:00\"", "from = \"10:25\"\nto = \"10:35\"");
+        var header = DefinitionFixtures.At(files, Taro, "[[schedule.block]]\nid = \"lunch_break\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -167,10 +167,10 @@ public class ReviewRegressionTests
     public void ChildOutsideParentIsReported()
     {
         var files = DefinitionFixtures.Replaced(
-            Kaori,
+            Taro,
             "times = [[\"10:20\", \"10:30\"], [\"14:30\", \"14:40\"]]",
             "times = [[\"07:00\", \"07:10\"]]");
-        var header = DefinitionFixtures.At(files, Kaori, "[[schedule.block]]\nid = \"short_break\"");
+        var header = DefinitionFixtures.At(files, Taro, "[[schedule.block]]\nid = \"short_break\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -184,9 +184,9 @@ public class ReviewRegressionTests
     [Fact]
     public void CrossMidnightOverlapIsReportedOncePerDefinition()
     {
-        var dawn = "[[schedule.block]]\nid = \"dawn\"\nfrom = \"00:30\"\nto = \"01:00\"\naction = \"core.idle\"\nplace = \"kaori_room\"\n\n[[schedule.exception]]\n";
-        var files = DefinitionFixtures.Replaced(Kaori, "[[schedule.exception]]\n", dawn);
-        var header = DefinitionFixtures.At(files, Kaori, "[[schedule.block]]\nid = \"dawn\"");
+        var dawn = "[[schedule.block]]\nid = \"dawn\"\nfrom = \"00:30\"\nto = \"01:00\"\naction = \"core.idle\"\nplace = \"taro_room\"\n\n[[schedule.exception]]\n";
+        var files = DefinitionFixtures.Replaced(Taro, "[[schedule.exception]]\n", dawn);
+        var header = DefinitionFixtures.At(files, Taro, "[[schedule.block]]\nid = \"dawn\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -200,10 +200,10 @@ public class ReviewRegressionTests
     public void ExceptionDayIsCheckedAgainstPreviousNight()
     {
         var files = DefinitionFixtures.Replaced(
-            Kaori,
+            Taro,
             "place = \"home_living\"",
-            "place = \"home_living\"\n\n[[schedule.exception.block]]\nid = \"early\"\nfrom = \"05:00\"\nto = \"07:00\"\naction = \"core.idle\"\nplace = \"kaori_room\"");
-        var header = DefinitionFixtures.At(files, Kaori, "[[schedule.exception.block]]\nid = \"early\"");
+            "place = \"home_living\"\n\n[[schedule.exception.block]]\nid = \"early\"\nfrom = \"05:00\"\nto = \"07:00\"\naction = \"core.idle\"\nplace = \"taro_room\"");
+        var header = DefinitionFixtures.At(files, Taro, "[[schedule.exception.block]]\nid = \"early\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -216,10 +216,10 @@ public class ReviewRegressionTests
     public void ExceptionOutsideTheScanYearsIsStillChecked()
     {
         var files = DefinitionFixtures.Replaced(
-            Kaori,
+            Taro,
             "place = \"home_living\"",
-            "place = \"home_living\"\n\n[[schedule.exception]]\ndate = \"2060-01-01\"\n\n[[schedule.exception.block]]\nid = \"far\"\nfrom = \"05:00\"\nto = \"07:00\"\naction = \"core.idle\"\nplace = \"kaori_room\"");
-        var header = DefinitionFixtures.At(files, Kaori, "[[schedule.exception.block]]\nid = \"far\"");
+            "place = \"home_living\"\n\n[[schedule.exception]]\ndate = \"2060-01-01\"\n\n[[schedule.exception.block]]\nid = \"far\"\nfrom = \"05:00\"\nto = \"07:00\"\naction = \"core.idle\"\nplace = \"taro_room\"");
+        var header = DefinitionFixtures.At(files, Taro, "[[schedule.exception.block]]\nid = \"far\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -230,8 +230,8 @@ public class ReviewRegressionTests
     [Fact]
     public void ExceptionBlockWithInIsRejected()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "id = \"xmas_party\"", "id = \"xmas_party\"\nin = [\"default\"]");
-        var location = DefinitionFixtures.At(files, Kaori, "id = \"xmas_party\"");
+        var files = DefinitionFixtures.Replaced(Taro, "id = \"xmas_party\"", "id = \"xmas_party\"\nin = [\"default\"]");
+        var location = DefinitionFixtures.At(files, Taro, "id = \"xmas_party\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -243,14 +243,14 @@ public class ReviewRegressionTests
     public void ExceptionSkipDoesNotRemoveAddedBlockWithSameId()
     {
         var files = DefinitionFixtures.Replaced(
-            Kaori,
+            Taro,
             "place = \"home_living\"",
-            "place = \"home_living\"\n\n[[schedule.exception.block]]\nid = \"school\"\nfrom = \"09:00\"\nto = \"10:00\"\naction = \"core.idle\"\nplace = \"kaori_room\"");
+            "place = \"home_living\"\n\n[[schedule.exception.block]]\nid = \"school\"\nfrom = \"09:00\"\nto = \"10:00\"\naction = \"core.idle\"\nplace = \"taro_room\"");
         var result = DefinitionLoader.LoadFiles(files);
         Assert.True(result.Definitions is not null, string.Join(" | ", result.Issues.Select(issue => issue.ToString())));
         var definitions = result.Definitions!;
 
-        var day = FixedScheduleResolver.Resolve(definitions, definitions.Personas[new PersonaDefId("kaori")], new DateOnly(2026, 12, 24), NoHolidays.Instance);
+        var day = FixedScheduleResolver.Resolve(definitions, definitions.Personas[new PersonaDefId("taro")], new DateOnly(2026, 12, 24), NoHolidays.Instance);
 
         Assert.Contains(day.Blocks, block => block.Id == "school@2026-12-24" && block.StartMinute == 540);
     }
@@ -258,7 +258,7 @@ public class ReviewRegressionTests
     /// <summary>場所、ブロックの ID に名前空間の "." や "@" は使えない。</summary>
     [Theory]
     [InlineData(World, "id = \"street\"", "id = \"st.reet\"")]
-    [InlineData(Kaori, "id = \"school\"", "id = \"lunch.2@x\"")]
+    [InlineData(Taro, "id = \"school\"", "id = \"lunch.2@x\"")]
     public void PlainIdsRejectDotsAndAt(string path, string from, string to)
     {
         var files = DefinitionFixtures.Replaced(path, from, to);
@@ -285,8 +285,8 @@ public class ReviewRegressionTests
     [Fact]
     public void UnmatchedWildcardIsWarnedNotFailed()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "use = [\"core.*\", \"walk_park\"", "use = [\"core.*\", \"misskey.*\", \"walk_park\"");
-        var location = DefinitionFixtures.At(files, Kaori, "use = [\"core.*\", \"misskey.*\"");
+        var files = DefinitionFixtures.Replaced(Taro, "use = [\"core.*\", \"walk_park\"", "use = [\"core.*\", \"misskey.*\", \"walk_park\"");
+        var location = DefinitionFixtures.At(files, Taro, "use = [\"core.*\", \"misskey.*\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -311,8 +311,8 @@ public class ReviewRegressionTests
     [Fact]
     public void NegativePreferenceFactorIsRejected()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "cafe = 1.5", "cafe = -1.5");
-        var location = DefinitionFixtures.At(files, Kaori, "cafe = -1.5");
+        var files = DefinitionFixtures.Replaced(Taro, "cafe = 1.5", "cafe = -1.5");
+        var location = DefinitionFixtures.At(files, Taro, "cafe = -1.5");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -323,8 +323,8 @@ public class ReviewRegressionTests
     [Fact]
     public void NegativeDisruptionWeightIsRejected()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "late = 1.0", "late = -1.0");
-        var location = DefinitionFixtures.At(files, Kaori, "late = -1.0");
+        var files = DefinitionFixtures.Replaced(Taro, "late = 1.0", "late = -1.0");
+        var location = DefinitionFixtures.At(files, Taro, "late = -1.0");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -385,14 +385,14 @@ public class ReviewRegressionTests
     [Fact]
     public void DuplicateTableHeaderIsReported()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "[memory]\n", "[memory]\nhalf_life = 1.2\n[memory]\n");
+        var files = DefinitionFixtures.Replaced(Taro, "[memory]\n", "[memory]\nhalf_life = 1.2\n[memory]\n");
 
         var result = DefinitionLoader.LoadFiles(files);
 
         Assert.Contains(result.Issues, issue =>
             issue.Severity == IssueSeverity.Error
             && (issue.Code == DefinitionIssueCode.DuplicateKey || issue.Code == DefinitionIssueCode.SyntaxError)
-            && issue.Location.Path == Kaori);
+            && issue.Location.Path == Taro);
         Assert.Null(result.Definitions);
     }
 
@@ -400,18 +400,18 @@ public class ReviewRegressionTests
     [Fact]
     public void ChannelSettingsAreKeptAsJsonElement()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "follow_back = \"always\"", "follow_back = \"always\"\n\n[channel.misskey]\nreversi = true");
+        var files = DefinitionFixtures.Replaced(Taro, "follow_back = \"always\"", "follow_back = \"always\"\n\n[channel.misskey]\nreversi = true");
 
         var definitions = Assert.IsType<DefinitionPack>(DefinitionLoader.LoadFiles(files).Definitions);
 
-        Assert.True(definitions.Personas[new PersonaDefId("kaori")].ChannelSettings["misskey"].GetProperty("reversi").GetBoolean());
+        Assert.True(definitions.Personas[new PersonaDefId("taro")].ChannelSettings["misskey"].GetProperty("reversi").GetBoolean());
     }
 
     /// <summary>ファイルの渡す順を変えても、問題の一覧とハッシュは変わらない。</summary>
     [Fact]
     public void FileOrderDoesNotChangeIssuesOrHash()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "home = \"kaori_room\"", "home = \"nowhere\"");
+        var files = DefinitionFixtures.Replaced(Taro, "home = \"taro_room\"", "home = \"nowhere\"");
         var reversed = files.AsEnumerable().Reverse().ToList();
 
         var forward = DefinitionLoader.LoadFiles(files);
@@ -460,8 +460,8 @@ public class ReviewRegressionTests
     [Fact]
     public void PreferenceForUnknownActionIsReported()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "prefs = { read_book = \"like\"", "prefs = { nonexistent = \"like\", read_book = \"like\"");
-        var location = DefinitionFixtures.At(files, Kaori, "nonexistent = \"like\"");
+        var files = DefinitionFixtures.Replaced(Taro, "prefs = { read_book = \"like\"", "prefs = { nonexistent = \"like\", read_book = \"like\"");
+        var location = DefinitionFixtures.At(files, Taro, "nonexistent = \"like\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -474,8 +474,8 @@ public class ReviewRegressionTests
     [Fact]
     public void PartnerWithDifferentPlaceIsWarned()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "place = \"school_2a\"\nphone = \"open\"", "place = \"street\"\nphone = \"open\"");
-        var location = DefinitionFixtures.At(files, Kaori, "with = [\"shiori\"]");
+        var files = DefinitionFixtures.Replaced(Taro, "place = \"school_2a\"\nphone = \"open\"", "place = \"street\"\nphone = \"open\"");
+        var location = DefinitionFixtures.At(files, Taro, "with = [\"hanako\"]");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -489,8 +489,8 @@ public class ReviewRegressionTests
     [Fact]
     public void ItemRequirementNeverSatisfiedIsWarned()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "items = [\"smartphone\", \"book\"]", "items = [\"smartphone\"]");
-        var location = DefinitionFixtures.At(files, Kaori, "use = [\"core.*\"");
+        var files = DefinitionFixtures.Replaced(Taro, "items = [\"smartphone\", \"book\"]", "items = [\"smartphone\"]");
+        var location = DefinitionFixtures.At(files, Taro, "use = [\"core.*\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -509,7 +509,7 @@ public class ReviewRegressionTests
         try
         {
             CultureInfo.CurrentCulture = new CultureInfo("th-TH");
-            var day = FixedScheduleResolver.Resolve(definitions, definitions.Personas[new PersonaDefId("kaori")], new DateOnly(2026, 11, 2), NoHolidays.Instance);
+            var day = FixedScheduleResolver.Resolve(definitions, definitions.Personas[new PersonaDefId("taro")], new DateOnly(2026, 11, 2), NoHolidays.Instance);
 
             Assert.Contains(day.Blocks, block => block.Id == "school@2026-11-02");
         }
@@ -525,18 +525,18 @@ public class ReviewRegressionTests
     [Fact]
     public void OverlapInOnlyALaterYearOfTheCycleIsFound()
     {
-        var source = new DefinitionSource(new SourceLocation(Kaori, 1, 1), ImmutableDictionary<string, SourceLocation>.Empty);
+        var source = new DefinitionSource(new SourceLocation(Taro, 1, 1), ImmutableDictionary<string, SourceLocation>.Empty);
         var definitions = TestWorld.LoadOrThrow();
-        var kaori = definitions.Personas[new PersonaDefId("kaori")];
+        var taro = definitions.Personas[new PersonaDefId("taro")];
         var period = new PeriodDef("ny", new MonthDay(1, 1), new MonthDay(1, 1), source);
-        var fridayOnly = new BlockDef("ny_a", null, ["ny"], [DayOfWeek.Friday], [new TimeRange(new TimeOnly(12, 0), new TimeOnly(13, 0))], "core.idle", "kaori_room", null, null, [], null, null, source);
-        var everyYear = new BlockDef("ny_b", null, ["ny"], [], [new TimeRange(new TimeOnly(12, 0), new TimeOnly(13, 0))], "core.idle", "kaori_room", null, null, [], null, null, source);
-        var persona = kaori with
+        var fridayOnly = new BlockDef("ny_a", null, ["ny"], [DayOfWeek.Friday], [new TimeRange(new TimeOnly(12, 0), new TimeOnly(13, 0))], "core.idle", "taro_room", null, null, [], null, null, source);
+        var everyYear = new BlockDef("ny_b", null, ["ny"], [], [new TimeRange(new TimeOnly(12, 0), new TimeOnly(13, 0))], "core.idle", "taro_room", null, null, [], null, null, source);
+        var persona = taro with
         {
-            Schedule = kaori.Schedule with
+            Schedule = taro.Schedule with
             {
-                Periods = kaori.Schedule.Periods.Add(period),
-                Blocks = kaori.Schedule.Blocks.Add(fridayOnly).Add(everyYear),
+                Periods = taro.Schedule.Periods.Add(period),
+                Blocks = taro.Schedule.Blocks.Add(fridayOnly).Add(everyYear),
             },
         };
 
@@ -552,10 +552,10 @@ public class ReviewRegressionTests
     public void OverlapInLaterCycleYearIsReportedByLoader()
     {
         var files = DefinitionFixtures.Replaced(
-            Kaori,
+            Taro,
             "[[schedule.exception]]\n",
-            "[[schedule.period]]\nid = \"ny\"\nfrom = \"01-01\"\nto = \"01-01\"\n\n[[schedule.block]]\nid = \"ny_a\"\nin = [\"ny\"]\ndays = [\"fri\"]\nfrom = \"12:00\"\nto = \"13:00\"\naction = \"core.idle\"\nplace = \"kaori_room\"\n\n[[schedule.block]]\nid = \"ny_b\"\nin = [\"ny\"]\nfrom = \"12:00\"\nto = \"13:00\"\naction = \"core.idle\"\nplace = \"kaori_room\"\n\n[[schedule.exception]]\n");
-        var header = DefinitionFixtures.At(files, Kaori, "[[schedule.block]]\nid = \"ny_b\"");
+            "[[schedule.period]]\nid = \"ny\"\nfrom = \"01-01\"\nto = \"01-01\"\n\n[[schedule.block]]\nid = \"ny_a\"\nin = [\"ny\"]\ndays = [\"fri\"]\nfrom = \"12:00\"\nto = \"13:00\"\naction = \"core.idle\"\nplace = \"taro_room\"\n\n[[schedule.block]]\nid = \"ny_b\"\nin = [\"ny\"]\nfrom = \"12:00\"\nto = \"13:00\"\naction = \"core.idle\"\nplace = \"taro_room\"\n\n[[schedule.exception]]\n");
+        var header = DefinitionFixtures.At(files, Taro, "[[schedule.block]]\nid = \"ny_b\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -569,13 +569,13 @@ public class ReviewRegressionTests
     [Theory]
     [InlineData("actions/actions.toml", "weight = 1.0", "weight = nan")]
     [InlineData("actions/actions.toml", "weight = 1.0", "weight = inf")]
-    [InlineData("personas/kaori.toml", "half_life = 1.2", "half_life = nan")]
-    [InlineData("personas/kaori.toml", "energy = { initial = 80 }", "energy = { initial = nan }")]
-    [InlineData("personas/kaori.toml", "energy = { initial = 80 }", "energy = { initial = 500 }")]
-    [InlineData("personas/kaori.toml", "floor = -40", "floor = nan")]
-    [InlineData("personas/kaori.toml", "rate_alone = 2.0", "rate_alone = nan")]
-    [InlineData("personas/kaori.toml", "threshold = 15,", "threshold = nan,")]
-    [InlineData("personas/kaori.toml", "threshold = 15,", "threshold = 500,")]
+    [InlineData("personas/taro.toml", "half_life = 1.2", "half_life = nan")]
+    [InlineData("personas/taro.toml", "energy = { initial = 80 }", "energy = { initial = nan }")]
+    [InlineData("personas/taro.toml", "energy = { initial = 80 }", "energy = { initial = 500 }")]
+    [InlineData("personas/taro.toml", "floor = -40", "floor = nan")]
+    [InlineData("personas/taro.toml", "rate_alone = 2.0", "rate_alone = nan")]
+    [InlineData("personas/taro.toml", "threshold = 15,", "threshold = nan,")]
+    [InlineData("personas/taro.toml", "threshold = 15,", "threshold = 500,")]
     [InlineData("actions/actions.toml", "limits.max_per_day = 2", "limits.max_per_day = 5000000000")]
     [InlineData("incidents/incidents.toml", "weight.\"tag:outdoor\" = 0.3", "weight.\"tag:outdoor\" = -0.3")]
     [InlineData("incidents/incidents.toml", "weight.\"tag:outdoor\" = 0.3", "weight.\"tag:outdoor\" = nan")]
@@ -653,10 +653,10 @@ public class ReviewRegressionTests
     public void SocialReflexIsRejected()
     {
         var files = DefinitionFixtures.Replaced(
-            Kaori,
+            Taro,
             "health = { threshold = 15, action = \"core.go_home_rest\" }",
             "health = { threshold = 15, action = \"core.go_home_rest\" }\nsocial = { threshold = 10, action = \"core.idle\" }");
-        var location = DefinitionFixtures.At(files, Kaori, "social = { threshold = 10");
+        var location = DefinitionFixtures.At(files, Taro, "social = { threshold = 10");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -690,8 +690,8 @@ public class ReviewRegressionTests
     [Fact]
     public void RangeMessageUsesPlainInvariantBounds()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "rate_alone = 2.0", "rate_alone = 5000");
-        var location = DefinitionFixtures.At(files, Kaori, "rate_alone = 5000");
+        var files = DefinitionFixtures.Replaced(Taro, "rate_alone = 2.0", "rate_alone = 5000");
+        var location = DefinitionFixtures.At(files, Taro, "rate_alone = 5000");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -702,7 +702,7 @@ public class ReviewRegressionTests
     }
 
     /// <summary>
-    /// 同行の相手の例外日が範囲の外（2027 年）でも、範囲の中（2030 年）でも、香織への警告は同じ（1件、同じ文面）。
+    /// 同行の相手の例外日が範囲の外（2027 年）でも、範囲の中（2030 年）でも、太郎への警告は同じ（1件、同じ文面）。
     /// </summary>
     [Theory]
     [InlineData("2027-03-15")]
@@ -710,14 +710,14 @@ public class ReviewRegressionTests
     public void PartnerExceptionOutsideOrInsideScanGivesSameWarning(string date)
     {
         var files = DefinitionFixtures.Replaced(
-            Shiori,
-            "with = [\"kaori\"]",
-            "with = [\"kaori\"]\n\n[[schedule.exception]]\ndate = \"" + date + "\"\nskip = [\"school\"]");
+            Hanako,
+            "with = [\"taro\"]",
+            "with = [\"taro\"]\n\n[[schedule.exception]]\ndate = \"" + date + "\"\nskip = [\"school\"]");
 
         var result = DefinitionLoader.LoadFiles(files);
 
-        var kaoriWarnings = result.Issues.Where(issue => issue.Code == DefinitionIssueCode.PartnerMismatch && issue.Location.Path == Kaori).ToList();
-        var single = Assert.Single(kaoriWarnings);
+        var taroWarnings = result.Issues.Where(issue => issue.Code == DefinitionIssueCode.PartnerMismatch && issue.Location.Path == Taro).ToList();
+        var single = Assert.Single(taroWarnings);
         Assert.Contains("lunch_break", single.Message, StringComparison.Ordinal);
         Assert.DoesNotContain(date, single.Message, StringComparison.Ordinal);
     }
@@ -728,8 +728,8 @@ public class ReviewRegressionTests
     [InlineData("not-a-date")]
     public void InvalidExceptionDateIsReportedNotThrown(string date)
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "date = \"2026-12-24\"", $"date = \"{date}\"");
-        var location = DefinitionFixtures.At(files, Kaori, $"date = \"{date}\"");
+        var files = DefinitionFixtures.Replaced(Taro, "date = \"2026-12-24\"", $"date = \"{date}\"");
+        var location = DefinitionFixtures.At(files, Taro, $"date = \"{date}\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -741,12 +741,12 @@ public class ReviewRegressionTests
     [Fact]
     public void MissingExceptionDateIsReported()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "date = \"2026-12-24\"\n", string.Empty);
-        var header = DefinitionFixtures.At(files, Kaori, "[[schedule.exception]]\nskip");
+        var files = DefinitionFixtures.Replaced(Taro, "date = \"2026-12-24\"\n", string.Empty);
+        var header = DefinitionFixtures.At(files, Taro, "[[schedule.exception]]\nskip");
 
         var result = DefinitionLoader.LoadFiles(files);
 
-        Assert.Contains(result.Issues, issue => issue.Code == DefinitionIssueCode.MissingRequired && issue.Location.Path == Kaori);
+        Assert.Contains(result.Issues, issue => issue.Code == DefinitionIssueCode.MissingRequired && issue.Location.Path == Taro);
         Assert.Null(result.Definitions);
     }
 
@@ -756,7 +756,7 @@ public class ReviewRegressionTests
     [InlineData("9999-12-31")]
     public void ExceptionAtDateLimitsDoesNotThrow(string date)
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "date = \"2026-12-24\"", $"date = \"{date}\"");
+        var files = DefinitionFixtures.Replaced(Taro, "date = \"2026-12-24\"", $"date = \"{date}\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -768,10 +768,10 @@ public class ReviewRegressionTests
     public void ExceptionOnFirstDayOfScanIsCheckedAgainstPreviousNight()
     {
         var files = DefinitionFixtures.Replaced(
-            Kaori,
+            Taro,
             "place = \"home_living\"",
-            "place = \"home_living\"\n\n[[schedule.exception]]\ndate = \"2028-01-01\"\n\n[[schedule.exception.block]]\nid = \"ny_early\"\nfrom = \"05:00\"\nto = \"07:00\"\naction = \"core.idle\"\nplace = \"kaori_room\"");
-        var header = DefinitionFixtures.At(files, Kaori, "[[schedule.exception.block]]\nid = \"ny_early\"");
+            "place = \"home_living\"\n\n[[schedule.exception]]\ndate = \"2028-01-01\"\n\n[[schedule.exception.block]]\nid = \"ny_early\"\nfrom = \"05:00\"\nto = \"07:00\"\naction = \"core.idle\"\nplace = \"taro_room\"");
+        var header = DefinitionFixtures.At(files, Taro, "[[schedule.exception.block]]\nid = \"ny_early\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -783,7 +783,7 @@ public class ReviewRegressionTests
     [Fact]
     public void PartnerMismatchIsReportedOncePerDefinition()
     {
-        var files = DefinitionFixtures.Replaced(Kaori, "place = \"school_2a\"\nphone = \"open\"", "place = \"street\"\nphone = \"open\"");
+        var files = DefinitionFixtures.Replaced(Taro, "place = \"school_2a\"\nphone = \"open\"", "place = \"street\"\nphone = \"open\"");
 
         var result = DefinitionLoader.LoadFiles(files);
 
@@ -820,7 +820,7 @@ public class ReviewRegressionTests
     {
         var definitions = TestWorld.LoadOrThrow();
 
-        var saturday = FixedScheduleResolver.Resolve(definitions, definitions.Personas[new PersonaDefId("kaori")], new DateOnly(2026, 11, 7), NoHolidays.Instance);
+        var saturday = FixedScheduleResolver.Resolve(definitions, definitions.Personas[new PersonaDefId("taro")], new DateOnly(2026, 11, 7), NoHolidays.Instance);
 
         Assert.Contains(saturday.Blocks, block => block.DefId == "sleep_weekday");
         Assert.DoesNotContain(saturday.Blocks, block => block.DefId == "school");
@@ -830,9 +830,9 @@ public class ReviewRegressionTests
     [Fact]
     public void OneSidedWithAcceptsPartnerExceptionBlock()
     {
-        var files = DefinitionFixtures.Replaced(Shiori, "with = [\"kaori\"]", string.Empty);
-        files = files.Select(file => file.Path == Shiori
-            ? file with { Text = file.Text + "\n[[schedule.exception]]\ndate = \"2026-12-24\"\n\n[[schedule.exception.block]]\nid = \"xmas_lunch\"\nfrom = \"12:20\"\nto = \"13:00\"\naction = \"eat_lunch\"\nplace = \"school_2a\"\nwith = [\"kaori\"]\n" }
+        var files = DefinitionFixtures.Replaced(Hanako, "with = [\"taro\"]", string.Empty);
+        files = files.Select(file => file.Path == Hanako
+            ? file with { Text = file.Text + "\n[[schedule.exception]]\ndate = \"2026-12-24\"\n\n[[schedule.exception.block]]\nid = \"xmas_lunch\"\nfrom = \"12:20\"\nto = \"13:00\"\naction = \"eat_lunch\"\nplace = \"school_2a\"\nwith = [\"taro\"]\n" }
             : file).ToList();
 
         var result = DefinitionLoader.LoadFiles(files);

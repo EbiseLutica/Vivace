@@ -5,14 +5,14 @@ using Vivace.Tests.Support;
 
 namespace Vivace.Tests.Planning;
 
-/// <summary>固定予定だけのプランを、テスト用の町の香織の予定（睡眠 23:45〜06:30 JST）で確かめる。</summary>
+/// <summary>固定予定だけのプランを、テスト用の町の太郎の予定（睡眠 23:45〜06:30 JST）で確かめる。</summary>
 public class FallbackPlannerTests
 {
     /// <summary>23:00 から作ると、いまから 23:45 の睡眠までは自由時間、睡眠が次の作り直しの時刻、範囲はそこから 3 時間後まで。</summary>
     [Fact]
     public void PlanFromTwentyThreeOClockFillsGapsUntilNextSleep()
     {
-        var persona = Fixture.WithKaori().Personas[Fixture.Kaori];
+        var persona = Fixture.WithTaro().Personas[Fixture.Taro];
 
         var plan = FallbackPlanner.Plan(Fixture.Context.Defs, persona, Fixture.Now, 1);
 
@@ -26,6 +26,6 @@ public class FallbackPlannerTests
         Assert.Equal(Fixture.Now.AddMinutes(45), plan.Blocks[1].Start);
         Assert.Equal(new DateTimeOffset(2026, 11, 1, 21, 30, 0, TimeSpan.Zero), plan.Blocks[1].End);
         Assert.Equal("core.sleep", plan.Blocks[1].ActionId);
-        Assert.Equal(new PlaceId("kaori_room"), plan.Blocks[1].Place);
+        Assert.Equal(new PlaceId("taro_room"), plan.Blocks[1].Place);
     }
 }

@@ -18,7 +18,7 @@ namespace Vivace.Tests.Rules;
 /// </summary>
 public class LimitAndWakeTests
 {
-    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private static readonly PlaceId TaroRoom = new("taro_room");
     private static readonly PlaceId Park = new("park");
 
     /// <summary>
@@ -52,13 +52,13 @@ public class LimitAndWakeTests
             PlanSource.Fallback,
             [new PlanBlock(null, BlockKind.Free, now, Fixture.Now.AddHours(3), null, null, PhonePolicy.Closed, null, [], PartnerAbsentPolicy.Continue)],
             null);
-        var committed = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop))).State;
+        var committed = Fixture.Apply(Fixture.WithTaro(), Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Taro, new Guard([new PlanVersionCheck(0)], RejectAction.Drop))).State;
         var state = committed;
 
         for (ulong position = 0; position < 40; position++)
         {
-            var random = new SplitMixRandomSource().Open(state.Worlds[Fixture.World].Seed, Fixture.Kaori.Value, "decide", position);
-            var output = new UtilityDecider().Decide(new DecisionContext(state, Fixture.Kaori, now, DecisionReason.Free, null, Fixture.Context, random));
+            var random = new SplitMixRandomSource().Open(state.Worlds[Fixture.World].Seed, Fixture.Taro.Value, "decide", position);
+            var output = new UtilityDecider().Decide(new DecisionContext(state, Fixture.Taro, now, DecisionReason.Free, null, Fixture.Context, random));
 
             Assert.NotEqual("walk_park", output.Payload.ActionId);
         }
@@ -68,14 +68,14 @@ public class LimitAndWakeTests
     [Fact]
     public void SleepEndSetsLastWakeAndOtherActionsDoNot()
     {
-        var sleep = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(10, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("core.sleep", KaoriRoom, TimeSpan.FromHours(5), ActivityReason.Chosen, 0, null), Fixture.Kaori)).State;
-        var wake = Fixture.Apply(sleep, Fixture.Event(11, Fixture.Now.AddHours(5), EventTypes.ActionEnded, new ActionEndedPayload("core.sleep", 0), Fixture.Kaori));
+        var sleep = Fixture.Apply(Fixture.WithTaro(), Fixture.Event(10, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("core.sleep", TaroRoom, TimeSpan.FromHours(5), ActivityReason.Chosen, 0, null), Fixture.Taro)).State;
+        var wake = Fixture.Apply(sleep, Fixture.Event(11, Fixture.Now.AddHours(5), EventTypes.ActionEnded, new ActionEndedPayload("core.sleep", 0), Fixture.Taro));
 
-        Assert.Equal(Fixture.Now.AddHours(5), wake.State.Personas[Fixture.Kaori].LastWake);
+        Assert.Equal(Fixture.Now.AddHours(5), wake.State.Personas[Fixture.Taro].LastWake);
 
-        var reading = Fixture.Apply(Fixture.WithKaori(), Fixture.Event(12, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", KaoriRoom, TimeSpan.FromMinutes(30), ActivityReason.Chosen, 0, null), Fixture.Kaori)).State;
-        var readingEnd = Fixture.Apply(reading, Fixture.Event(13, Fixture.Now.AddMinutes(30), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 0), Fixture.Kaori));
+        var reading = Fixture.Apply(Fixture.WithTaro(), Fixture.Event(12, Fixture.Now, EventTypes.ActionStarted, new ActionStartedPayload("read_book", TaroRoom, TimeSpan.FromMinutes(30), ActivityReason.Chosen, 0, null), Fixture.Taro)).State;
+        var readingEnd = Fixture.Apply(reading, Fixture.Event(13, Fixture.Now.AddMinutes(30), EventTypes.ActionEnded, new ActionEndedPayload("read_book", 0), Fixture.Taro));
 
-        Assert.Null(readingEnd.State.Personas[Fixture.Kaori].LastWake);
+        Assert.Null(readingEnd.State.Personas[Fixture.Taro].LastWake);
     }
 }

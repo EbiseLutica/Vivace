@@ -256,7 +256,7 @@
     <li><strong>受信箱の残り</strong>：Reaction、<code>INotificationRule</code></li>
     <li><strong>運用</strong>：<code>vivace daemon</code>、管理用 API と SSE、<code>status</code> などの CLI、<code>RejectEventAsync</code>、<code>ResumeAsync</code>、ログと計測、<code>IAdminNotifier</code>（<a href="design/7-operations.html#errors">D7 7.1</a>、<a href="design/7-operations.html#observability">7.3</a>、<a href="design/7-operations.html#cli">7.5</a>）</li>
     <li><strong>永続化の残り</strong>：<code>persona.gap</code>、定義の読み直し（<a href="design/1-execution.html#reload">D1 1.12</a>）</li>
-    <li><strong>生成と破棄</strong>：ペルソナとワールドの破棄、生成し直したときの番号（<code>kaori#2</code>。P-22）（<a href="design/1-execution.html#lifecycle">D1 1.13</a>）</li>
+    <li><strong>生成と破棄</strong>：ペルソナとワールドの破棄、生成し直したときの番号（<code>taro#2</code>。P-22）（<a href="design/1-execution.html#lifecycle">D1 1.13</a>）</li>
     <li><strong>残りのイベントタイプ</strong>：出し手のないものの Apply と guard、全イベントタイプにルールと単体テストがあることのテスト（<a href="design/2-events.html#types">D2 2.3</a>）</li>
   </ul>
 </section>
@@ -277,15 +277,15 @@
   <div class="table-wrap">
     <table>
       <tr><th>課題</th><th>見つけた所</th><th>起きること</th><th>扱う時期</th></tr>
-      <tr><td>投稿に、同居人のいまの様子を作ることがある</td><td>PR #28 の運転</td><td>詩織が居間で「香織が『風邪ひくよ』ってタオルを投げてきた」と書いたが、香織は自分の部屋で本を読んでいた。プロンプトで「書いていない人の様子は書かない」と指示すると、食い違いは 15 件中 3 件から 13 件中 1 件に減ったが、消えてはいない。同じ場所にいる人をコンテキストに渡すか、校閲（D6 6.10）で弾く</td><td>校閲か、同じ場所の人を扱うとき（M4 以降）</td></tr>
+      <tr><td>投稿に、同居人のいまの様子を作ることがある</td><td>PR #28 の運転</td><td>花子が居間で「太郎が『風邪ひくよ』ってタオルを投げてきた」と書いたが、太郎は自分の部屋で本を読んでいた。プロンプトで「書いていない人の様子は書かない」と指示すると、食い違いは 15 件中 3 件から 13 件中 1 件に減ったが、消えてはいない。同じ場所にいる人をコンテキストに渡すか、校閲（D6 6.10）で弾く</td><td>校閲か、同じ場所の人を扱うとき（M4 以降）</td></tr>
       <tr><td>ハンドラの取り消しのコールバックが、エンジンの処理のスレッドで動く</td><td>PR #27 のレビュー</td><td><code>CancelHandler</code> で取り消すと、取り消しを待っていたハンドラの続き（代わりの出力の書き込み）が、エンジンの処理の中で同期的に動くことがある。ハンドラはスナップショットしか読まないので壊れはしないが、重いハンドラが増えたら、取り消しを別のスレッドで行う</td><td>M4 以降（LLM を使うハンドラが増えたら）</td></tr>
       <tr><td>チャンネルの <code>postRateLimit</code> がない</td><td>PR #26 のレビュー</td><td>チャンネルが宣言する投稿の間隔の下限を、投稿の判定に使っていない。コンソールには制限がないので困らない</td><td>M5（Misskey のチャンネルを足すとき）</td></tr>
       <tr><td>配信の結果の投入が拒否されると、黙って消える</td><td>PR #26 のレビュー</td><td>送信は済んだのに outbound.sent / failed が残らず、未送信の操作が残る（再起動後に送信不明として扱う手当てがない）。拒否の理由を記録する</td><td>M3（送信不明の扱い）</td></tr>
       <tr><td><code>outbound.sent</code> / <code>outbound.failed</code> のイベントに、ペルソナが入らない</td><td>PR #26 のレビュー</td><td>購読をペルソナで絞れない。投入の要求にペルソナがないため、未送信の操作からペルソナを引いて入れる</td><td>M3 か M4（購読の絞り込みを使うとき）</td></tr>
       <tr><td>定義の <code>channels</code> にあって、ビルダーに登録されていない種類があっても、警告が出ない</td><td>PR #26 のレビュー</td><td>ペルソナの投稿は、送り先がないまま送信失敗になる。起動時に、channels の種類が登録されていなければ警告を出す（止めはしない）</td><td>M5（Misskey のチャンネルを足すとき）</td></tr>
-      <tr><td>同じ行動が続きやすい</td><td>PR #22 の dry-run</td><td>詩織が夕方に「テレビを見る」を3回、「喫茶店でひと休み」を2回続けた。香織の「本を読む」が、終わった同じ分にまた始まる。続けた回数による重みの下げ方（<code>RepeatFactor</code>）が弱いと見られる</td><td>M2 以降（投稿で同じことばかり言うように見えてきたら）</td></tr>
+      <tr><td>同じ行動が続きやすい</td><td>PR #22 の dry-run</td><td>花子が夕方に「テレビを見る」を3回、「喫茶店でひと休み」を2回続けた。太郎の「本を読む」が、終わった同じ分にまた始まる。続けた回数による重みの下げ方（<code>RepeatFactor</code>）が弱いと見られる</td><td>M2 以降（投稿で同じことばかり言うように見えてきたら）</td></tr>
       <tr><td>生えた場所の名前が出ない</td><td>PR #21</td><td>流れる出力と行動表は、定義にない場所（生えた場所）を ID のまま出す</td><td>場所の生成を作るとき（M6 以降）</td></tr>
-      <tr><td>次の予定の場所へ1分だけ行って戻る</td><td>PR #23 の dry-run</td><td>香織が 11-03 の 21:51 に居間から自分の部屋へ移動し、着いた 21:52 にすぐ居間へ戻った。次の予定の場所へ向かう行動（<code>core.go_to_next</code>）が移動だけで終わり、着いて決め直したときに、元の場所の行動が選ばれる（J-143）。予定の開始までまだ2時間ある</td><td>M2 以降（行き来が目立ってきたら）</td></tr>
+      <tr><td>次の予定の場所へ1分だけ行って戻る</td><td>PR #23 の dry-run</td><td>太郎が 11-03 の 21:51 に居間から自分の部屋へ移動し、着いた 21:52 にすぐ居間へ戻った。次の予定の場所へ向かう行動（<code>core.go_to_next</code>）が移動だけで終わり、着いて決め直したときに、元の場所の行動が選ばれる（J-143）。予定の開始までまだ2時間ある</td><td>M2 以降（行き来が目立ってきたら）</td></tr>
       <tr><td>送信が遅いと、世界の時間が遅れる</td><td>PR #26 のレビュー</td><td>送信の結果が戻るまでエンジンは次を適用しない（J-176）。実時間と倍速では、送信の遅さがそのまま遅れになる（最長 30 秒の時間切れまで）。仮想の時計のときだけ待ち、ほかは結果を普通の到着として受ける形が考えられる</td><td>M5（Misskey をつなぐとき）</td></tr>
       <tr><td>ハンドラの例外を代わりの出力にするとき、例外を記録していない</td><td>PR #24 のレビュー</td><td>D7 7.1 の通知（ログ）がなく、落ちた原因が運転中に見えない</td><td>Core のログを入れるとき</td></tr>
       <tr><td>不変条件の <code>Busy()</code> が、ホライズン待ちの効果の出力を数える</td><td>PR #24 のレビュー</td><td>投稿の行動の間ずっと、そのペルソナの生存の検査が飛ばされる</td><td>M2 以降</td></tr>

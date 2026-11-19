@@ -15,8 +15,8 @@ public class DisplayNamesTests
     [Fact]
     public void PersonaUsesDefinitionName()
     {
-        Assert.Equal("香織", Names.Persona(new PersonaId("kaori")));
-        Assert.Equal("詩織", Names.Persona(new PersonaId("shiori")));
+        Assert.Equal("太郎", Names.Persona(new PersonaId("taro")));
+        Assert.Equal("花子", Names.Persona(new PersonaId("hanako")));
     }
 
     /// <summary>ワールドは定義の名前で引く。</summary>
@@ -30,7 +30,7 @@ public class DisplayNamesTests
     [Fact]
     public void WorldOfPersonaUsesDefinitionWorld()
     {
-        Assert.Equal(Town, Names.WorldOf(new PersonaId("kaori")));
+        Assert.Equal(Town, Names.WorldOf(new PersonaId("taro")));
         Assert.Null(Names.WorldOf(new PersonaId("nobody")));
     }
 
@@ -38,7 +38,7 @@ public class DisplayNamesTests
     [Fact]
     public void PlaceUsesNameOfItsWorld()
     {
-        Assert.Equal("香織の部屋", Names.Place(new PlaceId("kaori_room"), Town));
+        Assert.Equal("太郎の部屋", Names.Place(new PlaceId("taro_room"), Town));
         Assert.Equal("2年A組の教室", Names.Place(new PlaceId("school_2a"), Town));
     }
 
@@ -63,13 +63,13 @@ public class DisplayNamesTests
     [Fact]
     public void BlockActionFindsActivityOfPersonaBlock()
     {
-        var kaori = new PersonaId("kaori");
+        var taro = new PersonaId("taro");
 
-        Assert.Equal("授業を受ける", Names.BlockAction(kaori, "school@2026-11-02"));
-        Assert.Equal("授業を受ける", Names.BlockAction(kaori, "school.3@2026-11-02"));
-        Assert.Equal("眠る", Names.BlockAction(kaori, "sleep_weekday@2026-11-02"));
-        Assert.Null(Names.BlockAction(kaori, "no_such@2026-11-02"));
-        Assert.Null(Names.BlockAction(kaori, "school"));
+        Assert.Equal("授業を受ける", Names.BlockAction(taro, "school@2026-11-02"));
+        Assert.Equal("授業を受ける", Names.BlockAction(taro, "school.3@2026-11-02"));
+        Assert.Equal("眠る", Names.BlockAction(taro, "sleep_weekday@2026-11-02"));
+        Assert.Null(Names.BlockAction(taro, "no_such@2026-11-02"));
+        Assert.Null(Names.BlockAction(taro, "school"));
         Assert.Null(Names.BlockAction(new PersonaId("nobody"), "school@2026-11-02"));
     }
 
@@ -77,7 +77,7 @@ public class DisplayNamesTests
     [Fact]
     public void BlockWithoutActionInheritsParentActivity()
     {
-        Assert.Equal("授業を受ける", Names.BlockAction(new PersonaId("kaori"), "short_break@2026-11-02"));
+        Assert.Equal("授業を受ける", Names.BlockAction(new PersonaId("taro"), "short_break@2026-11-02"));
     }
 
     /// <summary>
@@ -86,10 +86,10 @@ public class DisplayNamesTests
     [Fact]
     public void ExceptionBlockIsFoundOnItsDateOnly()
     {
-        var kaori = new PersonaId("kaori");
+        var taro = new PersonaId("taro");
 
-        Assert.Equal("テレビを見る", Names.BlockAction(kaori, "xmas_party@2026-12-24"));
-        Assert.Null(Names.BlockAction(kaori, "xmas_party@2026-12-23"));
+        Assert.Equal("テレビを見る", Names.BlockAction(taro, "xmas_party@2026-12-24"));
+        Assert.Null(Names.BlockAction(taro, "xmas_party@2026-12-23"));
     }
 
     /// <summary>
@@ -98,7 +98,7 @@ public class DisplayNamesTests
     [Fact]
     public void ExceptionWithSameIdAsNormalBlockIsChosenByDate()
     {
-        var names = WithKaoriExceptions("""
+        var names = WithTaroExceptions("""
 
             [[schedule.exception]]
             date = "2026-12-25"
@@ -110,18 +110,18 @@ public class DisplayNamesTests
             action = "watch_tv"
             place = "home_living"
             """);
-        var kaori = new PersonaId("kaori");
+        var taro = new PersonaId("taro");
 
-        Assert.Equal("テレビを見る", names.BlockAction(kaori, "school@2026-12-25"));
-        Assert.Equal("授業を受ける", names.BlockAction(kaori, "school@2026-11-02"));
+        Assert.Equal("テレビを見る", names.BlockAction(taro, "school@2026-12-25"));
+        Assert.Equal("授業を受ける", names.BlockAction(taro, "school@2026-11-02"));
     }
 
-    /// <summary>テスト用の定義の kaori に、例外の書き足しを付けた名前の表を作る。</summary>
-    /// <param name="extra">kaori.toml の末尾に足す TOML。</param>
-    private static DisplayNames WithKaoriExceptions(string extra)
+    /// <summary>テスト用の定義の taro に、例外の書き足しを付けた名前の表を作る。</summary>
+    /// <param name="extra">taro.toml の末尾に足す TOML。</param>
+    private static DisplayNames WithTaroExceptions(string extra)
     {
         var files = TestWorld.Files()
-            .Select(file => file.Path == "personas/kaori.toml" ? file with { Text = file.Text + extra } : file)
+            .Select(file => file.Path == "personas/taro.toml" ? file with { Text = file.Text + extra } : file)
             .ToList();
         var result = DefinitionLoader.LoadFiles(files);
         return new DisplayNames(result.Definitions ?? throw new InvalidOperationException(string.Join("\n", result.Issues)));

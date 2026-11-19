@@ -13,9 +13,9 @@ namespace Vivace.Tests.Cli;
 public class DryRunReportTests
 {
     private static readonly DisplayNames Names = new(TestWorld.LoadOrThrow());
-    private static readonly PersonaId Kaori = new("kaori");
-    private static readonly PersonaId Shiori = new("shiori");
-    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private static readonly PersonaId Taro = new("taro");
+    private static readonly PersonaId Hanako = new("hanako");
+    private static readonly PlaceId TaroRoom = new("taro_room");
     private static readonly PlaceId HomeLiving = new("home_living");
     private static readonly PlaceId School = new("school_2a");
     private static readonly WorldId Town = new("testville");
@@ -23,23 +23,23 @@ public class DryRunReportTests
     /// <summary>
     /// 時差は UTC+9。UTC の 2026-11-01 22:00 は、現地の 2026-11-02 07:00（月曜）。
     /// 行は、同じ人の終わりの記録で閉じる。捨てた記録と却下の記録は行にせず、件数だけ数える（捨てた 2 件、却下 1 件で入れ替わりを見る）。
-    /// 人は ID の序数順（kaori、shiori）、記録の順には依らない。
+    /// 人は ID の序数順（hanako、taro）、記録の順には依らない。
     /// </summary>
     [Fact]
     public void RendersRowsByDayAndPersonaWithCounts()
     {
         var records = new[]
         {
-            Logged(1, At(22, 30), new ActionStartedPayload("read_book", HomeLiving, TimeSpan.FromMinutes(20), ActivityReason.Chosen, 1, null), Shiori),
-            Logged(2, At(22, 0), new ActionStartedPayload("eat_breakfast", KaoriRoom, TimeSpan.FromMinutes(30), ActivityReason.Block, 1, "b@1"), Kaori),
-            Logged(3, At(22, 30), new ActionEndedPayload("eat_breakfast", 1), Kaori),
-            Logged(4, At(23, 10), new TravelStartedPayload(KaoriRoom, School, [], At(23, 25), 2), Kaori),
-            Logged(5, At(23, 12), new ActionEndedPayload("read_book", 1), Kaori, EventStatus.Skipped),
-            Logged(6, At(23, 25), new TravelArrivedPayload(School, 2), Kaori),
-            Logged(7, At(23, 25), new ActionStartedPayload("attend_class", School, TimeSpan.FromMinutes(60), ActivityReason.Chosen, 3, null), Kaori),
-            Logged(8, At(22, 50), new ActionEndedPayload("read_book", 1), Shiori),
-            Logged(9, At(23, 40), new TravelStartedPayload(KaoriRoom, HomeLiving, [], At(23, 55), 4), Kaori, EventStatus.Rejected),
-            Logged(10, At(23, 13), new ActionEndedPayload("attend_class", 1), Kaori, EventStatus.Skipped),
+            Logged(1, At(22, 30), new ActionStartedPayload("read_book", HomeLiving, TimeSpan.FromMinutes(20), ActivityReason.Chosen, 1, null), Hanako),
+            Logged(2, At(22, 0), new ActionStartedPayload("eat_breakfast", TaroRoom, TimeSpan.FromMinutes(30), ActivityReason.Block, 1, "b@1"), Taro),
+            Logged(3, At(22, 30), new ActionEndedPayload("eat_breakfast", 1), Taro),
+            Logged(4, At(23, 10), new TravelStartedPayload(TaroRoom, School, [], At(23, 25), 2), Taro),
+            Logged(5, At(23, 12), new ActionEndedPayload("read_book", 1), Taro, EventStatus.Skipped),
+            Logged(6, At(23, 25), new TravelArrivedPayload(School, 2), Taro),
+            Logged(7, At(23, 25), new ActionStartedPayload("attend_class", School, TimeSpan.FromMinutes(60), ActivityReason.Chosen, 3, null), Taro),
+            Logged(8, At(22, 50), new ActionEndedPayload("read_book", 1), Hanako),
+            Logged(9, At(23, 40), new TravelStartedPayload(TaroRoom, HomeLiving, [], At(23, 55), 4), Taro, EventStatus.Rejected),
+            Logged(10, At(23, 13), new ActionEndedPayload("attend_class", 1), Taro, EventStatus.Skipped),
         };
         var offsets = new Dictionary<WorldId, TimeSpan> { [Town] = TimeSpan.FromHours(9) };
 
@@ -47,12 +47,12 @@ public class DryRunReportTests
 
         Assert.Equal(
             "2026-11-02（月）\n"
-            + "香織\n"
-            + "  07:00-07:30 eat_breakfast＠香織の部屋（予定）\n"
-            + "  08:10-08:25 移動 香織の部屋 → 2年A組の教室\n"
-            + "  08:25-未終了 授業を受ける＠2年A組の教室（自由）\n"
-            + "詩織\n"
+            + "花子\n"
             + "  07:30-07:50 本を読む＠居間（自由）\n"
+            + "太郎\n"
+            + "  07:00-07:30 eat_breakfast＠太郎の部屋（予定）\n"
+            + "  08:10-08:25 移動 太郎の部屋 → 2年A組の教室\n"
+            + "  08:25-未終了 授業を受ける＠2年A組の教室（自由）\n"
             + "\n"
             + "適用 7 件、捨てた 2 件、却下 1 件\n",
             text);
@@ -67,9 +67,9 @@ public class DryRunReportTests
     {
         var records = new[]
         {
-            Logged(1, At(1, 0), new ActionStartedPayload("read_book", HomeLiving, TimeSpan.FromMinutes(30), ActivityReason.Reflex, 1, null), Kaori),
-            Logged(2, At(1, 30), new ActionStartedPayload("attend_class", School, TimeSpan.FromMinutes(30), ActivityReason.Late, 2, null), Kaori),
-            Logged(3, At(2, 0), new TravelStartedPayload(School, KaoriRoom, [], At(2, 20), 3), Kaori),
+            Logged(1, At(1, 0), new ActionStartedPayload("read_book", HomeLiving, TimeSpan.FromMinutes(30), ActivityReason.Reflex, 1, null), Taro),
+            Logged(2, At(1, 30), new ActionStartedPayload("attend_class", School, TimeSpan.FromMinutes(30), ActivityReason.Late, 2, null), Taro),
+            Logged(3, At(2, 0), new TravelStartedPayload(School, TaroRoom, [], At(2, 20), 3), Taro),
         };
         var offsets = new Dictionary<WorldId, TimeSpan> { [Town] = TimeSpan.FromHours(9) };
 
@@ -77,10 +77,10 @@ public class DryRunReportTests
 
         Assert.Equal(
             "2026-11-01（日）\n"
-            + "香織\n"
+            + "太郎\n"
             + "  10:00-10:30 本を読む＠居間（反射）\n"
             + "  10:30-11:00 授業を受ける＠2年A組の教室（遅刻）\n"
-            + "  11:00-未終了 移動 2年A組の教室 → 香織の部屋\n"
+            + "  11:00-未終了 移動 2年A組の教室 → 太郎の部屋\n"
             + "\n"
             + "適用 3 件、捨てた 0 件、却下 0 件\n",
             text);
@@ -92,10 +92,10 @@ public class DryRunReportTests
     {
         var records = new[]
         {
-            Logged(1, At(1, 0), new ActionStartedPayload("x", HomeLiving, TimeSpan.FromMinutes(5), ActivityReason.Chosen, 1, null), Kaori, EventStatus.Skipped),
-            Logged(2, At(1, 10), new ActionEndedPayload("x", 1), Kaori, EventStatus.Skipped),
-            Logged(3, At(1, 20), new TravelStartedPayload(KaoriRoom, School, [], At(1, 30), 1), Kaori, EventStatus.Rejected),
-            Logged(4, At(2, 0), new ActionStartedPayload("read_book", HomeLiving, TimeSpan.FromMinutes(20), ActivityReason.Chosen, 2, null), Kaori),
+            Logged(1, At(1, 0), new ActionStartedPayload("x", HomeLiving, TimeSpan.FromMinutes(5), ActivityReason.Chosen, 1, null), Taro, EventStatus.Skipped),
+            Logged(2, At(1, 10), new ActionEndedPayload("x", 1), Taro, EventStatus.Skipped),
+            Logged(3, At(1, 20), new TravelStartedPayload(TaroRoom, School, [], At(1, 30), 1), Taro, EventStatus.Rejected),
+            Logged(4, At(2, 0), new ActionStartedPayload("read_book", HomeLiving, TimeSpan.FromMinutes(20), ActivityReason.Chosen, 2, null), Taro),
         };
         var offsets = new Dictionary<WorldId, TimeSpan> { [Town] = TimeSpan.FromHours(9) };
 
@@ -103,7 +103,7 @@ public class DryRunReportTests
 
         Assert.Equal(
             "2026-11-01（日）\n"
-            + "香織\n"
+            + "太郎\n"
             + "  11:00-未終了 本を読む＠居間（自由）\n"
             + "\n"
             + "適用 1 件、捨てた 2 件、却下 1 件\n",
@@ -119,11 +119,11 @@ public class DryRunReportTests
     {
         var records = new[]
         {
-            Logged(1, At(22, 0), new ActionStartedPayload("attend_class", School, TimeSpan.FromMinutes(60), ActivityReason.Block, 1, "b@1"), Kaori),
-            Logged(2, At(22, 20), new ActionStartedPayload("post_sns", School, TimeSpan.FromMinutes(8), ActivityReason.Chosen, 1, null, true), Kaori),
-            Logged(3, At(22, 28), new ActionEndedPayload("post_sns", 1, true), Kaori),
-            Logged(4, At(22, 50), new ActionStartedPayload("post_sns", School, TimeSpan.FromMinutes(10), ActivityReason.Chosen, 1, null, true), Kaori),
-            Logged(5, At(23, 0), new ActionEndedPayload("attend_class", 1), Kaori),
+            Logged(1, At(22, 0), new ActionStartedPayload("attend_class", School, TimeSpan.FromMinutes(60), ActivityReason.Block, 1, "b@1"), Taro),
+            Logged(2, At(22, 20), new ActionStartedPayload("post_sns", School, TimeSpan.FromMinutes(8), ActivityReason.Chosen, 1, null, true), Taro),
+            Logged(3, At(22, 28), new ActionEndedPayload("post_sns", 1, true), Taro),
+            Logged(4, At(22, 50), new ActionStartedPayload("post_sns", School, TimeSpan.FromMinutes(10), ActivityReason.Chosen, 1, null, true), Taro),
+            Logged(5, At(23, 0), new ActionEndedPayload("attend_class", 1), Taro),
         };
         var offsets = new Dictionary<WorldId, TimeSpan> { [Town] = TimeSpan.FromHours(9) };
 
@@ -131,7 +131,7 @@ public class DryRunReportTests
 
         Assert.Equal(
             "2026-11-02（月）\n"
-            + "香織\n"
+            + "太郎\n"
             + "  07:00-08:00 授業を受ける＠2年A組の教室（予定）\n"
             + "    07:20-07:28 （スマホ）SNS に投稿する\n"
             + "    07:50-08:00 （スマホ）SNS に投稿する\n"
@@ -146,11 +146,11 @@ public class DryRunReportTests
     {
         var records = new[]
         {
-            Logged(1, At(22, 0), new ActionStartedPayload("attend_class", School, TimeSpan.FromMinutes(60), ActivityReason.Block, 1, "b@1"), Kaori),
-            Logged(2, At(22, 20), new ActionStartedPayload("post_sns", School, TimeSpan.FromMinutes(8), ActivityReason.Chosen, 1, null, true), Kaori),
-            Logged(3, At(22, 28), new ActionEndedPayload("post_sns", 1, true), Kaori),
-            Logged(4, At(22, 28), new PostSkippedPayload(PostSkippedPayload.PostSkipReason.GenerationFailed, null), Kaori),
-            Logged(5, At(23, 0), new ActionEndedPayload("attend_class", 1), Kaori),
+            Logged(1, At(22, 0), new ActionStartedPayload("attend_class", School, TimeSpan.FromMinutes(60), ActivityReason.Block, 1, "b@1"), Taro),
+            Logged(2, At(22, 20), new ActionStartedPayload("post_sns", School, TimeSpan.FromMinutes(8), ActivityReason.Chosen, 1, null, true), Taro),
+            Logged(3, At(22, 28), new ActionEndedPayload("post_sns", 1, true), Taro),
+            Logged(4, At(22, 28), new PostSkippedPayload(PostSkippedPayload.PostSkipReason.GenerationFailed, null), Taro),
+            Logged(5, At(23, 0), new ActionEndedPayload("attend_class", 1), Taro),
         };
         var offsets = new Dictionary<WorldId, TimeSpan> { [Town] = TimeSpan.FromHours(9) };
 
@@ -158,7 +158,7 @@ public class DryRunReportTests
 
         Assert.Equal(
             "2026-11-02（月）\n"
-            + "香織\n"
+            + "太郎\n"
             + "  07:00-08:00 授業を受ける＠2年A組の教室（予定）\n"
             + "    07:20-07:28 （スマホ）SNS に投稿する\n"
             + "    07:28 （投稿をやめた：生成の失敗）\n"
@@ -173,10 +173,10 @@ public class DryRunReportTests
     {
         var records = new[]
         {
-            Logged(1, At(22, 20), new ActionStartedPayload("post_sns", School, TimeSpan.FromMinutes(8), ActivityReason.Chosen, 1, null, true), Kaori),
-            Logged(2, At(22, 28), new ActionEndedPayload("post_sns", 1, true), Kaori),
-            Logged(3, At(22, 28), new OutboundSpeechPayload("console", OutboundSpeechPayload.OutboundPostKind.Post, "今日の授業眠い", null, Audience.Public, [], default, null), Kaori),
-            Logged(4, At(22, 50), new PostSkippedPayload(PostSkippedPayload.PostSkipReason.AllRejected, null), Kaori),
+            Logged(1, At(22, 20), new ActionStartedPayload("post_sns", School, TimeSpan.FromMinutes(8), ActivityReason.Chosen, 1, null, true), Taro),
+            Logged(2, At(22, 28), new ActionEndedPayload("post_sns", 1, true), Taro),
+            Logged(3, At(22, 28), new OutboundSpeechPayload("console", OutboundSpeechPayload.OutboundPostKind.Post, "今日の授業眠い", null, Audience.Public, [], default, null), Taro),
+            Logged(4, At(22, 50), new PostSkippedPayload(PostSkippedPayload.PostSkipReason.AllRejected, null), Taro),
         };
         var offsets = new Dictionary<WorldId, TimeSpan> { [Town] = TimeSpan.FromHours(9) };
 
@@ -184,7 +184,7 @@ public class DryRunReportTests
 
         Assert.Equal(
             "2026-11-02（月）\n"
-            + "香織\n"
+            + "太郎\n"
             + "    07:20-07:28 （スマホ）SNS に投稿する\n"
             + "    07:28 （投稿）今日の授業眠い\n"
             + "  07:50 （投稿をやめた：話題がなかった）\n"

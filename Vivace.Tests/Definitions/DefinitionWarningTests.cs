@@ -50,8 +50,8 @@ public class DefinitionWarningTests
     [Fact]
     public void OneSidedWithIsWarnedAtWithKey()
     {
-        var files = DefinitionFixtures.Replaced("personas/shiori.toml", "with = [\"kaori\"]", string.Empty);
-        var location = DefinitionFixtures.At(files, "personas/kaori.toml", "with = [\"shiori\"]");
+        var files = DefinitionFixtures.Replaced("personas/hanako.toml", "with = [\"taro\"]", string.Empty);
+        var location = DefinitionFixtures.At(files, "personas/taro.toml", "with = [\"hanako\"]");
 
         var result = DefinitionLoader.LoadFiles(files);
 

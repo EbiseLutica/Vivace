@@ -22,7 +22,7 @@ public class ConsoleChannelTests
         var channel = new ConsoleChannel(new DisplayNames(definitions), offsets, output);
         var request = new OutboundRequest(
             Seq: 22,
-            Persona: new PersonaId("kaori"),
+            Persona: new PersonaId("taro"),
             At: new DateTimeOffset(2026, 11, 1, 14, 8, 0, TimeSpan.Zero),
             OperationKind: "post",
             IsSpeech: true,
@@ -31,7 +31,7 @@ public class ConsoleChannelTests
         var result = await channel.SendAsync(request, CancellationToken.None);
 
         Assert.Equal("console", channel.Kind);
-        Assert.Equal("11-01 23:08 [送信 console] 香織: 今日の授業眠い\n", output.ToString());
+        Assert.Equal("11-01 23:08 [送信 console] 太郎: 今日の授業眠い\n", output.ToString());
         Assert.Equal(new SendResult.Sent("console-22"), result);
     }
 
@@ -46,6 +46,6 @@ public class ConsoleChannelTests
         var code = await RunCommand.RunAsync(folder.Path, new VirtualClock(Scenario.Start), Scenario.WorldSeed, false, output, CancellationToken.None, Scenario.Start.AddDays(2), llm: llm);
 
         Assert.Equal(0, code);
-        Assert.Contains("[送信 console] 香織: テストの文面\n", output.ToString(), StringComparison.Ordinal);
+        Assert.Contains("[送信 console] 太郎: テストの文面\n", output.ToString(), StringComparison.Ordinal);
     }
 }

@@ -14,39 +14,39 @@ namespace Vivace.Tests.Engine;
 /// </summary>
 public class InvariantsTests
 {
-    private static readonly PlaceId KaoriRoom = new("kaori_room");
+    private static readonly PlaceId TaroRoom = new("taro_room");
 
     /// <summary>行動中の状態を作る。</summary>
     private static SimState Running(long version = 0) => Fixture.With(
-        Fixture.WithKaori(),
-        Fixture.Get(Fixture.WithKaori(), Fixture.Kaori) with
+        Fixture.WithTaro(),
+        Fixture.Get(Fixture.WithTaro(), Fixture.Taro) with
         {
-            Activity = new Activity("read_book", KaoriRoom, Fixture.Now, Fixture.Now.AddMinutes(30), ActivityReason.Chosen, null),
+            Activity = new Activity("read_book", TaroRoom, Fixture.Now, Fixture.Now.AddMinutes(30), ActivityReason.Chosen, null),
             ActivityVersion = version,
         });
 
     /// <summary>移動中の状態を作る。</summary>
     private static SimState Traveling() => Fixture.With(
-        Fixture.WithKaori(),
-        Fixture.Get(Fixture.WithKaori(), Fixture.Kaori) with
+        Fixture.WithTaro(),
+        Fixture.Get(Fixture.WithTaro(), Fixture.Taro) with
         {
-            Location = new Traveling(KaoriRoom, new PlaceId("home_living"), ImmutableArray<RouteStep>.Empty, Fixture.Now, Fixture.Now.AddMinutes(1)),
+            Location = new Traveling(TaroRoom, new PlaceId("home_living"), ImmutableArray<RouteStep>.Empty, Fixture.Now, Fixture.Now.AddMinutes(1)),
         });
 
     /// <summary>決定中の状態を作る。</summary>
     private static SimState Deciding() => Fixture.With(
-        Fixture.WithKaori(),
-        Fixture.Get(Fixture.WithKaori(), Fixture.Kaori) with { Deciding = true });
+        Fixture.WithTaro(),
+        Fixture.Get(Fixture.WithTaro(), Fixture.Taro) with { Deciding = true });
 
     /// <summary>未適用のイベントを作る。</summary>
     private static SimEvent Pending(long seq, string type, EventPayload payload) =>
-        Fixture.Event(seq, Fixture.Now.AddMinutes(30), type, payload, Fixture.Kaori);
+        Fixture.Event(seq, Fixture.Now.AddMinutes(30), type, payload, Fixture.Taro);
 
     /// <summary>不変条件を検査する。</summary>
     private static void Check(SimState state, IEnumerable<SimEvent> pending, bool busy = false)
     {
         var lookup = pending.ToLookup(ev => ev.PersonaId!.Value);
-        var busySet = busy ? ImmutableHashSet.Create(Fixture.Kaori) : ImmutableHashSet<PersonaId>.Empty;
+        var busySet = busy ? ImmutableHashSet.Create(Fixture.Taro) : ImmutableHashSet<PersonaId>.Empty;
         Invariants.Check(Fixture.Context, state, state.Cursor.Time, busySet, lookup, null);
     }
 
@@ -80,7 +80,7 @@ public class InvariantsTests
     [Fact]
     public void IdlePersonaWithoutEventIsDetected()
     {
-        Assert.Throws<InvariantViolationException>(() => Check(Fixture.WithKaori(), []));
+        Assert.Throws<InvariantViolationException>(() => Check(Fixture.WithTaro(), []));
     }
 
     /// <summary>
@@ -98,7 +98,7 @@ public class InvariantsTests
             Vivace.Core.Domain.State.PlanSource.Fallback,
             [new Vivace.Core.Domain.State.PlanBlock(null, Vivace.Core.Domain.State.BlockKind.Free, Fixture.Now, Fixture.Now.AddHours(3), null, null, Vivace.Core.Domain.PhonePolicy.Closed, null, [], Vivace.Core.Domain.PartnerAbsentPolicy.Continue)],
             null);
-        var state = Fixture.With(Fixture.WithKaori(), Fixture.Get(Fixture.WithKaori(), Fixture.Kaori) with { Plan = plan });
+        var state = Fixture.With(Fixture.WithTaro(), Fixture.Get(Fixture.WithTaro(), Fixture.Taro) with { Plan = plan });
 
         Assert.Throws<InvariantViolationException>(() => Check(state, [Pending(10, EventTypes.BlockStarted, new BlockStartedPayload("later@2026-11-01", 1))]));
         Check(state, [Pending(11, EventTypes.DecisionRequested, new DecisionRequestedPayload(DecisionReason.Ended, null))]);
@@ -109,10 +109,10 @@ public class InvariantsTests
     public void VitalOutOfRangeIsDetected()
     {
         var broken = Fixture.With(
-            Fixture.WithKaori(),
-            Fixture.Get(Fixture.WithKaori(), Fixture.Kaori) with
+            Fixture.WithTaro(),
+            Fixture.Get(Fixture.WithTaro(), Fixture.Taro) with
             {
-                Vitals = Fixture.Get(Fixture.WithKaori(), Fixture.Kaori).Vitals with { Energy = new VitalTrack(Fixture.Now, 150, 0) },
+                Vitals = Fixture.Get(Fixture.WithTaro(), Fixture.Taro).Vitals with { Energy = new VitalTrack(Fixture.Now, 150, 0) },
             });
 
         Assert.Throws<InvariantViolationException>(() => Check(broken, [Pending(10, EventTypes.BlockStarted, new BlockStartedPayload(null, 1))]));
@@ -130,9 +130,9 @@ public class InvariantsTests
     [Fact]
     public void OverlayWithoutMainActionIsDetected()
     {
-        var overlay = new Activity("cafe", KaoriRoom, Fixture.Now, Fixture.Now.AddMinutes(5), ActivityReason.Chosen, null);
-        var state = Fixture.With(Fixture.WithKaori(), Fixture.Get(Fixture.WithKaori(), Fixture.Kaori) with { Overlay = overlay });
-        var subEnd = Fixture.Event(10, overlay.EndsAt, EventTypes.ActionEnded, new ActionEndedPayload("cafe", 0, true), Fixture.Kaori);
+        var overlay = new Activity("cafe", TaroRoom, Fixture.Now, Fixture.Now.AddMinutes(5), ActivityReason.Chosen, null);
+        var state = Fixture.With(Fixture.WithTaro(), Fixture.Get(Fixture.WithTaro(), Fixture.Taro) with { Overlay = overlay });
+        var subEnd = Fixture.Event(10, overlay.EndsAt, EventTypes.ActionEnded, new ActionEndedPayload("cafe", 0, true), Fixture.Taro);
 
         Assert.Throws<InvariantViolationException>(() => Check(state, []));
         Assert.Throws<InvariantViolationException>(() => Check(state, [subEnd]));
@@ -144,11 +144,11 @@ public class InvariantsTests
     [Fact]
     public void OverlayWithoutSubActionEndIsDetected()
     {
-        var overlay = new Activity("cafe", KaoriRoom, Fixture.Now, Fixture.Now.AddMinutes(5), ActivityReason.Chosen, null);
+        var overlay = new Activity("cafe", TaroRoom, Fixture.Now, Fixture.Now.AddMinutes(5), ActivityReason.Chosen, null);
         var running = Running();
-        var state = Fixture.With(running, Fixture.Get(running, Fixture.Kaori) with { Overlay = overlay });
+        var state = Fixture.With(running, Fixture.Get(running, Fixture.Taro) with { Overlay = overlay });
         var mainEnd = Pending(11, EventTypes.ActionEnded, new ActionEndedPayload("read_book", 0));
-        var subEnd = Fixture.Event(12, Fixture.Now.AddMinutes(5), EventTypes.ActionEnded, new ActionEndedPayload("cafe", 0, true), Fixture.Kaori);
+        var subEnd = Fixture.Event(12, Fixture.Now.AddMinutes(5), EventTypes.ActionEnded, new ActionEndedPayload("cafe", 0, true), Fixture.Taro);
 
         Assert.Throws<InvariantViolationException>(() => Check(state, [mainEnd]));
         Check(state, [mainEnd, subEnd]);
