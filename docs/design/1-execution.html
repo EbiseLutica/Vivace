@@ -187,23 +187,22 @@ record ApplyResult(
   <div class="table-wrap">
     <table>
       <tr><th>シグナル</th><th>依頼の中身</th><th>再起動したときの復元</th></tr>
-      <tr><td><code>StartHandler</code></td><td>決定タイミングのハンドラを、レーンで起動する</td><td>「処理中」の決定タイミングを探して、起動し直す</td></tr>
+      <tr><td><code>StartHandler</code></td><td>ハンドラ（Decider、Planner、効果）を、レーンで起動する</td><td>processing のイベントから作り直して、起動し直す（P-58）</td></tr>
       <tr><td><code>CancelHandler</code></td><td>割り込みで不要になったハンドラを取り消す</td><td>不要。古い出力は検査で弾かれる（1.7）</td></tr>
       <tr><td><code>Deliver</code></td><td>未送信の外向きの操作を、配信役に渡す</td><td>未送信のものは、送らずに「送信不明」にする（VISION 10章）</td></tr>
       <tr><td><code>Consolidate</code></td><td>記憶の整理を起こす（範囲の上限の適用番号つき）</td><td>起動時に、カーソルから現在までを1回まとめて整理する（VISION UC-1）</td></tr>
       <tr><td><code>ChannelOnline</code></td><td>圏外が明けたことをチャンネルに伝える</td><td>追いつきの終わりに、毎回出す</td></tr>
     </table>
   </div>
-  <div class="draft">
-    <span class="label">案 P-58　StartHandler を出したイベントは、出力を取り込むまで processing にする</span>
-    <p>上の表の復元は、処理中の決定タイミングしか手がかりにしていない。Planner（記憶の整理を起こす行動の開始、ブロックの開始、<code>plan.due</code>、<code>persona.created</code> から起動）と効果のハンドラ（<code>action.started</code> から起動）は、トリガーのイベントがすぐ applied になるので、出力が届く前に落ちると、起動し直す手がかりが残らない。</p>
+  <div class="callout">
+    <span class="label">決定 P-58　StartHandler を出したイベントは、出力を取り込むまで processing にする</span>
+    <p>決定タイミングだけを processing にすると、Planner（記憶の整理を起こす行動の開始、ブロックの開始、<code>plan.due</code>、<code>persona.created</code> から起動）と効果のハンドラ（<code>action.started</code> から起動）は、トリガーのイベントがすぐ applied になり、出力が届く前に落ちると、起動し直す手がかりが残らない。</p>
     <ul>
       <li>P-07 の processing を、決定タイミングだけでなく、<code>StartHandler</code> を出すすべてのイベントに広げる。適用番号は processing に入るときに振り、ハンドラの出力をキューに入れたら applied にする。<code>CancelHandler</code> で出力を捨てたときも applied にする</li>
       <li>再起動では、processing のイベントからシグナルを作り直して起動する。まとまりの連番はそのイベントの連番、ほかの中身はペイロードといまの状態から作る。スナップショットは再起動のときの状態になるので、ホライズンの先が長いハンドラ（効果、Planner）は、落ちなかったときと入力が変わりうる。LLM の出力はもともと揺れるので、それは許す</li>
       <li>取り消したハンドラを再起動で起動し直しても、出力は行動のバージョンの検査（1.7）で弾かれる（P-03 と同じ）</li>
       <li>1つのイベントが出す <code>StartHandler</code> は1つまでにする。実行中のハンドラと出力は、まとまりの連番で区別するため。いまぶつかりうるのは、記憶の整理を起こす行動が効果のハンドラも持つときだけなので、定義の検証で、<code>effects.sleep.consolidate</code> と <code>effects.handler</code> を同じ行動に持たせない</li>
     </ul>
-    <p>合意したら、上の表の <code>StartHandler</code> の行を「ハンドラ（Decider、Planner、効果）をレーンで起動する」「processing のイベントから起動し直す」に直し、1.8 の状態の図と 1.11 の起動の手順も合わせる。</p>
   </div>
   <div class="callout">
     <span class="label">決定 P-03　割り込まれた行動のハンドラは取り消す</span>
@@ -368,14 +367,14 @@ record ApplyResult(
 
       <rect class="box warn" x="560" y="60" width="160" height="48" rx="8"/>
       <text class="title" x="640" y="82" text-anchor="middle">processing</text>
-      <text class="sub" x="640" y="99" text-anchor="middle">決定タイミング：処理中</text>
+      <text class="sub" x="640" y="99" text-anchor="middle">ハンドラの出力待ち</text>
 
 
       <path class="arrow" d="M170 112 L318 50"/>
       <path class="arrow" d="M170 124 H318"/>
       <path class="arrow" d="M170 136 L318 198"/>
       <path class="arrow" d="M170 106 C 260 70, 450 70, 558 80"/>
-      <text class="sub" x="470" y="66">決定タイミング</text>
+      <text class="sub" x="470" y="66">StartHandler を出す</text>
       <path class="arrow" d="M600 60 C 590 24, 500 24, 452 38"/>
       <text class="sub" x="530" y="16" text-anchor="middle">出力を取り込んだ</text>
       <path class="arrow dash" d="M720 74 C 756 66, 756 102, 722 96"/>
@@ -384,7 +383,7 @@ record ApplyResult(
     <figcaption>イベントの状態。行は消さず、中身も書き換えない（VISION 4章）。変わるのは状態と適用番号だけ</figcaption>
   </figure>
   <ul>
-    <li>適用番号を持つのは、applied と processing（決定タイミング）だけ。skipped と rejected は持たない（何も適用していないから）</li>
+    <li>適用番号を持つのは、applied と processing（StartHandler を出したイベント。P-58）だけ。skipped と rejected は持たない（何も適用していないから）</li>
     <li>rejected と skipped には、理由（<code>status_reason</code>）を残す。ビューアと実行レポートで、なぜ起きなかったかを読める</li>
   </ul>
   <div class="callout">
@@ -476,7 +475,7 @@ record ApplyResult(
     <li>状態のテーブルから SimState を組み立て、未適用と処理中のイベントでキューを作る</li>
     <li>未送信の操作ごとに「送信不明」のイベントを挿入する</li>
     <li>最後に適用したイベントの時刻と、いまの時刻を比べる。差が 1 分を超えていれば、追いつきに入る</li>
-    <li>処理中の決定タイミングのハンドラを起動し直し、エンジンを動かす</li>
+    <li>processing のイベントから、ハンドラを起動し直し（P-58）、エンジンを動かす</li>
   </ol>
   <h3>追いつき</h3>
   <ul>
@@ -492,7 +491,7 @@ record ApplyResult(
   <h3>停止</h3>
   <ol>
     <li>受付を閉じる（新しいコマンドを受けない）</li>
-    <li>実行中のハンドラを取り消す。決定タイミングは processing のまま残り、次の起動で再決定する</li>
+    <li>実行中のハンドラを取り消す。StartHandler を出したイベントは processing のまま残り、次の起動でハンドラを起動し直す</li>
     <li>すべてのレーンを閉じ（これ以降は、新しいレーンも作らない）、動いているジョブの終わりを待つ。ジョブの例外で閉じたレーンがあっても、ここでは例外を投げない（実行している間に出す。D7 7.1）（J-151）</li>
     <li>実行中のトランザクションのコミットを待って、接続を閉じる。配信役が送信中のものは、結果を待たずに閉じてよい（次の起動で不明になる）</li>
   </ol>

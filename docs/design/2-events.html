@@ -272,6 +272,7 @@
       <tr><td><code>handler = "&lt;プラグイン&gt;.&lt;名前&gt;"</code></td><td>プラグインが足すハンドラ</td><td>コアのイベントタイプ（中身はチャンネルが解釈する）</td></tr>
     </table>
   </div>
+  <p>記憶の整理を起こす行動（<code>sleep.consolidate = true</code>）には、<code>handler</code> を持たせない。定義の検証で弾く。行動の開始が Planner と効果のハンドラを両方起こすと、1つのイベントが出す <code>StartHandler</code> が2つになるため（D1 P-58）。</p>
   <h3>組み込みの行動</h3>
   <div class="table-wrap">
     <table>
