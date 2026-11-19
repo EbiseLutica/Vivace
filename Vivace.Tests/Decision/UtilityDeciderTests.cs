@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Vivace.Core;
 using Vivace.Core.Decision;
 using Vivace.Core.Definitions.Model;
 using Vivace.Core.Domain.State;
@@ -40,6 +41,35 @@ public class UtilityDeciderTests
         new VitalTrack(Fixture.Now, boredom, 0),
         new VitalTrack(Fixture.Now, 0, 0),
         1);
+
+    /// <summary>投稿の送り先がないペルソナは、自由時間の決定で投稿を選ばない。送り先があれば、同じ位置の集まりに投稿が出る（対照）。</summary>
+    [Fact]
+    public void PersonaWithoutChannelNeverChoosesPostInFreeTime()
+    {
+        var state = FreeDay();
+        var positions = Enumerable.Range(0, 200).Select(position => (ulong)position).ToList();
+
+        var withChannel = positions.Select(position => FreeTimeChoice(state, position, Fixture.Context)).ToList();
+        var withoutChannel = positions.Select(position => FreeTimeChoice(state, position, Fixture.ContextWithoutKaoriChannels())).ToList();
+
+        Assert.Contains("post_sns", withChannel);
+        Assert.DoesNotContain("post_sns", withoutChannel);
+    }
+
+    /// <summary>香織が、固定の予定のない1日分のプランを持つ状態（自由時間が続く。プランの終わりまで行動を選べる）。</summary>
+    private static SimState FreeDay()
+    {
+        var plan = new DayPlan(1, Fixture.Now, Fixture.Now.AddHours(24), Fixture.Now.AddHours(21), PlanSource.Fallback, [], null);
+        var committed = Fixture.Event(10, Fixture.Now, EventTypes.PlanCommitted, new PlanCommittedPayload(plan), Fixture.Kaori, new Guard([new PlanVersionCheck(0)], RejectAction.Drop));
+        return Fixture.Apply(Fixture.WithKaori(), committed).State;
+    }
+
+    /// <summary>位置を指定して、自由時間の決定の行動の ID を1つ返す。</summary>
+    private static string FreeTimeChoice(SimState state, ulong position, RuleContext context)
+    {
+        var random = new SplitMixRandomSource().Open(state.Worlds[Fixture.World].Seed, Fixture.Kaori.Value, "decide", position);
+        return new UtilityDecider().Decide(new DecisionContext(state, Fixture.Kaori, Fixture.Now, DecisionReason.Ended, null, context, random)).Payload.ActionId;
+    }
 
     /// <summary>設計書の計算例：14:00、気力 30、退屈度 70。家で昼寝（60 分、気力 +20/時）、公園を散歩（移動 15 分 + 45 分、気力 −6/時、終了時に退屈度 −25）、家でゲーム（60 分、終了時に退屈度 −30、好き）。</summary>
     [Fact]

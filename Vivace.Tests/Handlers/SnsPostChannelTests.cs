@@ -53,6 +53,20 @@ public class SnsPostChannelTests
         Assert.True(ActionRules.HasChannelFor(kaori with { Channels = [] }, read));
     }
 
+    /// <summary>投稿の送り先がないペルソナは、行動の判定（CanChoose）で投稿を選べない。送り先があれば選べる（対照）。</summary>
+    [Fact]
+    public void CanChooseRejectsPostWithoutChannel()
+    {
+        var state = Fixture.WithKaori();
+        var kaori = state.Personas[Fixture.Kaori];
+
+        Assert.True(ActionRules.CanChoose(Fixture.Context, state, kaori, "post_sns", KaoriRoom, Fixture.Now));
+        Assert.False(ActionRules.CanChoose(Fixture.ContextWithoutKaoriChannels(), state, kaori, "post_sns", KaoriRoom, Fixture.Now));
+    }
+
+    /// <summary>テスト用の定義の香織の channels を差し替えた定義。</summary>
+    private static readonly PlaceId KaoriRoom = new("kaori_room");
+
     /// <summary>テスト用の定義の香織の channels を差し替えた定義。</summary>
     private static DefinitionPack WithChannels(ImmutableArray<string> channels)
     {

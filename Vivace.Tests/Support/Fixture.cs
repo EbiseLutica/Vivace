@@ -36,6 +36,15 @@ public static class Fixture
     /// <summary>テストの規則のコンテキスト（定義と最短経路のテーブル）。</summary>
     public static RuleContext Context => Shared.Value;
 
+    /// <summary>香織の channels を空にした規則のコンテキスト（投稿の送り先がないペルソナ）。</summary>
+    public static RuleContext ContextWithoutKaoriChannels()
+    {
+        var defs = TestWorld.LoadOrThrow();
+        var id = new PersonaDefId("kaori");
+        var changed = defs with { Personas = defs.Personas.SetItem(id, defs.Personas[id] with { Channels = [] }) };
+        return new RuleContext(changed, RouteCache.Create(changed));
+    }
+
     /// <summary>空の状態。位置は基準の時刻。</summary>
     public static SimState Empty() => new(
         new ApplyCursor(Now, Core.Events.EventStage.DayTurn, 0, 0),
