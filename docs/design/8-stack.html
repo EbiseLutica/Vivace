@@ -13,11 +13,11 @@
 <header class="hero">
   <div class="kicker">VIVACE / DESIGN / D8</div>
   <h1>技術スタック</h1>
-  <p>C# と SQLite に加えて、D1〜D7 で決めた「やること」から選んだライブラリも決定した。バージョンは、実装を始めるときに NuGet で確かめて固定する。LLM の実装は、8.4 の PoC で A を選んだ（B との比べは残している）。</p>
+  <p>C# と SQLite に加えて、D1〜D7 で決めた「やること」から選んだライブラリも決定した。バージョンは、実装を始めるときに NuGet で確かめて固定する。LLM の実装は、いまは 8.4 の A を使う（B との比べは 8.4）。</p>
   <div class="meta">
     <span class="chip">2026-11-03 時点</span>
     <span class="chip fixed">ライブラリは決定</span>
-    <span class="chip draft">LLM の実装は PoC で選ぶ</span>
+    <span class="chip fixed">LLM はいまは A（8.4）</span>
   </div>
 </header>
 
@@ -132,7 +132,7 @@
       <tr><td>投稿の文面</td><td><code>vivace run --speed 600</code> で約1日半回し、2人で 15 件の投稿が作れた。失敗は 0 件。応答は Main（<code>claude-sonnet-5-5</code>）で 3〜7 秒ほど</td></tr>
       <tr><td>使用量（4）</td><td>モデル名と、入力と出力のトークン数が、呼び出しごとに取れる。短い指示で入力 67、出力 160〜260 トークンほど</td></tr>
       <tr><td>応答の切れ</td><td>応答の上限を 16 トークンにすると、停止理由 <code>max_tokens</code> で失敗になる</td></tr>
-      <tr><td>時間切れ</td><td>1回の呼び出しの時間切れ（J-180）は、SDK から <code>TaskCanceledException</code> で上がる。呼び出し元の取り消しではないので、エンジンは代わりの出力（<code>post.skipped</code>）にする</td></tr>
+      <tr><td>時間切れ</td><td>1回の呼び出しの時間切れ（J-180）は、SDK から <code>TaskCanceledException</code> で上がる。エンジンは、例外の種類によらず代わりの出力（<code>post.skipped</code>）にする。呼び出し元の取り消しではないので、run は失敗として標準エラーに1行書く</td></tr>
       <tr><td>取り消し（5）</td><td><code>CancellationToken</code> を取り消すと、その時点で呼び出しが止まる</td></tr>
       <tr><td>キーとモデルの誤り</td><td>キーが違うと 401、モデルがないと 404 の例外になる。<code>vivace run</code> は止まらず、投稿ごとに <code>post.skipped</code> を残し、標準エラーに1行書く</td></tr>
     </table>
