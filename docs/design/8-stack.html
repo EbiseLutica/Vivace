@@ -13,7 +13,7 @@
 <header class="hero">
   <div class="kicker">VIVACE / DESIGN / D8</div>
   <h1>技術スタック</h1>
-  <p>C# と SQLite に加えて、D1〜D7 で決めた「やること」から選んだライブラリも決定した。バージョンは、実装を始めるときに NuGet で確かめて固定する。LLM の実装だけは、8.4 の PoC で選ぶ。</p>
+  <p>C# と SQLite に加えて、D1〜D7 で決めた「やること」から選んだライブラリも決定した。バージョンは、実装を始めるときに NuGet で確かめて固定する。LLM の実装は、8.4 の PoC で A を選んだ（B との比べは残している）。</p>
   <div class="meta">
     <span class="chip">2026-11-03 時点</span>
     <span class="chip fixed">ライブラリは決定</span>
@@ -73,7 +73,7 @@
       <tr><td>ハッシュ</td><td><code>System.Security.Cryptography.SHA256</code></td><td>BCL。乱数のシードの導出（D5 5.9）</td></tr>
       <tr><td>ログ</td><td><code>Microsoft.Extensions.Logging.Abstractions</code></td><td>コアは抽象だけに依存し、出力先はホストが選ぶ</td></tr>
       <tr><td>計測</td><td><code>System.Diagnostics.Metrics</code></td><td>BCL（D7 7.3）</td></tr>
-      <tr><td>LLM</td><td>コア独自の <code>ILlmClient</code> と、その実装（8.4 の PoC で決める）</td><td>D4 P-26</td></tr>
+      <tr><td>LLM</td><td>コア独自の <code>ILlmClient</code> と、その実装。いまは Anthropic の公式 C# SDK を直接使う（8.4 の A）</td><td>D4 P-26</td></tr>
       <tr><td>テスト</td><td>xUnit v3（4.x、<code>xunit.v3.mtp-v2</code>）+ Verify（32.x、<code>Verify.XunitV3</code>）</td><td>シナリオのテストは、イベントの列のスナップショットを比べる（D7 7.4）。xUnit は 4.0 で Microsoft Testing Platform v2 が既定になったので、.NET 10 SDK では <code>global.json</code> の設定が要る。Verify は 33.0.0 から、NuGet のパッケージのライセンスが MIT から OSMF EULA に変わり（ソースは MIT のまま）、SponsorCheck（SC021）が、ライセンスの申告か免除の宣言がないとビルドを止める。免除の宣言には期限（最長12か月）があるので、32.x に留めた。Verify.XunitV3 32.0.1 が xunit.v3.extensibility.core に求めるのは 3.2.2 以上で、4.0.2 はその範囲内。Verify が使う xunit の型9個とメンバー9個は、4.0.2 にすべてある（名前で確かめた）。xunit か Verify を上げるときは、Verify を使うテストを回す。組み合わせが壊れたときに自前の比較へ差し替えられるよう、テストは Verify を直接呼ばず、<code>Vivace.Tests</code> の1つのヘルパーを通す。Verify の呼び出しをそこ1か所に閉じ込め、<code>Vivace.Testing</code> は CLI の dry-run からも使うので、テストフレームワークを参照させない（J-136）</td></tr>
       <tr><td>CLI</td><td><code>System.CommandLine</code>（2.0 系）</td><td>2.0 で安定版になった。CLI（D7 7.5）のコマンドの解析だけに使う</td></tr>
       <tr><td>デーモンの管理用 API</td><td>ASP.NET Core の Minimal API（共有フレームワーク）</td><td>.NET に同梱なので、パッケージを足さない。ルーター、JSON、Server-Sent Events（.NET 10）、Unix ソケット（Kestrel）が使える。<code>HttpListener</code> は、Microsoft が新しい開発に勧めていないので使わない（D7 P-54）</td></tr>
@@ -123,6 +123,21 @@
     <li><strong>取り消し</strong>：<code>CancellationToken</code> で、締め切り（D1 1.6）に呼び出しを止められるか</li>
   </ol>
   <p>B で 3 が効かない、または A に比べて手間が大きければ A にする。どちらも満たすなら、プロバイダを替えやすい B にする。</p>
+
+  <h3>M2 の PoC の結果</h3>
+  <p>M2 では A だけを作り、投稿の文面が作れることと、失敗と時間切れを扱えることを、本物の API で確かめた（2026-11-19、SDK 13.10.0）。B との比べと、上の 1〜3 は、構造化出力とツールを作るときに、困ったら確かめる。それまでは A を使う。</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>確かめたこと</th><th>結果</th></tr>
+      <tr><td>投稿の文面</td><td><code>vivace run --speed 600</code> で約1日半回し、2人で 15 件の投稿が作れた。失敗は 0 件。応答は Main（<code>claude-sonnet-5-5</code>）で 3〜7 秒ほど</td></tr>
+      <tr><td>使用量（4）</td><td>モデル名と、入力と出力のトークン数が、呼び出しごとに取れる。短い指示で入力 67、出力 160〜260 トークンほど</td></tr>
+      <tr><td>応答の切れ</td><td>応答の上限を 16 トークンにすると、停止理由 <code>max_tokens</code> で失敗になる</td></tr>
+      <tr><td>時間切れ</td><td>1回の呼び出しの時間切れ（J-180）は、SDK から <code>TaskCanceledException</code> で上がる。呼び出し元の取り消しではないので、エンジンは代わりの出力（<code>post.skipped</code>）にする</td></tr>
+      <tr><td>取り消し（5）</td><td><code>CancellationToken</code> を取り消すと、その時点で呼び出しが止まる</td></tr>
+      <tr><td>キーとモデルの誤り</td><td>キーが違うと 401、モデルがないと 404 の例外になる。<code>vivace run</code> は止まらず、投稿ごとに <code>post.skipped</code> を残し、標準エラーに1行書く</td></tr>
+    </table>
+  </div>
+  <p>拒否（停止理由 <code>refusal</code>）は、本物の API では起こせなかった。偽の HTTP の応答でだけ確かめている。</p>
 </section>
 
 </main>
