@@ -21,7 +21,7 @@ public class SnsPostChannelTests
     {
         var defs = WithChannels(["misskey", "console"]);
 
-        var draft = await SnsPostHandler.RunAsync(new RuleContext(defs, RouteCache.Create(defs)), new ScriptedLlm().Reply("post.compose", "今日の授業眠い"), Fixture.WithKaori(), Effect());
+        var draft = await SnsPostHandler.RunAsync(new RuleContext(defs, RouteCache.Create(defs)), new ScriptedLlm().Reply("post.compose", "今日の授業眠い"), Fixture.WithKaori(), Effect(), CancellationToken.None);
 
         var speech = Assert.IsType<OutboundSpeechPayload>(draft.Payload);
         Assert.Equal("misskey", speech.Channel);
@@ -33,7 +33,7 @@ public class SnsPostChannelTests
     {
         var defs = WithChannels([]);
 
-        var draft = await SnsPostHandler.RunAsync(new RuleContext(defs, RouteCache.Create(defs)), new ScriptedLlm(), Fixture.WithKaori(), Effect());
+        var draft = await SnsPostHandler.RunAsync(new RuleContext(defs, RouteCache.Create(defs)), new ScriptedLlm(), Fixture.WithKaori(), Effect(), CancellationToken.None);
 
         Assert.Equal(EventTypes.PostSkipped, draft.EventType);
         Assert.Equal(PostSkippedPayload.PostSkipReason.NoChannel, ((PostSkippedPayload)draft.Payload).Reason);

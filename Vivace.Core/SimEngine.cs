@@ -49,6 +49,8 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly Dictionary<long, Running> _running = [];
     private readonly List<Output> _held = [];
     private readonly HashSet<long> _dropped = [];
+    /// <summary>起動したジョブの取り消し元。エンジンの処理のスレッドだけが読み書きし、出力を受け取ったときに破棄する。</summary>
+    private readonly Dictionary<long, CancellationTokenSource> _handlerCancels = [];
     private readonly Channel<Output> _outputs = Channel.CreateUnbounded<Output>();
     /// <summary>実行中に届いた投入のコマンド。ループの各回の先頭で取り出す。</summary>
     private readonly Channel<InjectCommand> _commands = Channel.CreateUnbounded<InjectCommand>();
@@ -455,15 +457,15 @@ public sealed class SimEngine : IAsyncDisposable
         {
             case StartDeciderSignal decide:
                 var decideSnapshot = _state;
-                StartHandler(decide, $"decide:{decide.Persona}", origin, () => Task.FromResult(Decide(decide, decideSnapshot)), () => FallbackDraft(decide, decideSnapshot));
+                StartHandler(decide, $"decide:{decide.Persona}", origin, _ => Task.FromResult(Decide(decide, decideSnapshot)), () => FallbackDraft(decide, decideSnapshot));
                 break;
             case StartPlannerSignal plan:
                 var planSnapshot = _state;
-                StartHandler(plan, $"plan:{plan.Persona}", origin, () => Task.FromResult(Plan(plan, planSnapshot)), null);
+                StartHandler(plan, $"plan:{plan.Persona}", origin, _ => Task.FromResult(Plan(plan, planSnapshot)), null);
                 break;
             case StartEffectSignal effect:
                 var effectSnapshot = _state;
-                StartHandler(effect, $"decide:{effect.Persona}", origin, () => SnsPostHandler.RunAsync(_ctx, _llm, effectSnapshot, effect), () => SnsPostHandler.Skipped(effectSnapshot, effect));
+                StartHandler(effect, $"decide:{effect.Persona}", origin, ct => SnsPostHandler.RunAsync(_ctx, _llm, effectSnapshot, effect, ct), () => SnsPostHandler.Skipped(effectSnapshot, effect));
                 break;
             case DeliverSignal deliver:
                 Deliver(deliver);
@@ -473,6 +475,10 @@ public sealed class SimEngine : IAsyncDisposable
                 {
                     _running.Remove(run.Key);
                     _dropped.Add(run.Key);
+                    if (_handlerCancels.TryGetValue(run.Key, out var handlerCancel))
+                    {
+                        handlerCancel.Cancel();
+                    }
                 }
 
                 break;
@@ -541,15 +547,17 @@ public sealed class SimEngine : IAsyncDisposable
     /// 決める側のジョブを、レーンで起動する。ジョブはスナップショット（起動の時点の状態）だけを読む。
     /// fallback があれば、ジョブの例外は代わりの出力にする。なければ、例外はレーンを閉じ、エンジンを止める。
     /// </summary>
-    private void StartHandler(StartHandlerSignal start, string lane, Origin origin, Func<Task<EventDraft>> work, Func<EventDraft>? fallback)
+    private void StartHandler(StartHandlerSignal start, string lane, Origin origin, Func<CancellationToken, Task<EventDraft>> work, Func<EventDraft>? fallback)
     {
         _running[start.BatchSeq] = new Running(start.BatchSeq, start.Persona, start.Horizon, lane);
+        var handlerCancel = CancellationTokenSource.CreateLinkedTokenSource(_shutdown.Token);
+        _handlerCancels[start.BatchSeq] = handlerCancel;
         _lanes.Post(lane, async () =>
         {
             EventDraft draft;
             try
             {
-                draft = await work();
+                draft = await work(handlerCancel.Token);
             }
             catch (Exception) when (fallback is not null)
             {
@@ -607,6 +615,11 @@ public sealed class SimEngine : IAsyncDisposable
     private void Receive(Output output)
     {
         _running.Remove(output.BatchSeq);
+        if (_handlerCancels.Remove(output.BatchSeq, out var handlerCancel))
+        {
+            handlerCancel.Dispose();
+        }
+
         if (_dropped.Remove(output.BatchSeq))
         {
             return;
