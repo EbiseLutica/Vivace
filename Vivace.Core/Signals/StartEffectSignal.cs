@@ -3,7 +3,7 @@ using Vivace.Core.Domain;
 namespace Vivace.Core.Signals;
 
 /// <summary>
-/// 行動の効果のハンドラ（effects.handler）を、決める側のレーンで起動する。出力の時刻とホライズンは行動の終わり。
+/// 行動の効果のハンドラ（effects.handler）を、決める側のレーンで起動する。ホライズンと出力の時刻は行動の終わり。
 /// </summary>
 /// <param name="BatchSeq">出力のまとまりの連番（行動の開始の連番）。</param>
 /// <param name="Persona">ペルソナ。</param>
@@ -17,4 +17,4 @@ public sealed record StartEffectSignal(
     DateTimeOffset Horizon,
     string ActionId,
     PlaceId Place,
-    long ActivityVersion) : EngineSignal;
+    long ActivityVersion) : StartHandlerSignal(BatchSeq, Persona, Horizon);
