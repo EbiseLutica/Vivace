@@ -2,6 +2,7 @@ using System.Text.Json;
 using Vivace.Cli;
 using Vivace.Core.Channels;
 using Vivace.Core.Domain;
+using Vivace.Core.Llm;
 using Vivace.Core.Time;
 using Vivace.Testing;
 using Vivace.Tests.Support;
@@ -34,16 +35,29 @@ public class ConsoleChannelTests
         Assert.Equal(new SendResult.Sent("console-22"), result);
     }
 
-    /// <summary>run は投稿を送信の行として書く（文面の仮の LLM を使う）。</summary>
+    /// <summary>run は投稿を送信の行として書く。文面は渡した LLM が作る。</summary>
     [Fact]
     public async Task RunPrintsPostsAsChannelLines()
     {
         using var folder = new DefinitionFolder(TestWorld.Files().ToList());
         var output = new StringWriter { NewLine = "\n" };
+        var llm = new ScriptedLlm().Reply("post.compose", "テストの文面");
 
-        var code = await RunCommand.RunAsync(folder.Path, new VirtualClock(Scenario.Start), Scenario.WorldSeed, false, output, CancellationToken.None, Scenario.Start.AddDays(2));
+        var code = await RunCommand.RunAsync(folder.Path, new VirtualClock(Scenario.Start), Scenario.WorldSeed, false, output, CancellationToken.None, Scenario.Start.AddDays(2), llm: llm);
 
         Assert.Equal(0, code);
-        Assert.Contains("[送信 console] 香織: 今日の授業眠い\n", output.ToString(), StringComparison.Ordinal);
+        Assert.Contains("[送信 console] 香織: テストの文面\n", output.ToString(), StringComparison.Ordinal);
+    }
+
+    /// <summary>LLM を渡さないと、仮の文面を使い、仮だとわかる形で書く。</summary>
+    [Fact]
+    public async Task RunWithoutLlmUsesMarkedStandInText()
+    {
+        using var folder = new DefinitionFolder(TestWorld.Files().ToList());
+        var output = new StringWriter { NewLine = "\n" };
+
+        await RunCommand.RunAsync(folder.Path, new VirtualClock(Scenario.Start), Scenario.WorldSeed, false, output, CancellationToken.None, Scenario.Start.AddDays(2));
+
+        Assert.Contains("[送信 console] 香織: 今日の授業眠い（仮の文面）\n", output.ToString(), StringComparison.Ordinal);
     }
 }

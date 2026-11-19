@@ -2,6 +2,7 @@ using System.CommandLine;
 using Vivace.Core;
 using Vivace.Core.Definitions;
 using Vivace.Core.Definitions.Model;
+using Vivace.Core.Llm;
 using Vivace.Core.Domain;
 using Vivace.Core.Storage;
 using Vivace.Core.Time;
@@ -64,6 +65,7 @@ public static class RunCommand
     /// <param name="until">回す先の時刻。省略するとキャンセルまで回す。</param>
     /// <param name="subscriberCapacity">流す購読の容量。省略すると既定の容量（テストで、あふれる経路を作るために指定する）。</param>
     /// <param name="channelOutput">投稿の行を書く先。省略すると出力と同じ。</param>
+    /// <param name="llm">文面を作る LLM。省略すると、仮の文面を返す台本の LLM。</param>
     internal static async Task<int> RunAsync(
         string dir,
         IClock clock,
@@ -73,7 +75,8 @@ public static class RunCommand
         CancellationToken ct,
         DateTimeOffset? until = null,
         int? subscriberCapacity = null,
-        TextWriter? channelOutput = null)
+        TextWriter? channelOutput = null,
+        ILlmClient? llm = null)
     {
         output = TextWriter.Synchronized(output);
         channelOutput = TextWriter.Synchronized(channelOutput ?? output);
@@ -97,7 +100,7 @@ public static class RunCommand
             .UseDefinitions(definitions)
             .UseStorage(storage)
             .UseClock(clock)
-            .UseLlm(StandInLlm())
+            .UseLlm(llm ?? StandInLlm())
             .AddChannel(new ConsoleChannel(names, offsets, channelOutput ?? output))
             .Build();
         using var run = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -138,12 +141,12 @@ public static class RunCommand
     }
 
     /// <summary>
-    /// 文面を作る LLM の仮の実装。本物の LLM を組むまで、投稿の文面は台本の一言になる。
+    /// 文面を作る LLM の仮の実装。本物の LLM を組むまで、投稿の文面は仮の一言になる。
     /// </summary>
     private static ScriptedLlm StandInLlm() => new ScriptedLlm().Reply("post.compose", StandInBody);
 
     /// <summary>仮の文面。</summary>
-    private const string StandInBody = "今日の授業眠い";
+    private const string StandInBody = "今日の授業眠い（仮の文面）";
 
     /// <summary>
     /// 購読を読み、既定の書式で1行ずつ書く。購読があふれたら、理由を書いて run を止め、true を返す。
