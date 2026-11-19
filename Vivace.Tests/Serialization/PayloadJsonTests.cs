@@ -112,6 +112,6 @@ public class PayloadJsonTests
         var restored = JsonSerializer.Deserialize(json, VivaceJsonContext.Default.Guard);
 
         Assert.Equal(json, JsonSerializer.Serialize(restored, VivaceJsonContext.Default.Guard));
-        Assert.Equal("{\"Checks\":[{\"$type\":\"activityVersion\",\"Expected\":4},{\"$type\":\"feasible\",\"ActionId\":\"read\",\"Place\":\"home\"},{\"$type\":\"rngCursor\",\"Owner\":\"taro\",\"Purpose\":\"decide\",\"Position\":9}],\"OnReject\":0}", json);
+        Assert.Equal("{\"Checks\":[{\"$type\":\"activityVersion\",\"Expected\":4},{\"$type\":\"feasible\",\"ActionId\":\"read\",\"Place\":\"home\"},{\"$type\":\"rngCursor\",\"Owner\":\"taro\",\"Purpose\":\"decide\",\"Position\":9}],\"OnReject\":\"Redecide\"}", json);
     }
 }

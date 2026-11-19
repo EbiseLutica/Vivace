@@ -15,6 +15,7 @@ namespace Vivace.Core.Serialization;
 /// </summary>
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.Unspecified,
+    UseStringEnumConverter = true,
     Converters = new[]
     {
         typeof(PlaceIdConverter),
