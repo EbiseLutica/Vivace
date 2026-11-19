@@ -23,9 +23,6 @@ internal static class SnsPostHandler
     /// <summary>LLM の目的。</summary>
     public const string Purpose = "post.compose";
 
-    /// <summary>投稿のチャンネルの名前（コンソール）。</summary>
-    public const string Channel = "console";
-
     /// <summary>チャンネルの中身。コンソールは追加の情報を持たない。</summary>
     private static readonly JsonElement EmptyChannelPayload = JsonSerializer.SerializeToElement(new Dictionary<string, string>(StringComparer.Ordinal));
 
@@ -41,6 +38,12 @@ internal static class SnsPostHandler
         var persona = snapshot.Personas[effect.Persona];
         var world = ctx.Defs.Worlds[snapshot.Worlds[persona.World].DefId];
         var personaDef = ctx.Defs.Personas[persona.DefId];
+        if (personaDef.Channels.IsDefaultOrEmpty)
+        {
+            return Skipped(snapshot, effect, PostSkippedPayload.PostSkipReason.NoChannel);
+        }
+
+        var channel = personaDef.Channels[0];
         var action = ctx.Defs.Actions[effect.ActionId];
         var result = await llm.GenerateTextAsync(Request(personaDef, world, persona, action, effect), CancellationToken.None);
         var body = result.Value.Trim();
@@ -50,20 +53,21 @@ internal static class SnsPostHandler
         }
 
         var guard = new Guard([new ActivityVersionCheck(effect.ActivityVersion)], RejectAction.Drop);
-        var speech = new OutboundSpeechPayload(Channel, OutboundSpeechPayload.OutboundPostKind.Post, body, null, Audience.Public, [effect.BatchSeq], EmptyChannelPayload, null);
+        var speech = new OutboundSpeechPayload(channel, OutboundSpeechPayload.OutboundPostKind.Post, body, null, Audience.Public, [effect.BatchSeq], EmptyChannelPayload, null);
         return new EventDraft(effect.Horizon, EventTypes.OutboundSpeech, persona.World, persona.Id, speech, guard, effect.BatchSeq);
     }
 
     /// <summary>
-    /// 投稿をスキップする出力（生成の失敗）。ハンドラが失敗したときの代わりの出力にも使う。
+    /// 投稿をスキップする出力。省略すると生成の失敗。ハンドラが失敗したときの代わりの出力にも使う。
     /// </summary>
     /// <param name="snapshot">起動の時点の状態。</param>
     /// <param name="effect">起動のシグナル。</param>
-    public static EventDraft Skipped(SimState snapshot, StartEffectSignal effect)
+    /// <param name="reason">スキップの理由。</param>
+    public static EventDraft Skipped(SimState snapshot, StartEffectSignal effect, PostSkippedPayload.PostSkipReason reason = PostSkippedPayload.PostSkipReason.GenerationFailed)
     {
         var persona = snapshot.Personas[effect.Persona];
         var guard = new Guard([new ActivityVersionCheck(effect.ActivityVersion)], RejectAction.Drop);
-        var payload = new PostSkippedPayload(PostSkippedPayload.PostSkipReason.GenerationFailed, null);
+        var payload = new PostSkippedPayload(reason, null);
         return new EventDraft(effect.Horizon, EventTypes.PostSkipped, persona.World, persona.Id, payload, guard, effect.BatchSeq);
     }
 

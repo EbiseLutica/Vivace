@@ -168,6 +168,7 @@ public static class ActionRules
         var personaDef = ctx.Defs.Personas[persona.DefId];
         if (action.ScheduleOnly
             || !IsUsable(personaDef, actionId)
+            || !HasChannelFor(personaDef, action)
             || PreferenceFactor(personaDef, action) is null
             || world.Places.FirstOrDefault(p => p.Id == place.Value) is not { } placeDef
             || !PlaceAllows(action, personaDef, placeDef)
@@ -179,6 +180,14 @@ public static class ActionRules
 
         return true;
     }
+
+    /// <summary>
+    /// 行動が投稿（効果が sns.post）なら、ペルソナにつながるチャンネルがあるか。投稿以外は常に満たす。
+    /// </summary>
+    /// <param name="persona">ペルソナの定義。</param>
+    /// <param name="action">行動の定義。</param>
+    public static bool HasChannelFor(PersonaDef persona, ActionDef action) =>
+        action.Effects.Handler != SnsPostHandler.Name || !persona.Channels.IsDefaultOrEmpty;
 
     /// <summary>
     /// 投稿の行動（効果が sns.post）の、投稿の状態による制限を満たすか。最後のスキップから SkipCooldown 以内、

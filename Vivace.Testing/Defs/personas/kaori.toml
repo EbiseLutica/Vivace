@@ -7,7 +7,7 @@ lore = """
 高校2年生。本が好きで、図書委員。
 """
 examples = ["今日の図書室、ずっと静かだったな"]
-channels = []
+channels = ["console"]
 items = ["smartphone", "book"]
 tools = []
 

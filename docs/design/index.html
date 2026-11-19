@@ -339,6 +339,8 @@
       <tr><td>J-174</td><td>決め方が例外で失敗したときの代わりの決定は、自由時間は <code>core.go_to_next</code>、スマホを開く機会は <code>core.idle</code>（何もしない、所要時間 0 の副行動）。スマホを開く機会の候補に <code>core.go_to_next</code> は入らないため</td><td><a href="7-operations.html">D7 7.1</a></td><td>エージェント（PR #24）</td></tr>
       <tr><td>J-175</td><td>ドライラン（<code>DryRun()</code>）は、チャンネルを <code>NullChannel</code> に替えず、チャンネルを渡さずに配信役を止める。未送信の操作は残り、送信の完了も失敗も記録しない。<code>NullChannel</code> は <code>Vivace.Testing</code> の部品で、コアは参照できないため。時計を省いた、または仮想でない時計のドライランは <code>Build()</code> が例外にする</td><td><a href="4-components.html#api">D4 4.6</a>、<a href="1-execution.html#clock">D1 1.10</a></td><td>エージェント（PR #未定）</td></tr>
       <tr><td>J-176</td><td>配信の結果は、送信のタスクから、エンジンの処理のスレッドのコマンドの列に戻す。結果を待つ間（配信中の操作があるあいだ）は、エンジンは次のイベントの適用も、ほかの出力の取り込みもしない。結果のイベントの連番の位置を、送信の速さに依らず決めるため。結果の投入は公開の <code>InjectAsync</code> を使わず、内部のコマンドの列に入れる（待ちの数を、エンジンの処理のスレッドだけで数えるため）</td><td><a href="1-execution.html#step">D1 1.4</a>、<a href="4-components.html#api">D4 4.6</a></td><td>エージェント（PR #未定）</td></tr>
+      <tr><td>J-177</td><td>投稿（<code>sns.post</code>）の送り先は、ペルソナ定義の <code>channels</code> の先頭にする。<code>channels</code> が空のペルソナには、投稿の行動を候補にしない（主の行動、スマホを開く機会の副行動とも）。投稿の行動は、ほかの候補と同じ抽選に入らないため、送り先のないまま文面を作らない</td><td><a href="5-decision.html#candidates">D5 5.2</a>、<a href="4-components.html#channel">D4 4.3</a></td><td>エージェント（PR #未定）</td></tr>
+      <tr><td>J-178</td><td>投稿をスキップする理由に「つながるチャンネルがない」（<code>NoChannel</code>）を足す。送り先のない投稿の行動が固定予定などで走ったときに、生成の失敗と取り違えないため</td><td><a href="2-events.html#types">D2 2.3</a>、<a href="6-llm.html">D6</a></td><td>エージェント（PR #未定）</td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>

@@ -134,7 +134,7 @@ public sealed class UtilityDecider : IDecider
 
         foreach (var action in defs.Actions.Values.OrderBy(a => a.Id, StringComparer.Ordinal))
         {
-            if (action.Effects.Handler != SnsPostHandler.Name || action.ScheduleOnly || action.Duration is null || !ActionRules.IsUsable(personaDef, action.Id))
+            if (action.Effects.Handler != SnsPostHandler.Name || action.ScheduleOnly || action.Duration is null || !ActionRules.IsUsable(personaDef, action.Id) || !ActionRules.HasChannelFor(personaDef, action))
             {
                 continue;
             }
@@ -173,7 +173,7 @@ public sealed class UtilityDecider : IDecider
         options.Add(new Option(GoToNext, go.Place, go.Minutes, goPreference, goAction, go.Wait));
         foreach (var action in defs.Actions.Values.OrderBy(a => a.Id, StringComparer.Ordinal))
         {
-            if (action.ScheduleOnly || action.Id == GoToNext || action.Duration is null || !ActionRules.IsUsable(personaDef, action.Id))
+            if (action.ScheduleOnly || action.Id == GoToNext || action.Duration is null || !ActionRules.IsUsable(personaDef, action.Id) || !ActionRules.HasChannelFor(personaDef, action))
             {
                 continue;
             }
