@@ -488,11 +488,29 @@ public sealed class SimEngine : IAsyncDisposable
         var operation = signal.Operation;
         var request = new OutboundRequest(operation.Seq, signal.Persona, _clock.UtcNow, operation.OperationKind, operation.IsSpeech, operation.Payload);
         _deliveriesInFlight++;
-        _ = Task.Run(async () =>
+        _ = Task.Run(() => DeliverAsync(_dispatcher, operation, request));
+    }
+
+    /// <summary>
+    /// 配信役に送らせ、結果を配信の結果のコマンドとして戻す。どの経路でも結果を1つ戻す（例外は失敗の結果にする）。
+    /// </summary>
+    /// <param name="dispatcher">配信役。</param>
+    /// <param name="operation">送る未送信の操作。</param>
+    /// <param name="request">チャンネルに渡す操作。</param>
+    private async Task DeliverAsync(Dispatcher dispatcher, OutboundOp operation, OutboundRequest request)
+    {
+        InjectRequest injection;
+        try
         {
-            var result = await _dispatcher.SendAsync(operation.Channel, request, CancellationToken.None);
-            _commands.Writer.TryWrite(new InjectCommand(DeliveryRequest(operation, result), null, Delivery: true));
-        });
+            var result = await dispatcher.SendAsync(operation.Channel, request, CancellationToken.None);
+            injection = DeliveryRequest(operation, result);
+        }
+        catch (Exception ex)
+        {
+            injection = DeliveryRequest(operation, new SendResult.Failed(ex.Message, SurelyNotSent: false, RetryAfter: null));
+        }
+
+        _commands.Writer.TryWrite(new InjectCommand(injection, null, Delivery: true));
     }
 
     /// <summary>送信の結果を、送信の完了か失敗のイベントの投入にする。</summary>

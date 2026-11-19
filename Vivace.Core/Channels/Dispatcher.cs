@@ -21,7 +21,8 @@ internal sealed class Dispatcher(IReadOnlyList<IChannel> channels)
 
         try
         {
-            return await channel.SendAsync(request, ct);
+            var result = await channel.SendAsync(request, ct);
+            return result ?? new SendResult.Failed("チャンネルが結果を返さなかった", SurelyNotSent: false, RetryAfter: null);
         }
         catch (Exception ex)
         {

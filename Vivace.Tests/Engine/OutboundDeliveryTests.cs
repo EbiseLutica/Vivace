@@ -66,6 +66,25 @@ public class OutboundDeliveryTests
         Assert.All(failed, payload => Assert.Contains(Scenario.ChannelKind, payload.Reason, StringComparison.Ordinal));
     }
 
+    /// <summary>結果を返さないチャンネルと、例外を投げるチャンネルは、どちらも失敗の結果になり、エンジンは進む。</summary>
+    [Theory]
+    [InlineData("null")]
+    [InlineData("throw")]
+    public async Task BrokenChannelResultBecomesFailedAndRunContinues(string mode)
+    {
+        var channel = new FakeChannel(Scenario.ChannelKind, (_, _) => mode == "null"
+            ? Task.FromResult<SendResult>(null!)
+            : Task.FromException<SendResult>(new InvalidOperationException("壊れた")));
+        await using var engine = await Scenario.RunAsync(2, llm: Posts(), channels: [channel]);
+
+        var speeches = Applied(engine).Count(entry => entry.Event.EventType == EventTypes.OutboundSpeech);
+        var failed = Applied(engine).Where(entry => entry.Event.EventType == EventTypes.OutboundFailed).Select(entry => (OutboundFailedPayload)entry.Event.Payload).ToList();
+
+        Assert.NotEqual(0, speeches);
+        Assert.Equal(speeches, failed.Count);
+        Assert.All(failed, payload => Assert.Contains(mode == "null" ? "結果を返さなかった" : "壊れた", payload.Reason, StringComparison.Ordinal));
+    }
+
     /// <summary>ドライランでは送らず、発話の未送信の操作が残る（送信の完了も失敗もない）。</summary>
     [Fact]
     public async Task DryRunKeepsSpeechesUnsent()
