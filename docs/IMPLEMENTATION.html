@@ -200,8 +200,8 @@
   <p>イベントを SQLite に記録し、起動したら記録から状態を戻して続きから動かす。M2 までの「起動するたびに生成し直す」をやめる。</p>
   <p><strong>参照</strong>：<a href="design/1-execution.html#tx">D1 1.9</a>、<a href="design/1-execution.html#startup">1.11</a>、<a href="design/3-data.html#sqlite">D3 3.8</a>、<a href="design/3-data.html#json">3.9</a>、<a href="design/7-operations.html#testing">D7 7.4</a></p>
   <ul class="tasks">
-    <li><input type="checkbox" disabled><code>Vivace.Storage.Sqlite</code>：スキーマ、接続の設定、<code>StorageBatch</code> のコミット、イベントの読み出し</li>
-    <li><input type="checkbox" disabled>ペイロードの JSON（ソース生成、バージョン、知らないイベントタイプでの停止）</li>
+    <li><input type="checkbox" disabled checked><code>Vivace.Storage.Sqlite</code>：スキーマ、接続の設定、<code>StorageBatch</code> のコミット、イベントの読み出し</li>
+    <li><input type="checkbox" disabled checked>ペイロードの JSON（ソース生成、バージョン、知らないイベントタイプでの停止）</li>
     <li><input type="checkbox" disabled>起動の手順：記録から状態を戻し、処理中の決定タイミングとハンドラを起動し直す（<a href="design/1-execution.html#apply">D1 P-58</a>。定義の検証で、記憶の整理を起こす行動に <code>handler</code> を持たせないことも含む）</li>
     <li><input type="checkbox" disabled>追いつき：止めていた間を早送りで進める。上限は 14 日</li>
     <li><input type="checkbox" disabled><code>vivace run --db &lt;path&gt;</code>。指定がなければ、M2 までと同じくメモリで動く</li>
@@ -277,6 +277,10 @@
   <div class="table-wrap">
     <table>
       <tr><th>課題</th><th>見つけた所</th><th>起きること</th><th>扱う時期</th></tr>
+      <tr><td>時刻の精度が、SQLite の列と JSON で食い違う</td><td>M3 の SQLite の PR のレビュー</td><td>実時間運転の投入では、イベントの時刻が <code>SystemClock</code> の tick の精度になる。<code>events.time_utc</code> などの列は Unix ミリ秒に切り捨てるが、JSON の列（行動、移動、プラン）は tick のまま残る。キューを記録から戻すと、同じミリ秒の中の順が入れ替わり、決定性が崩れうる。時計の側で、時刻をミリ秒にそろえる（J-184 も直す）</td><td>M3（起動の手順の PR）</td></tr>
+      <tr><td>状態から消えた行を、SQLite から消さない</td><td>M3 の SQLite の PR のレビュー</td><td>状態の書き込みは upsert だけなので、ワールド、ペルソナ、生えた場所、辞書のキーが状態から消えると、行が残って、読み戻した状態とずれる。いまはキーを消す処理がない（破棄は status で表す）ので困らない</td><td>キーを消す処理を足すとき（M6 以降の生成と破棄）</td></tr>
+      <tr><td>ペイロードの版の確かめ方が粗い</td><td>M3 の SQLite の PR のレビュー</td><td>読める版を全イベントタイプで1つ（1）にしている。D3 3.9 はイベントタイプごとの版。<code>"v"</code> のない JSON も 1 として通る。新しい形の v2 は、版の確認より先に JSON の読み込みで止まり、エラーの文が分かりにくい。<code>EventTypeInfo</code> に版を持たせ、<code>"v"</code> を先に読んで確かめる</td><td>ペイロードの版を初めて上げるとき</td></tr>
+      <tr><td>マイグレーションの版を、トランザクションの外で読む</td><td>M3 の SQLite の PR のレビュー</td><td>2つのプロセスが同時にデータベースを開くと、後の側が「table exists」で失敗する（データは壊れない）。IMMEDIATE のトランザクションの中で版を読む</td><td>デーモンと CLI が同じデータベースを開くとき（M6 以降の運用）</td></tr>
       <tr><td>投稿に、同居人のいまの様子を作ることがある</td><td>PR #28 の運転</td><td>花子が居間で「太郎が『風邪ひくよ』ってタオルを投げてきた」と書いたが、太郎は自分の部屋で本を読んでいた。プロンプトで「書いていない人の様子は書かない」と指示すると、食い違いは 15 件中 3 件から 13 件中 1 件に減ったが、消えてはいない。同じ場所にいる人をコンテキストに渡すか、校閲（D6 6.10）で弾く</td><td>校閲か、同じ場所の人を扱うとき（M4 以降）</td></tr>
       <tr><td>ハンドラの取り消しのコールバックが、エンジンの処理のスレッドで動く</td><td>PR #27 のレビュー</td><td><code>CancelHandler</code> で取り消すと、取り消しを待っていたハンドラの続き（代わりの出力の書き込み）が、エンジンの処理の中で同期的に動くことがある。ハンドラはスナップショットしか読まないので壊れはしないが、重いハンドラが増えたら、取り消しを別のスレッドで行う</td><td>M4 以降（LLM を使うハンドラが増えたら）</td></tr>
       <tr><td>チャンネルの <code>postRateLimit</code> がない</td><td>PR #26 のレビュー</td><td>チャンネルが宣言する投稿の間隔の下限を、投稿の判定に使っていない。コンソールには制限がないので困らない</td><td>M5（Misskey のチャンネルを足すとき）</td></tr>
