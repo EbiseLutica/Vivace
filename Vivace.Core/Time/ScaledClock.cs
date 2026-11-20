@@ -53,7 +53,7 @@ public sealed class ScaledClock : IClock
                 return DateTimeOffset.MaxValue;
             }
 
-            return _start + TimeSpan.FromTicks((long)scaled);
+            return Milliseconds.Truncate(_start + TimeSpan.FromTicks((long)scaled));
         }
     }
 

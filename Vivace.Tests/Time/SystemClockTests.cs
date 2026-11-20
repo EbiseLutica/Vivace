@@ -102,6 +102,6 @@ public class SystemClockTests
         var before = DateTimeOffset.UtcNow;
         var clock = new SystemClock(null);
 
-        Assert.InRange(clock.UtcNow, before, DateTimeOffset.UtcNow);
+        Assert.InRange(clock.UtcNow, before.AddTicks(-(before.Ticks % TimeSpan.TicksPerMillisecond)), DateTimeOffset.UtcNow);
     }
 }
