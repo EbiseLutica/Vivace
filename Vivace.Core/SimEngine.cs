@@ -44,6 +44,8 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly CancellationTokenSource _shutdown = new();
     /// <summary>配信役に渡して、まだ結果が戻っていない操作の数。エンジンの処理のスレッドだけが書く。</summary>
     private int _deliveriesInFlight;
+    /// <summary>エンジンの処理（RunUntilAsync と、実行していないときの投入）を1つずつにする。</summary>
+    private readonly SemaphoreSlim _engineGate = new(1, 1);
     /// <summary>未適用のイベント。時刻、ステージ、連番の順に取り出す。</summary>
     private readonly PriorityQueue<SimEvent, (DateTimeOffset Time, int Stage, long Seq)> _queue = new();
     private readonly Dictionary<long, Running> _running = [];
@@ -133,25 +135,39 @@ public sealed class SimEngine : IAsyncDisposable
     public IReadOnlyList<LoggedEvent> Log => _log;
 
     /// <summary>
-    /// 投入 API。要求を検査し、通ればキューに入れて連番を、通らなければ拒否の理由を返す。
+    /// 投入 API。要求を検査し、通ればキューに入れて（保存先にも書いて）連番を、通らなければ拒否の理由を返す。
     /// 実行中でなければその場で処理し、実行中は、ループが次の回の先頭で処理する。
     /// 検査は、処理する時点の状態とキューと時計の時刻で行う。
     /// </summary>
     /// <param name="request">投入の要求。</param>
     /// <param name="ct">結果を待つのをやめるキャンセル。受け付けたコマンドは取り消さない。</param>
-    public Task<InjectResult> InjectAsync(InjectRequest request, CancellationToken ct)
+    public async Task<InjectResult> InjectAsync(InjectRequest request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
+        Task<InjectResult>? queued = null;
         lock (_gate)
         {
-            if (!_looping)
+            if (_looping)
             {
-                return Task.FromResult(Inject(request));
+                var completion = new TaskCompletionSource<InjectResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+                _commands.Writer.TryWrite(new InjectCommand(request, completion));
+                queued = completion.Task;
             }
+        }
 
-            var completion = new TaskCompletionSource<InjectResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _commands.Writer.TryWrite(new InjectCommand(request, completion));
-            return completion.Task.WaitAsync(ct);
+        if (queued is not null)
+        {
+            return await queued.WaitAsync(ct);
+        }
+
+        await _engineGate.WaitAsync(ct);
+        try
+        {
+            return await InjectNowAsync(request, ct);
+        }
+        finally
+        {
+            _engineGate.Release();
         }
     }
 
@@ -202,21 +218,33 @@ public sealed class SimEngine : IAsyncDisposable
             {
                 throw new InvalidOperationException("RunUntilAsync はすでに実行中です。");
             }
-
-            _looping = true;
         }
 
+        await _engineGate.WaitAsync(ct);
         try
-        {
-            await LoopAsync(until, ct);
-        }
-        finally
         {
             lock (_gate)
             {
-                DrainCommands();
-                _looping = false;
+                _looping = true;
             }
+
+            try
+            {
+                await LoopAsync(until, ct);
+            }
+            finally
+            {
+                lock (_gate)
+                {
+                    _looping = false;
+                }
+
+                await DrainCommandsAsync(CancellationToken.None);
+            }
+        }
+        finally
+        {
+            _engineGate.Release();
         }
     }
 
@@ -229,8 +257,8 @@ public sealed class SimEngine : IAsyncDisposable
         {
             ct.ThrowIfCancellationRequested();
             ThrowIfLaneFailed();
-            DrainCommands();
-            DrainOutputs();
+            await DrainCommandsAsync(ct);
+            await DrainOutputsAsync(ct);
             if (_deliveriesInFlight > 0)
             {
                 _commandWait ??= _commands.Reader.WaitToReadAsync(CancellationToken.None).AsTask();
@@ -265,7 +293,7 @@ public sealed class SimEngine : IAsyncDisposable
 
             if (_held.Any(output => output.Horizon <= limit))
             {
-                InsertHeld(limit);
+                await InsertHeldAsync(limit, ct);
                 continue;
             }
 
@@ -351,8 +379,21 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>要求を検査し、通ればキューに入れる。</summary>
-    private InjectResult Inject(InjectRequest request)
+    /// <summary>要求を検査し、通ればキューに入れ、積んだものを保存先に書く。</summary>
+    private async Task<InjectResult> InjectNowAsync(InjectRequest request, CancellationToken ct)
+    {
+        var added = new List<SimEvent>();
+        var result = Inject(request, added);
+        if (added.Count > 0)
+        {
+            await _storage.CommitAsync(new StorageBatch(added.ToImmutableArray(), ImmutableArray<EventRowUpdate>.Empty, _state), ct);
+        }
+
+        return result;
+    }
+
+    /// <summary>要求を検査し、通ればキューに入れる。積んだイベントは added に足す。</summary>
+    private InjectResult Inject(InjectRequest request, List<SimEvent> added)
     {
         var pending = _queue.UnorderedItems.Select(item => item.Element);
         if (!_validator.TryValidate(_state, pending, request, _clock.UtcNow, out var draft, out var reason))
@@ -360,11 +401,11 @@ public sealed class SimEngine : IAsyncDisposable
             return InjectResult.Reject(reason);
         }
 
-        return InjectResult.Accept(Enqueue(draft, request.Origin, null));
+        return InjectResult.Accept(Enqueue(draft, request.Origin, null, added));
     }
 
     /// <summary>届いている投入のコマンドを、届いた順にすべて処理する。</summary>
-    private void DrainCommands()
+    private async Task DrainCommandsAsync(CancellationToken ct)
     {
         while (_commands.Reader.TryRead(out var command))
         {
@@ -373,7 +414,7 @@ public sealed class SimEngine : IAsyncDisposable
                 _deliveriesInFlight--;
             }
 
-            var result = Inject(command.Request);
+            var result = await InjectNowAsync(command.Request, ct);
             command.Completion?.TrySetResult(result);
         }
     }
@@ -387,7 +428,10 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>1つのイベントを適用する。不変条件を検査してからコミットし、シグナルを実行する。</summary>
+    /// <summary>
+    /// 1つのイベントを適用する。不変条件を検査し、後続のイベントと行の状態を1つのコミットで書いてから、シグナルを実行する。
+    /// シグナルを出したイベントは、出力を取り込むまで処理中の行にする。
+    /// </summary>
     private async Task ApplyAsync(SimEvent ev, CancellationToken ct)
     {
         var previous = _state.Cursor.Time;
@@ -406,9 +450,10 @@ public sealed class SimEngine : IAsyncDisposable
 
         var logged = new LoggedEvent(ev, result.Status, applyNo, result.Reason);
         _log.Add(logged);
+        var added = new List<SimEvent>();
         foreach (var followUp in result.FollowUps)
         {
-            Enqueue(followUp, ev.Origin, ev.Seq);
+            Enqueue(followUp, ev.Origin, ev.Seq, added);
         }
 
         if (result.Status == EventStatus.Applied)
@@ -418,7 +463,8 @@ public sealed class SimEngine : IAsyncDisposable
             Invariants.Check(_ctx, _state, previous, BusyAfter(result.Signals), PendingEvents(), EarliestPending());
         }
 
-        await _storage.CommitAsync(new StorageBatch([logged], _state), ct);
+        var update = new EventRowUpdate(ev.Seq, RowStatusOf(result), applyNo, result.Reason);
+        await _storage.CommitAsync(new StorageBatch(added.ToImmutableArray(), ImmutableArray.Create(update), _state), ct);
         if (logged.Status == EventStatus.Applied)
         {
             Publish(logged);
@@ -430,12 +476,21 @@ public sealed class SimEngine : IAsyncDisposable
         }
     }
 
+    /// <summary>適用の結果を行の状態にする。決める側のハンドラを起こすイベントは、出力を取り込むまで処理中にする。</summary>
+    /// <param name="result">適用の結果。</param>
+    private static EventRowStatus RowStatusOf(ApplyResult result) => result.Status switch
+    {
+        EventStatus.Applied => result.Signals.OfType<StartHandlerSignal>().Any() ? EventRowStatus.Processing : EventRowStatus.Applied,
+        EventStatus.Skipped => EventRowStatus.Skipped,
+        _ => EventRowStatus.Rejected,
+    };
+
     /// <summary>適用の後に動いている決めるジョブのペルソナ。これから起動するシグナルの分も含める。</summary>
     private ImmutableHashSet<PersonaId> BusyAfter(ImmutableArray<EngineSignal> signals) =>
         Busy().Union(signals.OfType<StartHandlerSignal>().Select(start => start.Persona));
 
-    /// <summary>後続のイベントに連番と発生元を付けて、キューに入れる。</summary>
-    private long Enqueue(EventDraft ev, Origin origin, long? cause)
+    /// <summary>後続のイベントに連番と発生元を付けて、キューに入れ、積んだ一覧に足す。</summary>
+    private long Enqueue(EventDraft ev, Origin origin, long? cause, List<SimEvent> added)
     {
         var seq = ++_nextSeq;
         var stage = EventTypes.StageOf(ev.EventType);
@@ -453,6 +508,7 @@ public sealed class SimEngine : IAsyncDisposable
             null,
             null);
         _queue.Enqueue(simEvent, (ev.Time, (int)stage, seq));
+        added.Add(simEvent);
         return seq;
     }
 
@@ -608,17 +664,29 @@ public sealed class SimEngine : IAsyncDisposable
         return new EventDraft(plan.Now, EventTypes.PlanCommitted, persona.World, persona.Id, new PlanCommittedPayload(planned), guard, plan.BatchSeq);
     }
 
-    /// <summary>終わったジョブの出力を、ぜんぶ受け取る。</summary>
-    private void DrainOutputs()
+    /// <summary>
+    /// 終わったジョブの出力を、ぜんぶ受け取る。捨てたものは、処理中のトリガーを適用済みにするので、その分の更新を1つのコミットで書く。
+    /// </summary>
+    private async Task DrainOutputsAsync(CancellationToken ct)
     {
+        var updates = new List<EventRowUpdate>();
         while (_outputs.Reader.TryRead(out var output))
         {
-            Receive(output);
+            if (Receive(output))
+            {
+                updates.Add(new EventRowUpdate(output.BatchSeq, EventRowStatus.Applied, null, null));
+            }
+        }
+
+        if (updates.Count > 0)
+        {
+            await _storage.CommitAsync(new StorageBatch(ImmutableArray<SimEvent>.Empty, updates.ToImmutableArray(), _state), ct);
         }
     }
 
-    /// <summary>ジョブの出力を受け取り、積む時を待つ列に入れる。取り消したものは捨てる。</summary>
-    private void Receive(Output output)
+    /// <summary>ジョブの出力を受け取り、積む時を待つ列に入れる。取り消したものは捨て、捨てたなら true を返す。</summary>
+    /// <param name="output">ジョブの出力。</param>
+    private bool Receive(Output output)
     {
         _running.Remove(output.BatchSeq);
         if (_handlerCancels.Remove(output.BatchSeq, out var handlerCancel))
@@ -628,24 +696,35 @@ public sealed class SimEngine : IAsyncDisposable
 
         if (_dropped.Remove(output.BatchSeq))
         {
-            return;
+            return true;
         }
 
         _held.Add(output);
+        return false;
     }
 
-    /// <summary>ホライズンが limit 以下になった出力を、トリガーの連番の順にキューへ入れる。</summary>
-    private void InsertHeld(DateTimeOffset limit)
+    /// <summary>
+    /// ホライズンが limit 以下になった出力を、トリガーの連番の順にキューへ入れる。積んだイベントを保存先に書き、
+    /// トリガーの処理中の行を適用済みにする（1つのコミット）。
+    /// </summary>
+    /// <param name="limit">この時刻までのホライズンの出力を入れる。</param>
+    /// <param name="ct">キャンセル。</param>
+    private async Task InsertHeldAsync(DateTimeOffset limit, CancellationToken ct)
     {
         var ready = _held.Where(output => output.Horizon <= limit).OrderBy(output => output.BatchSeq).ToList();
+        var added = new List<SimEvent>();
+        var updates = new List<EventRowUpdate>();
         foreach (var output in ready)
         {
             _held.Remove(output);
+            updates.Add(new EventRowUpdate(output.BatchSeq, EventRowStatus.Applied, null, null));
             foreach (var ev in output.Events)
             {
-                Enqueue(ev, output.Origin, output.BatchSeq);
+                Enqueue(ev, output.Origin, output.BatchSeq, added);
             }
         }
+
+        await _storage.CommitAsync(new StorageBatch(added.ToImmutableArray(), updates.ToImmutableArray(), _state), ct);
     }
 
     /// <summary>決める側のジョブが動いている（実行中、または出力を待っている）ペルソナ。</summary>
