@@ -654,7 +654,7 @@ public sealed class SimEngine : IAsyncDisposable
         return result switch
         {
             SendResult.Sent sent => new InjectRequest(EventTypes.OutboundSent, new OutboundSentPayload(operation.Seq, sent.ExternalId), null, origin),
-            SendResult.Failed failed => new InjectRequest(EventTypes.OutboundFailed, new OutboundFailedPayload(operation.Seq, failed.Reason, failed.RetryAfter), null, origin),
+            SendResult.Failed failed => new InjectRequest(EventTypes.OutboundFailed, new OutboundFailedPayload(operation.Seq, failed.Reason, failed.RetryAfter is { } retry ? Milliseconds.Truncate(retry) : null), null, origin),
             _ => throw new ArgumentOutOfRangeException(nameof(result), result, null),
         };
     }
