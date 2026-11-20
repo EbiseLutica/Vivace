@@ -145,31 +145,10 @@ public sealed class SimEngine : IAsyncDisposable
     public async Task<InjectResult> InjectAsync(InjectRequest request, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
-        Task<InjectResult>? queued = null;
-        lock (_gate)
-        {
-            if (_looping)
-            {
-                var completion = new TaskCompletionSource<InjectResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-                _commands.Writer.TryWrite(new InjectCommand(request, completion));
-                queued = completion.Task;
-            }
-        }
-
-        if (queued is not null)
-        {
-            return await queued.WaitAsync(ct);
-        }
-
-        await _engineGate.WaitAsync(ct);
-        try
-        {
-            return await InjectNowAsync(request, ct);
-        }
-        finally
-        {
-            _engineGate.Release();
-        }
+        var completion = new TaskCompletionSource<InjectResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _commands.Writer.TryWrite(new InjectCommand(request, completion));
+        await PumpCommandsAsync();
+        return await completion.Task.WaitAsync(ct);
     }
 
     /// <summary>
@@ -259,33 +238,50 @@ public sealed class SimEngine : IAsyncDisposable
             {
                 throw new InvalidOperationException("RunUntilAsync はすでに実行中です。");
             }
+
+            _looping = true;
         }
 
-        await _engineGate.WaitAsync(ct);
+        await _engineGate.WaitAsync(CancellationToken.None);
         try
         {
-            lock (_gate)
-            {
-                _looping = true;
-            }
-
-            try
-            {
-                await LoopAsync(until, ct);
-            }
-            finally
-            {
-                lock (_gate)
-                {
-                    _looping = false;
-                }
-
-                await DrainCommandsAsync(CancellationToken.None);
-            }
+            await LoopAsync(until, ct);
+            await DrainCommandsAsync(CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            FailCommands(ex);
+            throw;
         }
         finally
         {
+            lock (_gate)
+            {
+                _looping = false;
+            }
+
             _engineGate.Release();
+        }
+
+        await PumpCommandsAsync();
+    }
+
+    /// <summary>
+    /// 届いている投入のコマンドを、エンジンが止まっていれば、この場で処理する。エンジンが回っていれば、ループが処理するので何もしない。
+    /// 処理のあと、ゲートを離してから届いたものも、取り残さないように読み直す。
+    /// </summary>
+    private async Task PumpCommandsAsync()
+    {
+        while (_commands.Reader.TryPeek(out _) && await _engineGate.WaitAsync(0))
+        {
+            try
+            {
+                await DrainCommandsAsync(CancellationToken.None);
+            }
+            finally
+            {
+                _engineGate.Release();
+            }
         }
     }
 
@@ -455,8 +451,29 @@ public sealed class SimEngine : IAsyncDisposable
                 _deliveriesInFlight--;
             }
 
-            var result = await InjectNowAsync(command.Request, ct);
+            InjectResult result;
+            try
+            {
+                result = await InjectNowAsync(command.Request, ct);
+            }
+            catch (Exception ex)
+            {
+                command.Completion?.TrySetException(ex);
+                FailCommands(ex);
+                throw;
+            }
+
             command.Completion?.TrySetResult(result);
+        }
+    }
+
+    /// <summary>届いている投入のコマンドを、すべて例外で失敗させる。適用されなかったものは、待っている呼び出し側に知らせる。</summary>
+    /// <param name="ex">失敗の原因。</param>
+    private void FailCommands(Exception ex)
+    {
+        while (_commands.Reader.TryRead(out var command))
+        {
+            command.Completion?.TrySetException(ex);
         }
     }
 
