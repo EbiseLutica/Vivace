@@ -1,11 +1,9 @@
-using System.Globalization;
 using Vivace.Core;
 using Vivace.Core.Domain;
 using Vivace.Core.Events;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Llm;
 using Vivace.Core.Randomness;
-using Vivace.Core.Serialization;
 using Vivace.Core.Storage;
 using Vivace.Core.Time;
 using Vivace.Storage.Sqlite;
@@ -48,14 +46,14 @@ public class RestartTests
     /// <summary>投稿の文面の台本（LLM あり）。</summary>
     private static readonly Func<ScriptedLlm> Llm = () => new ScriptedLlm().Reply("post.compose", "今日の授業眠い");
 
-    /// <summary>止めなかった場合の事実のイベントの列と比べ、いくつかの位置で止めて起動し直したとき、列が一致する。</summary>
+    /// <summary>止めなかった場合の events の全行と比べ、いくつかの位置で止めて起動し直したとき、全行が一致する。</summary>
     [Fact]
     public async Task RestartAtFixedRandomPositionsGivesTheSameFacts()
     {
         var ct = TestContext.Current.CancellationToken;
         using var referenceTemp = new TempDatabase();
         var shapes = await FirstRunAsync(referenceTemp.FilePath, stopAfter: null, ct);
-        var expected = await ReadFactsAsync(referenceTemp.FilePath, ct);
+        var expected = await ReadRowsAsync(referenceTemp.FilePath, ct);
         var positions = StopPositions(shapes);
 
         Assert.NotEmpty(expected);
@@ -67,7 +65,7 @@ public class RestartTests
             Assert.Equal(position, stopped.Count);
             await RestartAsync(temp.FilePath, ct);
 
-            Assert.Equal(expected, await ReadFactsAsync(temp.FilePath, ct));
+            Assert.Equal(expected, await ReadRowsAsync(temp.FilePath, ct));
         }
     }
 
@@ -118,24 +116,29 @@ public class RestartTests
         await engine.RunUntilAsync(Scenario.Start.AddDays(Days), ct);
     }
 
-    /// <summary>保存先から、適用されたイベントを適用番号の順に、1件1行の事実にして読む。</summary>
-    private static async Task<string[]> ReadFactsAsync(string path, CancellationToken ct)
+    /// <summary>
+    /// events の全行を seq の順に、1行1件の文字列にして読む（行の状態、理由、適用番号、連番の参照、発生元、中身まで）。
+    /// 適用の実時刻（applied_utc）は実行のたびに違うので含めない。
+    /// </summary>
+    private static async Task<string[]> ReadRowsAsync(string path, CancellationToken ct)
     {
         await using var database = await SqliteDatabase.OpenAsync(path, ct: ct);
-        var events = await new SqliteStorage(database).ReadEventsAsync(ct);
-        return events
-            .Where(logged => logged.ApplyNo is not null)
-            .OrderBy(logged => logged.ApplyNo)
-            .Select(Fact)
-            .ToArray();
-    }
+        await using var command = database.Connection.CreateCommand();
+        command.CommandText = """
+            SELECT seq, time_utc, event_type, world_id, persona_id, status, status_reason, apply_no,
+                   batch_seq, cause_seq, origin, payload, guard, enqueued_utc
+            FROM events
+            ORDER BY seq
+            """;
+        var rows = new List<string>();
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            var columns = Enumerable.Range(0, reader.FieldCount).Select(index => reader.IsDBNull(index) ? "NULL" : reader.GetValue(index).ToString());
+            rows.Add(string.Join("|", columns));
+        }
 
-    /// <summary>1件の事実の行（適用番号、時刻、イベントタイプ、ペルソナ、中身）。</summary>
-    private static string Fact(LoggedEvent logged)
-    {
-        var ev = logged.Event;
-        var payload = PayloadJson.Serialize(ev.EventType, ev.Payload);
-        return $"{logged.ApplyNo} {ev.Time.ToString("O", CultureInfo.InvariantCulture)} {ev.EventType} {ev.PersonaId?.Value} {payload}";
+        return rows.ToArray();
     }
 
     /// <summary>
