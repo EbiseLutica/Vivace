@@ -6,7 +6,12 @@ using Vivace.Core.Events;
 using Vivace.Core.Events.Guards;
 using Vivace.Core.Events.Payloads;
 using Vivace.Core.Llm;
+using Vivace.Core.Randomness;
+using Vivace.Core.Storage;
+using Vivace.Core.Time;
+using Vivace.Storage.Sqlite;
 using Vivace.Testing;
+using Vivace.Tests.Storage;
 
 namespace Vivace.Tests.Engine;
 
@@ -172,5 +177,54 @@ public class SnsPostInterruptTests
         await engine.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.True(llm.Captured.IsCancellationRequested);
+    }
+
+    /// <summary>
+    /// 太郎の投稿の文面の呼び出しは、取り消されるか5秒経つまで応答しない LLM（取り消しを待つ）。ほかの呼び出しは即座に返す。
+    /// 取り消されたあとの出力は、エンジンが回っていなければ読まれずに残る。
+    /// </summary>
+    private sealed class HeldLlm : ILlmClient
+    {
+        /// <summary>太郎の投稿の呼び出しを、取り消されるか5秒まで止める。</summary>
+        public async Task<LlmResult<string>> GenerateTextAsync(LlmRequest request, CancellationToken ct)
+        {
+            if (request.System.Contains("人物：太郎", StringComparison.Ordinal))
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5), ct);
+            }
+
+            return new LlmResult<string>(Body, new LlmUsage("held", 0, 0));
+        }
+    }
+
+    /// <summary>
+    /// 投稿の途中の睡眠で取り消された投稿は、取り消しを決めた適用で処理中を抜ける。その後、出力が届く前に止めて起動し直しても、
+    /// 投稿のハンドラは起き直らず、その投稿からの出力も出ない。
+    /// </summary>
+    [Fact]
+    public async Task CancelledPostIsNotRestartedWhenStoppedBeforeItsOutput()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        using var temp = new TempDatabase();
+        var held = new HeldLlm();
+        var database = await SqliteDatabase.OpenAsync(temp.FilePath, ct: ct);
+        var storage = new SqliteStorage(database);
+        var engine = await Scenario.CreateAsync(decider: new PostingDecider(), llm: held, storage: storage);
+        await engine.RunUntilAsync(Scenario.Start.AddMinutes(50), ct).WaitAsync(TimeSpan.FromSeconds(30), ct);
+
+        var interrupted = Assert.Single(engine.Log, entry => entry.Status == EventStatus.Applied
+            && entry.Event.PersonaId == Taro
+            && entry.Event.Time == Scenario.Start.AddMinutes(40)
+            && entry.Event.Payload is ActionStartedPayload { ActionId: "post_sns", IsSubAction: false });
+        var open = (await storage.LoadAsync(ct)).Open;
+        await engine.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30), ct);
+        Assert.DoesNotContain(open, row => row.Status == EventRowStatus.Processing);
+
+        var reopened = await SqliteDatabase.OpenAsync(temp.FilePath, ct: ct);
+        await using var restarted = SimEngine.Create(TestWorld.LoadOrThrow(), new SqliteStorage(reopened), new SplitMixRandomSource(), new VirtualClock(Scenario.Start), new PostingDecider(), TestHolidays.Instance, new ScriptedLlm().Reply("post.compose", Body), [new NullChannel(Scenario.ChannelKind)]);
+        await restarted.RecoverAsync(ct);
+        await restarted.RunUntilAsync(Scenario.Start.AddMinutes(60), ct).WaitAsync(TimeSpan.FromSeconds(30), ct);
+
+        Assert.DoesNotContain(restarted.Log, entry => entry.Event.CauseSeq == interrupted.Event.Seq);
     }
 }

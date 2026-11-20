@@ -56,4 +56,7 @@ public enum DefinitionIssueCode
 
     /// <summary>同行の相手と、時刻、場所、行動が一致しない（警告）。</summary>
     PartnerMismatch,
+
+    /// <summary>同じ行動に、記憶の整理を起こす睡眠（effects.sleep.consolidate）と effects.handler の両方がある。</summary>
+    EffectConflict,
 }

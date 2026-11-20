@@ -36,6 +36,9 @@ internal sealed class FailingStorage : IStorage
         return _inner.CommitAsync(batch, ct);
     }
 
+    /// <summary>成功したコミットの内容を読み出す。</summary>
+    public Task<RecoveredRecords> LoadAsync(CancellationToken ct) => _inner.LoadAsync(ct);
+
     /// <summary>何もしない。</summary>
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }

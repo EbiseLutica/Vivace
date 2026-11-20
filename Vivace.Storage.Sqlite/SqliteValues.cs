@@ -84,12 +84,13 @@ internal static class SqliteValues
     /// <param name="sql">SQL。</param>
     /// <param name="bind">パラメータを足す処理。</param>
     /// <param name="ct">キャンセル。</param>
-    public static async Task ExecuteAsync(SqliteConnection connection, SqliteTransaction transaction, string sql, Action<SqliteCommand> bind, CancellationToken ct)
+    /// <returns>変わった行の数。</returns>
+    public static async Task<int> ExecuteAsync(SqliteConnection connection, SqliteTransaction transaction, string sql, Action<SqliteCommand> bind, CancellationToken ct)
     {
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = sql;
         bind(command);
-        await command.ExecuteNonQueryAsync(ct);
+        return await command.ExecuteNonQueryAsync(ct);
     }
 }

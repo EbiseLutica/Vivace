@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+using Vivace.Core;
 using Vivace.Core.Domain.State;
 using Vivace.Core.Storage;
 
@@ -34,21 +36,32 @@ public sealed class SqliteStorage : IStorage
         var connection = _database.Connection;
         var appliedAt = _time.GetUtcNow();
         await using var transaction = connection.BeginTransaction();
-        foreach (var logged in batch.Events)
+        foreach (var ev in batch.Enqueued)
         {
-            await SqliteEventWriter.InsertAsync(connection, transaction, logged, appliedAt, ct);
+            await SqliteEventWriter.InsertPendingAsync(connection, transaction, ev, ct);
         }
 
-        var updatedSeq = batch.Events.IsEmpty ? 0 : batch.Events.Max(logged => logged.Event.Seq);
+        foreach (var update in batch.Updates)
+        {
+            await SqliteEventWriter.UpdateAsync(connection, transaction, update, appliedAt, ct);
+        }
+
+        var updatedSeq = batch.Enqueued.Select(ev => ev.Seq).Concat(batch.Updates.Select(update => update.Seq)).DefaultIfEmpty(0).Max();
         await SqliteStateWriter.WriteAsync(connection, transaction, _committed, batch.State, updatedSeq, ct);
         await transaction.CommitAsync(ct);
         _committed = batch.State;
     }
 
-    /// <summary>記録の全件を、seq の昇順で読む。</summary>
+    /// <summary>
+    /// 適用の記録を、seq の昇順で読む（未適用の行は含めない。処理中の行は適用済みとして読む）。
+    /// 知らないイベントタイプの行があれば例外。
+    /// </summary>
     /// <param name="ct">キャンセル。</param>
-    public async Task<IReadOnlyList<LoggedEvent>> ReadEventsAsync(CancellationToken ct) =>
-        await SqliteEventReader.ReadAsync(_database.Connection, ct);
+    public async Task<IReadOnlyList<LoggedEvent>> ReadEventsAsync(CancellationToken ct)
+    {
+        var rows = await SqliteEventReader.ReadRowsAsync(_database.Connection, "WHERE status <> 'pending'", ct);
+        return rows.Select(row => new LoggedEvent(row.Event, ToResult(row.Status), row.ApplyNo, row.Reason)).ToList();
+    }
 
     /// <summary>
     /// 状態の行から SimState を組み立てる。組み立てた状態は、次のコミットで変わった行を判る基準になる。
@@ -63,5 +76,25 @@ public sealed class SqliteStorage : IStorage
     }
 
     /// <inheritdoc />
+    public async Task<RecoveredRecords> LoadAsync(CancellationToken ct)
+    {
+        var connection = _database.Connection;
+        var state = await SqliteStateReader.ReadAsync(connection, ct);
+        var open = await SqliteEventReader.ReadRowsAsync(connection, "WHERE status IN ('pending', 'processing')", ct);
+        var maxSeq = await SqliteValues.QueryAsync(connection, "SELECT COALESCE(MAX(seq), 0) FROM events", _ => { }, reader => reader.GetInt64(0), ct);
+        _committed = state;
+        return new RecoveredRecords(state, open.ToImmutableArray(), maxSeq[0]);
+    }
+
+    /// <inheritdoc />
     public ValueTask DisposeAsync() => _database.DisposeAsync();
+
+    /// <summary>行の状態を、適用の記録の結果にする（処理中は適用済み）。未適用の行は呼ばれない。</summary>
+    /// <param name="status">行の状態。</param>
+    private static EventStatus ToResult(EventRowStatus status) => status switch
+    {
+        EventRowStatus.Skipped => EventStatus.Skipped,
+        EventRowStatus.Rejected => EventStatus.Rejected,
+        _ => EventStatus.Applied,
+    };
 }

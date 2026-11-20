@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Vivace.Core.Domain.State;
 using Vivace.Core.Events;
+using Vivace.Core.Time;
 
 namespace Vivace.Core;
 
@@ -39,7 +40,7 @@ public sealed class InjectionValidator
         [NotNullWhen(false)] out string? reason)
     {
         draft = null;
-        var at = request.At ?? now;
+        var at = Milliseconds.Truncate(request.At ?? now);
         if (at < now)
         {
             reason = "過去の時刻";

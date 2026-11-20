@@ -49,7 +49,7 @@ public class SqliteFullStateTests
         await using (var database = await SqliteDatabase.OpenAsync(temp.FilePath, ct: ct))
         await using (var storage = new SqliteStorage(database))
         {
-            await storage.CommitAsync(new StorageBatch(log, state), ct);
+            await storage.CommitAsync(LoggedBatch.From(log, state), ct);
         }
 
         await using var reopened = await SqliteDatabase.OpenAsync(temp.FilePath, ct: ct);

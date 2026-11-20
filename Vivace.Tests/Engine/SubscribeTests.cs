@@ -64,13 +64,13 @@ public class SubscribeTests
     }
 
     /// <summary>
-    /// 購読に流れるのは、コミットが成功したものだけ。3 回目のコミット（太郎の生成、連番 2）が失敗すると、エンジンは止まり、
-    /// 購読が受け取るのは、コミットできたワールドの生成（連番 1）とその日の始まり（連番 4）だけ。
+    /// 購読に流れるのは、コミットが成功したものだけ。投入の3回（ワールドと2人の生成）のあとの、適用の3回目のコミット（太郎の生成、連番 2）が失敗すると、
+    /// エンジンは止まり、購読が受け取るのは、コミットできたワールドの生成（連番 1）とその日の始まり（連番 4）だけ。
     /// </summary>
     [Fact]
     public async Task OnlyCommittedEventsArePublished()
     {
-        var storage = new FailingStorage(3);
+        var storage = new FailingStorage(6);
         var engine = await Scenario.CreateAsync(storage: storage);
         var received = Collect(engine.Subscribe(TestContext.Current.CancellationToken));
 

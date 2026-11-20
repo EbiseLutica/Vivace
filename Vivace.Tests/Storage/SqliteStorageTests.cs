@@ -25,7 +25,7 @@ public class SqliteStorageTests
 
         await using var database = await SqliteDatabase.OpenAsync(temp.FilePath, ct: ct);
         await using var storage = new SqliteStorage(database);
-        await storage.CommitAsync(new StorageBatch([applied, skipped], EmptyState(new ApplyCursor(time, EventStage.DayTurn, 1, 1))), ct);
+        await storage.CommitAsync(LoggedBatch.From([applied, skipped], EmptyState(new ApplyCursor(time, EventStage.DayTurn, 1, 1))), ct);
 
         var read = await storage.ReadEventsAsync(ct);
 
@@ -65,7 +65,7 @@ public class SqliteStorageTests
         await using (var database = await SqliteDatabase.OpenAsync(temp.FilePath, ct: ct))
         await using (var storage = new SqliteStorage(database))
         {
-            await storage.CommitAsync(new StorageBatch([new LoggedEvent(ev, EventStatus.Applied, 3, null)], EmptyState(new ApplyCursor(time, EventStage.DayTurn, 5, 3))), ct);
+            await storage.CommitAsync(LoggedBatch.From([new LoggedEvent(ev, EventStatus.Applied, 3, null)], EmptyState(new ApplyCursor(time, EventStage.DayTurn, 5, 3))), ct);
         }
 
         await using var reopened = await SqliteDatabase.OpenAsync(temp.FilePath, ct: ct);

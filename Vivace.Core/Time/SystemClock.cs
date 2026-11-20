@@ -19,7 +19,7 @@ public sealed class SystemClock : IClock
     }
 
     /// <summary>いまの UTC の時刻。</summary>
-    public DateTimeOffset UtcNow => _timeProvider.GetUtcNow();
+    public DateTimeOffset UtcNow => Milliseconds.Truncate(_timeProvider.GetUtcNow());
 
     /// <summary>
     /// t まで実際に待つ。t がいまより前か同じなら、待たずに完了する。
