@@ -58,6 +58,13 @@ public class SqliteFullStateTests
         var loaded = await restored.LoadStateAsync(ct);
 
         Assert.Equal(expectedEvents, events.Select(RoundTripDump.EventLine).ToArray());
+        foreach (var (table, expected) in new[] { ("world_places", 2L), ("world_terms", 1L), ("incidents", 1L), ("inbox", 1L), ("outbound", 1L) })
+        {
+            await using var count = reopened.Connection.CreateCommand();
+            count.CommandText = $"SELECT COUNT(*) FROM {table}";
+            Assert.Equal<object>(expected, await count.ExecuteScalarAsync(ct));
+        }
+
         Assert.NotNull(loaded);
         Assert.Equal(expectedState, RoundTripDump.StateLines(loaded));
     }

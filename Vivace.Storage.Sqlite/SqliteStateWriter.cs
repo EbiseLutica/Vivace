@@ -6,21 +6,21 @@ using Vivace.Core.Serialization;
 namespace Vivace.Storage.Sqlite;
 
 /// <summary>
-/// 状態の行を書く。前にコミットした状態と参照を比べ、変わった行だけを書く（イミュータブルなので参照で判る）。
-/// 子の一覧（出来事、受信、未送信の操作）は、一覧の参照が変わったら所属の行を消して入れ直す。
+/// 状態を書く。前にコミットした状態と参照を比べ、変わった行だけを書く（イミュータブルなので参照で判る）。
+/// ワールドとペルソナの行は、状態の全体を state の JSON にする。子の表（生えた場所、辞書、出来事、受信、未送信の操作）は写しで、
+/// 一覧の参照が変わったら所属の行を消して入れ直す。
 /// </summary>
 internal static class SqliteStateWriter
 {
     /// <summary>ワールドの行の挿入と更新。作成の連番は world.created のイベントから引く。</summary>
     private const string WorldUpsertSql = """
-        INSERT INTO worlds (id, def_id, seed, status, graph_version, created_seq)
-        VALUES ($id, $def, $seed, $status, $graph,
+        INSERT INTO worlds (id, def_id, status, state, created_seq)
+        VALUES ($id, $def, $status, $state,
                 COALESCE((SELECT MIN(seq) FROM events WHERE world_id = $id AND event_type = 'world.created'), 0))
-        ON CONFLICT(id) DO UPDATE SET def_id = excluded.def_id, seed = excluded.seed,
-                                      status = excluded.status, graph_version = excluded.graph_version
+        ON CONFLICT(id) DO UPDATE SET def_id = excluded.def_id, status = excluded.status, state = excluded.state
         """;
 
-    /// <summary>生えた場所の挿入と更新。</summary>
+    /// <summary>生えた場所の挿入と更新（写し）。</summary>
     private const string PlaceUpsertSql = """
         INSERT INTO world_places (world_id, place_id, name, tags, links, grp, status, created_seq, updated_seq)
         VALUES ($world, $place, $name, $tags, $links, $grp, $status, $created, $updated)
@@ -28,17 +28,17 @@ internal static class SqliteStateWriter
                                                       grp = excluded.grp, status = excluded.status, updated_seq = excluded.updated_seq
         """;
 
-    /// <summary>変換の辞書の挿入と更新。</summary>
+    /// <summary>変換の辞書の挿入と更新（写し）。</summary>
     private const string TermUpsertSql = """
         INSERT INTO world_terms (world_id, term, verdict, mapped, category, created_seq)
         VALUES ($world, $term, $verdict, $mapped, $category, $created)
         ON CONFLICT(world_id, term) DO UPDATE SET verdict = excluded.verdict, mapped = excluded.mapped, category = excluded.category
         """;
 
-    /// <summary>ワールドの出来事の、所属の行の削除。</summary>
+    /// <summary>ワールドの出来事の、所属の行の削除（写し）。</summary>
     private const string IncidentDeleteSql = "DELETE FROM incidents WHERE world_id = $world";
 
-    /// <summary>出来事の挿入。</summary>
+    /// <summary>出来事の挿入（写し）。</summary>
     private const string IncidentInsertSql = """
         INSERT INTO incidents (id, world_id, persona_id, def_id, effects, started_utc, ends_utc)
         VALUES ($id, $world, $persona, $def, $effects, $started, $ends)
@@ -46,34 +46,27 @@ internal static class SqliteStateWriter
 
     /// <summary>ペルソナの行の挿入と更新。作成の連番は persona.created のイベントから引く。</summary>
     private const string PersonaUpsertSql = """
-        INSERT INTO personas (id, def_id, world_id, status, location, activity, overlay, activity_version, vitals, conditions,
-                              plan, plan_version, usage, rng, posting, last_wake_utc, created_seq, updated_seq,
-                              deciding, last_block_id, planned_for)
-        VALUES ($id, $def, $world, $status, $location, $activity, $overlay, $activityVersion, $vitals, $conditions,
-                $plan, $planVersion, $usage, $rng, $posting, $lastWake,
+        INSERT INTO personas (id, def_id, world_id, status, state, created_seq, updated_seq)
+        VALUES ($id, $def, $world, $status, $state,
                 COALESCE((SELECT MIN(seq) FROM events WHERE persona_id = $id AND event_type = 'persona.created'), $updated),
-                $updated, $deciding, $lastBlock, $plannedFor)
+                $updated)
         ON CONFLICT(id) DO UPDATE SET def_id = excluded.def_id, world_id = excluded.world_id, status = excluded.status,
-                                      location = excluded.location, activity = excluded.activity, overlay = excluded.overlay,
-                                      activity_version = excluded.activity_version, vitals = excluded.vitals, conditions = excluded.conditions,
-                                      plan = excluded.plan, plan_version = excluded.plan_version, usage = excluded.usage, rng = excluded.rng,
-                                      posting = excluded.posting, last_wake_utc = excluded.last_wake_utc, updated_seq = excluded.updated_seq,
-                                      deciding = excluded.deciding, last_block_id = excluded.last_block_id, planned_for = excluded.planned_for
+                                      state = excluded.state, updated_seq = excluded.updated_seq
         """;
 
-    /// <summary>受信の、所属の行の削除。</summary>
+    /// <summary>受信の、所属の行の削除（写し）。</summary>
     private const string InboxDeleteSql = "DELETE FROM inbox WHERE persona_id = $persona";
 
-    /// <summary>受信の挿入。状態の写しなので、未処理の unread だけを書く（J-190）。</summary>
+    /// <summary>受信の挿入（写し）。状態の写しなので、未処理の unread だけを書く（J-188）。</summary>
     private const string InboxInsertSql = """
-        INSERT INTO inbox (id, persona_id, channel, kind, sender, audience, body, original_arrived_utc, status, handled_seq, outcome, item)
-        VALUES ($id, $persona, $channel, $kind, $sender, $audience, $body, $arrived, 'unread', NULL, NULL, $item)
+        INSERT INTO inbox (id, persona_id, channel, kind, sender, audience, body, original_arrived_utc, status, handled_seq, outcome)
+        VALUES ($id, $persona, $channel, $kind, $sender, $audience, $body, $arrived, 'unread', NULL, NULL)
         """;
 
-    /// <summary>未送信の操作の、所属の行の削除。</summary>
+    /// <summary>未送信の操作の、所属の行の削除（写し）。</summary>
     private const string OutboundDeleteSql = "DELETE FROM outbound WHERE persona_id = $persona";
 
-    /// <summary>未送信の操作の挿入。送信前の操作として入れる。</summary>
+    /// <summary>未送信の操作の挿入（写し）。送信前の操作として入れる。</summary>
     private const string OutboundInsertSql = """
         INSERT INTO outbound (id, persona_id, channel, op_kind, is_speech, payload, status, external_id, result_seq, sent_utc, error)
         VALUES ($id, $persona, $channel, $kind, $speech, $payload, 'pending', NULL, NULL, NULL, NULL)
@@ -111,7 +104,7 @@ internal static class SqliteStateWriter
         }
     }
 
-    /// <summary>ワールドの行、生えた場所、辞書、出来事を書く。変わった所だけ。</summary>
+    /// <summary>ワールドの行（state ごと）と、生えた場所、辞書、出来事の写しを書く。変わった所だけ。</summary>
     private static async Task WriteWorldAsync(SqliteConnection connection, SqliteTransaction transaction, WorldState? before, WorldState world, CancellationToken ct)
     {
         if (!ReferenceEquals(before, world))
@@ -120,9 +113,8 @@ internal static class SqliteStateWriter
             {
                 SqliteValues.Bind(command, "$id", world.Id.Value);
                 SqliteValues.Bind(command, "$def", world.DefId.Value);
-                SqliteValues.Bind(command, "$seed", unchecked((long)world.Seed));
                 SqliteValues.Bind(command, "$status", SqliteNames.ToColumn(world.Status));
-                SqliteValues.Bind(command, "$graph", world.GraphVersion);
+                SqliteValues.Bind(command, "$state", SqliteValues.Json(world, VivaceJsonContext.Default.WorldState));
             }, ct);
         }
 
@@ -152,7 +144,7 @@ internal static class SqliteStateWriter
         }
     }
 
-    /// <summary>生えた場所の1件を書く。</summary>
+    /// <summary>生えた場所の1件を写しとして書く。</summary>
     private static Task WritePlaceAsync(SqliteConnection connection, SqliteTransaction transaction, WorldState world, RuntimePlace place, CancellationToken ct) =>
         SqliteValues.ExecuteAsync(connection, transaction, PlaceUpsertSql, command =>
         {
@@ -167,7 +159,7 @@ internal static class SqliteStateWriter
             SqliteValues.Bind(command, "$updated", place.UpdatedSeq);
         }, ct);
 
-    /// <summary>変換の辞書の1件を書く。</summary>
+    /// <summary>変換の辞書の1件を写しとして書く。</summary>
     private static Task WriteTermAsync(SqliteConnection connection, SqliteTransaction transaction, WorldState world, TermEntry term, CancellationToken ct) =>
         SqliteValues.ExecuteAsync(connection, transaction, TermUpsertSql, command =>
         {
@@ -179,7 +171,7 @@ internal static class SqliteStateWriter
             SqliteValues.Bind(command, "$created", term.CreatedSeq);
         }, ct);
 
-    /// <summary>発生中の出来事の1件を書く。</summary>
+    /// <summary>発生中の出来事の1件を写しとして書く。</summary>
     private static Task WriteIncidentAsync(SqliteConnection connection, SqliteTransaction transaction, WorldState world, ActiveIncident incident, CancellationToken ct) =>
         SqliteValues.ExecuteAsync(connection, transaction, IncidentInsertSql, command =>
         {
@@ -192,7 +184,7 @@ internal static class SqliteStateWriter
             SqliteValues.Bind(command, "$ends", SqliteValues.ToMsOrNull(incident.EndsAt));
         }, ct);
 
-    /// <summary>ペルソナの行、受信、未送信の操作を書く。変わった所だけ。</summary>
+    /// <summary>ペルソナの行（state ごと）と、受信、未送信の操作の写しを書く。変わった所だけ。</summary>
     private static async Task WritePersonaAsync(SqliteConnection connection, SqliteTransaction transaction, PersonaState? before, PersonaState persona, long updatedSeq, CancellationToken ct)
     {
         if (!ReferenceEquals(before, persona))
@@ -219,7 +211,7 @@ internal static class SqliteStateWriter
         }
     }
 
-    /// <summary>ペルソナの行を書く。</summary>
+    /// <summary>ペルソナの行を書く（state ごと）。</summary>
     private static Task WritePersonaRowAsync(SqliteConnection connection, SqliteTransaction transaction, PersonaState persona, long updatedSeq, CancellationToken ct) =>
         SqliteValues.ExecuteAsync(connection, transaction, PersonaUpsertSql, command =>
         {
@@ -227,25 +219,11 @@ internal static class SqliteStateWriter
             SqliteValues.Bind(command, "$def", persona.DefId.Value);
             SqliteValues.Bind(command, "$world", persona.World.Value);
             SqliteValues.Bind(command, "$status", SqliteNames.ToColumn(persona.Status));
-            SqliteValues.Bind(command, "$location", SqliteValues.Json(persona.Location, VivaceJsonContext.Default.Location));
-            SqliteValues.Bind(command, "$activity", SqliteValues.JsonOrNull(persona.Activity, VivaceJsonContext.Default.Activity));
-            SqliteValues.Bind(command, "$overlay", SqliteValues.JsonOrNull(persona.Overlay, VivaceJsonContext.Default.Activity));
-            SqliteValues.Bind(command, "$activityVersion", persona.ActivityVersion);
-            SqliteValues.Bind(command, "$vitals", SqliteValues.Json(persona.Vitals, VivaceJsonContext.Default.Vitals));
-            SqliteValues.Bind(command, "$conditions", SqliteValues.Json(persona.Conditions, VivaceJsonContext.Default.ImmutableArrayAttachedCondition));
-            SqliteValues.Bind(command, "$plan", SqliteValues.JsonOrNull(persona.Plan, VivaceJsonContext.Default.DayPlan));
-            SqliteValues.Bind(command, "$planVersion", persona.PlanVersion);
-            SqliteValues.Bind(command, "$usage", SqliteValues.Json(persona.Usage, VivaceJsonContext.Default.ImmutableDictionaryStringActionUsage));
-            SqliteValues.Bind(command, "$rng", SqliteValues.Json(persona.Rng, VivaceJsonContext.Default.ImmutableDictionaryStringUInt64));
-            SqliteValues.Bind(command, "$posting", SqliteValues.Json(persona.Posting, VivaceJsonContext.Default.PostingState));
-            SqliteValues.Bind(command, "$lastWake", SqliteValues.ToMsOrNull(persona.LastWake));
+            SqliteValues.Bind(command, "$state", SqliteValues.Json(persona, VivaceJsonContext.Default.PersonaState));
             SqliteValues.Bind(command, "$updated", updatedSeq);
-            SqliteValues.Bind(command, "$deciding", persona.Deciding ? 1 : 0);
-            SqliteValues.Bind(command, "$lastBlock", persona.LastBlockId);
-            SqliteValues.Bind(command, "$plannedFor", persona.PlannedFor);
         }, ct);
 
-    /// <summary>受信の1件を書く。</summary>
+    /// <summary>受信の1件を写しとして書く。</summary>
     private static Task WriteInboxItemAsync(SqliteConnection connection, SqliteTransaction transaction, PersonaState persona, InboxItem item, CancellationToken ct) =>
         SqliteValues.ExecuteAsync(connection, transaction, InboxInsertSql, command =>
         {
@@ -257,10 +235,9 @@ internal static class SqliteStateWriter
             SqliteValues.Bind(command, "$audience", SqliteNames.ToColumn(item.Audience));
             SqliteValues.Bind(command, "$body", item.Text ?? string.Empty);
             SqliteValues.Bind(command, "$arrived", SqliteValues.ToMsOrNull(item.OriginalArrivedAt));
-            SqliteValues.Bind(command, "$item", SqliteValues.Json(item, VivaceJsonContext.Default.InboxItem));
         }, ct);
 
-    /// <summary>未送信の操作の1件を書く。</summary>
+    /// <summary>未送信の操作の1件を写しとして書く。</summary>
     private static Task WriteOutboundAsync(SqliteConnection connection, SqliteTransaction transaction, PersonaState persona, OutboundOp operation, CancellationToken ct) =>
         SqliteValues.ExecuteAsync(connection, transaction, OutboundInsertSql, command =>
         {

@@ -22,11 +22,21 @@ CREATE INDEX ix_events_open    ON events(status) WHERE status IN ('pending', 'pr
 CREATE INDEX ix_events_persona ON events(persona_id, apply_no);
 CREATE INDEX ix_events_type    ON events(persona_id, event_type, time_utc);
 
--- 状態のテーブル（エンジンが書く）
+-- 状態のテーブル（エンジンが書く。状態を戻すときは state の JSON だけを読む）
 CREATE TABLE worlds (
-  id TEXT PRIMARY KEY, def_id TEXT NOT NULL, seed INTEGER NOT NULL,
-  status TEXT NOT NULL, graph_version INTEGER NOT NULL, created_seq INTEGER NOT NULL -- alive / destroyed
+  id TEXT PRIMARY KEY, def_id TEXT NOT NULL,
+  status TEXT NOT NULL,                    -- alive / destroyed
+  state TEXT NOT NULL,                     -- WorldState の全体の JSON
+  created_seq INTEGER NOT NULL
 );
+CREATE TABLE personas (
+  id TEXT PRIMARY KEY, def_id TEXT NOT NULL, world_id TEXT NOT NULL,
+  status TEXT NOT NULL,                    -- alive / gap / destroyed
+  state TEXT NOT NULL,                     -- PersonaState の全体の JSON
+  created_seq INTEGER NOT NULL, updated_seq INTEGER NOT NULL
+);
+
+-- 写しのテーブル（ビューアと一覧用。書くが、状態を戻すときは読まない）
 CREATE TABLE world_places (                -- 生えた場所
   world_id TEXT NOT NULL, place_id TEXT NOT NULL,
   name TEXT NOT NULL, tags TEXT NOT NULL, links TEXT NOT NULL, grp TEXT,
@@ -45,31 +55,18 @@ CREATE TABLE incidents (                   -- 発生中の出来事
   effects TEXT NOT NULL,                   -- 解決済みの効果（移動時間、閉鎖、状態。対象の場所を含む。J-119）
   started_utc INTEGER NOT NULL, ends_utc INTEGER
 );
-CREATE TABLE personas (
-  id TEXT PRIMARY KEY, def_id TEXT NOT NULL, world_id TEXT NOT NULL, status TEXT NOT NULL, -- alive / gap / destroyed
-  location TEXT NOT NULL,                  -- JSON
-  activity TEXT, overlay TEXT, activity_version INTEGER NOT NULL,
-  vitals TEXT NOT NULL, conditions TEXT NOT NULL,
-  plan TEXT, plan_version INTEGER NOT NULL,
-  usage TEXT NOT NULL, rng TEXT NOT NULL, posting TEXT NOT NULL,
-  last_wake_utc INTEGER, created_seq INTEGER NOT NULL, updated_seq INTEGER NOT NULL,
-  deciding INTEGER NOT NULL DEFAULT 0,     -- 決定タイミングの処理中
-  last_block_id TEXT,                      -- 最後に始めたブロック
-  planned_for TEXT                         -- Planner を起こした期間のキー
-);
-CREATE TABLE inbox (
+CREATE TABLE inbox (                       -- 未処理の受信の写し（処理済みの行は消す）
   id INTEGER PRIMARY KEY,                  -- notification.arrived の seq
   persona_id TEXT NOT NULL, channel TEXT NOT NULL, kind TEXT NOT NULL, -- message / reaction / follow / other
   sender TEXT, audience TEXT NOT NULL, body TEXT NOT NULL, -- public / dm / no_memory
   original_arrived_utc INTEGER,
-  status TEXT NOT NULL,                    -- unread / handled（状態の写しなので unread だけを書く）
-  handled_seq INTEGER, outcome TEXT,
-  item TEXT NOT NULL                       -- 受信の全体の JSON
+  status TEXT NOT NULL,                    -- unread（写しなので unread だけを書く）
+  handled_seq INTEGER, outcome TEXT
 );
-CREATE TABLE outbound (
+CREATE TABLE outbound (                    -- 未送信の操作の写し（送信済みの行は消す）
   id INTEGER PRIMARY KEY,                  -- outbound.speech / operation の seq
   persona_id TEXT NOT NULL, channel TEXT NOT NULL, op_kind TEXT NOT NULL,
   is_speech INTEGER NOT NULL, payload TEXT NOT NULL,
-  status TEXT NOT NULL,                    -- pending / sent / failed / unknown（状態の写しなので pending だけを書く）
+  status TEXT NOT NULL,                    -- pending（写しなので pending だけを書く）
   external_id TEXT, result_seq INTEGER, sent_utc INTEGER, error TEXT
 );

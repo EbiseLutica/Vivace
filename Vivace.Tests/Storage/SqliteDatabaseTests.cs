@@ -39,7 +39,7 @@ public class SqliteDatabaseTests
         using var temp = new TempDatabase();
         await using (var first = await SqliteDatabase.OpenAsync(temp.FilePath, ct: TestContext.Current.CancellationToken))
         {
-            await ExecuteAsync(first.Connection, "INSERT INTO worlds (id, def_id, seed, status, graph_version, created_seq) VALUES ('w1', 'testville', 1, 'alive', 0, 1)");
+            await ExecuteAsync(first.Connection, "INSERT INTO worlds (id, def_id, status, state, created_seq) VALUES ('w1', 'testville', 'alive', '{}', 1)");
         }
 
         await using var second = await SqliteDatabase.OpenAsync(temp.FilePath, ct: TestContext.Current.CancellationToken);
