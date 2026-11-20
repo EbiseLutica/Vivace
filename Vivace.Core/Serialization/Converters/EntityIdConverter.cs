@@ -20,4 +20,12 @@ public abstract class EntityIdConverter<T> : JsonConverter<T>
     /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options) =>
         writer.WriteStringValue(value.Value);
+
+    /// <inheritdoc />
+    public override T ReadAsPropertyName(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+        Create(reader.GetString() ?? throw new JsonException("ID が null です。"));
+
+    /// <inheritdoc />
+    public override void WriteAsPropertyName(Utf8JsonWriter writer, T value, JsonSerializerOptions options) =>
+        writer.WritePropertyName(value.Value);
 }

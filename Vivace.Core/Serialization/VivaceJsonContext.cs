@@ -61,6 +61,8 @@ namespace Vivace.Core.Serialization;
 [JsonSerializable(typeof(VitalThresholdPayload))]
 [JsonSerializable(typeof(WorldCreatedPayload))]
 [JsonSerializable(typeof(WorldDestroyedPayload))]
+[JsonSerializable(typeof(PersonaState))]
+[JsonSerializable(typeof(WorldState))]
 [JsonSerializable(typeof(Location))]
 [JsonSerializable(typeof(Activity))]
 [JsonSerializable(typeof(DayPlan))]
