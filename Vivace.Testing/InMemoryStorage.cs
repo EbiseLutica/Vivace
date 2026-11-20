@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Vivace.Core;
 using Vivace.Core.Domain.State;
 using Vivace.Core.Events;
@@ -45,6 +46,19 @@ public sealed class InMemoryStorage : IStorage
 
         Latest = batch.State;
         return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task<RecoveredRecords> LoadAsync(CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        var open = _rows.Values
+            .Where(row => row.Status is EventRowStatus.Pending or EventRowStatus.Processing)
+            .OrderBy(row => row.Event.Seq)
+            .Select(row => new EventRow(row.Event, row.Status, row.ApplyNo, row.Reason))
+            .ToImmutableArray();
+        var maxSeq = _rows.Keys.DefaultIfEmpty(0).Max();
+        return Task.FromResult(new RecoveredRecords(Latest, open, maxSeq));
     }
 
     /// <inheritdoc />

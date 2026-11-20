@@ -52,6 +52,10 @@ public sealed class VivaceEngine : IAsyncDisposable
         }
     }
 
+    /// <summary>保存先の記録から状態とキューを戻す。起動の直後に一度だけ呼ぶ（記録がなければ何もしない）。</summary>
+    /// <param name="ct">キャンセル。</param>
+    public Task RecoverAsync(CancellationToken ct) => _engine.RecoverAsync(ct);
+
     /// <summary>時刻 until まで回す。</summary>
     /// <param name="until">進める先の時刻。</param>
     /// <param name="ct">キャンセル。</param>

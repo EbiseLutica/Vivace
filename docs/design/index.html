@@ -353,6 +353,9 @@
       <tr><td>J-188</td><td>子の表は状態の写しで、状態は state の JSON から戻す。処理済み・送信済みの行は消す</td><td><a href="3-data.html#sqlite">D3 3.8</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/31">PR #31</a>）</td></tr>
       <tr><td>J-189</td><td><code>ReadEventsAsync</code> は seq の昇順で返す。エンジンの <code>Log</code> は処理の順なので、同じ列にはならない（seq は積んだときに付くため）。適用の列は <code>apply_no</code> の順で一致する。処理の順は保存しない。起動の手順で要ると分かったら、列を足して決める</td><td><a href="3-data.html#sqlite">D3 3.8</a></td><td>エージェント（<a href="https://github.com/EbiseLutica/Vivace/pull/31">PR #31</a>）</td></tr>
       <tr><td>J-190</td><td>購読と <code>Log</code> は、処理中のイベントを、適用番号を振った時点で適用として流す（出力を取り込んだときには流さない）。<code>ReadEventsAsync</code> も処理中の行を適用済みとして返す。適用の列（適用番号の順）とドライランの出力を、ハンドラの出力を待つ間に変えないため</td><td><a href="1-execution.html#apply">D1 1.3</a>、<a href="1-execution.html#tx">1.9</a></td><td>エージェント（PR 番号は未定）</td></tr>
+      <tr><td>J-191</td><td>起動のとき、処理中の行からハンドラのシグナルを作り直す。種類は、イベントタイプと行動の定義で決める（行動の開始は、効果のハンドラがあれば効果、なければ記憶の整理の Planner）。記憶の整理の Planner が起きたかは状態から判らないが、処理中の行は起こされたことを表すので、種類は行の状態から決まる。定義の検証で睡眠と効果を同じ行動に持たせないので、種類は一つに決まる</td><td><a href="1-execution.html#startup">D1 1.11</a>、<a href="1-execution.html#apply">1.3</a></td><td>エージェント（PR 番号は未定）</td></tr>
+      <tr><td>J-192</td><td>起動の入口は <code>SimEngine.RecoverAsync</code>（公開は <code>VivaceEngine.RecoverAsync</code>）で、起動の直後に一度だけ呼ぶ。ビルダーの <code>Build()</code> は同期のままにし、状態は読まない。記録がなければ何もしない。投入や適用のあとに呼ぶと例外にする</td><td><a href="1-execution.html#startup">D1 1.11</a></td><td>エージェント（PR 番号は未定）</td></tr>
+      <tr><td>J-193</td><td>起動で、処理の順（J-189 の <code>Log</code> の順）は使わない。キューは時刻、ステージ、連番の順に作り、処理中のハンドラは連番の順に起動し直す。適用の列は <code>apply_no</code> の順のまま。J-189 が「要ると分かったら列を足す」としていた件は、要らないと判ったので列は足さない</td><td><a href="3-data.html#sqlite">D3 3.8</a></td><td>エージェント（PR 番号は未定）</td></tr>
     </table>
   </div>
   <h3>調整前提の数値</h3>

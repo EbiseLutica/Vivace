@@ -13,6 +13,7 @@ using Vivace.Core.Handlers;
 using Vivace.Core.Llm;
 using Vivace.Core.Planning;
 using Vivace.Core.Randomness;
+using Vivace.Core.Recovery;
 using Vivace.Core.Routes;
 using Vivace.Core.Signals;
 using Vivace.Core.Storage;
@@ -203,6 +204,46 @@ public sealed class SimEngine : IAsyncDisposable
         }
 
         return ReadSubscriptionAsync(channel, ct);
+    }
+
+    /// <summary>
+    /// 保存先の記録から状態とキューを戻し、処理中のイベントのハンドラを起動し直す。起動の直後に一度だけ呼ぶ。記録がなければ何もしない。
+    /// 処理中のハンドラの出力は、取り込むまでは保存先に残るので、起動し直した出力で改めて適用される。
+    /// </summary>
+    /// <param name="ct">キャンセル。</param>
+    /// <exception cref="InvalidOperationException">すでに投入したか適用したあとに呼んだ。</exception>
+    public async Task RecoverAsync(CancellationToken ct)
+    {
+        await _engineGate.WaitAsync(ct);
+        try
+        {
+            if (_nextSeq != 0 || _applyNo != 0)
+            {
+                throw new InvalidOperationException("RecoverAsync は、起動の直後に一度だけ呼びます。");
+            }
+
+            var recovered = await _storage.LoadAsync(ct);
+            if (recovered.State is { } state)
+            {
+                _state = state;
+                _applyNo = state.Cursor.ApplyNo;
+            }
+
+            _nextSeq = recovered.MaxSeq;
+            foreach (var row in recovered.Open.Where(row => row.Status == EventRowStatus.Pending).OrderBy(row => row.Event.Seq))
+            {
+                _queue.Enqueue(row.Event, (row.Event.Time, (int)row.Event.Stage, row.Event.Seq));
+            }
+
+            foreach (var row in recovered.Open.Where(row => row.Status == EventRowStatus.Processing).OrderBy(row => row.Event.Seq))
+            {
+                Handle(ProcessingSignal.For(_ctx, row.Event), row.Event.Origin);
+            }
+        }
+        finally
+        {
+            _engineGate.Release();
+        }
     }
 
     /// <summary>

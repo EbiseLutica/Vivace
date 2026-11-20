@@ -202,10 +202,10 @@
   <ul class="tasks">
     <li><input type="checkbox" disabled checked><code>Vivace.Storage.Sqlite</code>：スキーマ、接続の設定、<code>StorageBatch</code> のコミット、イベントの読み出し</li>
     <li><input type="checkbox" disabled checked>ペイロードの JSON（ソース生成、バージョン、知らないイベントタイプでの停止）</li>
-    <li><input type="checkbox" disabled>起動の手順：記録から状態を戻し、処理中の決定タイミングとハンドラを起動し直す（<a href="design/1-execution.html#apply">D1 P-58</a>。定義の検証で、記憶の整理を起こす行動に <code>handler</code> を持たせないことも含む）</li>
+    <li><input type="checkbox" disabled checked>起動の手順：記録から状態を戻し、処理中の決定タイミングとハンドラを起動し直す（<a href="design/1-execution.html#apply">D1 P-58</a>。定義の検証で、記憶の整理を起こす行動に <code>handler</code> を持たせないことも含む）</li>
     <li><input type="checkbox" disabled>追いつき：止めていた間を早送りで進める。上限は 14 日</li>
     <li><input type="checkbox" disabled><code>vivace run --db &lt;path&gt;</code>。指定がなければ、M2 までと同じくメモリで動く</li>
-    <li><input type="checkbox" disabled>再起動のテスト</li>
+    <li><input type="checkbox" disabled checked>再起動のテスト</li>
   </ul>
   <p><strong>範囲外</strong>：<code>persona.gap</code>、定義の読み直し（<code>ReloadDefinitionsAsync</code>）、送信不明の扱い。<code>InMemoryStorage</code> はテスト用に残す。</p>
   <p><strong>完了条件</strong>：シナリオのランダムな位置で止めて再起動しても、事実のイベントの列が止めなかったときと一致する。<code>vivace run --db</code> を止めて起動し直すと、続きから動く。</p>
@@ -284,6 +284,7 @@
       <tr><td>ハンドラの取り消しのコールバックが、エンジンの処理のスレッドで動く</td><td>PR #27 のレビュー</td><td><code>CancelHandler</code> で取り消すと、取り消しを待っていたハンドラの続き（代わりの出力の書き込み）が、エンジンの処理の中で同期的に動くことがある。ハンドラはスナップショットしか読まないので壊れはしないが、重いハンドラが増えたら、取り消しを別のスレッドで行う</td><td>M4 以降（LLM を使うハンドラが増えたら）</td></tr>
       <tr><td>チャンネルの <code>postRateLimit</code> がない</td><td>PR #26 のレビュー</td><td>チャンネルが宣言する投稿の間隔の下限を、投稿の判定に使っていない。コンソールには制限がないので困らない</td><td>M5（Misskey のチャンネルを足すとき）</td></tr>
       <tr><td>配信の結果の投入が拒否されると、黙って消える</td><td>PR #26 のレビュー</td><td>送信は済んだのに outbound.sent / failed が残らず、未送信の操作が残る（再起動後に送信不明として扱う手当てがない）。拒否の理由を記録する</td><td>M3（送信不明の扱い）</td></tr>
+      <tr><td>起動で、未送信の操作が残っても再送しない</td><td>M3 の起動の PR</td><td>起動では、未送信の操作を配信役に渡さず、送信不明のイベントも作らない（範囲外）。送信の途中で止まった操作は、状態に残るだけになる。再起動のテストは、未送信の操作が残る位置では止めない</td><td>M3（送信不明の扱い）</td></tr>
       <tr><td><code>outbound.sent</code> / <code>outbound.failed</code> のイベントに、ペルソナが入らない</td><td>PR #26 のレビュー</td><td>購読をペルソナで絞れない。投入の要求にペルソナがないため、未送信の操作からペルソナを引いて入れる</td><td>M3 か M4（購読の絞り込みを使うとき）</td></tr>
       <tr><td>定義の <code>channels</code> にあって、ビルダーに登録されていない種類があっても、警告が出ない</td><td>PR #26 のレビュー</td><td>ペルソナの投稿は、送り先がないまま送信失敗になる。起動時に、channels の種類が登録されていなければ警告を出す（止めはしない）</td><td>M5（Misskey のチャンネルを足すとき）</td></tr>
       <tr><td>同じ行動が続きやすい</td><td>PR #22 の dry-run</td><td>花子が夕方に「テレビを見る」を3回、「喫茶店でひと休み」を2回続けた。太郎の「本を読む」が、終わった同じ分にまた始まる。続けた回数による重みの下げ方（<code>RepeatFactor</code>）が弱いと見られる</td><td>M2 以降（投稿で同じことばかり言うように見えてきたら）</td></tr>
@@ -298,7 +299,7 @@
 
 <section id="next">
   <h2>最初の一手</h2>
-  <p>M3 の SQLite のストレージから進める。</p>
+  <p>M3 の追いつき（14 日の上限）から進める。</p>
 </section>
 
 </main>

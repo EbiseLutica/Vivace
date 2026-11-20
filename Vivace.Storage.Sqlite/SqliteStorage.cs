@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Vivace.Core;
 using Vivace.Core.Domain.State;
 using Vivace.Core.Storage;
@@ -72,6 +73,17 @@ public sealed class SqliteStorage : IStorage
         var state = await SqliteStateReader.ReadAsync(_database.Connection, ct);
         _committed = state;
         return state;
+    }
+
+    /// <inheritdoc />
+    public async Task<RecoveredRecords> LoadAsync(CancellationToken ct)
+    {
+        var connection = _database.Connection;
+        var state = await SqliteStateReader.ReadAsync(connection, ct);
+        var open = await SqliteEventReader.ReadRowsAsync(connection, "WHERE status IN ('pending', 'processing')", ct);
+        var maxSeq = await SqliteValues.QueryAsync(connection, "SELECT COALESCE(MAX(seq), 0) FROM events", _ => { }, reader => reader.GetInt64(0), ct);
+        _committed = state;
+        return new RecoveredRecords(state, open.ToImmutableArray(), maxSeq[0]);
     }
 
     /// <inheritdoc />
