@@ -20,6 +20,22 @@ public class DefinitionErrorTests
         Assert.Null(result.Definitions);
     }
 
+    /// <summary>
+    /// 同じ行動に、記憶の整理を起こす睡眠（effects.sleep.consolidate）と effects.handler があれば、行動の位置にエラーが出る。
+    /// </summary>
+    [Fact]
+    public void SleepConsolidateAndHandlerOnOneActionIsRejected()
+    {
+        var files = DefinitionFixtures.Replaced("actions/actions.toml", "effects.handler = \"sns.post\"", "effects.handler = \"sns.post\"\neffects.sleep = { consolidate = true, debt = false }");
+        var header = DefinitionFixtures.At(files, "actions/actions.toml", "[[action]]\nid = \"post_sns\"");
+
+        var result = DefinitionLoader.LoadFiles(files);
+
+        var issue = DefinitionFixtures.Find(result, DefinitionIssueCode.EffectConflict, header);
+        Assert.Equal(IssueSeverity.Error, issue.Severity);
+        Assert.Null(result.Definitions);
+    }
+
     /// <summary>必須の項目（ここでは場所の name）がなければ、そのテーブルの見出しの位置にエラーが出る。</summary>
     [Fact]
     public void MissingRequiredItemIsReportedAtTableHeader()

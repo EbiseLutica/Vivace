@@ -113,6 +113,13 @@ public static class DefinitionValidator
             Add(issues, DefinitionIssueCode.MissingRequired, action.Source.Location,
                 $"schedule_only でない行動には所要時間（duration）が必要です: {action.Id}");
         }
+
+        // 同じ行動の開始が、記憶の整理の Planner と効果のハンドラを両方起こさないよう、一度に1つにする。
+        if (action.Effects.Sleep is { Consolidate: true } && action.Effects.Handler is not null)
+        {
+            Add(issues, DefinitionIssueCode.EffectConflict, action.Source.Location,
+                $"記憶の整理を起こす睡眠（effects.sleep.consolidate）と effects.handler を同じ行動に持たせられません: {action.Id}");
+        }
     }
 
     /// <summary>ペルソナの定義の参照と整合性を見る。</summary>
