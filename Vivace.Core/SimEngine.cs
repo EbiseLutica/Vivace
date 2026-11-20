@@ -295,7 +295,7 @@ public sealed class SimEngine : IAsyncDisposable
             ct.ThrowIfCancellationRequested();
             ThrowIfLaneFailed();
             await DrainCommandsAsync(ct);
-            await DrainOutputsAsync(ct);
+            DrainOutputs();
             if (_deliveriesInFlight > 0)
             {
                 _commandWait ??= _commands.Reader.WaitToReadAsync(CancellationToken.None).AsTask();
@@ -521,8 +521,9 @@ public sealed class SimEngine : IAsyncDisposable
             Invariants.Check(_ctx, _state, previous, BusyAfter(result.Signals), PendingEvents(), EarliestPending());
         }
 
-        var update = new EventRowUpdate(ev.Seq, RowStatusOf(result), applyNo, result.Reason);
-        await _storage.CommitAsync(new StorageBatch(added.ToImmutableArray(), ImmutableArray.Create(update), _state), ct);
+        var updates = ImmutableArray.Create(new EventRowUpdate(ev.Seq, RowStatusOf(result), applyNo, result.Reason));
+        updates = updates.AddRange(CancelledTriggers(result));
+        await _storage.CommitAsync(new StorageBatch(added.ToImmutableArray(), updates, _state), ct);
         if (logged.Status == EventStatus.Applied)
         {
             Publish(logged);
@@ -533,6 +534,16 @@ public sealed class SimEngine : IAsyncDisposable
             Handle(signal, ev.Origin);
         }
     }
+
+    /// <summary>
+    /// この適用が取り消すハンドラのトリガーの行を、適用済みにする更新。取り消しを決めた適用と同じコミットに入れ、
+    /// 出力が届く前に止まっても、起動のときに起き直らないようにする。
+    /// </summary>
+    /// <param name="result">適用の結果（取り消しのシグナルを含む）。</param>
+    private IEnumerable<EventRowUpdate> CancelledTriggers(ApplyResult result) =>
+        result.Signals.OfType<CancelHandlerSignal>()
+            .SelectMany(cancel => _running.Values.Where(run => run.Persona == cancel.Persona && IsCancellable(run.Lane)))
+            .Select(run => new EventRowUpdate(run.Key, EventRowStatus.Applied, null, null));
 
     /// <summary>適用の結果を行の状態にする。決める側のハンドラを起こすイベントは、出力を取り込むまで処理中にする。</summary>
     /// <param name="result">適用の結果。</param>
@@ -725,26 +736,17 @@ public sealed class SimEngine : IAsyncDisposable
     /// <summary>
     /// 終わったジョブの出力を、ぜんぶ受け取る。捨てたものは、処理中のトリガーを適用済みにするので、その分の更新を1つのコミットで書く。
     /// </summary>
-    private async Task DrainOutputsAsync(CancellationToken ct)
+    private void DrainOutputs()
     {
-        var updates = new List<EventRowUpdate>();
         while (_outputs.Reader.TryRead(out var output))
         {
-            if (Receive(output))
-            {
-                updates.Add(new EventRowUpdate(output.BatchSeq, EventRowStatus.Applied, null, null));
-            }
-        }
-
-        if (updates.Count > 0)
-        {
-            await _storage.CommitAsync(new StorageBatch(ImmutableArray<SimEvent>.Empty, updates.ToImmutableArray(), _state), ct);
+            Receive(output);
         }
     }
 
     /// <summary>ジョブの出力を受け取り、積む時を待つ列に入れる。取り消したものは捨て、捨てたなら true を返す。</summary>
     /// <param name="output">ジョブの出力。</param>
-    private bool Receive(Output output)
+    private void Receive(Output output)
     {
         _running.Remove(output.BatchSeq);
         if (_handlerCancels.Remove(output.BatchSeq, out var handlerCancel))
@@ -752,13 +754,10 @@ public sealed class SimEngine : IAsyncDisposable
             handlerCancel.Dispose();
         }
 
-        if (_dropped.Remove(output.BatchSeq))
+        if (!_dropped.Remove(output.BatchSeq))
         {
-            return true;
+            _held.Add(output);
         }
-
-        _held.Add(output);
-        return false;
     }
 
     /// <summary>
