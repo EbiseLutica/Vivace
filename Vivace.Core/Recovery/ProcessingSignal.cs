@@ -51,7 +51,16 @@ internal static class ProcessingSignal
     /// <summary>Planner のシグナル。トリガーの時刻はイベントの時刻。</summary>
     private static StartPlannerSignal Planner(SimEvent ev) => new(ev.Seq, Persona(ev), ev.Time);
 
-    /// <summary>イベントのペルソナ。処理中のイベントは必ずペルソナを持つ。</summary>
-    private static PersonaId Persona(SimEvent ev) =>
-        ev.PersonaId ?? throw new InvalidOperationException($"処理中のイベントにペルソナがありません（seq {ev.Seq}）");
+    /// <summary>
+    /// イベントのペルソナ。生成のイベントは行にペルソナを持たないので、定義 ID から引く（PersonaCreatedRule と同じ ID）。
+    /// </summary>
+    private static PersonaId Persona(SimEvent ev)
+    {
+        if (ev.Payload is PersonaCreatedPayload created)
+        {
+            return new PersonaId(created.DefId.Value);
+        }
+
+        return ev.PersonaId ?? throw new InvalidOperationException($"処理中のイベントにペルソナがありません（seq {ev.Seq}）");
+    }
 }

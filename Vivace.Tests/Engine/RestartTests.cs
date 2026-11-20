@@ -27,8 +27,23 @@ public class RestartTests
     /// <summary>止める位置を選ぶシード。</summary>
     private const ulong PositionSeed = 20261101;
 
-    /// <summary>ハンドラを起こす位置と、それ以外から、それぞれ選ぶ数。</summary>
-    private const int PositionsPerKind = 4;
+    /// <summary>それ以外のコミットの後から、固定シードで選ぶ数。</summary>
+    private const int ExtraPositions = 3;
+
+    /// <summary>投入の回数（ワールドと2人の生成）。この回までのコミットでは止めない。</summary>
+    private const int InjectionCommits = 3;
+
+    /// <summary>
+    /// ハンドラを起こすイベントの種類。種類ごとに、止める位置を1つ以上入れる。
+    /// plan.due はテストの町では出ないので、ここには入れず、シグナルの対応を単体で確かめる（ProcessingSignalTests）。
+    /// </summary>
+    private static readonly string[] TriggerKinds =
+    [
+        EventTypes.PersonaCreated,
+        EventTypes.BlockStarted,
+        EventTypes.DecisionRequested,
+        EventTypes.ActionStarted,
+    ];
 
     /// <summary>投稿の文面の台本（LLM あり）。</summary>
     private static readonly Func<ScriptedLlm> Llm = () => new ScriptedLlm().Reply("post.compose", "今日の授業眠い");
@@ -124,20 +139,21 @@ public class RestartTests
     }
 
     /// <summary>
-    /// 止める位置を選ぶ。ハンドラを起こすイベントを適用したコミットの後から数か所、それ以外のコミットの後から数か所。未送信の操作が残るコミットは除く。
+    /// 止める位置を選ぶ。トリガーの種類ごとに1か所ずつと、固定シードでそれ以外から数か所。投入の途中と、未送信の操作が残るコミットは除く。
     /// </summary>
     private static List<int> StopPositions(IReadOnlyList<CommitProbe.Shape> shapes)
     {
         var safe = Candidates(shapes, _ => true);
-        var triggers = Candidates(shapes, shape => shape.Trigger);
         var state = PositionSeed;
         var picks = new SortedSet<int>();
-        for (var i = 0; i < PositionsPerKind && triggers.Count > 0; i++)
+        foreach (var kind in TriggerKinds)
         {
-            picks.Add(triggers[NextIndex(ref state, triggers.Count)]);
+            var candidates = Candidates(shapes, shape => shape.Trigger == kind);
+            Assert.True(candidates.Count > 0, $"停止位置の候補がない: {kind}");
+            picks.Add(candidates[NextIndex(ref state, candidates.Count)]);
         }
 
-        for (var i = 0; i < PositionsPerKind; i++)
+        for (var i = 0; i < ExtraPositions; i++)
         {
             picks.Add(safe[NextIndex(ref state, safe.Count)]);
         }
@@ -145,9 +161,11 @@ public class RestartTests
         return picks.ToList();
     }
 
-    /// <summary>条件に合うコミットの位置（1 から数える）。未送信の操作が残るものは除く。</summary>
+    /// <summary>条件に合うコミットの位置（1 から数える）。投入の途中と、未送信の操作が残るものは除く。</summary>
     private static List<int> Candidates(IReadOnlyList<CommitProbe.Shape> shapes, Func<CommitProbe.Shape, bool> condition) =>
-        Enumerable.Range(1, shapes.Count).Where(index => !shapes[index - 1].InFlight && condition(shapes[index - 1])).ToList();
+        Enumerable.Range(1, shapes.Count)
+            .Where(index => index > InjectionCommits && !shapes[index - 1].InFlight && condition(shapes[index - 1]))
+            .ToList();
 
     /// <summary>決めたシードから、0 以上 count 未満の次の値を取る（線形合同法。テストの位置を決めるためだけ）。</summary>
     private static int NextIndex(ref ulong state, int count)

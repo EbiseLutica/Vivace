@@ -36,7 +36,10 @@ internal sealed class CommitProbe(IStorage inner, int? stopAfter) : IStorage
             _types[ev.Seq] = ev.EventType;
         }
 
-        var trigger = batch.Updates.Any(update => update.ApplyNo is not null && TriggerTypes.Contains(_types[update.Seq]));
+        var trigger = batch.Updates
+            .Where(update => update.ApplyNo is not null && TriggerTypes.Contains(_types[update.Seq]))
+            .Select(update => _types[update.Seq])
+            .FirstOrDefault();
         _shapes.Add(new Shape(trigger, batch.State.Personas.Values.Any(persona => persona.Outbound.Count > 0)));
         if (_shapes.Count == stopAfter)
         {
@@ -51,7 +54,7 @@ internal sealed class CommitProbe(IStorage inner, int? stopAfter) : IStorage
     public ValueTask DisposeAsync() => inner.DisposeAsync();
 
     /// <summary>1回のコミットの性質。</summary>
-    /// <param name="Trigger">ハンドラを起こすイベントを適用したコミットか（その後、出力を待つ間に止まる）。</param>
+    /// <param name="Trigger">そのコミットで適用した、ハンドラを起こすイベントのタイプ（なければ null）。出力を待つ間に止まる位置になる。</param>
     /// <param name="InFlight">未送信の操作が残っているか（配信の途中。ここでは止めない）。</param>
-    public sealed record Shape(bool Trigger, bool InFlight);
+    public sealed record Shape(string? Trigger, bool InFlight);
 }
