@@ -73,6 +73,36 @@ public class RunCommandDbTests
     }
 
     /// <summary>
+    /// 定義にエラーがあれば、記録は開かない（無効な定義で記録のファイルを作らない）。
+    /// </summary>
+    [Fact]
+    public async Task BrokenDefinitionsDoNotOpenTheRecord()
+    {
+        var files = TestWorld.Files().Select(file => file.Path == "worlds/testville.toml"
+            ? file with { Text = file.Text.Replace("utc_offset = \"+09:00\"", "utc_offset = \"+9\"", StringComparison.Ordinal) }
+            : file).ToList();
+        using var folder = new DefinitionFolder(files);
+        var opened = false;
+        var output = new StringWriter { NewLine = "\n" };
+
+        var code = await RunCommand.RunAsync(
+            folder.Path,
+            _ => new VirtualClock(Scenario.Start),
+            Scenario.WorldSeed,
+            false,
+            output,
+            CancellationToken.None,
+            _ =>
+            {
+                opened = true;
+                return Task.FromResult<Vivace.Core.Storage.IStorage>(new Vivace.Testing.InMemoryStorage());
+            });
+
+        Assert.Equal(1, code);
+        Assert.False(opened);
+    }
+
+    /// <summary>
     /// SQLite の記録に対して run を1回回し、終了コードと流れた出力を返す。エンジンが閉じるので、保存先は呼び出しごとに開く。
     /// </summary>
     /// <param name="dir">定義のフォルダ。</param>

@@ -37,26 +37,19 @@ public static class RunCommand
         command.Options.Add(seed);
         command.Options.Add(all);
         command.Options.Add(db);
-        command.SetAction(async (parseResult, ct) =>
+        command.SetAction((parseResult, ct) =>
         {
-            var directory = parseResult.GetValue(dir)!;
             var rate = parseResult.GetValue(speed);
-            var worldSeed = parseResult.GetValue(seed);
-            var showAll = parseResult.GetValue(all);
             var path = parseResult.GetValue(db);
-            if (path is null)
-            {
-                return await RunAsync(directory, ClockFor(rate), worldSeed, showAll, Console.Out, ct,
-                    llmFactory: output => LlmSetup.Create(Environment.GetEnvironmentVariable, output),
-                    storage: new InMemoryStorage());
-            }
-
-            await using var database = await SqliteDatabase.OpenAsync(path, ct: ct);
-            var storage = new SqliteStorage(database);
-            var recorded = (await storage.LoadAsync(ct)).State?.Cursor.Time;
-            return await RunAsync(directory, ClockFor(rate, recorded), worldSeed, showAll, Console.Out, ct,
+            return RunAsync(
+                parseResult.GetValue(dir)!,
+                recorded => ClockFor(rate, recorded),
+                parseResult.GetValue(seed),
+                parseResult.GetValue(all),
+                Console.Out,
+                ct,
                 llmFactory: output => LlmSetup.Create(Environment.GetEnvironmentVariable, output),
-                storage: storage);
+                open: path is null ? null : token => OpenSqliteAsync(path, token));
         });
         return command;
     }
@@ -78,9 +71,14 @@ public static class RunCommand
         return new ScaledClock(ahead ? recorded!.Value : now, speed);
     }
 
+    /// <summary>SQLite の記録を開く。エンジンを破棄すると、記録も閉じる。</summary>
+    /// <param name="path">記録のファイル。</param>
+    /// <param name="ct">キャンセル。</param>
+    public static async Task<IStorage> OpenSqliteAsync(string path, CancellationToken ct) =>
+        new SqliteStorage(await SqliteDatabase.OpenAsync(path, ct: ct));
+
     /// <summary>
-    /// 定義を読み、時計のいまの時刻でワールドとペルソナを生成して回す。until まで（既定は Ctrl+C まで）流れる出力を書き、止めたら件数を書く。
-    /// 定義にエラーがあれば問題を書いて 1 を返す。購読があふれて止めたときも 1 を返す。
+    /// 時計と保存先を指定して回す（テストの入口）。記録は <paramref name="storage"/> を使い、省略するとメモリ。
     /// </summary>
     /// <param name="dir">定義のフォルダ。</param>
     /// <param name="clock">時計。</param>
@@ -89,13 +87,13 @@ public static class RunCommand
     /// <param name="output">出力先。</param>
     /// <param name="ct">止めるためのキャンセル（Ctrl+C）。</param>
     /// <param name="until">回す先の時刻。省略するとキャンセルまで回す。</param>
-    /// <param name="subscriberCapacity">流す購読の容量。省略すると既定の容量（テストで、あふれる経路を作るために指定する）。</param>
+    /// <param name="subscriberCapacity">流す購読の容量。省略すると既定の容量。</param>
     /// <param name="channelOutput">投稿の行を書く先。省略すると出力と同じ。</param>
-    /// <param name="llm">文面を作る LLM。省略すると llmFactory を使う。どちらもなければ、投稿は文面を作れずにスキップされる。</param>
-    /// <param name="llmFactory">定義の検証が通ったあとに LLM を作る関数。通知は出力に書く。</param>
+    /// <param name="llm">文面を作る LLM。省略すると llmFactory を使う。</param>
+    /// <param name="llmFactory">定義の検証が通ったあとに LLM を作る関数。</param>
     /// <param name="errors">LLM の失敗を書く先。省略するとエラーの出力（Console.Error）。</param>
-    /// <param name="storage">保存先。省略するとメモリ（InMemoryStorage）。エンジンを組んだあとは、エンジンが閉じる。組めなかったときは呼び出し側が閉じる。</param>
-    internal static async Task<int> RunAsync(
+    /// <param name="storage">保存先。省略するとメモリ（InMemoryStorage）。</param>
+    internal static Task<int> RunAsync(
         string dir,
         IClock clock,
         ulong? seed,
@@ -108,7 +106,53 @@ public static class RunCommand
         ILlmClient? llm = null,
         Func<TextWriter, ILlmClient?>? llmFactory = null,
         TextWriter? errors = null,
-        IStorage? storage = null)
+        IStorage? storage = null) =>
+        RunAsync(
+            dir,
+            _ => clock,
+            seed,
+            all,
+            output,
+            ct,
+            storage is null ? null : _ => Task.FromResult(storage),
+            until,
+            subscriberCapacity,
+            channelOutput,
+            llm,
+            llmFactory,
+            errors);
+
+    /// <summary>
+    /// 定義を読み、保存先を開き、記録の最後の時刻から時計を決めて回す。until まで（既定は Ctrl+C まで）流れる出力を書き、止めたら件数を書く。
+    /// 定義にエラーがあれば問題を書いて 1 を返し、保存先は開かない。購読があふれて止めたときも 1 を返す。
+    /// </summary>
+    /// <param name="dir">定義のフォルダ。</param>
+    /// <param name="clockFor">記録の最後に適用した時刻（記録がなければ null）から時計を作る関数。</param>
+    /// <param name="seed">ワールドのシード。省略すると既定の値。記録があるときは、記録のシードを使う（違えば1行知らせる）。</param>
+    /// <param name="all">すべてのイベントを出すかどうか。</param>
+    /// <param name="output">出力先。</param>
+    /// <param name="ct">止めるためのキャンセル（Ctrl+C）。</param>
+    /// <param name="open">保存先を開く関数。省略するとメモリ（InMemoryStorage）。定義の検証のあとに呼ぶ。</param>
+    /// <param name="until">回す先の時刻。省略するとキャンセルまで回す。</param>
+    /// <param name="subscriberCapacity">流す購読の容量。省略すると既定の容量。</param>
+    /// <param name="channelOutput">投稿の行を書く先。省略すると出力と同じ。</param>
+    /// <param name="llm">文面を作る LLM。省略すると llmFactory を使う。</param>
+    /// <param name="llmFactory">定義の検証が通ったあとに LLM を作る関数。</param>
+    /// <param name="errors">LLM の失敗を書く先。省略するとエラーの出力（Console.Error）。</param>
+    internal static async Task<int> RunAsync(
+        string dir,
+        Func<DateTimeOffset?, IClock> clockFor,
+        ulong? seed,
+        bool all,
+        TextWriter output,
+        CancellationToken ct,
+        Func<CancellationToken, Task<IStorage>>? open = null,
+        DateTimeOffset? until = null,
+        int? subscriberCapacity = null,
+        TextWriter? channelOutput = null,
+        ILlmClient? llm = null,
+        Func<TextWriter, ILlmClient?>? llmFactory = null,
+        TextWriter? errors = null)
     {
         output = TextWriter.Synchronized(output);
         channelOutput = TextWriter.Synchronized(channelOutput ?? output);
@@ -126,12 +170,14 @@ public static class RunCommand
         WorldSetup.WriteHolidayNotices(definitions, output);
         var client = llm ?? llmFactory?.Invoke(output);
 
+        var storage = open is null ? new InMemoryStorage() : await open(ct);
+        var recorded = (await storage.LoadAsync(ct)).State?.Cursor.Time;
         var names = new DisplayNames(definitions);
         var offsets = Offsets(definitions);
         var builder = VivaceEngine.Create()
             .UseDefinitions(definitions)
-            .UseStorage(storage ?? new InMemoryStorage())
-            .UseClock(clock)
+            .UseStorage(storage)
+            .UseClock(clockFor(recorded))
             .AddChannel(new ConsoleChannel(names, offsets, channelOutput ?? output));
         if (client is not null)
         {
@@ -184,19 +230,20 @@ public static class RunCommand
     }
 
     /// <summary>
-    /// 記録から続けるとき、指定のシードが記録と違えば、記録のシードで続けることを1行書く。記録のシードは、ワールドの状態から読む。
+    /// 記録から続けるとき、指定のシードが記録と違えば、記録のシードで続けることを1行書く。記録のシードは、キーの序数順で最初のワールドの状態から読む。
     /// </summary>
     /// <param name="engine">記録から起動したエンジン。</param>
     /// <param name="seed">指定のシード。省略なら何も書かない。</param>
     /// <param name="output">出力先。</param>
     private static void WriteRecordedSeed(VivaceEngine engine, ulong? seed, TextWriter output)
     {
-        if (seed is not { } given || engine.View.Worlds.Values.FirstOrDefault() is not { } world || world.Seed == given)
+        var worlds = engine.View.Worlds.OrderBy(pair => pair.Key.Value, StringComparer.Ordinal).ToList();
+        if (seed is not { } given || worlds.Count == 0 || worlds[0].Value.Seed == given)
         {
             return;
         }
 
-        output.WriteLine($"記録のシード {world.Seed} で続ける（--seed {given} は無視した）");
+        output.WriteLine($"記録のシード {worlds[0].Value.Seed} で続ける（--seed {given} は無視した）");
     }
 
     /// <summary>
