@@ -198,10 +198,12 @@ public sealed class SimEngine : IAsyncDisposable
     /// <summary>
     /// 保存先の記録から状態とキューを戻し、処理中のイベントのハンドラを起動し直す。起動の直後に一度だけ呼ぶ。記録がなければ何もしない。
     /// 処理中のハンドラの出力は、取り込むまでは保存先に残るので、起動し直した出力で改めて適用される。
+    /// 止めていた間が 1 分を超えていれば、追いつきをこの中で行う（ここで戻った後は、いまの時計で続きを回せる）。
     /// </summary>
     /// <param name="ct">キャンセル。</param>
-    /// <exception cref="InvalidOperationException">すでに投入したか適用したあとに呼んだ。</exception>
-    public async Task RecoverAsync(CancellationToken ct)
+    /// <returns>保存先に記録があったら true（その場合、ワールドとペルソナを生成し直さない）。なければ false。</returns>
+    /// <exception cref="InvalidOperationException">すでに投入したか適用したあとに呼んだ。止めていた間が 14 日を超えた。</exception>
+    public async Task<bool> RecoverAsync(CancellationToken ct)
     {
         await _engineGate.WaitAsync(ct);
         try
@@ -242,6 +244,8 @@ public sealed class SimEngine : IAsyncDisposable
             {
                 await CatchUpAsync(now, ct);
             }
+
+            return recovered.MaxSeq > 0;
         }
         catch (Exception ex)
         {
