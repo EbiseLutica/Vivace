@@ -13,6 +13,19 @@ internal sealed class Dispatcher(IReadOnlyList<IChannel> channels, TimeSpan send
     /// <summary>種類からチャンネルを引く表。種類の重複は、ビルダーで拒否してある。</summary>
     private readonly Dictionary<string, IChannel> _channels = channels.ToDictionary(channel => channel.Kind, StringComparer.Ordinal);
 
+    /// <summary>つないだチャンネルの一覧。追加した順。圏外明けの通知に使う。</summary>
+    private readonly IReadOnlyList<IChannel> _all = channels;
+
+    /// <summary>圏外が明けたことを、つないだチャンネルに追加した順に伝える。チャンネルの例外は、そのまま投げる。</summary>
+    /// <param name="ct">エンジンを止めるキャンセル。</param>
+    public async Task NotifyOnlineAsync(CancellationToken ct)
+    {
+        foreach (var channel in _all)
+        {
+            await channel.OnlineAsync(ct);
+        }
+    }
+
     /// <summary>操作を種類のチャンネルに送る。チャンネルがなければ、送っていない失敗にする。時間切れは、チャンネルが返らなくても失敗として返す。</summary>
     /// <param name="kind">チャンネルの種類。</param>
     /// <param name="request">送る操作。</param>

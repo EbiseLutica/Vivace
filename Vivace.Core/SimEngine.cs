@@ -76,6 +76,14 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly List<Channel<LoggedEvent>> _subscribers = [];
     /// <summary>破棄したか。購読の一覧のロックを取って読み書きする。</summary>
     private bool _disposed;
+    /// <summary>追いつきの最中か。早送りの間は、投入を保留し、配信を止め、購読に流さず、積むイベントの発生元を catchup にする。</summary>
+    private bool _catchingUp;
+    /// <summary>追いつきの最中に届いた投入のコマンド。追いつきが終わってから、いまの時刻で処理する。</summary>
+    private readonly List<InjectCommand> _deferred = [];
+    /// <summary>これを超えて止めていたら、追いつきに入る（最後に適用した時刻からのずれ）。</summary>
+    private static readonly TimeSpan CatchUpThreshold = TimeSpan.FromMinutes(1);
+    /// <summary>圏外明けの通知を流すレーンのキー。</summary>
+    private const string ChannelLane = "channel";
 
     /// <summary>初期の状態と部品から、エンジンを作る。</summary>
     private SimEngine(RuleContext ctx, IDecider decider, IStorage storage, IRandomSource random, IClock clock, ILlmClient llm, Dispatcher? dispatcher)
@@ -202,12 +210,15 @@ public sealed class SimEngine : IAsyncDisposable
             }
 
             var recovered = await _storage.LoadAsync(ct);
+            var now = _clock.UtcNow;
+            var catchUp = recovered.State is { } recoveredState && now - recoveredState.Cursor.Time > CatchUpThreshold;
             if (recovered.State is { } state)
             {
                 _state = state;
                 _applyNo = state.Cursor.ApplyNo;
             }
 
+            _catchingUp = catchUp;
             _nextSeq = recovered.MaxSeq;
             foreach (var row in recovered.Open.Where(row => row.Status == EventRowStatus.Pending).OrderBy(row => row.Event.Seq))
             {
@@ -218,11 +229,70 @@ public sealed class SimEngine : IAsyncDisposable
             {
                 Handle(ProcessingSignal.For(_ctx, row.Event), row.Event.Origin);
             }
+
+            if (catchUp)
+            {
+                await CatchUpAsync(now, ct);
+            }
+        }
+        catch (Exception ex)
+        {
+            FailDeferred(ex);
+            FailCommands(ex);
+            throw;
         }
         finally
         {
             _engineGate.Release();
         }
+    }
+
+    /// <summary>
+    /// 最後に適用したイベントの時刻から target まで、仮想の時計で早送りする。配信は止め、投入は保留する。
+    /// 終わったら、時計を元の時計に戻し、保留した投入を処理して、圏外明けを流す。
+    /// </summary>
+    /// <param name="target">早送りの先の時刻（いまの時刻）。</param>
+    /// <param name="ct">キャンセル。</param>
+    private async Task CatchUpAsync(DateTimeOffset target, CancellationToken ct)
+    {
+        var live = _clock.Current;
+        _clock.Replace(new VirtualClock(_state.Cursor.Time));
+        try
+        {
+            await LoopAsync(target, ct);
+        }
+        finally
+        {
+            _clock.Replace(live);
+            _catchingUp = false;
+        }
+
+        await ProcessDeferredAsync(ct);
+        Handle(new ChannelOnlineSignal(), Origin.Catchup);
+    }
+
+    /// <summary>保留した投入のコマンドを、届いた順に処理する。</summary>
+    /// <param name="ct">キャンセル。</param>
+    private async Task ProcessDeferredAsync(CancellationToken ct)
+    {
+        var deferred = _deferred.ToList();
+        _deferred.Clear();
+        foreach (var command in deferred)
+        {
+            await ProcessCommandAsync(command, ct);
+        }
+    }
+
+    /// <summary>保留と届いているコマンドを、例外で失敗させる。起動が途中で失敗したときに、待っている呼び出し側を残さないため。</summary>
+    /// <param name="ex">失敗の原因。</param>
+    private void FailDeferred(Exception ex)
+    {
+        foreach (var command in _deferred)
+        {
+            command.Completion?.TrySetException(ex);
+        }
+
+        _deferred.Clear();
     }
 
     /// <summary>
@@ -446,25 +516,39 @@ public sealed class SimEngine : IAsyncDisposable
     {
         while (_commands.Reader.TryRead(out var command))
         {
-            if (command.Delivery)
+            if (_catchingUp)
             {
-                _deliveriesInFlight--;
+                _deferred.Add(command);
+                continue;
             }
 
-            InjectResult result;
-            try
-            {
-                result = await InjectNowAsync(command.Request, ct);
-            }
-            catch (Exception ex)
-            {
-                command.Completion?.TrySetException(ex);
-                FailCommands(ex);
-                throw;
-            }
-
-            command.Completion?.TrySetResult(result);
+            await ProcessCommandAsync(command, ct);
         }
+    }
+
+    /// <summary>投入のコマンドを1件処理し、結果を待っている呼び出し側に返す。例外は、届いているものも含めて失敗させる。</summary>
+    /// <param name="command">処理するコマンド。</param>
+    /// <param name="ct">キャンセル。</param>
+    private async Task ProcessCommandAsync(InjectCommand command, CancellationToken ct)
+    {
+        if (command.Delivery)
+        {
+            _deliveriesInFlight--;
+        }
+
+        InjectResult result;
+        try
+        {
+            result = await InjectNowAsync(command.Request, ct);
+        }
+        catch (Exception ex)
+        {
+            command.Completion?.TrySetException(ex);
+            FailCommands(ex);
+            throw;
+        }
+
+        command.Completion?.TrySetResult(result);
     }
 
     /// <summary>届いている投入のコマンドを、すべて例外で失敗させる。適用されなかったものは、待っている呼び出し側に知らせる。</summary>
@@ -524,7 +608,7 @@ public sealed class SimEngine : IAsyncDisposable
         var updates = ImmutableArray.Create(new EventRowUpdate(ev.Seq, RowStatusOf(result), applyNo, result.Reason));
         updates = updates.AddRange(CancelledTriggers(result));
         await _storage.CommitAsync(new StorageBatch(added.ToImmutableArray(), updates, _state), ct);
-        if (logged.Status == EventStatus.Applied)
+        if (logged.Status == EventStatus.Applied && !_catchingUp)
         {
             Publish(logged);
         }
@@ -573,7 +657,7 @@ public sealed class SimEngine : IAsyncDisposable
             ev.Guard,
             ev.BatchSeq,
             cause,
-            ev.Origin ?? origin,
+            _catchingUp ? Origin.Catchup : (ev.Origin ?? origin),
             null,
             null);
         _queue.Enqueue(simEvent, (ev.Time, (int)stage, seq));
@@ -596,10 +680,29 @@ public sealed class SimEngine : IAsyncDisposable
                 break;
             case StartEffectSignal effect:
                 var effectSnapshot = _state;
-                StartHandler(effect, $"decide:{effect.Persona}", origin, ct => SnsPostHandler.RunAsync(_ctx, _llm, effectSnapshot, effect, ct), () => SnsPostHandler.Skipped(effectSnapshot, effect));
+                var offline = _catchingUp;
+                StartHandler(
+                    effect,
+                    $"decide:{effect.Persona}",
+                    origin,
+                    ct => offline
+                        ? Task.FromResult(SnsPostHandler.Skipped(effectSnapshot, effect, PostSkippedPayload.PostSkipReason.NoChannel))
+                        : SnsPostHandler.RunAsync(_ctx, _llm, effectSnapshot, effect, ct),
+                    () => SnsPostHandler.Skipped(effectSnapshot, effect));
                 break;
             case DeliverSignal deliver:
-                Deliver(deliver);
+                if (!_catchingUp)
+                {
+                    Deliver(deliver);
+                }
+
+                break;
+            case ChannelOnlineSignal:
+                if (_dispatcher is { } online)
+                {
+                    _lanes.Post(ChannelLane, () => online.NotifyOnlineAsync(_shutdown.Token));
+                }
+
                 break;
             case CancelHandlerSignal cancel:
                 foreach (var run in _running.Values.Where(run => run.Persona == cancel.Persona && IsCancellable(run.Lane)).ToList())

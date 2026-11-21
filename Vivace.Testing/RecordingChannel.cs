@@ -14,6 +14,9 @@ public sealed class RecordingChannel(string kind, Func<OutboundRequest, SendResu
     /// <summary>送った操作（送られた順）。</summary>
     private readonly List<OutboundRequest> _sent = [];
 
+    /// <summary>圏外明けの通知を受けた回数を数える。</summary>
+    private int _onlineCount;
+
     /// <inheritdoc />
     public string Kind { get; } = kind;
 
@@ -29,8 +32,18 @@ public sealed class RecordingChannel(string kind, Func<OutboundRequest, SendResu
         }
     }
 
+    /// <summary>圏外明けの通知を受けた回数。</summary>
+    public int OnlineCount => Volatile.Read(ref _onlineCount);
+
     /// <inheritdoc />
     public Task StartAsync(VivaceEngine engine, CancellationToken ct) => Task.CompletedTask;
+
+    /// <inheritdoc />
+    public Task OnlineAsync(CancellationToken ct)
+    {
+        Interlocked.Increment(ref _onlineCount);
+        return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public Task<SendResult> SendAsync(OutboundRequest request, CancellationToken ct)

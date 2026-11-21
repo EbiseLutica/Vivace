@@ -28,6 +28,9 @@ public sealed class VivaceEngine : IAsyncDisposable
     /// <summary>いまの状態（不変）。</summary>
     public SimState View => _engine.View;
 
+    /// <summary>この運転で適用、捨て、却下の結果が決まったイベントの記録（決まった順）。追いつきで進めた分も含む。</summary>
+    public IReadOnlyList<LoggedEvent> Log => _engine.Log;
+
     /// <summary>投入 API。受け付けたら連番を、拒否したら理由を返す。</summary>
     /// <param name="request">投入の要求。</param>
     /// <param name="ct">結果を待つのをやめるキャンセル。</param>

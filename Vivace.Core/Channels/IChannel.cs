@@ -17,4 +17,10 @@ public interface IChannel
     /// <param name="request">送る操作。</param>
     /// <param name="ct">キャンセル。</param>
     Task<SendResult> SendAsync(OutboundRequest request, CancellationToken ct);
+
+    /// <summary>
+    /// 圏外が明けたことを伝える。追いつきが終わるたびに1回呼ばれる。既定では何もしない。取り直しをするチャンネルは、これを実装する。
+    /// </summary>
+    /// <param name="ct">キャンセル。</param>
+    Task OnlineAsync(CancellationToken ct) => Task.CompletedTask;
 }

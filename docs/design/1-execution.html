@@ -461,7 +461,7 @@ record ApplyResult(
       <tr><td>実時間</td><td><code>SystemClock</code></td><td>効かせる</td><td>動く</td><td>実物</td></tr>
       <tr><td>倍速</td><td><code>ScaledClock</code>（開始点からの経過を n 倍）</td><td>効かせる（仮想の時刻で）</td><td>動く（どのチャンネルをつなぐかはホストが決める）</td><td>実物かダミー</td></tr>
       <tr><td>早送り（ドライラン）</td><td><code>VirtualClock</code></td><td>効かせない</td><td>動かさない</td><td>実物かダミー</td></tr>
-      <tr><td>追いつき</td><td><code>VirtualClock</code> から <code>SystemClock</code> へ切り替え</td><td>効かせない</td><td>動かさない（圏外）</td><td>追いつきの中で使い終わるプランは、Planner が LLM を呼ばない（D5 5.5）。SNS の行動は候補にならない</td></tr>
+      <tr><td>追いつき</td><td><code>VirtualClock</code> から <code>SystemClock</code> へ切り替え</td><td>効かせない</td><td>動かさない（圏外）</td><td>追いつきの中で使い終わるプランは、Planner が LLM を呼ばない（D5 5.5）。投稿は文面を作らず、圏外として <code>post.skipped</code> にする（J-194）</td></tr>
     </table>
   </div>
   <p>時計を読むのは、エンジンと配信役と到着の受付だけ。決める側には、トリガーのイベントの時刻を now として渡す（VISION 4章）。到着のイベントの時刻は、受付が時計の「いま」を読んで付ける。</p>
