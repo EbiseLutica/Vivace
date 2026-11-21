@@ -13,6 +13,7 @@ namespace Vivace.Core.Decision;
 /// <param name="BlockId">関係するブロック（あれば）。</param>
 /// <param name="Rules">規則のコンテキスト。</param>
 /// <param name="Random">決める側の乱数の列（用途 decide）。</param>
+/// <param name="CatchingUp">追いつきの最中か。真なら、SNS の行動（投稿）を候補にしない（VISION 4章）。</param>
 public sealed record DecisionContext(
     SimState State,
     PersonaId Persona,
@@ -20,4 +21,5 @@ public sealed record DecisionContext(
     DecisionReason Reason,
     string? BlockId,
     RuleContext Rules,
-    IRandom Random);
+    IRandom Random,
+    bool CatchingUp = false);

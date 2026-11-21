@@ -28,6 +28,9 @@ public sealed class VivaceEngine : IAsyncDisposable
     /// <summary>いまの状態（不変）。</summary>
     public SimState View => _engine.View;
 
+    /// <summary>この運転で適用、捨て、却下の結果が決まったイベントの記録（決まった順）。追いつきで進めた分も含む。</summary>
+    public IReadOnlyList<LoggedEvent> Log => _engine.Log;
+
     /// <summary>投入 API。受け付けたら連番を、拒否したら理由を返す。</summary>
     /// <param name="request">投入の要求。</param>
     /// <param name="ct">結果を待つのをやめるキャンセル。</param>
@@ -52,9 +55,12 @@ public sealed class VivaceEngine : IAsyncDisposable
         }
     }
 
-    /// <summary>保存先の記録から状態とキューを戻す。起動の直後に一度だけ呼ぶ（記録がなければ何もしない）。</summary>
+    /// <summary>
+    /// 保存先の記録から状態とキューを戻す。起動の直後に一度だけ呼ぶ（記録がなければ何もしない）。止めていた間が 1 分を超えていれば、追いつく。
+    /// </summary>
     /// <param name="ct">キャンセル。</param>
-    public Task RecoverAsync(CancellationToken ct) => _engine.RecoverAsync(ct);
+    /// <returns>保存先に記録があったら true。</returns>
+    public Task<bool> RecoverAsync(CancellationToken ct) => _engine.RecoverAsync(ct);
 
     /// <summary>時刻 until まで回す。</summary>
     /// <param name="until">進める先の時刻。</param>

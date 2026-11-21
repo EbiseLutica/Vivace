@@ -17,4 +17,12 @@ public interface IChannel
     /// <param name="request">送る操作。</param>
     /// <param name="ct">キャンセル。</param>
     Task<SendResult> SendAsync(OutboundRequest request, CancellationToken ct);
+
+    /// <summary>
+    /// 圏外が明けたことを伝える。記録から起動するたびに1回呼ばれる。圏外だった区間を渡すので、取り直しに使える。既定では何もしない。
+    /// </summary>
+    /// <param name="offlineFrom">圏外になった時刻（記録の最後に適用した時刻）。</param>
+    /// <param name="onlineAt">いまに着いた時刻（圏外が明けた時刻）。</param>
+    /// <param name="ct">キャンセル。</param>
+    Task OnlineAsync(DateTimeOffset offlineFrom, DateTimeOffset onlineAt, CancellationToken ct) => Task.CompletedTask;
 }
