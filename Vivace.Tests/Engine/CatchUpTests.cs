@@ -99,6 +99,27 @@ public class CatchUpTests
     }
 
     /// <summary>
+    /// 止めていた間が 14 日を超えると、起動を止めてエラーにする。何も適用せず、エラーの文で persona.gap が未実装だと分かる。
+    /// </summary>
+    [Fact]
+    public async Task GapOverFourteenDaysStopsStartup()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        using var temp = new TempDatabase();
+        var first = await FirstRunAsync(temp.FilePath, StopAt, ct);
+        var lastApplied = first.Max(entry => entry.Event.Time);
+
+        var engine = await OpenAsync(temp.FilePath, new VirtualClock(lastApplied.AddDays(14).AddSeconds(1)), null, [], ct);
+        await using (engine)
+        {
+            var error = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.RecoverAsync(ct));
+
+            Assert.Contains("persona.gap", error.Message);
+            Assert.Empty(engine.Log);
+        }
+    }
+
+    /// <summary>
     /// 止めていた間が 1 分以内なら、追いつきに入らず、圏外明けも伝えない。
     /// </summary>
     [Fact]

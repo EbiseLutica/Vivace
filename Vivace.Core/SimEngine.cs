@@ -82,6 +82,8 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly List<InjectCommand> _deferred = [];
     /// <summary>これを超えて止めていたら、追いつきに入る（最後に適用した時刻からのずれ）。</summary>
     private static readonly TimeSpan CatchUpThreshold = TimeSpan.FromMinutes(1);
+    /// <summary>追いつきの上限。これを超えて止めていた起動は、persona.gap が実装されるまで止める（P-08）。</summary>
+    private static readonly TimeSpan CatchUpLimit = TimeSpan.FromDays(14);
     /// <summary>圏外明けの通知を流すレーンのキー。</summary>
     private const string ChannelLane = "channel";
 
@@ -211,7 +213,13 @@ public sealed class SimEngine : IAsyncDisposable
 
             var recovered = await _storage.LoadAsync(ct);
             var now = _clock.UtcNow;
-            var catchUp = recovered.State is { } recoveredState && now - recoveredState.Cursor.Time > CatchUpThreshold;
+            var gap = recovered.State is { } last ? now - last.Cursor.Time : TimeSpan.Zero;
+            if (gap > CatchUpLimit)
+            {
+                throw new InvalidOperationException("止めていた間が 14 日を超えたため、起動を止めました。persona.gap（空白の期間）は未実装です。");
+            }
+
+            var catchUp = recovered.State is not null && gap > CatchUpThreshold;
             if (recovered.State is { } state)
             {
                 _state = state;
