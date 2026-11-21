@@ -35,7 +35,7 @@ public sealed class SimEngine : IAsyncDisposable
     private readonly IDecider _decider;
     private readonly IStorage _storage;
     private readonly IRandomSource _random;
-    private readonly IClock _clock;
+    private readonly SwitchableClock _clock;
     /// <summary>LLM。効果のハンドラが使う。</summary>
     private readonly ILlmClient _llm;
     private readonly Lanes _lanes = new();
@@ -88,7 +88,7 @@ public sealed class SimEngine : IAsyncDisposable
         _decider = decider;
         _storage = storage;
         _random = random;
-        _clock = clock;
+        _clock = new SwitchableClock(clock);
         _state = new SimState(
             new ApplyCursor(clock.UtcNow, EventStage.DayTurn, 0, 0),
             ImmutableDictionary<WorldId, WorldState>.Empty,
