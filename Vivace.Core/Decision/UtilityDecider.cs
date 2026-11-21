@@ -61,11 +61,11 @@ public sealed class UtilityDecider : IDecider
         var options = Candidates(defs, persona, personaDef, worldDef, here, now, routes, next, deadline);
         var drawn = options.Select(option => (Option: option, Duration: option.FixedDuration ?? DurationOf(option, random))).ToList();
         var feasible = drawn.Where(entry => IsFeasible(entry.Option, entry.Duration, now, deadline, next, routes)).ToList();
-        var weights = WeightsOf(feasible, state, persona, personaDef, now);
+        var weights = WeightsFor(feasible, context.CatchingUp, state, persona, personaDef, now);
         if (feasible.Where((entry, i) => !entry.Option.GoToNext && weights[i] > 0).Any())
         {
             feasible = feasible.Where(entry => !entry.Option.Waits).ToList();
-            weights = WeightsOf(feasible, state, persona, personaDef, now);
+            weights = WeightsFor(feasible, context.CatchingUp, state, persona, personaDef, now);
         }
 
         var chosenIndex = weights.Sum() > 0 ? Pick(weights, random) : feasible.FindIndex(entry => entry.Option.GoToNext);
@@ -109,7 +109,7 @@ public sealed class UtilityDecider : IDecider
             entries.Add((option, duration > remaining ? remaining : duration));
         }
 
-        var weights = WeightsOf(entries, context.State, persona, personaDef, now).Append(1.0).ToArray();
+        var weights = WeightsFor(entries, context.CatchingUp, context.State, persona, personaDef, now).Append(1.0).ToArray();
         entries.Add((new Option(Idle, here, 0, 1.0, null, TimeSpan.Zero), TimeSpan.Zero));
         var chosen = entries[Pick(weights, random)];
         var draws = new RngDraws(persona.Id.Value, "decide", from, random.Position);
@@ -245,6 +245,32 @@ public sealed class UtilityDecider : IDecider
 
         return duration > TimeSpan.Zero
             && now.AddMinutes(option.Minutes) + duration + TimeSpan.FromMinutes(back) <= deadline;
+    }
+
+    /// <summary>
+    /// 候補の重み。追いつきの最中は、SNS の行動（投稿）の重みを 0 にして、候補から外す。乱数は、外す前と同じ数だけ引かれたままになる（止めずに回したときの決定と揃えるため）。
+    /// </summary>
+    /// <param name="entries">候補と所要時間。</param>
+    /// <param name="catchingUp">追いつきの最中か。</param>
+    /// <param name="state">全体の状態。</param>
+    /// <param name="persona">ペルソナ。</param>
+    /// <param name="personaDef">ペルソナの定義。</param>
+    /// <param name="now">決定タイミングの時刻。</param>
+    private static double[] WeightsFor(List<(Option Option, TimeSpan Duration)> entries, bool catchingUp, SimState state, PersonaState persona, PersonaDef personaDef, DateTimeOffset now)
+    {
+        var weights = WeightsOf(entries, state, persona, personaDef, now);
+        if (catchingUp)
+        {
+            for (var i = 0; i < entries.Count; i++)
+            {
+                if (entries[i].Option.Action?.Effects.Handler == SnsPostHandler.Name)
+                {
+                    weights[i] = 0;
+                }
+            }
+        }
+
+        return weights;
     }
 
     /// <summary>候補ごとの重みを、候補の並びのまま返す。</summary>

@@ -4,7 +4,7 @@ using System.Threading.Channels;
 namespace Vivace.Core;
 
 /// <summary>
-/// 決める側のジョブキュー。同じレーンのジョブは順番に、違うレーンのジョブは並列に動く。キーは "decide:{ペルソナ}"、"plan:{ペルソナ}"、"world:{ワールド}"。
+/// 決める側のジョブキュー。同じレーンのジョブは順番に、違うレーンのジョブは並列に動く。キーは "decide:{ペルソナ}"、"plan:{ペルソナ}"、"world:{ワールド}"、"channel"（圏外明けの通知）。
 /// ジョブが例外を投げたレーンは閉じ、残りのジョブを実行しない。
 /// </summary>
 public sealed class Lanes

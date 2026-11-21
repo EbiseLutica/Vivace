@@ -16,13 +16,23 @@ internal sealed class Dispatcher(IReadOnlyList<IChannel> channels, TimeSpan send
     /// <summary>つないだチャンネルの一覧。追加した順。圏外明けの通知に使う。</summary>
     private readonly IReadOnlyList<IChannel> _all = channels;
 
-    /// <summary>圏外が明けたことを、つないだチャンネルに追加した順に伝える。チャンネルの例外は、そのまま投げる。</summary>
+    /// <summary>
+    /// 圏外が明けたことを、つないだチャンネルに追加した順に伝える。チャンネルごとに例外を捕まえ、ほかのチャンネルとエンジンは止めない（Core にログがまだないので、捨てる。見つかった課題）。
+    /// </summary>
+    /// <param name="offlineFrom">圏外になった時刻。</param>
+    /// <param name="onlineAt">圏外が明けた時刻。</param>
     /// <param name="ct">エンジンを止めるキャンセル。</param>
-    public async Task NotifyOnlineAsync(CancellationToken ct)
+    public async Task NotifyOnlineAsync(DateTimeOffset offlineFrom, DateTimeOffset onlineAt, CancellationToken ct)
     {
         foreach (var channel in _all)
         {
-            await channel.OnlineAsync(ct);
+            try
+            {
+                await channel.OnlineAsync(offlineFrom, onlineAt, ct);
+            }
+            catch (Exception)
+            {
+            }
         }
     }
 

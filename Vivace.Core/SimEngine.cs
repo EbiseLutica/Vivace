@@ -205,6 +205,7 @@ public sealed class SimEngine : IAsyncDisposable
     /// <exception cref="InvalidOperationException">すでに投入したか適用したあとに呼んだ。止めていた間が 14 日を超えた。</exception>
     public async Task<bool> RecoverAsync(CancellationToken ct)
     {
+        bool resumed;
         await _engineGate.WaitAsync(ct);
         try
         {
@@ -245,7 +246,12 @@ public sealed class SimEngine : IAsyncDisposable
                 await CatchUpAsync(now, ct);
             }
 
-            return recovered.MaxSeq > 0;
+            if (recovered.State is { } resumedFrom)
+            {
+                Handle(new ChannelOnlineSignal(resumedFrom.Cursor.Time, now), Origin.Catchup);
+            }
+
+            resumed = recovered.MaxSeq > 0;
         }
         catch (Exception ex)
         {
@@ -257,6 +263,9 @@ public sealed class SimEngine : IAsyncDisposable
         {
             _engineGate.Release();
         }
+
+        await PumpCommandsAsync();
+        return resumed;
     }
 
     /// <summary>
@@ -280,7 +289,6 @@ public sealed class SimEngine : IAsyncDisposable
         }
 
         await ProcessDeferredAsync(ct);
-        Handle(new ChannelOnlineSignal(), Origin.Catchup);
     }
 
     /// <summary>保留した投入のコマンドを、届いた順に処理する。</summary>
@@ -684,7 +692,8 @@ public sealed class SimEngine : IAsyncDisposable
         {
             case StartDeciderSignal decide:
                 var decideSnapshot = _state;
-                StartHandler(decide, $"decide:{decide.Persona}", origin, _ => Task.FromResult(Decide(decide, decideSnapshot)), () => FallbackDraft(decide, decideSnapshot));
+                var decideOffline = _catchingUp;
+                StartHandler(decide, $"decide:{decide.Persona}", origin, _ => Task.FromResult(Decide(decide, decideSnapshot, decideOffline)), () => FallbackDraft(decide, decideSnapshot));
                 break;
             case StartPlannerSignal plan:
                 var planSnapshot = _state;
@@ -709,10 +718,10 @@ public sealed class SimEngine : IAsyncDisposable
                 }
 
                 break;
-            case ChannelOnlineSignal:
-                if (_dispatcher is { } online)
+            case ChannelOnlineSignal online:
+                if (_dispatcher is { } dispatcher)
                 {
-                    _lanes.Post(ChannelLane, () => online.NotifyOnlineAsync(_shutdown.Token));
+                    _lanes.Post(ChannelLane, () => dispatcher.NotifyOnlineAsync(online.OfflineFrom, online.OnlineAt, _shutdown.Token));
                 }
 
                 break;
@@ -815,12 +824,12 @@ public sealed class SimEngine : IAsyncDisposable
     }
 
     /// <summary>Decider を実行し、出力をイベントにする。</summary>
-    private EventDraft Decide(StartDeciderSignal decide, SimState snapshot)
+    private EventDraft Decide(StartDeciderSignal decide, SimState snapshot, bool catchingUp)
     {
         var persona = snapshot.Personas[decide.Persona];
         var seed = snapshot.Worlds[persona.World].Seed;
         var random = _random.Open(seed, persona.Id.Value, "decide", persona.Rng.GetValueOrDefault("decide"));
-        var context = new DecisionContext(snapshot, decide.Persona, decide.Now, decide.Reason, decide.BlockId, _ctx, random);
+        var context = new DecisionContext(snapshot, decide.Persona, decide.Now, decide.Reason, decide.BlockId, _ctx, random, catchingUp);
         var output = _decider.Decide(context);
         return ActivityChosenDraft(decide, persona, output);
     }

@@ -17,6 +17,9 @@ public sealed class RecordingChannel(string kind, Func<OutboundRequest, SendResu
     /// <summary>圏外明けの通知を受けた回数を数える。</summary>
     private int _onlineCount;
 
+    /// <summary>圏外明けの通知の区間（受けた順）。</summary>
+    private readonly List<(DateTimeOffset OfflineFrom, DateTimeOffset OnlineAt)> _online = [];
+
     /// <inheritdoc />
     public string Kind { get; } = kind;
 
@@ -39,10 +42,27 @@ public sealed class RecordingChannel(string kind, Func<OutboundRequest, SendResu
     public Task StartAsync(VivaceEngine engine, CancellationToken ct) => Task.CompletedTask;
 
     /// <inheritdoc />
-    public Task OnlineAsync(CancellationToken ct)
+    public Task OnlineAsync(DateTimeOffset offlineFrom, DateTimeOffset onlineAt, CancellationToken ct)
     {
+        lock (_gate)
+        {
+            _online.Add((offlineFrom, onlineAt));
+        }
+
         Interlocked.Increment(ref _onlineCount);
         return Task.CompletedTask;
+    }
+
+    /// <summary>圏外明けの通知（区間の始まりと終わり、受けた順）。</summary>
+    public IReadOnlyList<(DateTimeOffset OfflineFrom, DateTimeOffset OnlineAt)> Online
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _online.ToList();
+            }
+        }
     }
 
     /// <inheritdoc />
